@@ -7,11 +7,12 @@ It is based on the [ExtJS](https://www.sencha.com/products/extjs/) framework.
 
 ## Disclaimer
 
-> A community-driven fork based on Pimcore Community Edition (GPLv3), created to keep Open Source open!  
+> OpenDXP is a community-driven fork based on the Pimcore® Community Edition (GPLv3).  
+> OpenDXP is independent and maintained by its community and contributors. 
+> It is not affiliated with, endorsed by, or sponsored by Pimcore GmbH.   
 > Original credits: [Pimcore GmbH](https://www.pimcore.com)
 
-OpenDXP Admin Bundle is an independent, community-maintained fork of Pimcore Admin Classic Bundle.
-It is not affiliated with or endorsed by Pimcore GmbH.
+**OpenDXP Admin Bundle is based on the Pimcore® Community Edition and remains licensed under GPLv3.**
 
 ***
 
@@ -36,13 +37,21 @@ Following topics are short-cuts into the documentation for admin interface:
 - [Admin Translations](https://github.com/open-dxp/opendxp/blob/1.x/doc/06_Multi_Language_i18n/07_Admin_Translations.md)
 - [Extending Admin UI](https://github.com/open-dxp/opendxp/blob/1.x/doc/20_Extending_OpenDxp/13_Bundle_Developers_Guide/06_Event_Listener_UI.md)
 
-## Copyright and License 
-Copyright: OpenDXP
+***
 
-This project is a fork of [Pimcore admin-ui-classic-bundle (88fc2d7 / v1.7.10)](https://github.com/pimcore/admin-ui-classic-bundle/tree/88fc2d76ee0cd754f96ae89030bb54a4feb0e956),
-which is © Pimcore GmbH and licensed under the GPLv3.
+## Upstream Origin & Version Transparency 
+This project is a fork of the [Pimcore admin-ui-classic-bundle (88fc2d7 / v1.7.10)](https://github.com/pimcore/admin-ui-classic-bundle/tree/88fc2d76ee0cd754f96ae89030bb54a4feb0e956), which is © Pimcore GmbH and licensed under GPLv3. 
 
-For licensing details please visit [LICENSE.md](LICENSE.md)
+## License 
+Licensed under the GNU General Public License v3.0 (GPLv3). For details, please see [LICENSE.md](LICENSE.md). 
+
+## Copyright 
+© Pimcore GmbH  
+© 2025 OpenDXP Contributors — GPLv3 
+
+## Trademarks 
+Pimcore® is a registered [trademark](https://www.trademarkelite.com/europe/trademark/trademark-detail/009309841/PIMCORE) of Pimcore GmbH. 
+Any use of the Pimcore® mark in this repository is purely descriptive to identify the original upstream project. 
 
 ***
 
@@ -50,4 +59,9 @@ For licensing details please visit [LICENSE.md](LICENSE.md)
 For inquiries, suggestions, or contributions, feel free to reach us at contact@opendxp.ch.
 
 ## About
-OpenDXP is a community-driven project maintained and developed by [DACHCOM.DIGITAL](https://www.dachcom.com/de-ch), based in Rheineck, Switzerland.
+OpenDXP is a community-driven project initiated by [DACHCOM.DIGITAL](https://www.dachcom.com/de-ch) (Rheineck, Switzerland) and maintained by its community and contributors. 
+OpenDXP is independent and not affiliated with Pimcore GmbH. 
+
+The project’s purpose is to preserve and maintain a GPLv3‑licensed codebase for community use.   
+
+It is **not positioned as a competitor** to products or services of Pimcore GmbH and does **not** purport to replace or supersede any Pimcore offering.   
