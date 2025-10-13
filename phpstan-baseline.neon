@@ -1,4 +1,13 @@
 parameters:
 	ignoreErrors:
+		-
+			message: "#^Call to protected method addToUpdateTaskQueue\\(\\) of class OpenDxp\\\\Model\\\\Asset\\.$#"
+			count: 1
+			path: src/Controller/Admin/Asset/AssetController.php
+
+		-
+			message: "#^Else branch is unreachable because previous condition is always true\\.$#"
+			count: 1
+			path: src/Controller/Admin/Asset/AssetController.php
 	    - identifier: missingType.iterableValue
 	    - identifier: missingType.generics

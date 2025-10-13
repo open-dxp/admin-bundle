@@ -15,6 +15,7 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
+use function is_callable;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\AdminStyleTrait;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\ApplySchedulerDataTrait;
@@ -1459,9 +1460,14 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         if ($scanStatus === null) {
             $scanStatus = Asset\Enum\PdfScanStatus::IN_PROGRESS;
             if ($processBackground) {
-                \OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
-                    new AssetUpdateTasksMessage($asset->getId())
-                );
+                if (is_callable([$asset, 'addToUpdateTaskQueue'])) {
+                    $asset->addToUpdateTaskQueue();
+                } else {
+                    // Todo: BC layer, remove with 2.0 release
+                    \OpenDxp::getContainer()->get('messenger.bus.pimcore-core')->dispatch(
+                        new AssetUpdateTasksMessage($asset->getId())
+                    );
+                }
             }
         }
 
