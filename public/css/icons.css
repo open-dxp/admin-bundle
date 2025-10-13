@@ -1024,6 +1024,10 @@
     background: url(/bundles/opendxpadmin/img/flat-color-icons/cell_phone_landscape.svg) center center no-repeat !important;
 }
 
+.opendxp_icon_systemrequirements {
+    background: url(/bundles/opendxpadmin/img/flat-color-icons/factory.svg) center center no-repeat !important;
+}
+
 .opendxp_icon_notes {
     background: url(/bundles/opendxpadmin/img/flat-color-icons/survey.svg) center center no-repeat !important;
 }

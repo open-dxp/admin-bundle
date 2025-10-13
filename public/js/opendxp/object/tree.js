@@ -555,7 +555,23 @@ opendxp.registerNS("opendxp.object.tree");
                      var pasteMenu = [];
 
                      if (perspectiveCfg.inTreeContextMenu("object.paste")) {
-                         if (opendxp.cachedObjectId && (typeof perspectiveCfg.classes === "undefined" || typeof opendxp.copiedObject.get('className') === "undefined" || opendxp.copiedObject.get('className') in perspectiveCfg.classes)) {
+                         let classId = null;
+
+                         // Determine ClassId if copiedObject exists
+                         if (typeof opendxp.copiedObject !== 'undefined' && opendxp.copiedObject !== null) {
+                             if (typeof opendxp.copiedObject.get('className') !== "undefined") {
+                                 let className = opendxp.copiedObject.get('className');
+                                 if (className) {
+                                     let objectTypesStore = opendxp.globalmanager.get("object_types_store");
+                                     let classRecord = objectTypesStore.findRecord('text', className);
+                                     if (classRecord) {
+                                         classId = classRecord.get('id');
+                                     }
+                                 }
+                             }
+                         }
+
+                         if (opendxp.cachedObjectId && (typeof perspectiveCfg.classes === "undefined" || classId === null || classId in perspectiveCfg.classes)) {
                              pasteMenu.push({
                                  text: t("paste_recursive_as_child"),
                                  iconCls: "opendxp_icon_paste",
