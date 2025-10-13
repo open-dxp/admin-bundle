@@ -1464,7 +1464,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     $asset->addToUpdateTaskQueue();
                 } else {
                     // Todo: BC layer, remove with 2.0 release
-                    \OpenDxp::getContainer()->get('messenger.bus.pimcore-core')->dispatch(
+                    \OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
                         new AssetUpdateTasksMessage($asset->getId())
                     );
                 }
