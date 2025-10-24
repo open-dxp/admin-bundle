@@ -138,7 +138,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
                 'major_version' => Version::getMajorVersion(),
                 'php_version'   => PHP_VERSION,
                 'db_version'    => $mysqlVersion,
-                'bundles'       => array_keys($kernel->getBundles())
+                'bundles'       => array_keys($kernel->getBundles()),
             ];
         } catch (\Throwable) {
             $data = [];
