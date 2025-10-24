@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 use Doctrine\DBAL\Connection;
 use Exception;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\GuzzleException;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\IndexActionSettingsEvent;
@@ -116,9 +117,6 @@ class IndexController extends AdminAbstractController implements KernelResponseE
         return $this->render($settingsEvent->getTemplate() ?: '@OpenDxpAdmin/admin/index/index.html.twig', $templateParams);
     }
 
-    /**
-     * @throws \Exception
-     */
     #[Route('/index/statistics', name: 'opendxp_admin_index_statistics', methods: ['GET'])]
     public function statisticsAction(Request $request, Connection $db, KernelInterface $kernel): JsonResponse
     {
@@ -126,49 +124,40 @@ class IndexController extends AdminAbstractController implements KernelResponseE
             throw $this->createAccessDeniedHttpException();
         }
 
-        // DB
-        try {
-            $tables = $db->fetchAllAssociative('SELECT TABLE_NAME as name,TABLE_ROWS as `rows` from information_schema.TABLES
-                WHERE TABLE_ROWS IS NOT NULL AND TABLE_SCHEMA = ?', [$db->getDatabase()]);
-        } catch (\Exception $e) {
-            $tables = [];
-        }
-
         try {
             $mysqlVersion = $db->fetchOne('SELECT VERSION()');
-        } catch (\Exception $e) {
+        } catch (\Throwable) {
             $mysqlVersion = null;
         }
 
         try {
             $data = [
-                'instanceId' => $this->getInstanceId(),
-                'opendxp_major_version' => Version::getMajorVersion(),
-                'opendxp_version' => Version::getVersion(),
-                'opendxp_hash' => Version::getRevision(),
-                'php_version' => PHP_VERSION,
-                'mysql_version' => $mysqlVersion,
-                'bundles' => array_keys($kernel->getBundles()),
-                'tables' => $tables,
+                'instance_id'   => $this->getInstanceId(),
+                'revision'      => Version::getRevision(),
+                'version'       => Version::getVersion(),
+                'major_version' => Version::getMajorVersion(),
+                'php_version'   => PHP_VERSION,
+                'db_version'    => $mysqlVersion,
+                'bundles'       => array_keys($kernel->getBundles()),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable) {
             $data = [];
         }
 
-        if ($this->getAdminUser()->isAdmin()) {
-            return $this->adminJson($data);
+        try {
+            $this->httpClient->request(
+                'POST',
+                'https://metrics.opendxp.io/statistics',
+                [
+                    'json' => $data,
+                ]
+            );
+        } catch (GuzzleException) {
+            // fail silently
         }
 
-        $response = $this->httpClient->request(
-            'POST',
-            'https://liveupdate.opendxp.ch/statistics',
-            [
-                'body' => json_encode($data),
-            ]
-        );
-
         return $this->adminJson([
-            'success' => ($response->getStatusCode() >= 200 && $response->getStatusCode() < 400),
+            'success' => true,
         ]);
     }
 
