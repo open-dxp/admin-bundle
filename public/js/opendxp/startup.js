@@ -497,9 +497,6 @@ Ext.onReady(function () {
 
     var sitesStore = new Ext.data.Store({
         model: "opendxp.model.sites"
-        //restful:false,
-        //proxy:sitesProxy,
-        //reader:sitesReader
     });
     sitesStore.load();
     opendxp.globalmanager.add("sites", sitesStore);
@@ -507,98 +504,112 @@ Ext.onReady(function () {
     // check for updates
     window.setTimeout(function () {
 
-        var domains = '';
-        opendxp.globalmanager.get("sites").each(function (rec) {
+        var domains = [];
+        opendxp.globalmanager.get('sites').each(function (rec) {
             if(rec.get('rootId') !== 1) {
                 if(!empty(rec.get('domain'))) {
-                    domains += rec.get('domain') + ",";
+                    domains.push(rec.get('domain'));
                 }
                 if(!empty(rec.get('domains'))) {
-                    domains += rec.get('domains') + ",";
+                    domains.push(rec.get('domains'));
                 }
             }
         });
 
-        // use vanilla javascript instead of ExtJS to bypass default error handling
-        var request = new XMLHttpRequest();
-        request.open('POST', "https://liveupdate.opendxp.ch/update-check");
-
-        request.onload = function() {
-            if (this.status >= 200 && this.status < 400) {
-                var data = Ext.decode(this.response);
-                if (data.latestVersion) {
-                    if (opendxp.currentuser.admin) {
-
-                        opendxp.notification.helper.incrementCount();
-
-                        var toolbar = opendxp.globalmanager.get("layout_toolbar");
-                        toolbar.notificationMenu.add({
-                            text: t("update_available"),
-                            iconCls: "opendxp_icon_reload",
-                            handler: function () {
-                                var html = '<div class="opendxp_about_window" xmlns="http://www.w3.org/1999/html">';
-                                html += '<h2 style="text-decoration: underline">New Version Available!</h2>';
-                                html += '<br><b>Your Version: ' + opendxp.settings.version + '</b>';
-                                html += '<br><b style="color: darkgreen;">New Version: ' + data.latestVersion + '</b>';
-                                html += '<h3 style="color: darkred">Please update as soon as possible!</h3>';
-                                html += '</div>';
-
-                                var win = new Ext.Window({
-                                    title: "New Version Available!",
-                                    width: 500,
-                                    height: 220,
-                                    bodyStyle: "padding: 10px;",
-                                    modal: true,
-                                    html: html
-                                });
-                                win.show();
-                            }
-                        });
-                    }
-                }
-
-                if (data.pushStatistics) {
-                    const request = new XMLHttpRequest();
-                    request.open('GET', Routing.generate('opendxp_admin_index_statistics'));
-                    request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-
-                    if (opendxp.currentuser.admin) {
-                        request.onload = function () {
-                            if (this.status >= 200 && this.status < 400) {
-                                var res = Ext.decode(this.response);
-
-                                var request = new XMLHttpRequest();
-                                request.open('POST', "https://liveupdate.opendxp.ch/statistics");
-
-                                var data = new FormData();
-                                data.append('data', encodeURIComponent(JSON.stringify(res)));
-
-                                request.send(data);
-                            }
-                        };
-                    }
-                    request.send(data);
-                }
-            }
+        const data = {
+            instance_id: opendxp.settings.instanceId,
+            revision: opendxp.settings.build,
+            version: opendxp.settings.version,
+            debug: opendxp.settings.debug,
+            dev_mode: opendxp.settings.devmode,
+            environment: opendxp.settings.environment,
+            language: opendxp.settings.language,
+            main_domain: opendxp.settings.main_domain,
+            domains: domains.join(','),
+            timezone: opendxp.settings.timezone,
+            website_languages: opendxp.settings.websiteLanguages.join(',')
         };
 
-        var data = new FormData();
-        data.append('id', opendxp.settings.instanceId);
-        data.append('revision', opendxp.settings.build);
-        data.append('version', opendxp.settings.version);
-        data.append('debug', opendxp.settings.debug);
-        data.append('devmode', opendxp.settings.devmode);
-        data.append('environment', opendxp.settings.environment);
-        data.append("language", opendxp.settings.language);
-        data.append("main_domain", opendxp.settings.main_domain);
-        data.append("domains", domains);
-        data.append("timezone", opendxp.settings.timezone);
-        data.append("websiteLanguages", opendxp.settings.websiteLanguages.join(','));
+        fetch('https://metrics.opendxp.io/check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
 
-        request.send(data);
+            return null;
+        })
+        .then(data => {
+
+            if (!data) return;
+
+
+            if (data.latestVersion !== null && opendxp.currentuser.admin) {
+
+                const toolbar = opendxp.globalmanager.get('layout_toolbar');
+
+                opendxp.notification.helper.incrementCount();
+
+                toolbar.notificationMenu.add({
+                    text: t('update_available'),
+                    iconCls: 'opendxp_icon_reload',
+                    handler: function () {
+
+                        const tpl = new Ext.XTemplate(
+                            '<div class="opendxp_about_window">',
+                                '<h2 style="text-decoration: underline">New Version Available!</h2>',
+                                '<br><b>Your Version: {currentVersion}</b>',
+                                '<br><b style="color: darkgreen;">New Version: {latestVersion}</b>',
+                            '</div>'
+                        );
+
+                        const win = new Ext.Window({
+                            title: 'New Version Available!',
+                            width: 500,
+                            height: 220,
+                            bodyStyle: 'padding: 10px;',
+                            modal: true,
+                            html: tpl.apply({
+                                currentVersion: opendxp.settings.version,
+                                latestVersion: data.latestVersion
+                            })
+                        });
+
+                        win.show();
+                    }
+                });
+            }
+
+            if (data.pushStatistics) {
+                if (opendxp.currentuser.admin) {
+                    fetch(Routing.generate('opendxp_admin_index_statistics'), {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+
+                        return null;
+                    })
+                    .catch(error => {
+                        console.error('Metrics fetch error', error);
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Metrics fetch error', error);
+        });
 
     }, 5000);
-
 
     Ext.get("opendxp_logout")?.on('click', function () {
         document.getElementById('opendxp_logout_form').submit();
