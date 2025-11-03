@@ -18,9 +18,9 @@ namespace OpenDxp\Bundle\AdminBundle\Service\GridData;
 
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Model;
-use OpenDxp\Model\DataObject\ClassDefinition\Data;
 use OpenDxp\Model\DataObject\AbstractObject;
 use OpenDxp\Model\DataObject\ClassDefinition;
+use OpenDxp\Model\DataObject\ClassDefinition\Data;
 use OpenDxp\Model\DataObject\Classificationstore;
 use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\DataObject\Objectbrick;
