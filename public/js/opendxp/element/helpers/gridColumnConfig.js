@@ -420,6 +420,20 @@ opendxp.element.helpers.gridColumnConfig = {
 
             editor.fieldConfig.width = 300;
 
+            const activeFilter = this.grid.getStore().getFilters().items;
+
+            for (let filter of activeFilter) {
+                if (filter.dataIndex !== fieldInfo.dataIndex) {
+                    continue;
+                }
+                editor.data = filter.getValue()
+                    .split(",")
+                    .map(v => ({ id: Number.parseInt(v.trim()) }))
+                    .filter(v => !Number.isNaN(v.id));
+                editor.store.loadData(items, false);
+                break;
+            }
+
             const formPanel = Ext.create('Ext.form.Panel', {
                 xtype: "form",
                 border: false,
@@ -439,10 +453,25 @@ opendxp.element.helpers.gridColumnConfig = {
                         iconCls: "opendxp_icon_filter opendxp_icon_overlay_add",
                         handler: function () {
                             if (formPanel.isValid() && typeof fieldInfo.getRelationFilter === "function") {
-                                this.grid.filters.getStore().addFilter(
-                                    fieldInfo.getRelationFilter(fieldInfo.dataIndex, editor)
-                                );
-                                this.filterByRelationWindow.close();
+                                try {
+                                    // Sync editor store with its current value (if applicable)
+                                    const value = editor.getValue();
+                                    let items = [];
+                                    if (Array.isArray(value)) {
+                                        items = value;
+                                    } else if (value) {
+                                        items = [value];
+                                    }
+                                    editor.store.loadData(items, false);
+
+                                    this.grid.filters.getStore().addFilter(
+                                        fieldInfo.getRelationFilter(fieldInfo.dataIndex, editor)
+                                    );
+                                    this.filterByRelationWindow.close();
+                                } catch (e) {
+                                    console.error("Error applying relation filter:", e);
+                                    opendxp.helpers.showNotification(t("error"), e.message || e, "error");
+                                }
                             }
                         }.bind(this)
                     }
@@ -805,7 +834,7 @@ opendxp.element.helpers.gridColumnConfig = {
                 style: "margin-top: 0px;",
                 width: 500
             });
-            
+
             this.cancelBtn = Ext.create('Ext.Button', {
                 scale: 'small',
                 text: t('cancel'),
@@ -952,6 +981,10 @@ opendxp.element.helpers.gridColumnConfig = {
         //only direct children filter
         if (this.checkboxOnlyDirectChildren) {
             params["only_direct_children"] = this.checkboxOnlyDirectChildren.getValue();
+        }
+
+        if (typeof this.selectObjectType !=='undefined') {
+            params['filter_by_object_type'] = this.selectObjectType.getValue();
         }
 
         //only unreferenced filter
