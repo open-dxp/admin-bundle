@@ -283,6 +283,7 @@ opendxp.registerNS("opendxp.object.tree");
          }
 
          let tree = this.treeNodeMoveParameter.oldParent.getOwnerTree();
+         tree.loadMask.show();
 
          let pageOffset = 0;
          let ids = [];
@@ -394,7 +395,6 @@ opendxp.registerNS("opendxp.object.tree");
 
          // check permissions
          if (node.data.permissions.settings) {
-             tree.loadMask.show();
              return true;
          }
          return false;
