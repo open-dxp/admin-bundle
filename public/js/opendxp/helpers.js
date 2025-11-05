@@ -2233,20 +2233,20 @@ opendxp.helpers.editmode.openVideoEditPanel = function (data, callback) {
         // register at global DnD manager
         new Ext.dd.DropZone(el.getEl(), {
             reference: this,
-            ddGroup: "element",
+            ddGroup: 'element',
             getTargetFromEvent: function (e) {
                 return el.getEl();
             },
 
             onNodeOver: function (target, dd, e, data) {
-                if(data.records.length === 1) {
+                if (data.records.length === 1) {
                     data = data.records[0].data;
-                    if (target && target.getId() == poster.getId()) {
-                        if (data.elementType == "asset" && data.type == "image") {
+                    if (target && target.getId() === poster.getId()) {
+                        if (data.elementType === 'asset' && data.type === 'image') {
                             return Ext.dd.DropZone.prototype.dropAllowed;
                         }
                     } else {
-                        if (data.elementType == "asset" && data.type == "video") {
+                        if (data.type === 'video') {
                             return Ext.dd.DropZone.prototype.dropAllowed;
                         }
                     }
@@ -2256,22 +2256,22 @@ opendxp.helpers.editmode.openVideoEditPanel = function (data, callback) {
 
             onNodeDrop: function (target, dd, e, data) {
 
-                if(!opendxp.helpers.dragAndDropValidateSingleItem(data)) {
+                if (!opendxp.helpers.dragAndDropValidateSingleItem(data)) {
                     return false;
                 }
 
                 if (target) {
                     data = data.records[0].data;
 
-                    if (target.getId() == fieldPath.getId()) {
-                        if (data.elementType == "asset" && data.type == "video") {
+                    if (target.getId() === fieldPath.getId()) {
+                        if (data.type === 'video') {
                             fieldPath.setValue(data.path);
-                            form.getComponent("type").setValue("asset");
-                            updateType("asset");
+                            form.getComponent('type').setValue('asset');
+                            updateType('asset');
                             return true;
                         }
-                    } else if (target.getId() == poster.getId()) {
-                        if (data.elementType == "asset" && data.type == "image") {
+                    } else if (target.getId() === poster.getId()) {
+                        if (data.elementType === 'asset' && data.type === 'image') {
                             poster.setValue(data.path);
                             return true;
                         }
@@ -2283,13 +2283,11 @@ opendxp.helpers.editmode.openVideoEditPanel = function (data, callback) {
         });
     };
 
-    if (allowedTypes.includes("asset")) {
-        fieldPath.on("render", initDD);
-        poster.on("render", initDD);
-    }
+    fieldPath.on('render', initDD);
+    poster.on('render', initDD);
 
     const openButton = new Ext.Button({
-        iconCls: "opendxp_icon_open",
+        iconCls: 'opendxp_icon_open',
         handler: function () {
             opendxp.helpers.openElement(fieldPath.getValue(), 'asset');
             window.close();
@@ -2343,7 +2341,7 @@ opendxp.helpers.editmode.openVideoEditPanel = function (data, callback) {
     });
 
     const updateType = function (type) {
-        if(typeof searchButton !== 'undefined') {
+        if (typeof searchButton !== 'undefined') {
             searchButton.enable();
         }
         openButton.enable();
@@ -2351,35 +2349,22 @@ opendxp.helpers.editmode.openVideoEditPanel = function (data, callback) {
         var labelEl = form.getComponent("pathContainer").getComponent("path").labelEl;
         labelEl.update(t("path"));
 
-        if (type != "asset") {
-            if(typeof searchButton !== 'undefined') {
+        if (type !== "asset") {
+            if (typeof searchButton !== 'undefined') {
                 searchButton.disable();
             }
             openButton.disable();
-
-            poster.hide();
-            poster.setValue("");
-            form.getComponent("posterContainer").hide();
-            form.getComponent("title").hide();
-            form.getComponent("title").setValue("");
-            form.getComponent("description").hide();
-            form.getComponent("description").setValue("");
-        } else {
-            poster.show();
-            form.getComponent("posterContainer").show();
-            form.getComponent("title").show();
-            form.getComponent("description").show();
         }
 
-        if (type == "youtube") {
+        if (type === "youtube") {
             labelEl.update("ID");
         }
 
-        if (type == "vimeo") {
+        if (type === "vimeo") {
             labelEl.update("ID");
         }
 
-        if (type == "dailymotion") {
+        if (type === "dailymotion") {
             labelEl.update("ID");
         }
     };
@@ -2574,7 +2559,7 @@ opendxp.helpers.removeOtherConfigs = function (objectId, classId, gridConfigId, 
         buttons: Ext.Msg.YESNO,
         icon: Ext.MessageBox.INFO,
         fn: function (btn) {
-            if (btn == "yes") {
+            if (btn === "yes") {
                 Ext.Ajax.request({
                     url: Routing.generate('opendxp_admin_dataobject_dataobjecthelper_gridconfigapplytoall'),
                     method: "post",
