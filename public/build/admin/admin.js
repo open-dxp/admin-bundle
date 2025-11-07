@@ -1,1 +1,1 @@
-"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[884],{2170:(e,a,s)=>{var u=s(3481);s(6269);u.Icon.Default.imagePath="../bundles/opendxpadmin/build/admin/images/"}},e=>{e.O(0,[213],(()=>{return a=2170,e(e.s=a);var a}));e.O()}]);
+"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[884],{82170:(e,a,n)=>{var s=n(53481);n(56269);s.Icon.Default.imagePath="../bundles/opendxpadmin/build/admin/images/"}},e=>{e.O(0,[213],()=>{return a=82170,e(e.s=a);var a});e.O()}]);

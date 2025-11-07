@@ -141,8 +141,7 @@
         <form id="opendxp_logout_form" method="post" action="{{ path('opendxp_admin_logout') }}">
             <input type="hidden" name="csrfToken" value="{{ opendxp_csrf.getCsrfToken(app.request.session) }}">
 
-            <a id="opendxp_logout" data-menu-tooltip="{{ "logout"|trans([],'admin') }}" href="#" style="display: none">
-                <img src="/bundles/opendxpadmin/img/material-icons/outline-logout-24px.svg">
+            <a id="opendxp_logout" class="opendxp_material_icon_logout" data-menu-tooltip="{{ "logout"|trans([],'admin') }}" href="#" style="display: none">
             </a>
         </form>
     {% endblock %}
@@ -162,6 +161,7 @@
 
     {% set styles = [
         path('opendxp_admin_misc_admincss'),
+        "/bundles/opendxpadmin/css/variables.css",
         "/bundles/opendxpadmin/css/icons.css",
         "/bundles/opendxpadmin/extjs/css/OpenDxpApp-all_1.css",
         "/bundles/opendxpadmin/extjs/css/OpenDxpApp-all_2.css",

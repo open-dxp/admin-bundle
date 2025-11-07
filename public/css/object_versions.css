@@ -10,43 +10,44 @@
  * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.ch)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
- 
+@import 'variables.css';
+
 body {
 	font-weight: normal;
 	font-family: Tahoma, Arial, Verdana;
 	font-size: 11px;
-	color: #000;
+	color: var(--color-black);
 	margin: 0;
 	padding: 20px;
 }
 
 
 .preview {
-	border-left: 1px solid #d0d0d0;
+	border-left: 1px solid var(--color-neutral-g);
 	width: 100%;
 }
 
 .preview td, .preview th {
-	border-bottom: 1px solid #d0d0d0;
-	border-right: 1px solid #d0d0d0;
+	border-bottom: 1px solid var(--color-neutral-g);
+	border-right: 1px solid var(--color-neutral-g);
 	padding: 4px;
 }
 
 .preview th {
-	color:#fff;
-	background: #434343;
+	color:var(--color-white);
+	background: var(--color-neutral-d);
 }
 
 .preview .odd {
-	background: #fafafa;
+	background: var(--color-neutral-i);
 }
 
 .preview .modified {
-	background: #ffe5e5;
+	background: var(--color-red-c);
 }
 
 .preview .preview-metadata {
-	color: #a0a0a0;
+	color: var(--color-neutral-f);
 }
 
 .system {

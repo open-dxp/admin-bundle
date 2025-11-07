@@ -2485,7 +2485,7 @@ opendxp.helpers.editmode.openVideoEditPanel = function (data, callback) {
 opendxp.helpers.showAbout = function () {
 
     var html = '<div class="opendxp_about_window">';
-    html += '<br><img src="/bundles/opendxpadmin/img/logo-gray.svg" style="width: 300px;"><br>';
+    html += '<br><img src="/bundles/opendxpadmin/img/logo.svg" style="width: 300px;"><br>';
 
     html += '<br><b>Core Version: ' + opendxp.settings.version + '</b>';
 
