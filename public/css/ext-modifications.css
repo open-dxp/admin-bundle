@@ -20,7 +20,7 @@
 }
 
 .x-fieldset .x-fieldset-header {
-    background-color: var(--color-white);
+    background-color: transparent;
 }
 
 /* Style overrides */
