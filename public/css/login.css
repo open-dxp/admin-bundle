@@ -10,6 +10,7 @@
  * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.ch)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
+@import 'variables.css';
 
 @font-face {
     font-family: 'Open Sans';
@@ -28,12 +29,12 @@ body {
     padding: 0;
     margin: 0;
     font-size: 14px;
-    color: #fff;
-    background: #0C0F12;
+    color: var(--color-white);
+    background: var(--color-neutral-a);
 }
 
 a, a:hover, a:visited, a:active {
-    color: #fff;
+    color: var(--color-white);
     text-decoration: none;
 }
 
@@ -44,7 +45,7 @@ a, a:hover, a:visited, a:active {
     left: 0;
     width: 480px;
     height: 100%;
-    background: #0C0F12;
+    background: var(--color-neutral-a);
 }
 
 #content {
@@ -53,13 +54,13 @@ a, a:hover, a:visited, a:active {
     top: 0;
     left: 0;
     width: 480px;
-    background: #0C0F12;
+    background: var(--color-neutral-a);
     padding: 280px 90px 20px 90px;
 }
 
 #content input {
-    background: #393C3F;
-    color: #fff;
+    background: var(--color-neutral-d);
+    color: var(--color-white);
     margin-bottom: 10px;
     width: 100%;
     padding: 10px;
@@ -70,8 +71,8 @@ a, a:hover, a:visited, a:active {
 }
 
 #content button {
-    background: #e6ff2a;
-    color: #0B4559;
+    background: var(--color-primary-a);
+    color: var(--color-primary-b);
     margin-bottom: 10px;
     width: 100%;
     padding: 10px;
@@ -87,16 +88,16 @@ a, a:hover, a:visited, a:active {
 }
 
 #content .text.error {
-    color: #990000;
+    color: var(--color-red-a);
     padding: 10px;
-    background: #fff;
+    background: var(--color-white);
     border-radius: 2px;
 }
 
 #content .text.success {
-    color: #008000;
+    color: var(--color-green-a);
     padding: 10px;
-    background: #fff;
+    background: var(--color-white);
     border-radius: 2px;
 }
 
@@ -149,7 +150,7 @@ a, a:hover, a:visited, a:active {
     bottom: 70px;
     width: 480px;
     padding: 30px 90px 0 90px;
-    border-top: 1px solid #0B4559;
+    border-top: 1px solid var(--color-primary-b);
 }
 
 @media screen and (max-height: 800px) {
@@ -166,7 +167,7 @@ a, a:hover, a:visited, a:active {
 #news hr {
     width: 40px;
     height: 1px;
-    background: #0B4559;
+    background: var(--color-primary-b);
     margin: 0;
     border: 0;
 }
@@ -186,45 +187,45 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active  {
-    -webkit-box-shadow: 0 0 0 30px #393C3F inset !important;
+    -webkit-box-shadow: 0 0 0 30px var(--color-neutral-d) inset !important;
 }
 
 input:-webkit-autofill {
-    -webkit-text-fill-color: #fff !important;
+    -webkit-text-fill-color: var(--color-white) !important;
 }
 
 .inverted {
-    color: #0C0F12;
-    background: #fff;
+    color: var(--color-neutral-a);
+    background: var(--color-white);
 }
 
 .inverted a, .inverted a:hover, .inverted a:visited, .inverted a:active {
-    color: #0B4559;
+    color: var(--color-primary-b);
 }
 
 .inverted #contentBackground {
-    background: #fff;
+    background: var(--color-white);
 }
 
 .inverted #content {
-    background: #fff;
+    background: var(--color-white);
 }
 
 .inverted #content input {
-    background: #EFF0F1;
-    color: #0C0F12;
+    background: var(--color-neutral-h);
+    color: var(--color-neutral-a);
 }
 
 .inverted #footer a {
-    color: #0C0F12;
+    color: var(--color-neutral-a);
 }
 
 .inverted #news {
-    border-top: 1px solid #CECFD0;
+    border-top: 1px solid var(--color-neutral-g);
 }
 
 .inverted #news h2 {
-    color: #0C0F12;
+    color: var(--color-neutral-a);
 }
 
 
@@ -233,9 +234,9 @@ input:-webkit-autofill {
 .inverted input:-webkit-autofill:hover,
 .inverted input:-webkit-autofill:focus,
 .inverted input:-webkit-autofill:active  {
-    -webkit-box-shadow: 0 0 0 30px #EFF0F1 inset !important;
+    -webkit-box-shadow: 0 0 0 30px var(--color-neutral-h) inset !important;
 }
 
 .inverted input:-webkit-autofill {
-    -webkit-text-fill-color: #0C0F12 !important;
+    -webkit-text-fill-color: var(--color-neutral-a) !important;
 }
