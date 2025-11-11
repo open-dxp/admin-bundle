@@ -15,7 +15,7 @@
 @import 'variables.css';
 
 #opendxp_body {
-    padding: 8px 10px 0 60px !important;
+    padding: 0 10px 0 60px !important;
     background: var(--color-neutral-a);
 }
 
@@ -1389,8 +1389,9 @@ span.warning {
     background: var(--color-neutral-a);
     background-image: url(/bundles/opendxpadmin/img/logo.svg);
     background-repeat: no-repeat;
-    background-position: right 5px top 4px;
+    background-position: right 5px top 12px;
     background-size: 105px;
+    padding-top: 8px;
 }
 
 #opendxp_panel_tabs > .x-panel-bodyWrap > .x-tab-bar > .x-tab-bar-body {
@@ -1978,7 +1979,7 @@ span.warning {
 }
 
 .opendxp_main_splitter {
-    background-color: var(--color-neutral-c);
+    background-color: var(--color-neutral-i);
 }
 
 .opendxp_main_splitter .x-collapse-el {
