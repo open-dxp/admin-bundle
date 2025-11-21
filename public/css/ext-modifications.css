@@ -454,10 +454,6 @@ body > .x-mask {
     font-size: 16px;
     color: var(--color-neutral-f);
     background-position: center center;
-
-    &:hover {
-        background-color: var(--color-primary-a) !important;
-    }
 }
 
 .x-menu-default {

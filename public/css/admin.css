@@ -52,10 +52,6 @@
 
     &:hover {
         background-color: var(--color-neutral-a) !important;
-
-        .x-menu-item-main-icon {
-            background-color: var(--color-primary-a) !important;
-        }
     }
 }
 
