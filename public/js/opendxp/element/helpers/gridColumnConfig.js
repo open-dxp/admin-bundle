@@ -418,8 +418,6 @@ opendxp.element.helpers.gridColumnConfig = {
                 containerType: "filterByRelationWindow"
             });
 
-            editor.fieldConfig.width = 300;
-
             const activeFilter = this.grid.getStore().getFilters().items;
 
             for (let filter of activeFilter) {
@@ -480,9 +478,20 @@ opendxp.element.helpers.gridColumnConfig = {
 
             const title = t("filter_by_relation_field") + " " + fieldInfo.text;
             let width = 700;
-            if (tagType === 'manyToManyObjectRelation' && fieldInfo.layout.layout.width && fieldInfo.layout.layout.width !== '100%') {
+
+            if (tagType === 'manyToOneRelation') {
+                width = sumWidths(
+                    formPanel.config.items[0].items.items[0].width,
+                    formPanel.config.items[0].labelWidth + 140
+                );
+            } else if (
+                tagType === 'manyToManyObjectRelation' &&
+                fieldInfo.layout?.layout.width &&
+                fieldInfo.layout?.layout.width !== '100%'
+            ) {
                 width = sumWidths(fieldInfo.layout.layout.width, 25);
             }
+
             this.filterByRelationWindow = new Ext.Window({
                 autoScroll: true,
                 modal: false,

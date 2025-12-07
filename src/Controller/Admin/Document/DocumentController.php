@@ -33,7 +33,7 @@ use OpenDxp\Cache\RuntimeCache;
 use OpenDxp\Config;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use OpenDxp\Db;
-use OpenDxp\Document\Renderer\DocumentRenderer;
+use OpenDxp\Document\Renderer\DocumentRendererInterface;
 use OpenDxp\Event\Traits\RecursionBlockingEventDispatchHelperTrait;
 use OpenDxp\Image\HtmlToImage;
 use OpenDxp\Logger;
@@ -979,8 +979,13 @@ class DocumentController extends ElementControllerBase implements KernelControll
     }
 
     #[Route('/diff-versions/from/{from}/to/{to}', name: 'opendxp_admin_document_document_diffversions', requirements: ['from' => "\d+", 'to' => "\d+"], methods: ['GET'])]
-    public function diffVersionsAction(Request $request, int $from, int $to, DocumentRenderer $documentRenderer, RouterInterface $router): Response
-    {
+    public function diffVersionsAction(
+        Request $request,
+        int $from,
+        int $to,
+        DocumentRendererInterface $documentRenderer,
+        RouterInterface $router
+    ): Response {
         // return with error if prerequisites do not match
         if (!HtmlToImage::isSupported() || !class_exists('Imagick')) {
             return $this->render('@OpenDxpAdmin/admin/document/document/diff_versions_unsupported.html.twig');

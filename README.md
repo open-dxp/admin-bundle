@@ -40,7 +40,7 @@ Following topics are short-cuts into the documentation for admin interface:
 ***
 
 ## Upstream Origin & Version Transparency 
-This project is a fork of the [Pimcore admin-ui-classic-bundle (f75fe92 / v1.7.14)](https://github.com/pimcore/admin-ui-classic-bundle/tree/f75fe928555f3e66fe81ca7cb2ca9359fe3895a8), which is © Pimcore GmbH and licensed under GPLv3. 
+This project is a fork of the [Pimcore admin-ui-classic-bundle (95b1838 / v1.7.15)](https://github.com/pimcore/admin-ui-classic-bundle/tree/95b18389ad0678361d64fbbb5a1ba8db0bb4b54e), which is © Pimcore GmbH and licensed under GPLv3. 
 
 ## License 
 Licensed under the GNU General Public License v3.0 (GPLv3). For details, please see [LICENSE.md](LICENSE.md). 
