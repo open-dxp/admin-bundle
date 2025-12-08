@@ -11,3 +11,4 @@ cp -r .github/ci/files/bin/console bin/console
 chmod 755 bin/console
 cp -r .github/ci/files/kernel/. kernel
 cp -r .github/ci/files/public/. public
+cp .github/ci/files/.env ./
