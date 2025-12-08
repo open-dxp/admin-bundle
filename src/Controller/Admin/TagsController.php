@@ -132,7 +132,7 @@ class TagsController extends AdminAbstractController
                 }
             }
 
-            $filterIds = array_unique(array_values($filterIds));
+            $filterIds = array_unique($filterIds);
             $tagList->setCondition('id IN('.implode(',', $filterIds).')');
             $recursiveChildren = true;
         }

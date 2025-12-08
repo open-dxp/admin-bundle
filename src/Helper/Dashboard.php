@@ -53,7 +53,7 @@ final class Dashboard
         return $this->getConfigDir().'/dashboards_'.$this->getUser()->getId().'.psf';
     }
 
-    protected function loadFile(): ?array
+    protected function loadFile(): array
     {
         if (!is_dir($this->getConfigDir())) {
             $this->filesystem->mkdir($this->getConfigDir(), 0775);
@@ -85,7 +85,7 @@ final class Dashboard
         return $this->dashboards;
     }
 
-    public function getAllDashboards(): ?array
+    public function getAllDashboards(): array
     {
         return $this->loadFile();
     }

@@ -39,7 +39,7 @@ final class StringReplace extends AbstractOperator
         $this->insensitive = $config->insensitive ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;
@@ -88,9 +88,9 @@ final class StringReplace extends AbstractOperator
     {
         if ($this->getInsensitive()) {
             return str_ireplace($this->getSearch(), $this->getReplace(), $value);
-        } else {
-            return str_replace($this->getSearch(), $this->getReplace(), $value);
         }
+
+        return str_replace($this->getSearch(), $this->getReplace(), $value);
     }
 
     public function getSearch(): string

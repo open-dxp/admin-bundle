@@ -67,8 +67,7 @@ class Exporter
                 foreach ($fDefs as $fd) {
                     $getter = 'get' . ucfirst($fd->getName());
                     $value = $brickValue->$getter();
-                    if ($fd instanceof NormalizerInterface
-                        && $fd instanceof DataObject\ClassDefinition\Data) {
+                    if ($fd instanceof NormalizerInterface) {
                         $marshalledValue = $fd->normalize($value);
                         $resultContainer[$brickType][$fd->getName()] = $marshalledValue;
                     }
@@ -98,8 +97,7 @@ class Exporter
                 $getter = 'get' . ucfirst($fd->getName());
                 $value = $item->$getter();
 
-                if ($fd instanceof NormalizerInterface
-                    && $fd instanceof DataObject\ClassDefinition\Data) {
+                if ($fd instanceof NormalizerInterface) {
                     $marshalledValue = $fd->normalize($value);
                     $itemValues[$fd->getName()] = $marshalledValue;
                 }
@@ -131,12 +129,9 @@ class Exporter
                 self::doExportFieldcollection($object, $result, $value, $fd);
             } elseif ($fd instanceof Data\Objectbricks && $value instanceof Objectbrick) {
                 self::doExportBrick($object, $result, $value, $fd);
-            } else {
-                if ($fd instanceof NormalizerInterface
-                    && $fd instanceof DataObject\ClassDefinition\Data) {
-                    $marshalledValue = $fd->normalize($value);
-                    $result[$fd->getName()] = $marshalledValue;
-                }
+            } elseif ($fd instanceof NormalizerInterface) {
+                $marshalledValue = $fd->normalize($value);
+                $result[$fd->getName()] = $marshalledValue;
             }
         }
     }

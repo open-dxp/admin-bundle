@@ -104,7 +104,7 @@ class SnippetController extends DocumentControllerBase
 
         [$task, $snippet, $version] = $this->saveDocument($snippet, $request);
 
-        if ($task == self::TASK_PUBLISH || $task === self::TASK_UNPUBLISH) {
+        if ($task === self::TASK_PUBLISH || $task === self::TASK_UNPUBLISH) {
             $this->saveToSession($snippet, $request->getSession());
 
             $treeData = $this->getTreeNodeConfig($snippet);
@@ -117,27 +117,27 @@ class SnippetController extends DocumentControllerBase
                 ],
                 'treeData' => $treeData,
             ]);
-        } else {
-            $this->saveToSession($snippet, $request->getSession());
-
-            $draftData = [];
-            if ($version) {
-                $draftData = [
-                    'id' => $version->getId(),
-                    'modificationDate' => $version->getDate(),
-                    'isAutoSave' => $version->isAutoSave(),
-                ];
-            }
-
-            return $this->adminJson(['success' => true, 'draft' => $draftData]);
         }
+
+        $this->saveToSession($snippet, $request->getSession());
+
+        $draftData = [];
+        if ($version) {
+            $draftData = [
+                'id' => $version->getId(),
+                'modificationDate' => $version->getDate(),
+                'isAutoSave' => $version->isAutoSave(),
+            ];
+        }
+
+        return $this->adminJson(['success' => true, 'draft' => $draftData]);
     }
 
     protected function setValuesToDocument(Request $request, Document $document): void
     {
         $this->addSettingsToDocument($request, $document);
         $this->addDataToDocument($request, $document);
-        $this->applySchedulerDataToElement($request, $document);
+        $this->applySchedulerDataToElement($request, $document, $this->getAdminUser());
         $this->addPropertiesToDocument($request, $document);
     }
 }

@@ -77,10 +77,8 @@ class AssetHelperController extends AdminAbstractController
         $configListing = $configListing->load();
 
         $configData = [];
-        if (is_array($configListing)) {
-            foreach ($configListing as $config) {
-                $configData[] = $config->getObjectVars();
-            }
+        foreach ($configListing as $config) {
+            $configData[] = $config->getObjectVars();
         }
 
         return $configData;
@@ -113,10 +111,8 @@ class AssetHelperController extends AdminAbstractController
         }
 
         $configData = [];
-        if (is_array($configListing)) {
-            foreach ($configListing as $config) {
-                $configData[] = $config->getObjectVars();
-            }
+        foreach ($configListing as $config) {
+            $configData[] = $config->getObjectVars();
         }
 
         return $configData;
@@ -156,7 +152,6 @@ class AssetHelperController extends AdminAbstractController
         $gridConfigId = null;
 
         $classId = $request->get('id');
-        $type = $request->get('type');
 
         $context = ['purpose' => 'gridconfig'];
 
@@ -194,7 +189,8 @@ class AssetHelperController extends AdminAbstractController
                     $userIds = array_merge($userIds, $this->getAdminUser()->getRoles());
                     $userIds = implode(',', $userIds);
                     $shared = ($savedGridConfig->getOwnerId() != $userId && $savedGridConfig->isShareGlobally()) || $db->fetchOne('select * from gridconfig_shares where sharedWithUserId IN (' . $userIds . ') and gridConfigId = ' . $savedGridConfig->getId());
-                } catch (\Exception $e) {
+                } catch (\Exception) {
+                    // fail silently?
                 }
 
                 if (!$shared && $savedGridConfig->getOwnerId() != $this->getAdminUser()->getId()) {

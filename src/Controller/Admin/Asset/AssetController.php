@@ -840,7 +840,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 }
             }
 
-            $this->applySchedulerDataToElement($request, $asset);
+            $this->applySchedulerDataToElement($request, $asset, $this->getAdminUser());
 
             if ($request->get('data')) {
                 $asset->setData($request->get('data'));
@@ -879,9 +879,9 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 ],
                 'treeData' => $treeData,
             ]);
-        } else {
-            throw $this->createAccessDeniedHttpException();
         }
+
+        throw $this->createAccessDeniedHttpException();
     }
 
     #[Route('/publish-version', name: 'opendxp_admin_asset_publishversion', methods: ['POST'])]
@@ -1038,11 +1038,11 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $thumbnailConfig = new Asset\Image\Thumbnail\Config();
             $thumbnailConfig->setName('opendxp-download-' . $image->getId() . '-' . md5($request->get('config')));
 
-            if ($config['resize_mode'] == 'scaleByWidth') {
+            if ($config['resize_mode'] === 'scaleByWidth') {
                 $thumbnailConfig->addItem('scaleByWidth', [
                     'width' => $config['width'],
                 ]);
-            } elseif ($config['resize_mode'] == 'scaleByHeight') {
+            } elseif ($config['resize_mode'] === 'scaleByHeight') {
                 $thumbnailConfig->addItem('scaleByHeight', [
                     'height' => $config['height'],
                 ]);
@@ -1063,7 +1063,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
             $thumbnailConfig->setRasterizeSVG(true);
 
-            if ($thumbnailConfig->getFormat() == 'JPEG') {
+            if ($thumbnailConfig->getFormat() === 'JPEG') {
                 $thumbnailConfig->setPreserveMetaData(true);
 
                 if (empty($config['quality'])) {
@@ -1075,7 +1075,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $thumbnailFile = $thumbnail->getLocalFile();
 
             $exiftool = \OpenDxp\Tool\Console::getExecutable('exiftool');
-            if ($thumbnailConfig->getFormat() == 'JPEG' && $exiftool && isset($config['dpi']) && $config['dpi']) {
+            if ($thumbnailConfig->getFormat() === 'JPEG' && $exiftool && isset($config['dpi']) && $config['dpi']) {
                 $process = new Process([$exiftool, '-overwrite_original', '-xresolution=' . (int)$config['dpi'], '-yresolution=' . (int)$config['dpi'], '-resolutionunit=inches', $thumbnailFile]);
                 $process->run();
             }
@@ -1092,7 +1092,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $thumbnailFile = $thumbnailFile ?: $thumbnail->getLocalFile();
 
             $downloadFilename = preg_replace(
-                '/\.' . preg_quote(pathinfo($image->getFilename(), PATHINFO_EXTENSION)) . '$/i',
+                '/\.' . preg_quote(pathinfo($image->getFilename(), PATHINFO_EXTENSION), '/') . '$/i',
                 '.' . $thumbnail->getFileExtension(),
                 $image->getFilename()
             );
@@ -1401,18 +1401,17 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     }
 
     #[Route('/get-preview-document', name: 'opendxp_admin_asset_getpreviewdocument', methods: ['GET'])]
-    public function getPreviewDocumentAction(
-        Request $request,
-        TranslatorInterface $translator
-    ): StreamedResponse|Response {
+    public function getPreviewDocumentAction(Request $request): StreamedResponse|Response
+    {
         $asset = Asset\Document::getById((int) $request->get('id'));
 
-        if (!$asset) {
+        if (!$asset instanceof Asset\Document) {
             throw $this->createNotFoundException('could not load document asset');
         }
 
         if ($asset->isAllowed('view')) {
-            if ($asset instanceof Asset\Document && $asset->getMimeType() === self::PDF_MIMETYPE) {
+
+            if ($asset->getMimeType() === self::PDF_MIMETYPE) {
                 $scanResponse = $this->getResponseByScanStatus($asset);
                 $openPdfConfig = Config::getSystemConfiguration('assets')['document']['open_pdf_in_new_tab'];
 
@@ -1430,7 +1429,9 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
                 if ($scanResponse === PdfScanStatus::IN_PROGRESS) {
                     return $this->render('@OpenDxpAdmin/admin/asset/get_preview_pdf_in_progress.html.twig');
-                } elseif ($scanResponse === PdfScanStatus::UNSAFE) {
+                }
+
+                if ($scanResponse === PdfScanStatus::UNSAFE) {
                     return $this->render('@OpenDxpAdmin/admin/asset/get_preview_pdf_unsafe.html.twig');
                 }
             }
@@ -1442,12 +1443,13 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 }, 200, [
                     'Content-Type' => self::PDF_MIMETYPE,
                 ]);
-            } else {
-                throw $this->createNotFoundException('Unable to get preview for asset ' . $asset->getId());
             }
-        } else {
-            throw $this->createAccessDeniedException('Access to asset ' . $asset->getId() . ' denied');
+
+            throw $this->createNotFoundException('Unable to get preview for asset ' . $asset->getId());
+
         }
+
+        throw $this->createAccessDeniedException('Access to asset ' . $asset->getId() . ' denied');
     }
 
     private function getResponseByScanStatus(Asset\Document $asset, bool $processBackground = true): ?PdfScanStatus
@@ -1460,14 +1462,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         if ($scanStatus === null) {
             $scanStatus = Asset\Enum\PdfScanStatus::IN_PROGRESS;
             if ($processBackground) {
-                if (is_callable([$asset, 'addToUpdateTaskQueue'])) {
-                    $asset->addToUpdateTaskQueue();
-                } else {
-                    // Todo: BC layer, remove with 2.0 release
-                    \OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
-                        new AssetUpdateTasksMessage($asset->getId())
-                    );
-                }
+                $asset->addToUpdateTaskQueue();
             }
         }
 
@@ -2171,16 +2166,14 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $success = false;
 
         if ($asset = Asset::getById((int) $request->get('id'))) {
-            if (method_exists($asset, 'clearThumbnails')) {
-                if (!$asset->isAllowed('publish')) {
-                    throw $this->createAccessDeniedException('not allowed to publish');
-                }
-
-                $asset->clearThumbnails(true); // force clear
-                $asset->save();
-
-                $success = true;
+            if (!$asset->isAllowed('publish')) {
+                throw $this->createAccessDeniedException('not allowed to publish');
             }
+
+            $asset->clearThumbnails(true); // force clear
+            $asset->save();
+
+            $success = true;
         }
 
         return $this->adminJson(['success' => $success]);

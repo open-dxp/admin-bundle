@@ -111,106 +111,103 @@ abstract class ElementControllerBase extends AdminAbstractController
             }
 
             // check for children
-            if ($element instanceof ElementInterface) {
-                $event = null;
-                $eventName = null;
+            $event = null;
+            $eventName = null;
 
-                if ($element instanceof Asset) {
-                    $event = new AssetDeleteInfoEvent($element);
-                    $eventName = AssetEvents::DELETE_INFO;
-                } elseif ($element instanceof Document) {
-                    $event = new DocumentDeleteInfoEvent($element);
-                    $eventName = DocumentEvents::DELETE_INFO;
-                } elseif ($element instanceof AbstractObject) {
-                    $event = new DataObjectDeleteInfoEvent($element);
-                    $eventName = DataObjectEvents::DELETE_INFO;
-                }
-                if ($element->isLocked()) {
-                    $itemResults[] = [
-                        'id' => $element->getId(),
-                        'type' => $element->getType(),
-                        'key' => $element->getKey(),
-                        'reason' => 'Element is locked',
-                        'allowed' => false,
-                    ];
-                    $errors |= true;
+            if ($element instanceof Asset) {
+                $event = new AssetDeleteInfoEvent($element);
+                $eventName = AssetEvents::DELETE_INFO;
+            } elseif ($element instanceof Document) {
+                $event = new DocumentDeleteInfoEvent($element);
+                $eventName = DocumentEvents::DELETE_INFO;
+            } elseif ($element instanceof AbstractObject) {
+                $event = new DataObjectDeleteInfoEvent($element);
+                $eventName = DataObjectEvents::DELETE_INFO;
+            }
 
-                    continue;
-                }
-
-                if ($event instanceof ElementDeleteInfoEventInterface) {
-                    $eventDispatcher->dispatch($event, $eventName);
-
-                    if (!$event->getDeletionAllowed()) {
-                        $itemResults[] = [
-                            'id' => $element->getId(),
-                            'type' => $element->getType(),
-                            'key' => $element->getKey(),
-                            'reason' => $event->getReason(),
-                            'allowed' => false,
-                        ];
-                        $errors |= true;
-
-                        continue;
-                    }
-                }
-
+            if ($element->isLocked()) {
                 $itemResults[] = [
                     'id' => $element->getId(),
                     'type' => $element->getType(),
                     'key' => $element->getKey(),
-                    'path' => $element->getPath(),
-                    'allowed' => true,
+                    'reason' => 'Element is locked',
+                    'allowed' => false,
                 ];
+                $errors |= true;
 
-                $deleteJobs[] = [[
-                    'url' => $this->generateUrl('opendxp_admin_recyclebin_add'),
-                    'method' => 'POST',
-                    'params' => [
-                        'type' => $type,
-                        'id' => $element->getId(),
-                    ],
-                ]];
+                continue;
+            }
 
-                $hasChildren = $element->hasChildren();
-                if (!$hasDependency) {
-                    $hasDependency = $hasChildren;
-                }
+            $eventDispatcher->dispatch($event, $eventName);
 
-                if ($hasChildren) {
-                    // get amount of children
-                    $list = $element::getList(['unpublished' => true]);
-                    $pathColumn = 'path';
-                    $list->setCondition($pathColumn . ' LIKE ?', [$element->getRealFullPath() . '/%']);
-                    $children = $list->getTotalCount();
-                    $totalChildren += $children;
+            if (!$event->getDeletionAllowed()) {
+                $itemResults[] = [
+                    'id' => $element->getId(),
+                    'type' => $element->getType(),
+                    'key' => $element->getKey(),
+                    'reason' => $event->getReason(),
+                    'allowed' => false,
+                ];
+                $errors |= true;
 
-                    if ($children > 0) {
-                        $deleteObjectsPerRequest = 5;
-                        for ($i = 0, $iMax = ceil($children / $deleteObjectsPerRequest); $i < $iMax; $i++) {
-                            $deleteJobs[] = [[
-                                'url' => $request->getBaseUrl() . '/admin/' . $type . '/delete',
-                                'method' => 'DELETE',
-                                'params' => [
-                                    'step' => $i,
-                                    'amount' => $deleteObjectsPerRequest,
-                                    'type' => 'children',
-                                    'id' => $element->getId(),
-                                ],
-                            ]];
-                        }
+                continue;
+            }
+
+            $itemResults[] = [
+                'id' => $element->getId(),
+                'type' => $element->getType(),
+                'key' => $element->getKey(),
+                'path' => $element->getPath(),
+                'allowed' => true,
+            ];
+
+            $deleteJobs[] = [[
+                'url' => $this->generateUrl('opendxp_admin_recyclebin_add'),
+                'method' => 'POST',
+                'params' => [
+                    'type' => $type,
+                    'id' => $element->getId(),
+                ],
+            ]];
+
+            $hasChildren = $element->hasChildren();
+            if (!$hasDependency) {
+                $hasDependency = $hasChildren;
+            }
+
+            if ($hasChildren) {
+                // get amount of children
+                $list = $element::getList(['unpublished' => true]);
+                $pathColumn = 'path';
+                $list->setCondition($pathColumn . ' LIKE ?', [$element->getRealFullPath() . '/%']);
+                $children = $list->getTotalCount();
+                $totalChildren += $children;
+
+                if ($children > 0) {
+                    $deleteObjectsPerRequest = 5;
+                    for ($i = 0, $iMax = ceil($children / $deleteObjectsPerRequest); $i < $iMax; $i++) {
+                        $deleteJobs[] = [[
+                            'url' => $request->getBaseUrl() . '/admin/' . $type . '/delete',
+                            'method' => 'DELETE',
+                            'params' => [
+                                'step' => $i,
+                                'amount' => $deleteObjectsPerRequest,
+                                'type' => 'children',
+                                'id' => $element->getId(),
+                            ],
+                        ]];
                     }
                 }
-
-                // the element itself is the last one
-                $deleteJobs[] = [[
-                    'url' => $request->getBaseUrl() . '/admin/' . $type . '/delete',
-                    'method' => 'DELETE',
-                    'params' => [
-                        'id' => $element->getId(),
-                    ],
-                ]];
             }
+
+            // the element itself is the last one
+            $deleteJobs[] = [[
+                'url' => $request->getBaseUrl() . '/admin/' . $type . '/delete',
+                'method' => 'DELETE',
+                'params' => [
+                    'id' => $element->getId(),
+                ],
+            ]];
         }
 
         // get the element key in case of just one

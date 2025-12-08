@@ -33,7 +33,7 @@ final class Text extends AbstractOperator
         $this->textValue = $config->textValue ?? '';
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;

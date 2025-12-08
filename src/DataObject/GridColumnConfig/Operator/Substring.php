@@ -39,7 +39,7 @@ final class Substring extends AbstractOperator
         $this->ellipses = $config->ellipses ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;
@@ -48,47 +48,47 @@ final class Substring extends AbstractOperator
 
         if (!$children) {
             return $result;
-        } else {
-            $c = $children[0];
+        }
 
-            $valueArray = [];
+        $c = $children[0];
 
-            $childResult = $c->getLabeledValue($element);
-            $isArrayType = $childResult->isArrayType ?? false;
-            $childValues = $childResult->value ?? null;
-            if ($childValues && !$isArrayType) {
-                $childValues = [$childValues];
-            }
+        $valueArray = [];
 
-            if (is_array($childValues)) {
-                /** @var string $childValue */
-                foreach ($childValues as $childValue) {
-                    $showEllipses = false;
-                    if ($childValue && $this->getEllipses()) {
-                        $start = $this->getStart() ? $this->getStart() : 0;
-                        $length = $this->getLength() ? $this->getLength() : 0;
-                        if (strlen($childValue) > ($start + $length)) {
-                            $showEllipses = true;
-                        }
+        $childResult = $c->getLabeledValue($element);
+        $isArrayType = $childResult->isArrayType ?? false;
+        $childValues = $childResult->value ?? null;
+        if ($childValues && !$isArrayType) {
+            $childValues = [$childValues];
+        }
+
+        if (is_array($childValues)) {
+            /** @var string $childValue */
+            foreach ($childValues as $childValue) {
+                $showEllipses = false;
+                if ($childValue && $this->getEllipses()) {
+                    $start = $this->getStart() ?: 0;
+                    $length = $this->getLength() ?: 0;
+                    if (strlen($childValue) > ($start + $length)) {
+                        $showEllipses = true;
                     }
-
-                    $childValue = substr($childValue, $this->getStart(), $this->getLength());
-                    if ($showEllipses) {
-                        $childValue .= '...';
-                    }
-
-                    $valueArray[] = $childValue;
                 }
-            } else {
-                $valueArray[] = $childResult->value;
-            }
 
-            $result->isArrayType = $isArrayType;
-            if ($isArrayType) {
-                $result->value = $valueArray;
-            } else {
-                $result->value = $valueArray[0];
+                $childValue = substr($childValue, $this->getStart(), $this->getLength());
+                if ($showEllipses) {
+                    $childValue .= '...';
+                }
+
+                $valueArray[] = $childValue;
             }
+        } else {
+            $valueArray[] = $childResult->value;
+        }
+
+        $result->isArrayType = $isArrayType;
+        if ($isArrayType) {
+            $result->value = $valueArray;
+        } else {
+            $result->value = $valueArray[0];
         }
 
         return $result;

@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\AbstractModel;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Tool\Admin;
@@ -56,7 +55,7 @@ final class AnyGetter extends AbstractOperator
         $this->returnLastResult = $config->returnLastResult ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;
@@ -78,15 +77,12 @@ final class AnyGetter extends AbstractOperator
                 $result->value = $result->value->getObjectVars();
             }
         } else {
+
             if (count($children) > 1) {
                 $result->isArrayType = true;
             }
+
             $resultElements = [];
-
-            if (!is_array($children)) {
-                $children = [$children];
-            }
-
             foreach ($children as $c) {
                 $forwardObject = $element;
 

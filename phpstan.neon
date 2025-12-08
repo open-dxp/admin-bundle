@@ -1,10 +1,16 @@
 parameters:
     level: 6
-    reportUnmatchedIgnoredErrors: false
     paths:
         - src
     bootstrapFiles:
         - phpstan-bootstrap.php
+    ignoreErrors:
+        - identifier: missingType.iterableValue
+        - identifier: missingType.generics
+
+    symfony:
+        containerXmlPath: var/cache/test/App_KernelTestDebugContainer.xml
+
 includes:
     - vendor/phpstan/phpstan-symfony/extension.neon
     - phpstan-baseline.neon

@@ -398,7 +398,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
                 if ($document instanceof Model\Document\PageSnippet
                     || $document instanceof Model\Document\Hardlink
                     || $document instanceof Model\Document\Link) {
-                    $this->applySchedulerDataToElement($request, $document);
+                    $this->applySchedulerDataToElement($request, $document, $this->getAdminUser());
                     $document->saveScheduledTasks();
                 }
 

@@ -1273,9 +1273,9 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
         if ($forObjectEditor) {
             return $this->adminJson(['objectbricks' => $definitions, 'layoutDefinitions' => $layoutDefinitions]);
-        } else {
-            return $this->adminJson($definitions);
         }
+
+        return $this->adminJson($definitions);
     }
 
     #[Route('/objectbrick-list', name: 'objectbricklist', methods: ['GET'])]
@@ -1352,7 +1352,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $tmpName = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/bulk-import-' . uniqid() . '.tmp';
         file_put_contents($tmpName, $json);
 
-        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($tmpName) {
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($tmpName) {
             $session->set('class_bulk_import_file', $tmpName);
         }, 'opendxp_objects');
 
@@ -1363,10 +1363,10 @@ class ClassController extends AdminAbstractController implements KernelControlle
                 $displayName = null;
                 $icon = null;
 
-                if ($groupName == 'class') {
+                if ($groupName === 'class') {
                     $name = $groupItem['name'];
                     $icon = 'class';
-                } elseif ($groupName == 'customlayout') {
+                } elseif ($groupName === 'customlayout') {
                     $className = $groupItem['className'];
 
                     $layoutData = ['className' => $className, 'name' => $groupItem['name']];
@@ -1374,9 +1374,9 @@ class ClassController extends AdminAbstractController implements KernelControlle
                     $displayName = $className . ' / ' . $groupItem['name'];
                     $icon = 'custom_views';
                 } else {
-                    if ($groupName == 'objectbrick') {
+                    if ($groupName === 'objectbrick') {
                         $icon = 'objectbricks';
-                    } elseif ($groupName == 'fieldcollection') {
+                    } elseif ($groupName === 'fieldcollection') {
                         $icon = 'fieldcollection';
                     }
                     $name = $groupItem['key'];
@@ -1397,9 +1397,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
     /**
      * Add option to export/import all class definitions/brick definitions etc. at once
-     */
-
-    /**
+     *
      * @throws \Exception
      */
     #[Route('/bulk-commit', name: 'bulkcommit', methods: ['POST'])]
@@ -1417,10 +1415,8 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $list = $json[$type];
 
         foreach ($list as $item) {
-            unset($item['creationDate']);
-            unset($item['modificationDate']);
-            unset($item['userOwner']);
-            unset($item['userModification']);
+
+            unset($item['creationDate'], $item['modificationDate'], $item['userOwner'], $item['userModification']);
 
             if ($type === 'class' && $item['name'] == $name) {
                 $this->checkPermission('classes');
@@ -1432,7 +1428,9 @@ class ClassController extends AdminAbstractController implements KernelControlle
                 $success = DataObject\ClassDefinition\Service::importClassDefinitionFromJson($class, json_encode($item), true);
 
                 return $this->adminJson(['success' => $success !== false]);
-            } elseif ($type === 'objectbrick' && $item['key'] == $name) {
+            }
+
+            if ($type === 'objectbrick' && $item['key'] == $name) {
                 $this->checkPermission('objectbricks');
                 if (!$brick = DataObject\Objectbrick\Definition::getByKey($name)) {
                     $brick = new DataObject\Objectbrick\Definition();
@@ -1442,7 +1440,9 @@ class ClassController extends AdminAbstractController implements KernelControlle
                 $success = DataObject\ClassDefinition\Service::importObjectBrickFromJson($brick, json_encode($item), true);
 
                 return $this->adminJson(['success' => $success !== false]);
-            } elseif ($type === 'fieldcollection' && $item['key'] == $name) {
+            }
+
+            if ($type === 'fieldcollection' && $item['key'] == $name) {
                 $this->checkPermission('fieldcollections');
                 if (!$fieldCollection = DataObject\Fieldcollection\Definition::getByKey($name)) {
                     $fieldCollection = new DataObject\Fieldcollection\Definition();
@@ -1452,7 +1452,9 @@ class ClassController extends AdminAbstractController implements KernelControlle
                 $success = DataObject\ClassDefinition\Service::importFieldCollectionFromJson($fieldCollection, json_encode($item), true);
 
                 return $this->adminJson(['success' => $success !== false]);
-            } elseif ($type === 'customlayout') {
+            }
+
+            if ($type === 'customlayout') {
                 $this->checkPermission('classes');
                 $layoutData = json_decode(base64_decode($data['name']), true);
                 $className = $layoutData['className'];
@@ -1664,7 +1666,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             foreach ($fieldDefs as $fieldDef) {
                 if ($fieldDef instanceof DataObject\ClassDefinition\Data\Fieldcollections) {
                     $allowedKeys = $fieldDef->getAllowedTypes();
-                    if (is_array($allowedKeys) && in_array($key, $allowedKeys)) {
+                    if (in_array($key, $allowedKeys)) {
                         $result[] = [
                             'class' => $class->getName(),
                             'field' => $fieldDef->getName(),

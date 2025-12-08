@@ -113,6 +113,6 @@ class EmailController extends DocumentControllerBase
         $this->addSettingsToDocument($request, $document);
         $this->addDataToDocument($request, $document);
         $this->addPropertiesToDocument($request, $document);
-        $this->applySchedulerDataToElement($request, $document);
+        $this->applySchedulerDataToElement($request, $document, $this->getAdminUser());
     }
 }

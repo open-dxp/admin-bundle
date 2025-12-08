@@ -91,10 +91,8 @@ class DataObjectHelperController extends AdminAbstractController
         $configListing = $configListing->load();
 
         $configData = [];
-        if (is_array($configListing)) {
-            foreach ($configListing as $config) {
-                $configData[] = $config->getObjectVars();
-            }
+        foreach ($configListing as $config) {
+            $configData[] = $config->getObjectVars();
         }
 
         return $configData;
@@ -126,10 +124,8 @@ class DataObjectHelperController extends AdminAbstractController
         }
 
         $configData = [];
-        if (is_array($configListing)) {
-            foreach ($configListing as $config) {
-                $configData[] = $config->getObjectVars();
-            }
+        foreach ($configListing as $config) {
+            $configData[] = $config->getObjectVars();
         }
 
         return $configData;
@@ -138,13 +134,11 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/get-export-configs', name: 'getexportconfigs', methods: ['GET'])]
     public function getExportConfigsAction(Request $request): JsonResponse
     {
-        $classId = $request->get('classId');
-        $list = $this->getMyOwnGridColumnConfigs($this->getAdminUser()->getId(), $classId);
-        if (!is_array($list)) {
-            $list = [];
-        }
-        $list = array_merge($list, $this->getSharedGridColumnConfigs($this->getAdminUser(), $classId));
         $result = [];
+        $classId = $request->get('classId');
+
+        $list = $this->getMyOwnGridColumnConfigs($this->getAdminUser()->getId(), $classId);
+        $list = array_merge($list, $this->getSharedGridColumnConfigs($this->getAdminUser(), $classId));
 
         $result[] = [
             'id' => -1,
@@ -1047,10 +1041,9 @@ class DataObjectHelperController extends AdminAbstractController
         $key = $keyPrefix . $field->getName();
         $config = null;
         $title = $field->getName();
-        if (method_exists($field, 'getTitle')) {
-            if ($field->getTitle()) {
-                $title = $field->getTitle();
-            }
+
+        if (!empty($field->getTitle())) {
+            $title = $field->getTitle();
         }
 
         if ($field instanceof DataObject\ClassDefinition\Data\Slider) {
@@ -1067,11 +1060,11 @@ class DataObjectHelperController extends AdminAbstractController
         }
 
         $visible = false;
-        if ($gridType == 'search') {
+        if ($gridType === 'search') {
             $visible = $field->getVisibleSearch();
-        } elseif ($gridType == 'grid') {
+        } elseif ($gridType === 'grid') {
             $visible = $field->getVisibleGridView();
-        } elseif ($gridType == 'all') {
+        } elseif ($gridType === 'all') {
             $visible = true;
         }
 
@@ -1101,9 +1094,9 @@ class DataObjectHelperController extends AdminAbstractController
             }
 
             return $result;
-        } else {
-            return null;
         }
+
+        return null;
     }
 
     /**

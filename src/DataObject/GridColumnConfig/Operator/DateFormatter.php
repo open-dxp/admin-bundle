@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use Carbon\Carbon;
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
 
 /**
@@ -34,7 +33,7 @@ final class DateFormatter extends AbstractOperator
         $this->format = ($config->format ? $config->format : null);
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;
@@ -98,7 +97,9 @@ final class DateFormatter extends AbstractOperator
 
         if ($timestamp && $this->format) {
             return date($this->format, $timestamp);
-        } elseif ($theValue instanceof Carbon) {
+        }
+
+        if ($theValue instanceof Carbon) {
             return $theValue->toDateString();
         }
 

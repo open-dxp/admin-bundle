@@ -24,11 +24,9 @@ use OpenDxp\Model\Element\ElementInterface;
  */
 final class Trimmer extends AbstractOperator
 {
-    const LEFT = 1;
-
-    const RIGHT = 2;
-
-    const BOTH = 3;
+    public const int LEFT = 1;
+    public const int RIGHT = 2;
+    public const int BOTH = 3;
 
     private int $trim;
 
@@ -39,7 +37,7 @@ final class Trimmer extends AbstractOperator
         $this->trim = $config->trim ?? 0;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;
@@ -48,38 +46,38 @@ final class Trimmer extends AbstractOperator
 
         if (!$children) {
             return $result;
-        } else {
-            $c = $children[0];
+        }
 
-            $valueArray = [];
+        $c = $children[0];
 
-            $childResult = $c->getLabeledValue($element);
-            $isArrayType = $childResult->isArrayType ?? false;
-            $childValues = $childResult->value ?? null;
-            if ($childValues && !$isArrayType) {
-                $childValues = [$childValues];
-            }
+        $valueArray = [];
 
-            if ($childValues) {
-                /** @var string $childValue */
-                foreach ($childValues as $childValue) {
-                    if ($this->trim == self::LEFT) {
-                        $childValue = ltrim($childValue);
-                    } elseif ($this->trim == self::RIGHT) {
-                        $childValue = rtrim($childValue);
-                    } elseif ($this->trim == self::BOTH) {
-                        $childValue = trim($childValue);
-                    }
-                    $valueArray[] = $childValue;
+        $childResult = $c->getLabeledValue($element);
+        $isArrayType = $childResult->isArrayType ?? false;
+        $childValues = $childResult->value ?? null;
+        if ($childValues && !$isArrayType) {
+            $childValues = [$childValues];
+        }
+
+        if ($childValues) {
+            /** @var string $childValue */
+            foreach ($childValues as $childValue) {
+                if ($this->trim == self::LEFT) {
+                    $childValue = ltrim($childValue);
+                } elseif ($this->trim == self::RIGHT) {
+                    $childValue = rtrim($childValue);
+                } elseif ($this->trim == self::BOTH) {
+                    $childValue = trim($childValue);
                 }
+                $valueArray[] = $childValue;
             }
+        }
 
-            $result->isArrayType = $isArrayType;
-            if ($isArrayType) {
-                $result->value = $valueArray;
-            } else {
-                $result->value = $valueArray[0] ?? null;
-            }
+        $result->isArrayType = $isArrayType;
+        if ($isArrayType) {
+            $result->value = $valueArray;
+        } else {
+            $result->value = $valueArray[0] ?? null;
         }
 
         return $result;
