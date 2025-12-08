@@ -2,13 +2,6 @@
     "name": "open-dxp/admin-bundle",
     "license": "GPL-3.0+",
     "type": "opendxp-bundle",
-    "config": {
-        "sort-packages": true,
-        "preferred-install": {
-            "open-dxp/opendxp": "source",
-            "*": "dist"
-        }
-    },
     "prefer-stable": true,
     "minimum-stability": "dev",
     "require": {
@@ -51,6 +44,17 @@
             "bundles": [
                 "OpenDxp\\Bundle\\AdminBundle\\OpenDxpAdminBundle"
             ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "preferred-install": {
+            "open-dxp/opendxp": "source",
+            "*": "dist"
+        },
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "symfony/runtime": true
         }
     }
 }
