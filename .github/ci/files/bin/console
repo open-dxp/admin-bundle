@@ -26,8 +26,6 @@ define('OPENDXP_CONSOLE', true);
 return static function () {
 
     $kernel = Bootstrap::startupCli();
-    $application = new Application($kernel);
-    $application->run();
 
-    return $application;
+    return new Application($kernel);
 };
