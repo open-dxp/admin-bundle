@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
 
 /**
@@ -33,7 +32,7 @@ final class Anonymizer extends AbstractOperator
         $this->mode = $config->mode ?? '';
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;
@@ -58,7 +57,7 @@ final class Anonymizer extends AbstractOperator
             }
         }
 
-        if (count($children) == 1) {
+        if (count($children) === 1) {
             $result->value = $resultItems[0];
         } else {
             $result->value = $resultItems;

@@ -124,9 +124,9 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $config->save();
 
             return $this->adminJson(['success' => true, 'id' => $config->getName()]);
-        } else {
-            return $this->adminJson(['success' => false, 'id' => $config->getName(), 'message' => 'classificationstore_error_group_exists_msg']);
         }
+
+        return $this->adminJson(['success' => false, 'id' => $config->getName(), 'message' => 'classificationstore_error_group_exists_msg']);
     }
 
     /**
@@ -219,10 +219,8 @@ class ClassificationstoreController extends AdminAbstractController implements K
                 $query = 'select * from classificationstore_collectionrelations where groupId in (' . implode(',', $allowedGroupIds) .')';
                 $relationList = $db->fetchAllAssociative($query);
 
-                if (is_array($relationList)) {
-                    foreach ($relationList as $item) {
-                        $allowedCollectionIds[] = $item['colId'];
-                    }
+                foreach ($relationList as $item) {
+                    $allowedCollectionIds[] = $item['colId'];
                 }
             }
 
@@ -1233,7 +1231,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $config = Classificationstore\KeyConfig::getById($id);
 
             foreach ($data as $key => $value) {
-                if ($key != 'id') {
+                if ($key !== 'id') {
                     $setter = 'set' . $key;
                     if (method_exists($config, $setter)) {
                         $config->$setter($value);

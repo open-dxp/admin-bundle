@@ -33,7 +33,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     #[Route('/recyclebin/list', name: 'opendxp_admin_recyclebin_list', methods: ['POST'])]
     public function listAction(Request $request): JsonResponse
     {
-        if ($request->get('xaction') == 'destroy') {
+        if ($request->get('xaction') === 'destroy') {
             $item = Recyclebin\Item::getById(\OpenDxp\Bundle\AdminBundle\Helper\QueryParams::getRecordIdForGridRequest($request->get('data')));
 
             if ($item) {
@@ -41,99 +41,98 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
             }
 
             return $this->adminJson(['success' => true, 'data' => []]);
-        } else {
-            $db = \OpenDxp\Db::get();
-
-            $list = new Recyclebin\Item\Listing();
-            $list->setLimit((int) $request->get('limit', 50));
-            $list->setOffset((int) $request->get('start', 0));
-
-            $list->setOrderKey('date');
-            $list->setOrder('DESC');
-
-            $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings(array_merge($request->request->all(), $request->query->all()));
-            if ($sortingSettings['orderKey']) {
-                $list->setOrderKey($sortingSettings['orderKey']);
-                $list->setOrder($sortingSettings['order']);
-            }
-
-            $conditionFilters = [];
-
-            if ($request->get('filterFullText')) {
-                $conditionFilters[] = '`path` LIKE ' . $list->quote('%'. $list->escapeLike($request->get('filterFullText')) .'%');
-            }
-
-            $filters = $request->get('filter');
-            if ($filters) {
-                $filters = $this->decodeJson($filters);
-
-                foreach ($filters as $filter) {
-                    $operator = '=';
-
-                    $filterField = $filter['property'];
-                    $filterOperator = $filter['operator'];
-
-                    if ($filter['type'] == 'string') {
-                        $operator = 'LIKE';
-                    } elseif ($filter['type'] == 'numeric') {
-                        if ($filterOperator == 'lt') {
-                            $operator = '<';
-                        } elseif ($filterOperator == 'gt') {
-                            $operator = '>';
-                        } elseif ($filterOperator == 'eq') {
-                            $operator = '=';
-                        }
-                    } elseif ($filter['type'] == 'date') {
-                        if ($filterOperator == 'lt') {
-                            $operator = '<';
-                        } elseif ($filterOperator == 'gt') {
-                            $operator = '>';
-                        } elseif ($filterOperator == 'eq') {
-                            $operator = '=';
-                        }
-                        $filter['value'] = strtotime($filter['value']);
-                    } elseif ($filter['type'] == 'list') {
-                        $operator = '=';
-                    } elseif ($filter['type'] == 'boolean') {
-                        $operator = '=';
-                        $filter['value'] = (int) $filter['value'];
-                    }
-                    // system field
-                    $value = ($filter['value'] ?? '');
-                    if ($operator == 'LIKE') {
-                        $value = '%' . $value . '%';
-                    }
-
-                    $field = $db->quoteIdentifier($filterField);
-                    if (($filter['field'] ?? false) == 'fullpath') {
-                        $field = 'CONCAT(`path`,filename)';
-                    }
-
-                    if ($filter['type'] == 'date' && $operator == '=') {
-                        $maxTime = $value + (86400 - 1); //specifies the top point of the range used in the condition
-                        $condition = $field . ' BETWEEN ' . $db->quote($value) . ' AND ' . $db->quote($maxTime);
-                        $conditionFilters[] = $condition;
-                    } else {
-                        $conditionFilters[] = $field . $operator . ' ' . $db->quote($value);
-                    }
-                }
-            }
-
-            if (!empty($conditionFilters)) {
-                $condition = implode(' AND ', $conditionFilters);
-                $list->setCondition($condition);
-            }
-
-            $items = $list->load();
-            $data = [];
-            if (is_array($items)) {
-                foreach ($items as $item) {
-                    $data[] = $item->getObjectVars();
-                }
-            }
-
-            return $this->adminJson(['data' => $data, 'success' => true, 'total' => $list->getTotalCount()]);
         }
+
+        $db = \OpenDxp\Db::get();
+
+        $list = new Recyclebin\Item\Listing();
+        $list->setLimit((int) $request->get('limit', 50));
+        $list->setOffset((int) $request->get('start', 0));
+
+        $list->setOrderKey('date');
+        $list->setOrder('DESC');
+
+        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings(array_merge($request->request->all(), $request->query->all()));
+        if ($sortingSettings['orderKey']) {
+            $list->setOrderKey($sortingSettings['orderKey']);
+            $list->setOrder($sortingSettings['order']);
+        }
+
+        $conditionFilters = [];
+
+        if ($request->get('filterFullText')) {
+            $conditionFilters[] = '`path` LIKE ' . $list->quote('%'. $list->escapeLike($request->get('filterFullText')) .'%');
+        }
+
+        $filters = $request->get('filter');
+        if ($filters) {
+            $filters = $this->decodeJson($filters);
+
+            foreach ($filters as $filter) {
+                $operator = '=';
+
+                $filterField = $filter['property'];
+                $filterOperator = $filter['operator'];
+
+                if ($filter['type'] === 'string') {
+                    $operator = 'LIKE';
+                } elseif ($filter['type'] === 'numeric') {
+                    if ($filterOperator === 'lt') {
+                        $operator = '<';
+                    } elseif ($filterOperator === 'gt') {
+                        $operator = '>';
+                    } elseif ($filterOperator === 'eq') {
+                        $operator = '=';
+                    }
+                } elseif ($filter['type'] === 'date') {
+                    if ($filterOperator === 'lt') {
+                        $operator = '<';
+                    } elseif ($filterOperator === 'gt') {
+                        $operator = '>';
+                    } elseif ($filterOperator === 'eq') {
+                        $operator = '=';
+                    }
+                    $filter['value'] = strtotime($filter['value']);
+                } elseif ($filter['type'] === 'list') {
+                    $operator = '=';
+                } elseif ($filter['type'] === 'boolean') {
+                    $operator = '=';
+                    $filter['value'] = (int) $filter['value'];
+                }
+                // system field
+                $value = ($filter['value'] ?? '');
+                if ($operator === 'LIKE') {
+                    $value = '%' . $value . '%';
+                }
+
+                $field = $db->quoteIdentifier($filterField);
+                if (($filter['field'] ?? false) === 'fullpath') {
+                    $field = 'CONCAT(`path`,filename)';
+                }
+
+                if ($filter['type'] === 'date' && $operator === '=') {
+                    $maxTime = $value + (86400 - 1); //specifies the top point of the range used in the condition
+                    $condition = $field . ' BETWEEN ' . $db->quote($value) . ' AND ' . $db->quote($maxTime);
+                    $conditionFilters[] = $condition;
+                } else {
+                    $conditionFilters[] = $field . $operator . ' ' . $db->quote($value);
+                }
+            }
+        }
+
+        if (!empty($conditionFilters)) {
+            $condition = implode(' AND ', $conditionFilters);
+            $list->setCondition($condition);
+        }
+
+        $items = $list->load();
+        $data = [];
+        foreach ($items as $item) {
+            $data[] = $item->getObjectVars();
+        }
+
+        return $this->adminJson(['data' => $data, 'success' => true, 'total' => $list->getTotalCount()]);
+
     }
 
     #[Route('/recyclebin/restore', name: 'opendxp_admin_recyclebin_restore', methods: ['POST'])]

@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
 
 /**
@@ -33,7 +32,7 @@ final class CaseConverter extends AbstractOperator
         $this->capitalization = $config->capitalization ?? 0;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;
@@ -42,38 +41,38 @@ final class CaseConverter extends AbstractOperator
 
         if (!$children) {
             return $result;
-        } else {
-            $c = $children[0];
+        }
 
-            $valueArray = [];
+        $c = $children[0];
 
-            $childResult = $c->getLabeledValue($element);
+        $valueArray = [];
 
-            $childValues = $childResult->value ?? null;
-            $isArrayType = is_array($childValues);
+        $childResult = $c->getLabeledValue($element);
 
-            if ($childValues && !is_array($childValues)) {
-                $childValues = [$childValues];
-            }
+        $childValues = $childResult->value ?? null;
+        $isArrayType = is_array($childValues);
 
-            if (is_array($childValues)) {
-                foreach ($childValues as $childValue) {
-                    if ($this->capitalization == 1) {
-                        $childValue = strtoupper($childValue);
-                    } elseif ($this->capitalization == -1) {
-                        $childValue = strtolower($childValue);
-                    }
-                    $valueArray[] = $childValue;
+        if ($childValues && !is_array($childValues)) {
+            $childValues = [$childValues];
+        }
+
+        if (is_array($childValues)) {
+            foreach ($childValues as $childValue) {
+                if ($this->capitalization === 1) {
+                    $childValue = strtoupper($childValue);
+                } elseif ($this->capitalization === -1) {
+                    $childValue = strtolower($childValue);
                 }
-            } else {
-                $valueArray[] = null;
+                $valueArray[] = $childValue;
             }
+        } else {
+            $valueArray[] = null;
+        }
 
-            if ($isArrayType) {
-                $result->value = $valueArray;
-            } else {
-                $result->value = $valueArray[0];
-            }
+        if ($isArrayType) {
+            $result->value = $valueArray;
+        } else {
+            $result->value = $valueArray[0];
         }
 
         return $result;

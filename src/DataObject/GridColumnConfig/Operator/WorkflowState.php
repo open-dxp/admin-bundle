@@ -28,7 +28,7 @@ final class WorkflowState extends AbstractOperator
 {
     private StatusInfo $statusInfo;
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;

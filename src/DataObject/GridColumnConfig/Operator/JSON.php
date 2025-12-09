@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
 
 /**
@@ -33,7 +32,7 @@ final class JSON extends AbstractOperator
         $this->mode = $config->mode ?? '';
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;
@@ -42,33 +41,33 @@ final class JSON extends AbstractOperator
 
         if (!$children) {
             return $result;
+        }
+
+        $c = $children[0];
+
+        $valueArray = [];
+
+        $childResult = $c->getLabeledValue($element);
+
+        $childValues = $childResult->value;
+        $isArrayType = is_array($childValues);
+
+        if ($childValues && !is_array($childValues)) {
+            $childValues = [$childValues];
+        }
+
+        if (is_array($childValues)) {
+            foreach ($childValues as $childValue) {
+                $valueArray[] = $childValue;
+            }
         } else {
-            $c = $children[0];
+            $valueArray[] = null;
+        }
 
-            $valueArray = [];
-
-            $childResult = $c->getLabeledValue($element);
-
-            $childValues = $childResult->value;
-            $isArrayType = is_array($childValues);
-
-            if ($childValues && !is_array($childValues)) {
-                $childValues = [$childValues];
-            }
-
-            if (is_array($childValues)) {
-                foreach ($childValues as $childValue) {
-                    $valueArray[] = $childValue;
-                }
-            } else {
-                $valueArray[] = null;
-            }
-
-            if ($isArrayType) {
-                $result->value = $valueArray;
-            } else {
-                $result->value = $valueArray[0];
-            }
+        if ($isArrayType) {
+            $result->value = $valueArray;
+        } else {
+            $result->value = $valueArray[0];
         }
 
         if ($this->mode === 'e') {

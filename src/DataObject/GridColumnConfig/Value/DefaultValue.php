@@ -161,7 +161,7 @@ final class DefaultValue extends AbstractValue
         return $result;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): ?\stdClass
     {
         $attributeParts = explode('~', $this->attribute);
 
@@ -188,7 +188,7 @@ final class DefaultValue extends AbstractValue
             if ($element instanceof Concrete) {
                 try {
                     $result = $this->getValueForObject($element, $this->attribute, $brickType, $brickKey);
-                } catch (\Exception $e) {
+                } catch (\Exception) {
                     $result = $this->getDefaultValue($element->$getter());
                 }
             } else {

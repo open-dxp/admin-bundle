@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Db;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Element\Service;
@@ -38,7 +37,7 @@ final class RequiredBy extends AbstractOperator
         $this->onlyCount = $config->onlyCount ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;

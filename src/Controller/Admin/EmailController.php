@@ -55,7 +55,7 @@ class EmailController extends AdminAbstractController
 
         if ($request->get('filter')) {
             $filterTerm = $request->get('filter');
-            if ($filterTerm == '*') {
+            if ($filterTerm === '*') {
                 $filterTerm = '';
             }
 
@@ -64,7 +64,7 @@ class EmailController extends AdminAbstractController
 
             if (strpos($filterTerm, '@')) {
                 $parts = explode(' ', $filterTerm);
-                $parts = array_map(function ($part) {
+                $parts = array_map(static function ($part) {
                     if (strpos($part, '@')) {
                         $part = '"' . $part . '"';
                     }
@@ -92,13 +92,10 @@ class EmailController extends AdminAbstractController
         $data = $list->load();
         $jsonData = [];
 
-        if (is_array($data)) {
-            foreach ($data as $entry) {
-                $tmp = $entry->getObjectVars();
-                unset($tmp['bodyHtml']);
-                unset($tmp['bodyText']);
-                $jsonData[] = $tmp;
-            }
+        foreach ($data as $entry) {
+            $tmp = $entry->getObjectVars();
+            unset($tmp['bodyHtml'], $tmp['bodyText']);
+            $jsonData[] = $tmp;
         }
 
         return $this->adminJson([
@@ -131,11 +128,15 @@ class EmailController extends AdminAbstractController
 
         if ($type === 'text') {
             return $this->render('@OpenDxpAdmin/admin/email/text.html.twig', ['log' => $emailLog->getTextLog()]);
-        } elseif ($type === 'html') {
+        }
+
+        if ($type === 'html') {
             return new Response($emailLog->getHtmlLog(), 200, [
                 'Content-Security-Policy' => "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:",
             ]);
-        } elseif ($type === 'params') {
+        }
+
+        if ($type === 'params') {
             try {
                 $params = $emailLog->getParams();
             } catch (\Exception $e) {
@@ -147,17 +148,24 @@ class EmailController extends AdminAbstractController
             }
 
             return $this->adminJson($params);
-        } elseif ($type === 'details') {
+        }
+
+        if ($type === 'details') {
             $data = $emailLog->getObjectVars();
 
             return $this->adminJson($data);
-        } else {
-            return new Response('No Type specified');
         }
+
+        return new Response('No Type specified');
+
     }
 
-    protected function enhanceLoggingData(array &$data, ?array &$fullEntry = null): void
+    protected function enhanceLoggingData(?array &$data, ?array &$fullEntry = null): void
     {
+        if (!is_array($data)) {
+            return;
+        }
+
         if (!empty($data['objectClass'])) {
             $class = '\\' . ltrim($data['objectClass'], '\\');
             $reflection = new \ReflectionClass($class);
@@ -169,14 +177,15 @@ class EmailController extends AdminAbstractController
                 } else {
                     $data['objectPath'] = $obj->getRealFullPath();
                 }
+
                 //check for classmapping
                 if (stristr($class, '\\OpenDxp\\Model') === false) {
                     $niceClassName = '\\' . ltrim($reflection->getParentClass()->getName(), '\\');
                 } else {
                     $niceClassName = $class;
                 }
-                $niceClassName = str_replace('\\OpenDxp\\Model\\', '', $niceClassName);
-                $niceClassName = str_replace('_', '\\', $niceClassName);
+
+                $niceClassName = str_replace(['\\OpenDxp\\Model\\', '_'], ['', '\\'], $niceClassName);
 
                 $tmp = explode('\\', $niceClassName);
                 if (in_array($tmp[0], ['DataObject', 'Document', 'Asset'])) {
@@ -187,10 +196,16 @@ class EmailController extends AdminAbstractController
         }
 
         foreach ($data as &$value) {
-            if (is_array($value)) {
-                $this->enhanceLoggingData($value, $data);
+
+            if (!is_array($value)) {
+                continue;
             }
+
+            $this->enhanceLoggingData($value, $data);
         }
+
+        unset($value);
+
         if ($data['children'] ?? false) {
             foreach ($data['children'] as $key => $entry) {
                 if (is_string($key)) { //key must be integers
@@ -202,9 +217,9 @@ class EmailController extends AdminAbstractController
         } else {
             //setting the icon class
             if (empty($data['iconCls'])) {
-                if (($data['objectClassBase'] ?? '') == 'DataObject') {
+                if (($data['objectClassBase'] ?? '') === 'DataObject') {
                     $fullEntry['iconCls'] = 'opendxp_icon_object';
-                } elseif (($data['objectClassBase'] ?? '') == 'Asset') {
+                } elseif (($data['objectClassBase'] ?? '') === 'Asset') {
                     switch ($data['objectClassSubType']) {
                         case 'Image':
                             $fullEntry['iconCls'] = 'opendxp_icon_image';
@@ -363,11 +378,11 @@ class EmailController extends AdminAbstractController
 
         $mail = new Mail();
 
-        if ($request->get('emailType') == 'text') {
+        if ($request->get('emailType') === 'text') {
             $mail->text(strip_tags($request->get('content')));
-        } elseif ($request->get('emailType') == 'html') {
+        } elseif ($request->get('emailType') === 'html') {
             $mail->html($request->get('content'));
-        } elseif ($request->get('emailType') == 'document') {
+        } elseif ($request->get('emailType') === 'document') {
             $doc = \OpenDxp\Model\Document::getByPath($request->get('documentPath'));
 
             if ($doc instanceof \OpenDxp\Model\Document\Email) {
@@ -436,18 +451,22 @@ class EmailController extends AdminAbstractController
                 }
             }
 
-            if ($request->get('xaction') == 'destroy') {
+            if ($request->get('xaction') === 'destroy') {
                 $address = Tool\Email\Blocklist::getByAddress($data['address']);
                 $address->delete();
 
                 return $this->adminJson(['success' => true, 'data' => []]);
-            } elseif ($request->get('xaction') == 'update') {
+            }
+
+            if ($request->get('xaction') === 'update') {
                 $address = Tool\Email\Blocklist::getByAddress($data['address']);
                 $address->setValues($data);
                 $address->save();
 
                 return $this->adminJson(['data' => $address->getObjectVars(), 'success' => true]);
-            } elseif ($request->get('xaction') == 'create') {
+            }
+
+            if ($request->get('xaction') === 'create') {
                 unset($data['id']);
 
                 $address = new Tool\Email\Blocklist();
@@ -478,10 +497,8 @@ class EmailController extends AdminAbstractController
 
             $data = $list->load();
             $jsonData = [];
-            if (is_array($data)) {
-                foreach ($data as $entry) {
-                    $jsonData[] = $entry->getObjectVars();
-                }
+            foreach ($data as $entry) {
+                $jsonData[] = $entry->getObjectVars();
             }
 
             return $this->adminJson([

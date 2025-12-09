@@ -36,7 +36,7 @@ final class StringContains extends AbstractOperator
         $this->insensitive = $config->insensitive ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;
@@ -86,11 +86,12 @@ final class StringContains extends AbstractOperator
         if (empty($needle)) {
             return false;
         }
+
         if ($this->getInsensitive()) {
             return stripos($value, $this->getSearch()) !== false;
-        } else {
-            return strpos($value, $this->getSearch()) !== false;
         }
+
+        return str_contains($value, $this->getSearch());
     }
 
     public function getSearch(): string

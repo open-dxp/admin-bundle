@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
 
 /**
@@ -24,11 +23,12 @@ use OpenDxp\Model\Element\ElementInterface;
  */
 final class Iterator extends AbstractOperator
 {
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \stdClass
     {
         $result = new \stdClass();
         $result->label = $this->label;
         $result->value = [];
+
         if (!is_array($element)) {
             return $result;
         }
@@ -37,19 +37,18 @@ final class Iterator extends AbstractOperator
 
         if (!$children) {
             return $result;
-        } else {
-            $c = $children[0];
-
-            $valueArray = [];
-
-            foreach ($element as $element) {
-                $childResult = $c->getLabeledValue($element);
-
-                $valueArray[] = $childResult->value ? $childResult->value : null;
-            }
-
-            $result->value = $valueArray;
         }
+
+        $c = $children[0];
+
+        $valueArray = [];
+
+        foreach ($element as $subElement) {
+            $childResult = $c->getLabeledValue($subElement);
+            $valueArray[] = $childResult !== null && $childResult->value ? $childResult->value : null;
+        }
+
+        $result->value = $valueArray;
 
         return $result;
     }

@@ -57,11 +57,9 @@ class UserController extends AdminAbstractController implements KernelController
         $list->load();
 
         $users = [];
-        if (is_array($list->getUsers())) {
-            foreach ($list->getUsers() as $user) {
-                if ($user->getId() && $user->getName() != 'system') {
-                    $users[] = $this->getTreeNodeConfig($user);
-                }
+        foreach ($list->getUsers() as $user) {
+            if ($user->getId() && $user->getName() !== 'system') {
+                $users[] = $this->getTreeNodeConfig($user);
             }
         }
 
@@ -123,7 +121,7 @@ class UserController extends AdminAbstractController implements KernelController
                 $rid = (int)$request->get('rid');
                 $rObject = $className::getById($rid);
                 if ($rObject) {
-                    if ($type == 'user' || $type == 'role') {
+                    if ($type === 'user' || $type === 'role') {
                         $user->setParentId($rObject->getParentId());
                         if ($rObject->getClasses()) {
                             $user->setClasses(implode(',', $rObject->getClasses()));
@@ -142,7 +140,7 @@ class UserController extends AdminAbstractController implements KernelController
                                 /** @var User\Workspace\AbstractWorkspace $workspace */
                                 foreach ($workspaces as $workspace) {
                                     $vars = $workspace->getObjectVars();
-                                    if ($key == 'object') {
+                                    if ($key === 'object') {
                                         $workspaceClass = '\\OpenDxp\\Model\\User\\Workspace\\DataObject';
                                     } else {
                                         $workspaceClass = '\\OpenDxp\\Model\\User\\Workspace\\' . ucfirst($key);
@@ -162,7 +160,7 @@ class UserController extends AdminAbstractController implements KernelController
                         $user->setPerspectives($rObject->getPerspectives());
                         $user->setPermissions($rObject->getPermissions());
 
-                        if ($type == 'user') {
+                        if ($type === 'user') {
                             $user->setAdmin(false);
                             if ($this->getAdminUser()->isAdmin()) {
                                 $user->setAdmin($rObject->getAdmin());
@@ -205,15 +203,14 @@ class UserController extends AdminAbstractController implements KernelController
         $list->load();
 
         $childList = $roleMode ? $list->getRoles() : $list->getUsers();
-        if (is_array($childList)) {
-            foreach ($childList as $user) {
-                if ($user->getId() == $currentUser->getId()) {
-                    throw new \Exception('Cannot delete current user');
-                }
-                if ($user->getId() && $currentUser->getId() && $user->getName() != 'system') {
-                    $currentList[] = $user;
-                    $this->populateChildNodes($user, $currentList, $roleMode);
-                }
+
+        foreach ($childList as $user) {
+            if ($user->getId() === $currentUser->getId()) {
+                throw new \Exception('Cannot delete current user');
+            }
+            if ($user->getId() && $currentUser->getId() && $user->getName() !== 'system') {
+                $currentList[] = $user;
+                $this->populateChildNodes($user, $currentList, $roleMode);
             }
         }
 
@@ -232,20 +229,20 @@ class UserController extends AdminAbstractController implements KernelController
         // because a folder might contain an admin user, so it is simply not allowed for users with the "users" permission
         if (($user instanceof User\Folder && !$this->getAdminUser()->isAdmin()) || ($user instanceof User && $user->isAdmin() && !$this->getAdminUser()->isAdmin())) {
             throw new \Exception('You are not allowed to delete this user');
+        }
+
+        if ($user instanceof User\Role\Folder) {
+            $list = [$user];
+            $this->populateChildNodes($user, $list, true);
+            $listCount = count($list);
+            for ($i = $listCount - 1; $i >= 0; $i--) {
+                // iterate over the list from the so that nothing can get "lost"
+                $user = $list[$i];
+                $user->delete();
+            }
         } else {
-            if ($user instanceof User\Role\Folder) {
-                $list = [$user];
-                $this->populateChildNodes($user, $list, $user instanceof User\Role\Folder);
-                $listCount = count($list);
-                for ($i = $listCount - 1; $i >= 0; $i--) {
-                    // iterate over the list from the so that nothing can get "lost"
-                    $user = $list[$i];
-                    $user->delete();
-                }
-            } else {
-                if ($user->getId()) {
-                    $user->delete();
-                }
+            if ($user->getId()) {
+                $user->delete();
             }
         }
 
@@ -282,10 +279,8 @@ class UserController extends AdminAbstractController implements KernelController
 
             // check if there are permissions transmitted, if so reset them all to false (they will be set later)
             foreach ($values as $key => $value) {
-                if (strpos($key, 'permission_') === 0) {
-                    if (method_exists($user, 'setAllAclToFalse')) {
-                        $user->setAllAclToFalse();
-                    }
+                if (str_starts_with($key, 'permission_')) {
+                    $user->setAllAclToFalse();
 
                     break;
                 }
@@ -420,10 +415,8 @@ class UserController extends AdminAbstractController implements KernelController
         $availableUserPermissions = $availableUserPermissionsList->load();
 
         $availableUserPermissionsData = [];
-        if (is_array($availableUserPermissions)) {
-            foreach ($availableUserPermissions as $availableUserPermission) {
-                $availableUserPermissionsData[] = $availableUserPermission->getObjectVars();
-            }
+        foreach ($availableUserPermissions as $availableUserPermission) {
+            $availableUserPermissionsData[] = $availableUserPermission->getObjectVars();
         }
 
         // get available roles
@@ -432,10 +425,8 @@ class UserController extends AdminAbstractController implements KernelController
         $list->load();
 
         $roles = [];
-        if (is_array($list->getItems())) {
-            foreach ($list->getItems() as $role) {
-                $roles[] = [$role->getId(), $role->getName()];
-            }
+        foreach ($list->getItems() as $role) {
+            $roles[] = [$role->getId(), $role->getName()];
         }
 
         // unset confidential informations
@@ -445,8 +436,7 @@ class UserController extends AdminAbstractController implements KernelController
         $contentLanguages = Tool\Admin::reorderWebsiteLanguages($user, Tool::getValidLanguages());
         $userData['contentLanguages'] = $contentLanguages;
         $userData['twoFactorAuthentication']['isActive'] = ($user->getTwoFactorAuthentication('enabled') || $user->getTwoFactorAuthentication('secret'));
-        unset($userData['password']);
-        unset($userData['twoFactorAuthentication']['secret']);
+        unset($userData['password'], $userData['twoFactorAuthentication']['secret']);
         $userData['hasImage'] = $user->hasImage();
 
         $availablePerspectives = Config::getAvailablePerspectives(null);
@@ -493,14 +483,13 @@ class UserController extends AdminAbstractController implements KernelController
         if ($user != null) {
             if ($user->getId() == $request->get('id')) {
                 return $this->uploadImageAction($request);
-            } else {
-                Logger::warn('prevented save current user, because ids do not match. ');
-
-                return $this->adminJson(false);
             }
-        } else {
+            Logger::warn('prevented save current user, because ids do not match. ');
+
             return $this->adminJson(false);
         }
+
+        return $this->adminJson(false);
     }
 
     #[Route('/user/update-current-user', name: 'opendxp_admin_user_updatecurrentuser', methods: ['PUT'])]
@@ -521,12 +510,7 @@ class UserController extends AdminAbstractController implements KernelController
             if ($user->getId() == $request->get('id')) {
                 $values = $this->decodeJson($request->get('data'), true);
 
-                unset($values['name']);
-                unset($values['id']);
-                unset($values['admin']);
-                unset($values['permissions']);
-                unset($values['roles']);
-                unset($values['active']);
+                unset($values['name'], $values['id'], $values['admin'], $values['permissions'], $values['roles'], $values['active']);
 
                 if (!empty($values['new_password'])) {
                     $oldPasswordCheck = false;
@@ -635,10 +619,8 @@ class UserController extends AdminAbstractController implements KernelController
         $list->load();
 
         $roles = [];
-        if (is_array($list->getItems())) {
-            foreach ($list->getItems() as $role) {
-                $roles[] = $this->getRoleTreeNodeConfig($role);
-            }
+        foreach ($list->getItems() as $role) {
+            $roles[] = $this->getRoleTreeNodeConfig($role);
         }
 
         return $this->adminJson($roles);
@@ -701,7 +683,7 @@ class UserController extends AdminAbstractController implements KernelController
             $role->{'setWorkspaces' . ucfirst($type)}($workspaces);
         }
 
-        $replaceFn = function ($value) {
+        $replaceFn = static function ($value) {
             return $value->getObjectVars();
         };
 
@@ -906,17 +888,15 @@ class UserController extends AdminAbstractController implements KernelController
         $list->load();
 
         $users = [];
-        if (is_array($list->getUsers())) {
-            foreach ($list->getUsers() as $user) {
-                if ($user instanceof User && $user->getId() && $user->getName() != 'system') {
-                    $users[] = [
-                        'id' => $user->getId(),
-                        'name' => $user->getName(),
-                        'email' => $user->getEmail(),
-                        'firstname' => $user->getFirstname(),
-                        'lastname' => $user->getLastname(),
-                    ];
-                }
+        foreach ($list->getUsers() as $user) {
+            if ($user->getId() && $user->getName() !== 'system') {
+                $users[] = [
+                    'id' => $user->getId(),
+                    'name' => $user->getName(),
+                    'email' => $user->getEmail(),
+                    'firstname' => $user->getFirstname(),
+                    'lastname' => $user->getLastname(),
+                ];
             }
         }
 

@@ -325,14 +325,16 @@ class TranslationController extends AdminAbstractController
         if ($request->get('data')) {
             $data = $this->decodeJson($request->get('data'));
 
-            if ($request->get('xaction') == 'destroy') {
+            if ($request->get('xaction') === 'destroy') {
                 $t = Translation::getByKey($data['key'], $domain);
                 if ($t instanceof Translation) {
                     $t->delete();
                 }
 
                 return $this->adminJson(['success' => true, 'data' => []]);
-            } elseif ($request->get('xaction') == 'update') {
+            }
+
+            if ($request->get('xaction') === 'update') {
                 $t = Translation::getByKey($data['key'], $domain);
 
                 foreach ($data as $key => $value) {
@@ -363,7 +365,9 @@ class TranslationController extends AdminAbstractController
                 );
 
                 return $this->adminJson(['data' => $return, 'success' => true]);
-            } elseif ($request->get('xaction') == 'create') {
+            }
+
+            if ($request->get('xaction') === 'create') {
                 $t = Translation::getByKey($data['key'], $domain);
                 if ($t) {
                     return $this->adminJson([
@@ -476,10 +480,6 @@ class TranslationController extends AdminAbstractController
 
     protected function prefixTranslations(array $translations): array
     {
-        if (!is_array($translations)) {
-            return $translations;
-        }
-
         $prefixedTranslations = [];
         foreach ($translations as $lang => $trans) {
             $prefixedTranslations['_' . $lang] = $trans;
