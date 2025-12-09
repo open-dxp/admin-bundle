@@ -9,7 +9,6 @@ Thumbs.db
 # PHP-CS-Fixer
 /.php_cs
 /.php-cs-fixer.cache
-.php-cs-fixer-global.php
 
 # composer
 /composer.lock
