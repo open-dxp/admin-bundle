@@ -20,6 +20,7 @@ use Doctrine\DBAL\Connection;
 use Exception;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
+use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\IndexActionSettingsEvent;
@@ -55,6 +56,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Throwable;
 
 /**
  * @internal
@@ -69,7 +71,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/', name: 'opendxp_admin_index', methods: ['GET'])]
     public function indexAction(
@@ -126,7 +128,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
 
         try {
             $mysqlVersion = $db->fetchOne('SELECT VERSION()');
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $mysqlVersion = null;
         }
 
@@ -140,7 +142,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
                 'db_version'    => $mysqlVersion,
                 'bundles'       => array_keys($kernel->getBundles()),
             ];
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $data = [];
         }
 
@@ -218,9 +220,9 @@ class IndexController extends AdminAbstractController implements KernelResponseE
             'instanceId'          => $this->getInstanceId(),
             'version'             => Version::getVersion(),
             'build'               => Version::getRevision(),
-            'debug'               => \OpenDxp::inDebugMode(),
-            'devmode'             => \OpenDxp::inDevMode(),
-            'disableMinifyJs'     => \OpenDxp::disableMinifyJs(),
+            'debug'               => OpenDxp::inDebugMode(),
+            'devmode'             => OpenDxp::inDevMode(),
+            'disableMinifyJs'     => OpenDxp::disableMinifyJs(),
             'environment'         => $kernel->getEnvironment(),
             'sessionId'           => htmlentities($request->getSession()->getId(), ENT_QUOTES, 'UTF-8'),
 
@@ -281,7 +283,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
             // document types
             'document_types_configuration' => Document::getTypesConfiguration(),
             'document_search_types' => Document::getTypes(),
-            'document_valid_types' => array_values(array_filter(Document::getTypes(), fn($type) => $type !== 'folder')),
+            'document_valid_types' => array_values(array_filter(Document::getTypes(), fn ($type) => $type !== 'folder')),
             // email search compatible document types
             'document_email_search_types' => $config['documents']['email_search'],
             'select_options_provider_class' => SelectOptionsOptionsProvider::class,
@@ -308,7 +310,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
         try {
             $instanceId = $this->getParameter('secret');
             $instanceId = sha1(substr($instanceId, 3, -3));
-        } catch (\Exception) {
+        } catch (Exception) {
             // nothing to do
         }
 
@@ -358,7 +360,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
         //mail settings
         $mailIncomplete = false;
         if (isset($config['email']) && $systemSettings['email']) {
-            if (\OpenDxp::inDebugMode() && empty($systemSettings['email']['debug']['email_addresses'])) {
+            if (OpenDxp::inDebugMode() && empty($systemSettings['email']['debug']['email_addresses'])) {
                 $mailIncomplete = true;
             }
             if (empty($config['email']['sender']['email'])) {

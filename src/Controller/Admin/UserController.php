@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Helper\User as UserHelper;
 use OpenDxp\Bundle\AdminBundle\Perspective\Config;
@@ -177,13 +178,13 @@ class UserController extends AdminAbstractController implements KernelController
                 'success' => true,
                 'id' => $user->getId(),
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function populateChildNodes(User\AbstractUser $node, array &$currentList, bool $roleMode): array
     {
@@ -199,7 +200,7 @@ class UserController extends AdminAbstractController implements KernelController
 
         foreach ($childList as $user) {
             if ($user->getId() === $currentUser->getId()) {
-                throw new \Exception('Cannot delete current user');
+                throw new Exception('Cannot delete current user');
             }
             if ($user->getId() && $currentUser->getId() && $user->getName() !== 'system') {
                 $currentList[] = $user;
@@ -211,7 +212,7 @@ class UserController extends AdminAbstractController implements KernelController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/user/delete', name: 'opendxp_admin_user_delete', methods: ['DELETE'])]
     public function deleteAction(Request $request): JsonResponse
@@ -221,7 +222,7 @@ class UserController extends AdminAbstractController implements KernelController
         // only admins are allowed to delete admins and folders
         // because a folder might contain an admin user, so it is simply not allowed for users with the "users" permission
         if (($user instanceof User\Folder && !$this->getAdminUser()->isAdmin()) || ($user instanceof User && $user->isAdmin() && !$this->getAdminUser()->isAdmin())) {
-            throw new \Exception('You are not allowed to delete this user');
+            throw new Exception('You are not allowed to delete this user');
         }
 
         if ($user instanceof User\Role\Folder) {
@@ -241,7 +242,7 @@ class UserController extends AdminAbstractController implements KernelController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/user/update', name: 'opendxp_admin_user_update', methods: ['PUT'])]
     public function updateAction(Request $request, TranslatorInterface $translator): JsonResponse
@@ -263,7 +264,7 @@ class UserController extends AdminAbstractController implements KernelController
 
             if (!empty($values['password'])) {
                 if (strlen($values['password']) < 10) {
-                    throw new \Exception('Passwords have to be at least 10 characters long');
+                    throw new Exception('Passwords have to be at least 10 characters long');
                 }
                 $values['password'] = Tool\Authentication::getPasswordHash($user->getName(), $values['password']);
             }
@@ -307,7 +308,7 @@ class UserController extends AdminAbstractController implements KernelController
                     $newWorkspaces = [];
                     foreach ($spaces as $space) {
                         if (in_array($space['path'], $processedPaths[$type])) {
-                            throw new \Exception('Error saving workspaces as multiple entries found for path "' . $space['path'] .'" in '.$translator->trans((string)$type, [], 'admin') . 's');
+                            throw new Exception('Error saving workspaces as multiple entries found for path "' . $space['path'] .'" in '.$translator->trans((string)$type, [], 'admin') . 's');
                         }
 
                         $element = Element\Service::getElementByPath($type, $space['path']);
@@ -347,7 +348,7 @@ class UserController extends AdminAbstractController implements KernelController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/user/get', name: 'opendxp_admin_user_get', methods: ['GET'])]
     public function getAction(Request $request): JsonResponse
@@ -489,7 +490,7 @@ class UserController extends AdminAbstractController implements KernelController
         //TODO Can be completely validated with Symfony Validator
         $user = $this->getAdminUser();
 
-        $isPasswordReset = Tool\Session::useBag($request->getSession(), fn(AttributeBagInterface $adminSession) => (bool) $adminSession->get('password_reset'));
+        $isPasswordReset = Tool\Session::useBag($request->getSession(), fn (AttributeBagInterface $adminSession) => (bool) $adminSession->get('password_reset'));
 
         if ($user != null) {
             if ($user->getId() == $request->get('id')) {
@@ -512,13 +513,13 @@ class UserController extends AdminAbstractController implements KernelController
                     }
 
                     if (strlen($values['new_password']) < 10) {
-                        throw new \Exception('Passwords have to be at least 10 characters long');
+                        throw new Exception('Passwords have to be at least 10 characters long');
                     }
 
                     if ($oldPasswordCheck && $values['new_password'] == $values['retype_password']) {
 
                         if (Tool\Authentication::verifyPassword($user, $values['new_password'])) {
-                            throw new \Exception('The new password cannot be the same as the old one');
+                            throw new Exception('The new password cannot be the same as the old one');
                         }
 
                         $values['password'] = Tool\Authentication::getPasswordHash($user->getName(), $values['new_password']);
@@ -550,8 +551,10 @@ class UserController extends AdminAbstractController implements KernelController
                 return $this->adminJson(['success' => true]);
             }
             Logger::warn('prevented save current user, because ids do not match. ');
+
             return $this->adminJson(false);
         }
+
         return $this->adminJson(false);
     }
 
@@ -579,7 +582,7 @@ class UserController extends AdminAbstractController implements KernelController
         $userData['twoFactorAuthentication']['isActive'] = $user->getTwoFactorAuthentication('enabled') && $user->getTwoFactorAuthentication('secret');
         $userData['hasImage'] = $user->hasImage();
 
-        $userData['isPasswordReset'] = Tool\Session::useBag($request->getSession(), fn(AttributeBagInterface $adminSession) => $adminSession->get('password_reset'));
+        $userData['isPasswordReset'] = Tool\Session::useBag($request->getSession(), fn (AttributeBagInterface $adminSession) => $adminSession->get('password_reset'));
 
         $userData['validLocales'] = Tool::getSupportedJSLocales();
 
@@ -663,7 +666,7 @@ class UserController extends AdminAbstractController implements KernelController
             $role->{'setWorkspaces' . ucfirst($type)}($workspaces);
         }
 
-        $replaceFn = (static fn($value) => $value->getObjectVars());
+        $replaceFn = (static fn ($value) => $value->getObjectVars());
 
         // get available permissions
         $availableUserPermissionsList = new User\Permission\Definition\Listing();
@@ -686,7 +689,7 @@ class UserController extends AdminAbstractController implements KernelController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/user/upload-image', name: 'opendxp_admin_user_uploadimage', methods: ['POST'])]
     public function uploadImageAction(Request $request): JsonResponse
@@ -707,7 +710,7 @@ class UserController extends AdminAbstractController implements KernelController
         $assetType = Asset::getTypeFromMimeMapping($avatarFile->getMimeType(), $avatarFile->getFileName());
 
         if (!$avatarFile instanceof UploadedFile || $assetType !== 'image') {
-            throw new \Exception('Unsupported file format.');
+            throw new Exception('Unsupported file format.');
         }
 
         $userObj->setImage($_FILES['Filedata']['tmp_name']);
@@ -722,7 +725,7 @@ class UserController extends AdminAbstractController implements KernelController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/user/delete-image', name: 'opendxp_admin_user_deleteimage', methods: ['DELETE'])]
     public function deleteImageAction(Request $request): JsonResponse
@@ -815,7 +818,7 @@ class UserController extends AdminAbstractController implements KernelController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/user/get-token-login-link', name: 'opendxp_admin_user_gettokenloginlink', methods: ['GET'])]
     public function getTokenLoginLinkAction(Request $request, TranslatorInterface $translator): JsonResponse
@@ -976,7 +979,7 @@ class UserController extends AdminAbstractController implements KernelController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/user/invitationlink', name: 'opendxp_admin_user_invitationlink', methods: ['POST'])]
     public function invitationLinkAction(Request $request, TranslatorInterface $translator, RouterInterface $router): JsonResponse
@@ -1009,7 +1012,7 @@ class UserController extends AdminAbstractController implements KernelController
 
                 $domain = SystemSettingsConfig::get()['general']['domain'];
                 if (!$domain) {
-                    throw new \Exception('No main domain set in system settings, unable to generate login invitation link');
+                    throw new Exception('No main domain set in system settings, unable to generate login invitation link');
                 }
 
                 $context = $router->getContext();
@@ -1028,7 +1031,7 @@ class UserController extends AdminAbstractController implements KernelController
 
                     $success = true;
                     $message = sprintf($translator->trans('invitation_link_sent', [], 'admin_ext'), $user->getEmail());
-                } catch (\Exception) {
+                } catch (Exception) {
                     $message .= 'could not send email';
                 }
             }
@@ -1065,7 +1068,7 @@ class UserController extends AdminAbstractController implements KernelController
 
             //try to generate invitation link for custom admin point
             $loginUrl = $this->generateUrl($adminEntryPointRoute, $params, $referenceType);
-        } catch (\Exception) {
+        } catch (Exception) {
             //use default login check for invitation link
             $loginUrl = $this->generateUrl($fallbackUrl, $params, $referenceType);
         }

@@ -21,6 +21,8 @@ use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
 use OpenDxp\Db;
 use OpenDxp\Model\DataObject\ClassDefinition;
 use OpenDxp\Tests\Support\Test\ModelTestCase;
+use ReflectionClass;
+use ReflectionMethod;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class GridHelperTest extends ModelTestCase
@@ -101,9 +103,9 @@ class GridHelperTest extends ModelTestCase
         $this->assertEquals("`cskey_teststore_1_1` LIKE '%t%' AND `cskey_teststore_1_2` LIKE '%t77%'", $queryBuilder->getQueryPart('having')->__toString());
     }
 
-    public function getPrivateMethod(mixed $className, string $methodName): \ReflectionMethod
+    public function getPrivateMethod(mixed $className, string $methodName): ReflectionMethod
     {
-        $reflector = new \ReflectionClass($className);
+        $reflector = new ReflectionClass($className);
         $method = $reflector->getMethod($methodName);
         $method->setAccessible(true);
 

@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use Exception;
+use InvalidArgumentException;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\UnableToReadFile;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
@@ -37,6 +39,7 @@ use OpenDxp\Security\SecurityHelper;
 use OpenDxp\Tool;
 use OpenDxp\Tool\Storage;
 use OpenDxp\Version;
+use stdClass;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -164,7 +167,7 @@ class DataObjectHelperController extends AdminAbstractController
         $success = false;
         if ($gridConfig) {
             if ($gridConfig->getOwnerId() !== $this->getAdminUser()->getId() && !$this->getAdminUser()->isAdmin()) {
-                throw new \Exception("don't mess with someone elses grid config");
+                throw new Exception("don't mess with someone elses grid config");
             }
 
             $gridConfig->delete();
@@ -281,7 +284,7 @@ class DataObjectHelperController extends AdminAbstractController
                     //                  $shared = $savedGridConfig->isShareGlobally() || GridConfigShare::getByGridConfigAndSharedWithId($savedGridConfig->getId(), $this->getUser()->getId());
 
                     if (!$shared && $savedGridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
-                        throw new \Exception('You are neither the owner of this config nor it is shared with you');
+                        throw new Exception('You are neither the owner of this config nor it is shared with you');
                     }
                 }
 
@@ -438,7 +441,7 @@ class DataObjectHelperController extends AdminAbstractController
                 }
             }
         }
-        usort($availableFields, fn($a, $b) => $a['position'] <=> $b['position']);
+        usort($availableFields, fn ($a, $b) => $a['position'] <=> $b['position']);
 
         $frontendLanguages = Tool\Admin::reorderWebsiteLanguages(\OpenDxp\Tool\Admin::getCurrentUser(), $config['general']['valid_languages']);
         $language = $frontendLanguages ? $frontendLanguages[0] : $request->getLocale();
@@ -645,7 +648,7 @@ class DataObjectHelperController extends AdminAbstractController
 
                 return $calculatedColumnConfig;
             }, 'opendxp_gridconfig');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error((string) $e);
         }
 
@@ -657,7 +660,7 @@ class DataObjectHelperController extends AdminAbstractController
     {
         $helperColumns = [];
         $newData = [];
-        /** @var \stdClass[] $data */
+        /** @var stdClass[] $data */
         $data = json_decode($request->get('columns'));
         foreach ($data as $item) {
             if (!empty($item->isOperator)) {
@@ -721,7 +724,7 @@ class DataObjectHelperController extends AdminAbstractController
             $favourite->setOwnerId($user->getId());
             $class = DataObject\ClassDefinition::getById($classId);
             if (!$class) {
-                throw new \Exception('class ' . $classId . ' does not exist anymore');
+                throw new Exception('class ' . $classId . ' does not exist anymore');
             }
             $favourite->setClassId($classId);
             $favourite->setSearchType($searchType);
@@ -748,7 +751,7 @@ class DataObjectHelperController extends AdminAbstractController
                     . ' and objectId != ' . $objectId . ' and objectId != 0'
                     . ' and `type` != ' . $db->quote($type));
                 $specializedConfigs = $count > 0;
-            } catch (\Exception) {
+            } catch (Exception) {
                 $favourite->delete();
             }
 
@@ -815,7 +818,7 @@ class DataObjectHelperController extends AdminAbstractController
                 }
 
                 if ($gridConfig && $gridConfig->getOwnerId() !== $this->getAdminUser()->getId() && !$this->getAdminUser()->isAdmin()) {
-                    throw new \Exception("don't mess around with somebody elses configuration");
+                    throw new Exception("don't mess around with somebody elses configuration");
                 }
 
                 $this->updateGridConfigShares($gridConfig, $metadata);
@@ -865,7 +868,7 @@ class DataObjectHelperController extends AdminAbstractController
                     'availableConfigs' => $availableConfigs,
                     'sharedConfigs' => $sharedConfigs,
                 ]);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
             }
         }
@@ -874,7 +877,7 @@ class DataObjectHelperController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function updateGridConfigShares(?GridConfig $gridConfig, array $metadata): void
     {
@@ -885,7 +888,7 @@ class DataObjectHelperController extends AdminAbstractController
         }
 
         if ($gridConfig->getOwnerId() !== $user->getId() && !$user->isAdmin()) {
-            throw new \Exception("don't mess with someone elses grid config");
+            throw new Exception("don't mess with someone elses grid config");
         }
         $combinedShares = [];
         $sharedUserIds = $metadata['sharedUserIds'];
@@ -912,7 +915,7 @@ class DataObjectHelperController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function updateGridConfigFavourites(?GridConfig $gridConfig, array $metadata, int $objectId): void
     {
@@ -924,7 +927,7 @@ class DataObjectHelperController extends AdminAbstractController
         }
 
         if (!$currentUser->isAdmin() && (int) $gridConfig->getOwnerId() !== $currentUser->getId()) {
-            throw new \Exception("don't mess with someone elses grid config");
+            throw new Exception("don't mess with someone elses grid config");
         }
 
         $sharedUsers = [];
@@ -1159,7 +1162,7 @@ class DataObjectHelperController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception|FilesystemException
+     * @throws Exception|FilesystemException
      */
     #[Route('/do-export', name: 'doexport', methods: ['POST'])]
     public function doExportAction(
@@ -1182,7 +1185,7 @@ class DataObjectHelperController extends AdminAbstractController
         $class = DataObject\ClassDefinition::getById($request->get('classId'));
 
         if (!$class) {
-            throw new \InvalidArgumentException('No class definition found');
+            throw new InvalidArgumentException('No class definition found');
         }
 
         $className = $class->getName();
@@ -1332,7 +1335,7 @@ class DataObjectHelperController extends AdminAbstractController
 
         try {
             return $gridHelperService->createXlsxExportFile($storage, $fileHandle, $csvFile);
-        } catch (\Exception | FilesystemException | UnableToReadFile) {
+        } catch (Exception | FilesystemException | UnableToReadFile) {
             // handle the error
             throw $this->createNotFoundException('XLSX file not found');
         }
@@ -1396,7 +1399,7 @@ class DataObjectHelperController extends AdminAbstractController
                     $name = $params['name'];
 
                     if (!$object->isAllowed('save') || ($name === 'published' && !$object->isAllowed('publish'))) {
-                        throw new \Exception("Permission denied. You don't have the rights to save this object.");
+                        throw new Exception("Permission denied. You don't have the rights to save this object.");
                     }
 
                     $append = $params['append'] ?? false;
@@ -1561,7 +1564,7 @@ class DataObjectHelperController extends AdminAbstractController
                         $object->setUserModification($this->getAdminUser()->getId());
                         $object->save();
                         $success = true;
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
                     }
                 } else {
@@ -1570,7 +1573,7 @@ class DataObjectHelperController extends AdminAbstractController
                     return $this->adminJson(['success' => false, 'message' => 'DataObjectController::batchAction => There is no object left to update.']);
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::err((string) $e);
 
             return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);

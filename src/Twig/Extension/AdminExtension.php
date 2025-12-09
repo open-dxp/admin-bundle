@@ -25,9 +25,6 @@ use OpenDxp\Http\Request\Resolver\EditmodeResolver;
 use OpenDxp\Security\User\UserLoader;
 use OpenDxp\Tool\Admin;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Twig\Extension\AbstractExtension;
-use Twig\TwigFilter;
-use Twig\TwigFunction;
 
 /**
  * @internal

@@ -16,8 +16,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
+use Exception;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\UnableToReadFile;
+use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
@@ -37,6 +39,7 @@ use OpenDxp\Security\SecurityHelper;
 use OpenDxp\Tool\Session;
 use OpenDxp\Tool\Storage;
 use OpenDxp\Version;
+use stdClass;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\HeaderUtils;
@@ -126,7 +129,7 @@ class AssetHelperController extends AdminAbstractController
         $success = false;
         if ($gridConfig) {
             if ($gridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
-                throw new \Exception("don't mess with someone elses grid config");
+                throw new Exception("don't mess with someone elses grid config");
             }
 
             $gridConfig->delete();
@@ -189,12 +192,12 @@ class AssetHelperController extends AdminAbstractController
                     $userIds = [...$userIds, ...$this->getAdminUser()->getRoles()];
                     $userIds = implode(',', $userIds);
                     $shared = ($savedGridConfig->getOwnerId() !== $userId && $savedGridConfig->isShareGlobally()) || $db->fetchOne('select * from gridconfig_shares where sharedWithUserId IN (' . $userIds . ') and gridConfigId = ' . $savedGridConfig->getId());
-                } catch (\Exception) {
+                } catch (Exception) {
                     // fail silently?
                 }
 
                 if (!$shared && $savedGridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
-                    throw new \Exception('You are neither the owner of this config nor it is shared with you');
+                    throw new Exception('You are neither the owner of this config nor it is shared with you');
                 }
                 $gridConfigId = $savedGridConfig->getId();
                 $gridConfig = $savedGridConfig->getConfig();
@@ -228,7 +231,7 @@ class AssetHelperController extends AdminAbstractController
                 }
             }
         }
-        usort($availableFields, fn($a, $b) => $a['position'] <=> $b['position']);
+        usort($availableFields, fn ($a, $b) => $a['position'] <=> $b['position']);
 
         $availableConfigs = $classId ? $this->getMyOwnGridColumnConfigs($userId, $classId, $searchType) : [];
         $sharedConfigs = $classId ? $this->getSharedGridColumnConfigs($this->getAdminUser(), $classId, $searchType) : [];
@@ -345,7 +348,7 @@ class AssetHelperController extends AdminAbstractController
         $helperColumns = [];
         $newData = [];
         $data = json_decode($request->get('columns'));
-        /** @var \stdClass $item */
+        /** @var stdClass $item */
         foreach ($data as $item) {
             if (!empty($item->isOperator)) {
                 $itemKey = '#' . uniqid();
@@ -394,7 +397,7 @@ class AssetHelperController extends AdminAbstractController
 
                 $favourite->setObjectId(0);
                 $favourite->save();
-            } catch (\Exception) {
+            } catch (Exception) {
                 $favourite->delete();
             }
 
@@ -463,7 +466,7 @@ class AssetHelperController extends AdminAbstractController
                 }
 
                 if ($gridConfig && $gridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
-                    throw new \Exception("don't mess around with somebody else's configuration");
+                    throw new Exception("don't mess around with somebody else's configuration");
                 }
 
                 $this->updateGridConfigShares($gridConfig, $metadata);
@@ -512,7 +515,7 @@ class AssetHelperController extends AdminAbstractController
                     'availableConfigs' => $availableConfigs,
                     'sharedConfigs' => $sharedConfigs,
                 ]);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
             }
         }
@@ -521,7 +524,7 @@ class AssetHelperController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function updateGridConfigShares(?GridConfig $gridConfig, array $metadata): void
     {
@@ -532,7 +535,7 @@ class AssetHelperController extends AdminAbstractController
         }
 
         if ($gridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
-            throw new \Exception("don't mess with someone elses grid config");
+            throw new Exception("don't mess with someone elses grid config");
         }
         $combinedShares = [];
         $sharedUserIds = $metadata['sharedUserIds'];
@@ -559,7 +562,7 @@ class AssetHelperController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function updateGridConfigFavourites(?GridConfig $gridConfig, array $metadata): void
     {
@@ -571,7 +574,7 @@ class AssetHelperController extends AdminAbstractController
         }
 
         if (!$currentUser->isAdmin() && (int) $gridConfig->getOwnerId() !== $currentUser->getId()) {
-            throw new \Exception("don't mess with someone elses grid config");
+            throw new Exception("don't mess with someone elses grid config");
         }
 
         $sharedUsers = [];
@@ -742,7 +745,7 @@ class AssetHelperController extends AdminAbstractController
         $csv = [];
 
         $unsupportedFields = [0 => 'preview~system', 1 => 'size~system'];
-        $fields = array_filter($fields, fn($field) => !in_array($field['key'], $unsupportedFields));
+        $fields = array_filter($fields, fn ($field) => !in_array($field['key'], $unsupportedFields));
 
         if ($addTitles && $header !== 'no_header') {
             $columns = $fields;
@@ -838,7 +841,7 @@ class AssetHelperController extends AdminAbstractController
 
         try {
             return $gridHelperService->createXlsxExportFile($storage, $fileHandle, $csvFile);
-        } catch (\Exception | FilesystemException | UnableToReadFile) {
+        } catch (Exception | FilesystemException | UnableToReadFile) {
             // handle the error
             throw $this->createNotFoundException('XLSX file not found');
         }
@@ -917,7 +920,7 @@ class AssetHelperController extends AdminAbstractController
     {
         try {
             if ($request->get('data')) {
-                $loader = \OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
+                $loader = OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
 
                 $data = $this->decodeJson($request->get('data'), true);
 
@@ -943,7 +946,7 @@ class AssetHelperController extends AdminAbstractController
 
                 if ($asset) {
                     if (!$asset->isAllowed('publish')) {
-                        throw new \Exception("Permission denied. You don't have the rights to save this asset.");
+                        throw new Exception("Permission denied. You don't have the rights to save this asset.");
                     }
 
                     $metadata = $asset->getMetadata(null, null, false, true);
@@ -1035,7 +1038,7 @@ class AssetHelperController extends AdminAbstractController
 
                             return $this->adminJson(['success' => true]);
                         }
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
                     }
                 } else {
@@ -1044,7 +1047,7 @@ class AssetHelperController extends AdminAbstractController
                     return $this->adminJson(['success' => false, 'message' => 'AssetHelperController::batchAction => There is no asset left to update.']);
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::err((string)$e);
 
             return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);

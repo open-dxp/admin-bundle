@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\DataObjects;
 use OpenDxp\Controller\KernelControllerEventInterface;
@@ -61,7 +62,7 @@ class DataObjectController extends AdminAbstractController implements KernelCont
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/export', name: 'opendxp_admin_gdpr_dataobject_exportdataobject', methods: ['GET'])]
     public function exportDataObjectAction(Request $request, DataObjects $service): JsonResponse

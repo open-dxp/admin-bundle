@@ -15,6 +15,10 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
+use DateInterval;
+use DateTime;
+use Exception;
+use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\AdminStyleTrait;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\ApplySchedulerDataTrait;
@@ -45,6 +49,7 @@ use OpenDxp\Model\Element\ValidationException;
 use OpenDxp\Model\Metadata;
 use OpenDxp\Model\Schedule\Task;
 use OpenDxp\Tool;
+use Override;
 use RuntimeException;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Filesystem\Filesystem;
@@ -63,6 +68,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 use Twig\Extension\CoreExtension;
+use ZipArchive;
 
 /**
  * @internal
@@ -80,14 +86,14 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     protected Asset\Service $_assetService;
 
     #[Route('/tree-get-root', name: 'opendxp_admin_asset_treegetroot', methods: ['GET'])]
-    #[\Override]
+    #[Override]
     public function treeGetRootAction(Request $request): JsonResponse
     {
         return parent::treeGetRootAction($request);
     }
 
     #[Route('/delete-info', name: 'opendxp_admin_asset_deleteinfo', methods: ['GET'])]
-    #[\Override]
+    #[Override]
     public function deleteInfoAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
         return parent::deleteInfoAction($request, $eventDispatcher);
@@ -203,7 +209,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $request->getSchemeAndHttpHost() . $frontendPath;
 
         $data['scheduledTasks'] = array_map(
-            static fn(Task $task) => $task->getObjectVars(),
+            static fn (Task $task) => $task->getObjectVars(),
             $asset->getScheduledTasks()
         );
 
@@ -320,6 +326,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 'inSearch' => (int)$request->get('inSearch'),
             ]);
         }
+
         return $this->adminJson($assets);
     }
 
@@ -342,7 +349,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             }
 
             return $this->adminJson($response);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->adminJson([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -367,7 +374,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $response->headers->set('Content-Type', 'text/html');
 
             return $response;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->adminJson([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -376,7 +383,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/exists', name: 'opendxp_admin_asset_exists', methods: ['GET'])]
     public function existsAction(Request $request): JsonResponse
@@ -388,7 +395,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             // this is for uploading folders with Drag&Drop
             // param "dir" contains the relative path of the file
             if (str_contains($dir, '..')) {
-                throw new \Exception('not allowed');
+                throw new Exception('not allowed');
             }
             $dir =  '/' . trim($dir, '/ ');
         }
@@ -403,7 +410,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     /**
      * @return array{success: bool, asset: ?Asset}
      *
-     * @throws \Exception
+     * @throws Exception
      */
     protected function addAsset(Request $request, Config $config): array
     {
@@ -419,7 +426,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $filesystem = new Filesystem();
             $filesystem->dumpFile($sourcePath, base64_decode($data));
         } else {
-            throw new \Exception('The filename of the asset is empty');
+            throw new Exception('The filename of the asset is empty');
         }
 
         $parentId = $request->query->getInt('parentId');
@@ -431,7 +438,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $parent = Asset::getById((int) $request->get('parentId'));
             $dir = $request->get('dir');
             if (str_contains($dir, '..')) {
-                throw new \Exception('not allowed');
+                throw new Exception('not allowed');
             }
 
             $newPath = $parent->getRealFullPath() . '/' . trim($dir, '/ ');
@@ -443,7 +450,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     $newParent = Asset\Service::createFolderByPath($newPath);
 
                     break;
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     if ($retries < ($maxRetries - 1)) {
                         $waitTime = random_int(100000, 900000); // microseconds
                         usleep($waitTime); // wait specified time until we restart the transaction
@@ -467,7 +474,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         $filename = Element\Service::getValidKey($filename, 'asset');
         if (empty($filename)) {
-            throw new \Exception('The filename of the asset is empty');
+            throw new Exception('The filename of the asset is empty');
         }
 
         $context = $request->get('context');
@@ -480,7 +487,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $event = new ResolveUploadTargetEvent($parentId, $filename);
             $event->setArgument('context', $context);
 
-            \OpenDxp::getEventDispatcher()->dispatch($event, AssetEvents::RESOLVE_UPLOAD_TARGET);
+            OpenDxp::getEventDispatcher()->dispatch($event, AssetEvents::RESOLVE_UPLOAD_TARGET);
             $filename = Element\Service::getValidKey($event->getFilename(), 'asset');
             $parentId = $event->getParentId();
         }
@@ -502,11 +509,11 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             );
         }
         if (is_file($sourcePath) && filesize($sourcePath) < 1) {
-            throw new \Exception('File is empty!');
+            throw new Exception('File is empty!');
         }
 
         if (!is_file($sourcePath)) {
-            throw new \Exception('Something went wrong, please check upload_max_filesize and post_max_size in your php.ini as well as the write permissions of your temporary directories.');
+            throw new Exception('Something went wrong, please check upload_max_filesize and post_max_size in your php.ini as well as the write permissions of your temporary directories.');
         }
 
         // check if there is a requested type and if matches the asset type of the uploaded file
@@ -516,7 +523,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $assetType = Asset::getTypeFromMimeMapping($mimetype, $filename);
 
             if ($uploadAssetType !== $assetType) {
-                throw new \Exception("Mime type $mimetype does not match with asset type: $uploadAssetType");
+                throw new Exception("Mime type $mimetype does not match with asset type: $uploadAssetType");
             }
         }
 
@@ -563,7 +570,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/replace-asset', name: 'opendxp_admin_asset_replaceasset', methods: ['POST', 'PUT'])]
     public function replaceAssetAction(Request $request, TranslatorInterface $translator): JsonResponse
@@ -612,7 +619,8 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
             return $response;
         }
-        throw new \Exception('missing permission');
+
+        throw new Exception('missing permission');
     }
 
     #[Route('/add-folder', name: 'opendxp_admin_asset_addfolder', methods: ['POST'])]
@@ -683,16 +691,16 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
-    #[\Override]
+    #[Override]
     protected function getTreeNodeConfig(ElementInterface $element): array
     {
         return $this->elementService->getElementTreeNodeConfig($element);
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      * @throws RuntimeException
      */
     #[Route('/update', name: 'opendxp_admin_asset_update', methods: ['PUT'])]
@@ -749,7 +757,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                         'success' => true,
                         'treeData' => $this->getTreeNodeConfig($asset),
                     ];
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
                 }
             } else {
@@ -768,7 +776,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     'success' => true,
                     'treeData' => $this->getTreeNodeConfig($asset),
                 ];
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
             }
         } else {
@@ -779,7 +787,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/save', name: 'opendxp_admin_asset_save', methods: ['PUT', 'POST'])]
     public function saveAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
@@ -826,7 +834,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                             $property->setInheritable($propertyData['inheritable']);
 
                             $properties[$propertyName] = $property;
-                        } catch (\Exception) {
+                        } catch (Exception) {
                             Logger::err("Can't add " . $propertyName . ' to asset ' . $asset->getRealFullPath());
                         }
                     }
@@ -899,7 +907,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 $treeData = $this->getTreeNodeConfig($asset);
 
                 return $this->adminJson(['success' => true, 'treeData' => $treeData]);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
             }
         }
@@ -937,7 +945,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $twig->getExtension(CoreExtension::class)->setTimezone($timezone);
         }
 
-        $loader = \OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
+        $loader = OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
 
         return $this->render(
             '@OpenDxpAdmin/admin/asset/show_version_' . strtolower($asset->getType()) . '.html.twig',
@@ -1177,7 +1185,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         if ($request->get('treepreview')) {
             $thumbnailConfig = Asset\Image\Thumbnail\Config::getPreviewConfig();
             if ($request->get('origin') === 'treeNode' && !$image->getThumbnail($thumbnailConfig)->exists()) {
-                \OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
+                OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
                     new AssetPreviewImageMessage($image->getId())
                 );
 
@@ -1304,7 +1312,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $thumb = $video->getImageThumbnail($thumbnail, $time, $image);
 
         if ($request->get('origin') === 'treeNode' && !$thumb->exists()) {
-            \OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
+            OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
                 new AssetPreviewImageMessage($video->getId())
             );
 
@@ -1359,7 +1367,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $thumb = $document->getImageThumbnail($thumbnail, $page);
 
         if ($request->get('origin') === 'treeNode' && !$thumb->exists()) {
-            \OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
+            OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
                 new AssetPreviewImageMessage($document->getId())
             );
 
@@ -1385,8 +1393,8 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     protected function addThumbnailCacheHeaders(Response $response): void
     {
         $lifetime = 300;
-        $date = new \DateTime('now');
-        $date->add(new \DateInterval('PT' . $lifetime . 'S'));
+        $date = new DateTime('now');
+        $date->add(new DateInterval('PT' . $lifetime . 'S'));
 
         $response->setMaxAge($lifetime);
         $response->setPublic();
@@ -1483,7 +1491,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             try {
                 $document = \OpenDxp\Document::getInstance();
                 $stream = $document->getPdf($asset);
-            } catch (\Exception) {
+            } catch (Exception) {
                 // nothing to do
             }
         }
@@ -1526,11 +1534,13 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     $previewData
                 );
             }
+
             return $this->render(
                 '@OpenDxpAdmin/admin/asset/get_preview_video_error.html.twig',
                 $previewData
             );
         }
+
         return $this->render(
             '@OpenDxpAdmin/admin/asset/get_preview_video_error.html.twig',
             $previewData
@@ -1573,6 +1583,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 'Accept-Ranges' => 'bytes',
             ]);
         }
+
         throw $this->createNotFoundException('Video thumbnail not found');
     }
 
@@ -1918,8 +1929,8 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         }
 
         if ($asset->isAllowed('view')) {
-            $zip = new \ZipArchive();
-            $zipState = is_file($zipFile) ? $zip->open($zipFile) : $zip->open($zipFile, \ZipArchive::CREATE);
+            $zip = new ZipArchive();
+            $zipState = is_file($zipFile) ? $zip->open($zipFile) : $zip->open($zipFile, ZipArchive::CREATE);
 
             if ($zipState === true) {
                 $parentPath = $asset->getRealFullPath();
@@ -2035,7 +2046,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         copy($_FILES['Filedata']['tmp_name'], $zipFile);
 
-        $zip = new \ZipArchive;
+        $zip = new ZipArchive;
         $retCode = $zip->open($zipFile);
         if ($retCode === true) {
             $jobAmount = ceil($zip->numFiles / $filesPerJob);
@@ -2066,6 +2077,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
             return new Response($responseJson);
         }
+
         return $this->adminJson([
             'success' => false,
             'message' => $translator->trans('could_not_open_zip_file', [], 'admin'),
@@ -2086,7 +2098,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $filesystem->mkdir($tmpDir);
         }
 
-        $zip = new \ZipArchive;
+        $zip = new ZipArchive;
         if ($zip->open($zipFile) === true) {
             for ($i = $offset; $i < ($offset + $limit); $i++) {
                 $path = $zip->getNameIndex($i);
@@ -2179,7 +2191,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         $allParams = $filterPrepareEvent->getArgument('requestParams');
 
-        $loader = \OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
+        $loader = OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
 
         if (isset($allParams['data']) && $allParams['data']) {
             $csrfProtection->checkCsrfToken($request);
@@ -2301,7 +2313,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     }
 
                     return $this->adminJson(['success' => false, 'message' => 'something went wrong.']);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
                 }
             }

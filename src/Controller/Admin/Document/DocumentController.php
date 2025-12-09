@@ -15,13 +15,7 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
-use function base64_encode;
-use function basename;
-use function date;
 use Exception;
-use function file_exists;
-use function file_get_contents;
-use function file_put_contents;
 use Imagick;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
@@ -46,8 +40,8 @@ use OpenDxp\Model\Site;
 use OpenDxp\Model\Version;
 use OpenDxp\Tool;
 use OpenDxp\Tool\Session;
+use Override;
 use RuntimeException;
-use function sprintf;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -59,6 +53,13 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use function base64_encode;
+use function basename;
+use function date;
+use function file_exists;
+use function file_get_contents;
+use function file_put_contents;
+use function sprintf;
 use function uniqid;
 use function unlink;
 
@@ -75,14 +76,14 @@ class DocumentController extends ElementControllerBase implements KernelControll
     protected Document\Service $_documentService;
 
     #[Route('/tree-get-root', name: 'opendxp_admin_document_document_treegetroot', methods: ['GET'])]
-    #[\Override]
+    #[Override]
     public function treeGetRootAction(Request $request): JsonResponse
     {
         return parent::treeGetRootAction($request);
     }
 
     #[Route('/delete-info', name: 'opendxp_admin_document_document_deleteinfo', methods: ['GET'])]
-    #[\Override]
+    #[Override]
     public function deleteInfoAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
         return parent::deleteInfoAction($request, $eventDispatcher);
@@ -230,6 +231,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 'inSearch' => (int)$request->get('inSearch'),
             ]);
         }
+
         return $this->adminJson($documents);
     }
 
@@ -317,7 +319,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
 
                         break;
                     default:
-                        $classname = \OpenDxp::getContainer()->get('opendxp.class.resolver.document')->resolve($request->get('type'));
+                        $classname = OpenDxp::getContainer()->get('opendxp.class.resolver.document')->resolve($request->get('type'));
 
                         if (Tool::classExists($classname)) {
                             $document = $classname::create($parentDocument->getId(), $createValues);
@@ -616,6 +618,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                     throw new ConfigWriteException();
                 }
                 $type->delete();
+
                 return $this->adminJson(['success' => true, 'data' => []]);
             }
             if ($request->get('xaction') === 'update') {
@@ -628,6 +631,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 $type->save();
                 $responseData = $type->getObjectVars();
                 $responseData['writeable'] = $type->isWriteable();
+
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
             }
 
@@ -642,6 +646,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 $type->save();
                 $responseData = $type->getObjectVars();
                 $responseData['writeable'] = $type->isWriteable();
+
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
             }
         }
@@ -660,7 +665,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
             if (!Document\Service::isValidType($type)) {
                 throw new BadRequestHttpException('Invalid type: ' . $type);
             }
-            $list->setFilter(static fn(DocType $docType) => $docType->getType() === $type);
+            $list->setFilter(static fn (DocType $docType) => $docType->getType() === $type);
         }
 
         $docTypes = [];
@@ -862,7 +867,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
     {
         $transactionId = $request->get('transactionId');
 
-        $idStore = Session::useBag($request->getSession(), fn(AttributeBagInterface $session) => $session->get($transactionId), 'opendxp_copy');
+        $idStore = Session::useBag($request->getSession(), fn (AttributeBagInterface $session) => $session->get($transactionId), 'opendxp_copy');
 
         if (!array_key_exists('rewrite-stack', $idStore)) {
             $idStore['rewrite-stack'] = array_values($idStore['idMapping']);
@@ -1065,6 +1070,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 'type' => $doc->getType(),
             ]);
         }
+
         return $this->adminJson(false);
     }
 
@@ -1318,7 +1324,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
         $this->_documentService = new Document\Service($this->getAdminUser());
     }
 
-    #[\Override]
+    #[Override]
     public function getTreeNodeConfig(ElementInterface $element): array
     {
         return $this->elementService->getElementTreeNodeConfig($element);

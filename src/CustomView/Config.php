@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\CustomView;
 
+use Exception;
+use OpenDxp;
 use OpenDxp\Config\LocationAwareConfigRepository;
 
 /**
@@ -30,7 +32,7 @@ final class Config
     private static function getRepository(): LocationAwareConfigRepository
     {
         if (!self::$locationAwareConfigRepository) {
-            $containerConfig = \OpenDxp::getContainer()->getParameter('opendxp.config');
+            $containerConfig = OpenDxp::getContainer()->getParameter('opendxp.config');
             $config = $containerConfig[self::CONFIG_ID]['definitions'];
 
             $storageConfig = $containerConfig['config_location'][self::CONFIG_ID];
@@ -51,6 +53,7 @@ final class Config
             return [];
         }
         $tempClasses = explode(',', $data['classes']);
+
         return array_fill_keys($tempClasses, null);
     }
 
@@ -77,7 +80,7 @@ final class Config
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public static function save(array $data, ?array $deletedRecords): void
     {
@@ -88,7 +91,7 @@ final class Config
             [$configKey, $dataSource] = $repository->loadConfigByKey($key);
             if ($repository->isWriteable($key, $dataSource)) {
                 unset($value['writeable']);
-                $repository->saveConfig($key, $value, fn($key, $data) => [
+                $repository->saveConfig($key, $value, fn ($key, $data) => [
                     'opendxp' => [
                         'custom_views' => [
                             'definitions' => [

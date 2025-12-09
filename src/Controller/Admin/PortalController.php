@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use DateTime;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Helper\Dashboard;
 use OpenDxp\Controller\KernelControllerEventInterface;
@@ -71,8 +72,10 @@ class PortalController extends AdminAbstractController implements KernelControll
 
         if (!empty($key)) {
             $this->dashboardHelper->saveDashboard($key);
+
             return $this->adminJson(['success' => true]);
         }
+
         return $this->adminJson(['success' => false, 'message' => 'empty']);
     }
 
@@ -285,7 +288,7 @@ class PortalController extends AdminAbstractController implements KernelControll
             $a = $db->fetchOne('SELECT COUNT(*) AS count FROM assets WHERE modificationDate > '.$start . ' AND modificationDate < '.$end);
             $d = $db->fetchOne('SELECT COUNT(*) AS count FROM documents WHERE modificationDate > '.$start . ' AND modificationDate < '.$end);
 
-            $date = new \DateTime();
+            $date = new DateTime();
             $date->setTimestamp($start);
 
             $data[] = [

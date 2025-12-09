@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Schema;
 use OpenDxp\Extension\Bundle\Installer\SettingsStoreAwareInstaller;
+use Override;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 
 class Installer extends SettingsStoreAwareInstaller
@@ -86,7 +87,7 @@ class Installer extends SettingsStoreAwareInstaller
         }
     }
 
-    #[\Override]
+    #[Override]
     public function install(): void
     {
         $this->addPermissions();
@@ -126,7 +127,7 @@ class Installer extends SettingsStoreAwareInstaller
         }
     }
 
-    #[\Override]
+    #[Override]
     public function uninstall(): void
     {
         $this->removePermissions();

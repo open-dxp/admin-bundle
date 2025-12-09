@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\Assets;
 use OpenDxp\Controller\KernelControllerEventInterface;
@@ -64,7 +65,7 @@ class AssetController extends AdminAbstractController implements KernelControlle
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/export', name: 'opendxp_admin_gdpr_asset_exportassets', methods: ['GET'])]
     public function exportAssetsAction(Request $request, Assets $service): Response

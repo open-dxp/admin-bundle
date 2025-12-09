@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
 use OpenDxp\Cache;
@@ -49,6 +50,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Throwable;
 
 /**
  * @internal
@@ -81,7 +83,7 @@ class SettingsController extends AdminAbstractController
             try {
                 $mime = $storage->mimeType(self::CUSTOM_LOGO_PATH);
                 $stream = $storage->readStream(self::CUSTOM_LOGO_PATH);
-            } catch (\Exception) {
+            } catch (Exception) {
                 // do nothing
             }
         }
@@ -95,7 +97,7 @@ class SettingsController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/upload-custom-logo', name: 'opendxp_admin_settings_uploadcustomlogo', methods: ['POST'])]
     public function uploadCustomLogoAction(Request $request): JsonResponse
@@ -105,7 +107,7 @@ class SettingsController extends AdminAbstractController
         if (!$logoFile instanceof UploadedFile
             || !in_array($logoFile->guessExtension(), ['svg', 'png', 'jpg'])
         ) {
-            throw new \Exception('Unsupported file format.');
+            throw new Exception('Unsupported file format.');
         }
 
         $storage = Tool\Storage::get('admin');
@@ -147,6 +149,7 @@ class SettingsController extends AdminAbstractController
                     throw new ConfigWriteException();
                 }
                 $metadata->delete();
+
                 return $this->adminJson(['success' => true, 'data' => []]);
             }
             if ($request->get('xaction') == 'update') {
@@ -166,6 +169,7 @@ class SettingsController extends AdminAbstractController
                 $metadata->expand();
                 $responseData = $metadata->getObjectVars();
                 $responseData['writeable'] = $metadata->isWriteable();
+
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
             }
             if ($request->get('xaction') == 'create') {
@@ -184,6 +188,7 @@ class SettingsController extends AdminAbstractController
                 $metadata->save();
                 $responseData = $metadata->getObjectVars();
                 $responseData['writeable'] = $metadata->isWriteable();
+
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
             }
         } else {
@@ -250,6 +255,7 @@ class SettingsController extends AdminAbstractController
                     throw new ConfigWriteException();
                 }
                 $property->delete();
+
                 return $this->adminJson(['success' => true, 'data' => []]);
             }
             if ($request->get('xaction') == 'update') {
@@ -266,6 +272,7 @@ class SettingsController extends AdminAbstractController
                 $property->save();
                 $responseData = $property->getObjectVars();
                 $responseData['writeable'] = $property->isWriteable();
+
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
             }
 
@@ -281,6 +288,7 @@ class SettingsController extends AdminAbstractController
                 $property->save();
                 $responseData = $property->getObjectVars();
                 $responseData['writeable'] = $property->isWriteable();
+
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
             }
         } else {
@@ -541,7 +549,7 @@ class SettingsController extends AdminAbstractController
         foreach ($environments as $environment) {
             try {
                 $symfonyCacheClearer->clear($environment);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $errors = $result['errors'] ?? [];
                 $errors[] = $e->getMessage();
 
@@ -601,7 +609,7 @@ class SettingsController extends AdminAbstractController
             }
         }
 
-        usort($langs, fn($a, $b) => strcmp($a['display'], $b['display']));
+        usort($langs, fn ($a, $b) => strcmp($a['display'], $b['display']));
 
         return $this->adminJson($langs);
     }
@@ -747,7 +755,7 @@ class SettingsController extends AdminAbstractController
         $thumbnails = [];
 
         $list = new Asset\Image\Thumbnail\Config\Listing();
-        $list->setFilter(fn(Asset\Image\Thumbnail\Config $config) => $config->isDownloadable());
+        $list->setFilter(fn (Asset\Image\Thumbnail\Config $config) => $config->isDownloadable());
 
         foreach ($list->getThumbnails() as $item) {
             $thumbnails[] = [
@@ -845,7 +853,7 @@ class SettingsController extends AdminAbstractController
 
         foreach ($mediaData as $mediaName => $items) {
             if (preg_match('/["<>]/', $mediaName)) {
-                throw new \Exception('Invalid media query name');
+                throw new Exception('Invalid media query name');
             }
 
             foreach ($items as $item) {
@@ -1043,7 +1051,7 @@ class SettingsController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/website-settings', name: 'opendxp_admin_settings_websitesettings', methods: ['POST'])]
     public function websiteSettingsAction(Request $request): JsonResponse

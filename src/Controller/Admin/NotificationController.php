@@ -27,6 +27,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use UnexpectedValueException;
 
 /**
  *
@@ -90,7 +91,7 @@ class NotificationController extends AdminAbstractController
 
         try {
             $notification = $service->findAndMarkAsRead($id, $this->getAdminUser()->getId());
-        } catch (\UnexpectedValueException) {
+        } catch (UnexpectedValueException) {
             return $this->adminJson(
                 [
                     'success' => false,

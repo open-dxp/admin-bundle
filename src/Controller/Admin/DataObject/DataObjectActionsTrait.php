@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
 use OpenDxp\Bundle\AdminBundle\Service\GridData;
@@ -36,14 +37,14 @@ trait DataObjectActionsTrait
     {
         try {
             if (!$object instanceof DataObject) {
-                throw new \Exception('No Object found for given id.');
+                throw new Exception('No Object found for given id.');
             }
 
             $object->setKey($key);
             $object->save();
 
             return ['success' => true];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error((string) $e);
 
             return ['success' => false, 'message' => $e->getMessage()];
@@ -95,7 +96,7 @@ trait DataObjectActionsTrait
                     'success' => true,
                     'data' => GridData\DataObject::getData($object, $allParams['fields'], $requestedLanguage),
                 ];
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return [
                     'success' => false,
                     'message' => $e->getMessage(),
@@ -157,7 +158,7 @@ trait DataObjectActionsTrait
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function prepareObjectData(
         array $data,

@@ -16,9 +16,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
+use Exception;
 use OpenDxp\Model\AbstractModel;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Tool\Admin;
+use stdClass;
 
 /**
  * @internal
@@ -37,10 +39,10 @@ final class AnyGetter extends AbstractOperator
 
     private bool $returnLastResult;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         if (!Admin::getCurrentUser()->isAdmin()) {
-            throw new \Exception('AnyGetter only allowed for admin users');
+            throw new Exception('AnyGetter only allowed for admin users');
         }
 
         parent::__construct($config, $context);
@@ -55,9 +57,9 @@ final class AnyGetter extends AbstractOperator
         $this->returnLastResult = $config->returnLastResult ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): \stdClass
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $children = $this->getChildren();

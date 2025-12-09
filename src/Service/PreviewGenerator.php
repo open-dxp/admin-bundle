@@ -15,6 +15,8 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Service;
 
+use Locale;
+use LogicException;
 use OpenDxp\Model\DataObject\ClassDefinition\LinkGeneratorInterface;
 use OpenDxp\Model\DataObject\ClassDefinition\PreviewGeneratorInterface;
 use OpenDxp\Model\DataObject\Concrete;
@@ -44,7 +46,7 @@ class PreviewGenerator implements PreviewGeneratorInterface
             ]);
         }
 
-        throw new \LogicException("No link generator given for element of type {$object->getClassName()}");
+        throw new LogicException("No link generator given for element of type {$object->getClassName()}");
     }
 
     /**
@@ -82,7 +84,7 @@ class PreviewGenerator implements PreviewGeneratorInterface
 
         $locales = [];
         foreach (Tool::getValidLanguages() as $locale) {
-            $label = sprintf('%s (%s)', \Locale::getDisplayLanguage($locale, $userLocale), $locale);
+            $label = sprintf('%s (%s)', Locale::getDisplayLanguage($locale, $userLocale), $locale);
             $locales[$label] = $locale;
         }
 

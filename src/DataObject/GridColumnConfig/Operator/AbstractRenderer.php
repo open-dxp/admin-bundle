@@ -17,15 +17,16 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
  */
 abstract class AbstractRenderer extends AbstractOperator
 {
-    public function getLabeledValue(array|ElementInterface $element): \OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): \OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer|stdClass|null
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $children = $this->getChildren();

@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -28,7 +29,7 @@ final class ObjectFieldGetter extends AbstractOperator
 
     private readonly string $forwardAttribute;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
@@ -36,9 +37,9 @@ final class ObjectFieldGetter extends AbstractOperator
         $this->forwardAttribute = $config->forwardAttribute ?? '';
     }
 
-    public function getLabeledValue(array|ElementInterface $element): \stdClass
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $children = $this->getChildren();

@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use InvalidArgumentException;
+use Locale;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
 use OpenDxp\Bundle\AdminBundle\Tool as AdminTool;
@@ -44,7 +46,7 @@ class MiscController extends AdminAbstractController
     {
         $controllerReferences = $provider->getControllerReferences();
 
-        $result = array_map(fn($controller) => [
+        $result = array_map(fn ($controller) => [
             'name' => $controller,
         ], $controllerReferences);
 
@@ -62,7 +64,7 @@ class MiscController extends AdminAbstractController
 
         sort($templates, SORT_NATURAL | SORT_FLAG_CASE);
 
-        $result = array_map(static fn($template) => [
+        $result = array_map(static fn ($template) => [
             'path' => $template,
         ], $templates);
 
@@ -82,9 +84,9 @@ class MiscController extends AdminAbstractController
         $translations = [];
 
         $fallbackLanguages = [];
-        if (null !== \Locale::getRegion($language)) {
+        if (null !== Locale::getRegion($language)) {
             // if language is region specific, add the primary language as fallback
-            $fallbackLanguages[] = \Locale::getPrimaryLanguage($language);
+            $fallbackLanguages[] = Locale::getPrimaryLanguage($language);
         }
         if ($language != 'en') {
             // add en as a fallback
@@ -118,7 +120,7 @@ class MiscController extends AdminAbstractController
     {
         $storageFile = $request->get('storageFile');
         if (!$storageFile) {
-            throw new \InvalidArgumentException('The parameter storageFile is required');
+            throw new InvalidArgumentException('The parameter storageFile is required');
         }
 
         $fileExtension = pathinfo($storageFile, PATHINFO_EXTENSION);
@@ -141,6 +143,7 @@ class MiscController extends AdminAbstractController
 
             return $response;
         }
+
         throw $this->createNotFoundException('Scripts not found');
     }
 

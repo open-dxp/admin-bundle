@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service;
 
+use Exception;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element\ElementInterface;
 
@@ -25,7 +26,7 @@ interface ElementServiceInterface
     public function getCustomViewById(string $id): ?array;
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function getElementTreeNodeConfig(ElementInterface $element): array;
 

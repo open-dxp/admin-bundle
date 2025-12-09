@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use Exception;
+use InvalidArgumentException;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Service\Workflow\ActionsButtonService;
 use OpenDxp\Controller\KernelControllerEventInterface;
@@ -89,7 +91,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
                     $wfConfig['additional_fields'] = [];
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $wfConfig['message'] = $e->getMessage();
         }
 
@@ -113,7 +115,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
             } catch (ValidationException $e) {
                 $reason = '';
                 if (count($e->getSubItems()) > 0) {
-                    $reason = '<ul>' . implode('', array_map(fn($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
+                    $reason = '<ul>' . implode('', array_map(fn ($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
                 }
 
                 $data = [
@@ -122,7 +124,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
                     'reasons' => [$reason],
 
                 ];
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $data = [
                     'success' => false,
                     'message' => 'error performing action on this element',
@@ -132,7 +134,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
         } else {
             $blockTransitionList = $workflow->buildTransitionBlockerList($this->element, $request->get('transition'));
 
-            $reasons = array_map(fn($blockTransitionItem) => $blockTransitionItem->getMessage(), iterator_to_array($blockTransitionList->getIterator(), true));
+            $reasons = array_map(fn ($blockTransitionItem) => $blockTransitionItem->getMessage(), iterator_to_array($blockTransitionList->getIterator(), true));
 
             $data = [
                 'success' => false,
@@ -173,7 +175,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
         } catch (ValidationException $e) {
             $reason = '';
             if (count($e->getSubItems()) > 0) {
-                $reason = '<ul>' . implode('', array_map(fn($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
+                $reason = '<ul>' . implode('', array_map(fn ($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
             }
 
             $data = [
@@ -182,7 +184,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
                 'reasons' => [$reason],
 
             ];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $data = [
                 'success' => false,
                 'message' => 'error performing action on this element',
@@ -196,7 +198,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
     /**
      * Returns the JSON needed by the workflow elements detail tab store
      *
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/get-workflow-details', name: 'opendxp_admin_workflow_getworkflowdetailsstore')]
     public function getWorkflowDetailsStore(Request $request, Manager $workflowManager, StatusInfo $placeStatusInfo, RouterInterface $router, ActionsButtonService $actionsButtonService): JsonResponse
@@ -211,7 +213,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
 
             try {
                 $svg = $this->getWorkflowSvg($workflow);
-            } catch (\InvalidArgumentException $e) {
+            } catch (InvalidArgumentException $e) {
                 $msg = $e->getMessage();
             }
 
@@ -246,7 +248,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
     /**
      * Returns the JSON needed by the workflow elements detail tab store
      *
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/show-graph', name: 'opendxp_admin_workflow_show_graph')]
     public function showGraph(Request $request, Manager $workflowManager): Response
@@ -262,7 +264,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
     /**
      * Get custom HTML for the workflow transition submit modal, depending whether it is configured or not.
      *
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/modal-custom-html', name: 'opendxp_admin_workflow_modal_custom_html', methods: ['POST'])]
     public function getModalCustomHtml(Request $request, Registry $workflowRegistry, Manager $manager): JsonResponse
@@ -313,7 +315,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function getWorkflowSvg(WorkflowInterface $workflow): string
     {
@@ -323,11 +325,11 @@ class WorkflowController extends AdminAbstractController implements KernelContro
         $dot = Console::getExecutable('dot');
 
         if (!$php) {
-            throw new \InvalidArgumentException($this->translator->trans('workflow_cmd_not_found', ['php'], 'admin'));
+            throw new InvalidArgumentException($this->translator->trans('workflow_cmd_not_found', ['php'], 'admin'));
         }
 
         if (!$dot) {
-            throw new \InvalidArgumentException($this->translator->trans('workflow_cmd_not_found', ['dot'], 'admin'));
+            throw new InvalidArgumentException($this->translator->trans('workflow_cmd_not_found', ['dot'], 'admin'));
         }
 
         $cmd = $php . ' ' . OPENDXP_PROJECT_ROOT . '/bin/console opendxp:workflow:dump ${WNAME} ${WPLACES} | ${DOT} -Tsvg';
@@ -388,7 +390,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function onKernelControllerEvent(ControllerEvent $event): void
     {
@@ -407,7 +409,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
         }
 
         if (!$this->element) {
-            throw new \Exception('Cannot load element' . $request->get('cid') . ' of type \'' . $request->get('ctype') . '\'');
+            throw new Exception('Cannot load element' . $request->get('cid') . ' of type \'' . $request->get('ctype') . '\'');
         }
 
         //get the latest available version of the element -

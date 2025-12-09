@@ -17,8 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use Browser;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
+use Exception;
+use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\Login\LoginRedirectEvent;
@@ -145,7 +148,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
         }
 
         $params['browserSupported'] = $this->detectBrowser();
-        $params['debug'] = \OpenDxp::inDebugMode();
+        $params['debug'] = OpenDxp::inDebugMode();
 
         $params['includeTemplates'] = [];
         $event = new GenericEvent($this, [
@@ -231,7 +234,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
                 try {
                     $domain = SystemSettingsConfig::get()['general']['domain'];
                     if (!$domain) {
-                        throw new \Exception('No main domain set in system settings, unable to generate reset password link');
+                        throw new Exception('No main domain set in system settings, unable to generate reset password link');
                     }
 
                     $context = $router->getContext();
@@ -257,7 +260,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
                     if ($event->hasResponse()) {
                         return $event->getResponse();
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     Logger::error('Error sending password recovery email: ' . $e->getMessage());
                     $error = 'lost_password_email_error';
                 }
@@ -290,6 +293,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
                     'perspective' => $perspective,
                 ]);
                 $url .= '&' . $queryString;
+
                 return $this->redirect($url);
             }
 
@@ -298,6 +302,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
                     'deeplink' => 'true',
                     'perspective' => $perspective,
                 ]);
+
                 return $this->render('@OpenDxpAdmin/admin/login/deeplink.html.twig', [
                     'tab' => $deeplink,
                     'redirect' => $url,
@@ -360,7 +365,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
             $secret = $request->getSession()->get('2fa_secret');
 
             if (!$secret) {
-                throw new \Exception('2fa secret not found');
+                throw new Exception('2fa secret not found');
             }
 
             $user->setTwoFactorAuthentication('enabled', true);
@@ -405,19 +410,19 @@ class LoginController extends AdminAbstractController implements KernelControlle
     public function detectBrowser(): bool
     {
         $supported = false;
-        $browser = new \Browser();
+        $browser = new Browser();
         $browserVersion = (int)$browser->getVersion();
 
-        if ($browser->getBrowser() == \Browser::BROWSER_FIREFOX && $browserVersion >= 72) {
+        if ($browser->getBrowser() == Browser::BROWSER_FIREFOX && $browserVersion >= 72) {
             $supported = true;
         }
-        if ($browser->getBrowser() == \Browser::BROWSER_CHROME && $browserVersion >= 84) {
+        if ($browser->getBrowser() == Browser::BROWSER_CHROME && $browserVersion >= 84) {
             $supported = true;
         }
-        if ($browser->getBrowser() == \Browser::BROWSER_SAFARI && $browserVersion >= 13.1) {
+        if ($browser->getBrowser() == Browser::BROWSER_SAFARI && $browserVersion >= 13.1) {
             $supported = true;
         }
-        if ($browser->getBrowser() == \Browser::BROWSER_EDGE && $browserVersion >= 90) {
+        if ($browser->getBrowser() == Browser::BROWSER_EDGE && $browserVersion >= 90) {
             return true;
         }
 

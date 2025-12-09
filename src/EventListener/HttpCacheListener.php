@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\EventListener;
 
+use OpenDxp;
 use OpenDxp\Bundle\CoreBundle\EventListener\Traits\OpenDxpContextAwareTrait;
 use OpenDxp\Http\Request\Resolver\OpenDxpContextResolver;
 use OpenDxp\Http\RequestHelper;
@@ -58,7 +59,7 @@ class HttpCacheListener implements EventSubscriberInterface
                 $disable = true;
             }
 
-            if (\OpenDxp::inDebugMode()) {
+            if (OpenDxp::inDebugMode()) {
                 $disable = true;
             }
         }

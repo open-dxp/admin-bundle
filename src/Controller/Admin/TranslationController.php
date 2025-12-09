@@ -18,6 +18,9 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use Doctrine\DBAL\Exception\SyntaxErrorException;
 use Doctrine\DBAL\Query\QueryBuilder as DoctrineQueryBuilder;
+use Exception;
+use InvalidArgumentException;
+use Locale;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Logger;
@@ -88,7 +91,7 @@ class TranslationController extends AdminAbstractController
             foreach ($delta as $item) {
                 $lg = $item['lg'];
                 $currentLocale = $localeService->findLocale();
-                $item['lgname'] = \Locale::getDisplayLanguage($lg, $currentLocale);
+                $item['lgname'] = Locale::getDisplayLanguage($lg, $currentLocale);
                 $item['icon'] = $this->generateUrl('opendxp_admin_misc_getlanguageflag', ['language' => $lg]);
                 $item['current'] = $item['text'];
                 $enrichedDelta[] = $item;
@@ -174,7 +177,7 @@ class TranslationController extends AdminAbstractController
         try {
             $list->load();
         } catch (SyntaxErrorException) {
-            throw new \InvalidArgumentException('Check your arguments.');
+            throw new InvalidArgumentException('Check your arguments.');
         }
 
         $translations = [];
@@ -272,7 +275,7 @@ class TranslationController extends AdminAbstractController
 
                 try {
                     $t = Translation::getByKey($translationData, Translation::DOMAIN_ADMIN);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     Logger::log((string) $e);
                 }
                 if (!$t instanceof Translation) {
@@ -288,7 +291,7 @@ class TranslationController extends AdminAbstractController
 
                     try {
                         $t->save();
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         Logger::log((string) $e);
                     }
                 }

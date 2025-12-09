@@ -20,6 +20,8 @@ use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Tool;
+use Override;
+use stdClass;
 
 /**
  * @internal
@@ -33,7 +35,7 @@ final class LFExpander extends AbstractOperator
 
     private bool $asArray;
 
-    public function __construct(private readonly LocaleServiceInterface $localeService, \stdClass $config, array $context = [])
+    public function __construct(private readonly LocaleServiceInterface $localeService, stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
@@ -41,7 +43,7 @@ final class LFExpander extends AbstractOperator
         $this->asArray = $config->asArray ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): ResultContainer|stdClass|null
     {
         $children = $this->getChildren();
         if (isset($children[0])) {
@@ -73,7 +75,7 @@ final class LFExpander extends AbstractOperator
         return null;
     }
 
-    #[\Override]
+    #[Override]
     public function expandLocales(): bool
     {
         return true;
@@ -82,7 +84,7 @@ final class LFExpander extends AbstractOperator
     /**
      * @return string[]
      */
-    #[\Override]
+    #[Override]
     public function getValidLanguages(): array
     {
         if ($this->locales) {

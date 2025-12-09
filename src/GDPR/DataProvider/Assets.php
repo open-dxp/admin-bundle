@@ -23,6 +23,7 @@ use OpenDxp\Bundle\AdminBundle\Service\GridData;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
 use Symfony\Component\HttpFoundation\Response;
+use ZipArchive;
 
 /**
  * @internal
@@ -58,8 +59,8 @@ class Assets extends Elements implements DataProviderInterface
 
         // Prepare File
         $file = tempnam('/tmp', 'zip');
-        $zip = new \ZipArchive();
-        $zip->open($file, \ZipArchive::OVERWRITE);
+        $zip = new ZipArchive();
+        $zip->open($file, ZipArchive::OVERWRITE);
 
         foreach (array_keys($this->exportIds) as $id) {
             $theAsset = Asset::getById((int) $id);

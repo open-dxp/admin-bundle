@@ -18,8 +18,9 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\Factory;
 
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\OperatorInterface;
+use stdClass;
 
 interface OperatorFactoryInterface
 {
-    public function build(\stdClass $configElement, array $context = []): ?OperatorInterface;
+    public function build(stdClass $configElement, array $context = []): ?OperatorInterface;
 }

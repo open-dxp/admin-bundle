@@ -16,12 +16,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Http\RequestHelper;
 use OpenDxp\Logger;
 use OpenDxp\Mail;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Tool;
+use ReflectionClass;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -36,13 +38,13 @@ use Symfony\Component\Routing\Attribute\Route;
 class EmailController extends AdminAbstractController
 {
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/email-logs', name: 'opendxp_admin_email_emaillogs', methods: ['GET', 'POST'])]
     public function emailLogsAction(Request $request): JsonResponse
     {
         if (!$this->getAdminUser()->isAllowed('emails') && !$this->getAdminUser()->isAllowed('gdpr_data_extractor')) {
-            throw new \Exception("Permission denied, user needs 'emails' permission.");
+            throw new Exception("Permission denied, user needs 'emails' permission.");
         }
 
         $list = new Tool\Email\Log\Listing();
@@ -106,7 +108,7 @@ class EmailController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/show-email-log', name: 'opendxp_admin_email_showemaillog', methods: ['GET'])]
     public function showEmailLogAction(Request $request, ?Profiler $profiler): JsonResponse|Response
@@ -139,7 +141,7 @@ class EmailController extends AdminAbstractController
         if ($type === 'params') {
             try {
                 $params = $emailLog->getParams();
-            } catch (\Exception) {
+            } catch (Exception) {
                 Logger::warning('Could not decode JSON param string');
                 $params = [];
             }
@@ -168,7 +170,7 @@ class EmailController extends AdminAbstractController
 
         if (!empty($data['objectClass'])) {
             $class = '\\' . ltrim($data['objectClass'], '\\');
-            $reflection = new \ReflectionClass($class);
+            $reflection = new ReflectionClass($class);
 
             if (!empty($data['objectId']) && $reflection->implementsInterface(ElementInterface::class)) {
                 $obj = $class::getById($data['objectId']);
@@ -235,7 +237,7 @@ class EmailController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/delete-email-log', name: 'opendxp_admin_email_deleteemaillog', methods: ['DELETE'])]
     public function deleteEmailLogAction(Request $request): JsonResponse
@@ -257,7 +259,7 @@ class EmailController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/resend-email', name: 'opendxp_admin_email_resendemail', methods: ['POST'])]
     public function resendEmailAction(Request $request): JsonResponse
@@ -315,7 +317,7 @@ class EmailController extends AdminAbstractController
             // re-add params
             try {
                 $params = $emailLog->getParams();
-            } catch (\Exception) {
+            } catch (Exception) {
                 Logger::warning('Could not decode JSON param string');
                 $params = [];
             }
@@ -347,13 +349,13 @@ class EmailController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/send-test-email', name: 'opendxp_admin_email_sendtestemail', methods: ['POST'])]
     public function sendTestEmailAction(Request $request): JsonResponse
     {
         if (!$this->getAdminUser()->isAllowed('emails')) {
-            throw new \Exception("Permission denied, user needs 'emails' permission.");
+            throw new Exception("Permission denied, user needs 'emails' permission.");
         }
 
         // Simulate a frontend request to prefix assets
@@ -379,7 +381,7 @@ class EmailController extends AdminAbstractController
                     }
                 }
             } else {
-                throw new \Exception('Email document not found!');
+                throw new Exception('Email document not found!');
             }
         }
 
@@ -408,13 +410,13 @@ class EmailController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/blocklist', name: 'opendxp_admin_email_blocklist', methods: ['POST'])]
     public function blocklistAction(Request $request): JsonResponse
     {
         if (!$this->getAdminUser()->isAllowed('emails')) {
-            throw new \Exception("Permission denied, user needs 'emails' permission.");
+            throw new Exception("Permission denied, user needs 'emails' permission.");
         }
 
         if ($request->get('data')) {
@@ -497,7 +499,7 @@ class EmailController extends AdminAbstractController
         $data = null;
         if ($params['data']['type'] === 'object') {
             $class = '\\' . ltrim($params['data']['objectClass'], '\\');
-            $reflection = new \ReflectionClass($class);
+            $reflection = new ReflectionClass($class);
 
             if (!empty($params['data']['objectId']) && $reflection->implementsInterface(ElementInterface::class)) {
                 $obj = $class::getById($params['data']['objectId']);

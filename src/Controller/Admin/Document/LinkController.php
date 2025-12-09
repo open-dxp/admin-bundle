@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
+use Exception;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\Document;
@@ -33,7 +34,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 class LinkController extends DocumentControllerBase
 {
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(Request $request, SerializerInterface $serializer): JsonResponse
@@ -58,7 +59,7 @@ class LinkController extends DocumentControllerBase
         $data['locked'] = $link->isLocked();
         $data['rawHref'] = $link->getRawHref();
         $data['scheduledTasks'] = array_map(
-            static fn(Task $task) => $task->getObjectVars(),
+            static fn (Task $task) => $task->getObjectVars(),
             $link->getScheduledTasks()
         );
 
@@ -70,7 +71,7 @@ class LinkController extends DocumentControllerBase
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(Request $request): JsonResponse

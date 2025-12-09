@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service;
 
+use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\AdminStyleTrait;
 use OpenDxp\Bundle\AdminBundle\CustomView;
@@ -30,8 +31,8 @@ use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Element\Service;
 use OpenDxp\Model\Site;
 use OpenDxp\Security\User\UserLoader;
-use OpenDxp\Tool\Frontend;
 
+use OpenDxp\Tool\Frontend;
 use OpenDxp\Workflow\Manager;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -65,7 +66,7 @@ class ElementService implements ElementServiceInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function getElementTreeNodeConfig(ElementInterface $element): array
     {
@@ -151,7 +152,7 @@ class ElementService implements ElementServiceInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function assignAssetTreeConfig(
         Asset $element,
@@ -186,7 +187,7 @@ class ElementService implements ElementServiceInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function assignDataObjectTreeConfig(DataObject\AbstractObject $element, array &$tmpNode): void
     {
@@ -226,7 +227,7 @@ class ElementService implements ElementServiceInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function assignDocumentTreeConfig(
         Document $element,
@@ -310,7 +311,7 @@ class ElementService implements ElementServiceInterface
 
                     break;
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error('Cannot get dimensions of asset, seems to be broken. Reason: ' . $e->getMessage());
         }
     }

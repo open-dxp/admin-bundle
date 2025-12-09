@@ -18,6 +18,8 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\EventListener;
 
 use Doctrine\DBAL\Exception as DBALException;
+use Exception;
+use OpenDxp;
 use OpenDxp\Bundle\CoreBundle\EventListener\Traits\OpenDxpContextAwareTrait;
 use OpenDxp\Http\Request\Resolver\OpenDxpContextResolver;
 use OpenDxp\Model\Element\ValidationException;
@@ -28,6 +30,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Throwable;
 
 /**
  * @internal
@@ -62,11 +65,11 @@ class AdminExceptionListener implements EventSubscriberInterface
             ];
 
             // DBAL exceptions do include SQL statements, we don't want to expose them
-            if (!\OpenDxp::inDebugMode() && $ex instanceof DBALException) {
+            if (!OpenDxp::inDebugMode() && $ex instanceof DBALException) {
                 $message = 'Database error, see logs for details';
             }
 
-            if (\OpenDxp::inDebugMode()) {
+            if (OpenDxp::inDebugMode()) {
                 $data['trace'] = $ex->getTrace();
                 $data['traceString'] = 'in ' . $ex->getFile() . ':' . $ex->getLine() . "\n" . $ex->getTraceAsString();
             }
@@ -90,7 +93,7 @@ class AdminExceptionListener implements EventSubscriberInterface
         }
     }
 
-    private function getResponseData(\Throwable $ex, int $defaultStatusCode = 500): array
+    private function getResponseData(Throwable $ex, int $defaultStatusCode = 500): array
     {
         $code = $defaultStatusCode;
         $headers = [];
@@ -110,7 +113,7 @@ class AdminExceptionListener implements EventSubscriberInterface
     }
 
     /**
-     * @param \Exception[] $items
+     * @param Exception[] $items
      */
     protected function recursiveAddValidationExceptionSubItems(array $items, string &$message, string &$detailedInfo): void
     {
@@ -146,7 +149,7 @@ class AdminExceptionListener implements EventSubscriberInterface
         }
     }
 
-    protected function getInnerStack(\Throwable $e): \Throwable
+    protected function getInnerStack(Throwable $e): Throwable
     {
         while ($e->getPrevious()) {
             $e = $e->getPrevious();

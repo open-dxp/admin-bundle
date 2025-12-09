@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -27,7 +28,7 @@ final class Concatenator extends AbstractOperator
 
     private readonly bool $forceValue;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
@@ -35,9 +36,9 @@ final class Concatenator extends AbstractOperator
         $this->forceValue = $config->forceValue ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): \stdClass
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $hasValue = true;

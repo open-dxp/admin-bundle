@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Workflow\Place\StatusInfo;
+use stdClass;
 use Symfony\Contracts\Service\Attribute\Required;
 
 /**
@@ -27,9 +28,9 @@ final class WorkflowState extends AbstractOperator
 {
     private StatusInfo $statusInfo;
 
-    public function getLabeledValue(array|ElementInterface $element): \stdClass
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $context = $this->getContext();

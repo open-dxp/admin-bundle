@@ -834,7 +834,7 @@ class GridHelperService
                     if (empty($value)) {
                         continue;
                     }
-                    $quoted = array_map(fn($val) => $db->quote($val), $value);
+                    $quoted = array_map(fn ($val) => $db->quote($val), $value);
                     $value = '(' . implode(',', $quoted) . ')';
                 } elseif ($operator === 'BETWEEN') {
                 } else {

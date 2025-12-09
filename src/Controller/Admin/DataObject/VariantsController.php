@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
@@ -45,7 +46,7 @@ class VariantsController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/get-variants', name: 'getvariants', methods: ['GET', 'POST'])]
     public function getVariantsAction(
@@ -57,11 +58,11 @@ class VariantsController extends AdminAbstractController
     ): JsonResponse {
         $parentObject = DataObject\Concrete::getById((int) $request->get('objectId'));
         if (empty($parentObject)) {
-            throw new \Exception('No Object found with id ' . $request->get('objectId'));
+            throw new Exception('No Object found with id ' . $request->get('objectId'));
         }
 
         if (!$parentObject->isAllowed('view')) {
-            throw new \Exception('Permission denied');
+            throw new Exception('Permission denied');
         }
 
         $allParams = [...$request->request->all(), ...$request->query->all()];

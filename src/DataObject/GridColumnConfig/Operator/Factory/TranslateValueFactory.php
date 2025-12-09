@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\Factor
 
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\OperatorInterface;
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\TranslateValue;
+use stdClass;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -30,7 +31,7 @@ final readonly class TranslateValueFactory implements OperatorFactoryInterface
     {
     }
 
-    public function build(\stdClass $configElement, array $context = []): OperatorInterface
+    public function build(stdClass $configElement, array $context = []): OperatorInterface
     {
         return new TranslateValue($this->translator, $configElement, $context);
     }

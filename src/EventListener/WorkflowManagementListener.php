@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\EventListener;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Service\Workflow\ActionsButtonService;
 use OpenDxp\Model\DataObject;
@@ -56,7 +57,7 @@ class WorkflowManagementListener implements EventSubscriberInterface
      * Fired before information is sent back to the admin UI about an element
      *
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function onAdminElementGetPreSendData(GenericEvent $e): void
     {
@@ -141,7 +142,7 @@ class WorkflowManagementListener implements EventSubscriberInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function extractElementFromEvent(GenericEvent $e): ElementInterface
     {
@@ -154,7 +155,7 @@ class WorkflowManagementListener implements EventSubscriberInterface
         }
 
         if (empty($element)) {
-            throw new \Exception('No element found in event');
+            throw new Exception('No element found in event');
         }
 
         return $element;

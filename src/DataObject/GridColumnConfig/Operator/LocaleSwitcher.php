@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -27,15 +28,15 @@ final class LocaleSwitcher extends AbstractOperator
 {
     private readonly ?string $locale;
 
-    public function __construct(private readonly LocaleServiceInterface $localeService, \stdClass $config, array $context = [])
+    public function __construct(private readonly LocaleServiceInterface $localeService, stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
         $this->locale = $config->locale ?? null;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): ResultContainer|stdClass|null
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $children = $this->getChildren();

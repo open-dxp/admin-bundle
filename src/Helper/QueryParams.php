@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Helper;
 
 use Carbon\Carbon;
+use Exception;
 
 /**
  * @internal
@@ -70,7 +71,7 @@ class QueryParams
      *
      *
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public static function getFilterCondition(string $filterString, array $matchExact = ['id', 'id'], bool $returnString = true, array $callbacks = []): array|string
     {
@@ -115,7 +116,7 @@ class QueryParams
                     $conditions[$f->property][] = ' ' . $f->property . ' > ' . $db->quote($date->addDay()->subSecond()->getTimestamp());
                 }
             } else {
-                throw new \Exception('Filer of type ' . $f->type . ' not jet supported.');
+                throw new Exception('Filer of type ' . $f->type . ' not jet supported.');
             }
         }
 
@@ -130,6 +131,7 @@ class QueryParams
         if ($returnString) {
             return implode(' OR ', $conditionsGrouped);
         }
+
         return $conditionsGrouped;
     }
 }

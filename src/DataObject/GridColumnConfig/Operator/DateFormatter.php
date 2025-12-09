@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use Carbon\Carbon;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -26,16 +27,16 @@ final class DateFormatter extends AbstractOperator
 {
     private ?string $format = null;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
         $this->format = ($config->format ?: null);
     }
 
-    public function getLabeledValue(array|ElementInterface $element): \stdClass
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
         $result->value = null;
 

@@ -15,6 +15,7 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\AdminStyleTrait;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\ApplySchedulerDataTrait;
@@ -40,6 +41,7 @@ use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Element\Service;
 use OpenDxp\Model\Schedule\Task;
 use OpenDxp\Tool;
+use Override;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -50,6 +52,7 @@ use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Throwable;
 use Twig\Environment;
 use Twig\Extension\CoreExtension;
 
@@ -230,9 +233,9 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
-    #[\Override]
+    #[Override]
     protected function getTreeNodeConfig(ElementInterface $element): array
     {
         return $this->elementService->getElementTreeNodeConfig($element);
@@ -282,7 +285,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/get', name: 'get', methods: ['GET'])]
     public function getAction(Request $request, EventDispatcherInterface $eventDispatcher, PreviewGeneratorInterface $defaultPreviewGenerator): JsonResponse
@@ -387,7 +390,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
             $objectVersions = Element\Service::getSafeVersionInfo($objectFromDatabase->getVersions());
             $objectData['versions'] = array_splice($objectVersions, -1, 1);
             $objectData['scheduledTasks'] = array_map(
-                static fn(Task $task) => $task->getObjectVars(),
+                static fn (Task $task) => $task->getObjectVars(),
                 $objectFromDatabase->getScheduledTasks()
             );
 
@@ -407,7 +410,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
 
             try {
                 $this->getDataForObject($object, $objectFromVersion);
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 $object = $objectFromDatabase;
                 $this->getDataForObject($object, false);
             }
@@ -549,7 +552,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/get-select-options', name: 'getSelectOptions', methods: ['POST'])]
     public function getSelectOptions(Request $request): JsonResponse
@@ -895,7 +898,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                 'type' => $object->getType(),
                 'message' => $message,
             ];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $return = [
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -925,7 +928,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                 try {
                     $folder->save();
                     $success = true;
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
                 }
             }
@@ -937,7 +940,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/delete', name: 'delete', methods: ['DELETE'])]
     public function deleteAction(Request $request): JsonResponse
@@ -983,7 +986,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/change-children-sort-by', name: 'changechildrensortby', methods: ['PUT'])]
     public function changeChildrenSortByAction(Request $request): JsonResponse
@@ -1022,7 +1025,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/update', name: 'update', methods: ['PUT'])]
     public function updateAction(Request $request): JsonResponse
@@ -1051,7 +1054,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     /**
      * @return array{success: bool, message?: string}
      *
-     * @throws \Exception
+     * @throws Exception
      */
     private function executeUpdateAction(DataObject $object, mixed $values): array
     {
@@ -1090,7 +1093,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                 //check if parent is changed
                 if ($object->getParentId() !== $parent->getId()) {
                     if (!$parent->isAllowed('create')) {
-                        throw new \Exception('Prevented moving object - no create permission on new parent ');
+                        throw new Exception('Prevented moving object - no create permission on new parent ');
                     }
 
                     $objectWithSamePath = DataObject::getByPath($parent->getRealFullPath() . '/' . $object->getKey());
@@ -1133,7 +1136,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                   'success' => true,
                   'treeData' => $this->getTreeNodeConfig($object),
                 ];
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Logger::error((string) $e);
 
                 return ['success' => false, 'message' => $e->getMessage()];
@@ -1159,7 +1162,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                 Db::get()->commit();
 
                 break;
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Db::get()->rollBack();
 
                 // we try to start the transaction $maxRetries times again (deadlocks, ...)
@@ -1301,7 +1304,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(Request $request): JsonResponse
@@ -1344,7 +1347,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
         if ($request->get('data')) {
             try {
                 $this->applyChanges($object, $this->decodeJson($request->get('data')));
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 $this->applyChanges($objectFromDatabase, $this->decodeJson($request->get('data')));
             }
         }
@@ -1405,6 +1408,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
 
         if ($request->get('task') === 'scheduler' && $object->isAllowed('settings')) {
             $object->saveScheduledTasks();
+
             return $this->adminJson(['success' => true]);
         }
 
@@ -1446,7 +1450,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function performFieldcollectionModificationCheck(Request $request, DataObject\Concrete $object, int $originalModificationDate, array $data): bool
     {
@@ -1494,7 +1498,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                 $object->save();
 
                 return $this->adminJson(['success' => true]);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
             }
         }
@@ -1528,7 +1532,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                         $property->setInheritable($propertyData['inheritable']);
 
                         $properties[$propertyName] = $property;
-                    } catch (\Exception) {
+                    } catch (Exception) {
                         Logger::err("Can't add " . $propertyName . ' to object ' . $object->getRealFullPath());
                     }
                 }
@@ -1565,7 +1569,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                         'general' => ['modificationDate' => $object->getModificationDate() ],
                         'treeData' => $treeData, ]
                 );
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
             }
         }
@@ -1574,7 +1578,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/preview-version', name: 'previewversion', methods: ['GET'])]
     public function previewVersionAction(Request $request, Environment $twig): Response
@@ -1617,7 +1621,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/diff-versions/from/{from}/to/{to}', name: 'diffversions', methods: ['GET'])]
     public function diffVersionsAction(Request $request, Environment $twig, int $from, int $to): Response
@@ -1796,14 +1800,14 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/copy-rewrite-ids', name: 'copyrewriteids', methods: ['PUT'])]
     public function copyRewriteIdsAction(Request $request): JsonResponse
     {
         $transactionId = $request->get('transactionId');
 
-        $idStore = Tool\Session::useBag($request->getSession(), fn(AttributeBagInterface $session) => $session->get($transactionId), 'opendxp_copy');
+        $idStore = Tool\Session::useBag($request->getSession(), fn (AttributeBagInterface $session) => $session->get($transactionId), 'opendxp_copy');
 
         if (!array_key_exists('rewrite-stack', $idStore)) {
             $idStore['rewrite-stack'] = array_values($idStore['idMapping']);

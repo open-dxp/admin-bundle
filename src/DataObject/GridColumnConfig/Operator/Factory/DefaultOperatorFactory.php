@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\Factor
 
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\OperatorInterface;
 use OpenDxp\Logger;
+use stdClass;
 
 class DefaultOperatorFactory implements OperatorFactoryInterface
 {
@@ -26,7 +27,7 @@ class DefaultOperatorFactory implements OperatorFactoryInterface
     {
     }
 
-    public function build(\stdClass $configElement, array $context = []): ?OperatorInterface
+    public function build(stdClass $configElement, array $context = []): ?OperatorInterface
     {
         if (class_exists($this->className)) {
             return new $this->className($configElement, $context);

@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use Exception;
+use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\OpenDxpAdminExtension;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
@@ -77,7 +79,7 @@ class ElementController extends AdminAbstractController
         $type = $request->query->get('type');
 
         $event = new ResolveElementEvent($type, $idOrPath);
-        \OpenDxp::getEventDispatcher()->dispatch($event, AdminEvents::RESOLVE_ELEMENT);
+        OpenDxp::getEventDispatcher()->dispatch($event, AdminEvents::RESOLVE_ELEMENT);
         $idOrPath = $event->getId();
         $type = $event->getType();
 
@@ -106,6 +108,7 @@ class ElementController extends AdminAbstractController
                 'success' => true,
             ]);
         }
+
         return $this->adminJson([
             'success' => false,
         ]);
@@ -361,6 +364,7 @@ class ElementController extends AdminAbstractController
                 'jobs' => $element->getDependencies()->getRequiredBy(),
             ]);
         }
+
         return $this->adminJson(['success' => false], Response::HTTP_NOT_FOUND);
     }
 
@@ -476,14 +480,14 @@ class ElementController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/element/get-nice-path', name: 'opendxp_admin_element_getnicepath', methods: ['POST'])]
     public function getNicePathAction(Request $request): JsonResponse
     {
         $source = $this->decodeJson($request->get('source'));
         if ($source['type'] != 'object') {
-            throw new \Exception('currently only objects as source elements are supported');
+            throw new Exception('currently only objects as source elements are supported');
         }
         $result = [];
         $id = $source['id'];
@@ -526,7 +530,7 @@ class ElementController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/element/get-versions', name: 'opendxp_admin_element_getversions', methods: ['GET'])]
     public function getVersionsAction(Request $request): JsonResponse
@@ -571,8 +575,10 @@ class ElementController extends AdminAbstractController
 
                     return $this->adminJson(['versions' => $versions]);
                 }
+
                 throw $this->createAccessDeniedException('Permission denied, ' . $type . ' id [' . $id . ']');
             }
+
             throw $this->createNotFoundException($type . ' with id [' . $id . "] doesn't exist");
         }
 
@@ -659,6 +665,7 @@ class ElementController extends AdminAbstractController
 
                     return $this->adminJson($result);
                 }
+
                 return $this->adminJson($elements);
 
             }
@@ -718,6 +725,7 @@ class ElementController extends AdminAbstractController
 
                     return $this->adminJson($result);
                 }
+
                 return $this->adminJson($elements);
 
             }
@@ -750,6 +758,7 @@ class ElementController extends AdminAbstractController
                 if (!str_contains($predefined->getCtype(), $type)) {
                     return false;
                 }
+
                 return !($query && stripos($translator->trans($predefined->getName(), [], 'admin'), (string) $query) === false);
             });
 
@@ -792,7 +801,7 @@ class ElementController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function getNicePathFormatterFieldDefinition(DataObject\Concrete $source, array $context): DataObject\ClassDefinition\Data|bool|null
     {
@@ -835,7 +844,7 @@ class ElementController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function convertResultWithPathFormatter(DataObject\Concrete $source, array $context, array $result, array $targets): array
     {

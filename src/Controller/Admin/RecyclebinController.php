@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use OpenDxp\Model\Element;
@@ -171,7 +172,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
                     Recyclebin\Item::create($element, $this->getAdminUser());
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
         }
 

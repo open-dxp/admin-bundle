@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use OpenDxp\Db;
@@ -27,6 +28,7 @@ use OpenDxp\Model\Translation\Listing;
 use OpenDxp\Model\User;
 use OpenDxp\Security\SecurityHelper;
 use OpenDxp\Tool\Admin;
+use stdClass;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
@@ -106,7 +108,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/create-group', name: 'creategroup', methods: ['POST'])]
     public function createGroupAction(Request $request): JsonResponse
@@ -130,7 +132,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/create-store', name: 'createstore', methods: ['POST'])]
     public function createStoreAction(Request $request): JsonResponse
@@ -146,14 +148,14 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $config->setName($name);
             $config->save();
         } else {
-            throw new \Exception('Store with the given name exists');
+            throw new Exception('Store with the given name exists');
         }
 
         return $this->adminJson(['success' => true, 'storeId' => $config->getId()]);
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/create-collection', name: 'createcollection', methods: ['POST'])]
     public function createCollectionAction(Request $request): JsonResponse
@@ -257,7 +259,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
         if ($request->get('filter')) {
             $filterString = $request->get('filter');
             $filters = json_decode($filterString);
-            /** @var \stdClass $f */
+            /** @var stdClass $f */
             foreach ($filters as $f) {
                 if (!isset($f->value)) {
                     continue;
@@ -400,7 +402,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
         if ($request->get('filter')) {
             $filterString = $request->get('filter');
             $filters = json_decode($filterString);
-            /** @var \stdClass $f */
+            /** @var stdClass $f */
             foreach ($filters as $f) {
                 if (!isset($f->value)) {
                     continue;
@@ -533,7 +535,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $filters = json_decode($filterString);
 
             $count = 0;
-            /** @var \stdClass $f */
+            /** @var stdClass $f */
             foreach ($filters as $f) {
                 if (!isset($f->value)) {
                     continue;
@@ -684,7 +686,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $db = Db::get();
             $filterString = $request->get('filter');
             $filters = json_decode($filterString);
-            /** @var \stdClass $f */
+            /** @var stdClass $f */
             foreach ($filters as $f) {
                 if (!isset($f->value)) {
                     continue;
@@ -799,7 +801,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $db = Db::get();
             $filterString = $request->get('filter');
             $filters = json_decode($filterString);
-            /** @var \stdClass $f */
+            /** @var stdClass $f */
             foreach ($filters as $f) {
                 if (!isset($f->value)) {
                     continue;
@@ -890,7 +892,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/add-collections', name: 'addcollections', methods: ['POST'])]
     public function addCollectionsAction(Request $request): JsonResponse
@@ -998,7 +1000,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/add-groups', name: 'addgroups', methods: ['POST'])]
     public function addGroupsAction(Request $request): JsonResponse
@@ -1074,7 +1076,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/properties', name: 'propertiesget', methods: ['GET'])]
     public function propertiesGetAction(Request $request): JsonResponse
@@ -1166,7 +1168,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
         if ($request->get('filter')) {
             $filterString = $request->get('filter');
             $filters = json_decode($filterString);
-            /** @var \stdClass $f */
+            /** @var stdClass $f */
             foreach ($filters as $f) {
                 if (!isset($f->value)) {
                     continue;
@@ -1325,7 +1327,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/edit-store', name: 'editstore', methods: ['PUT'])]
     public function editStoreAction(Request $request): JsonResponse
@@ -1334,20 +1336,20 @@ class ClassificationstoreController extends AdminAbstractController implements K
         $data = json_decode($request->request->get('data'), true);
         $name = $data['name'];
         if (!$name) {
-            throw new \Exception('Name must not be empty');
+            throw new Exception('Name must not be empty');
         }
 
         $description = $data['description'];
 
         $config = Classificationstore\StoreConfig::getByName($name);
         if ($config && $config->getId() != $id) {
-            throw new \Exception('There is already a config with the same name');
+            throw new Exception('There is already a config with the same name');
         }
 
         $config = Classificationstore\StoreConfig::getById($id);
 
         if (!$config) {
-            throw new \Exception('Configuration does not exist');
+            throw new Exception('Configuration does not exist');
         }
 
         $config->setName($name);

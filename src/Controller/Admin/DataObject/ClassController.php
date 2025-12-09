@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Controller\KernelControllerEventInterface;
@@ -274,7 +275,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $classId = $request->get('classIdentifier');
         $existingClass = DataObject\ClassDefinition::getById($classId);
         if ($existingClass) {
-            throw new \Exception('Class identifier already exists');
+            throw new Exception('Class identifier already exists');
         }
 
         $class = DataObject\ClassDefinition::create(
@@ -295,7 +296,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $layoutId = $request->get('layoutIdentifier');
         $existingLayout = DataObject\ClassDefinition\CustomLayout::getById($layoutId);
         if ($existingLayout) {
-            throw new \Exception('Custom Layout identifier already exists');
+            throw new Exception('Custom Layout identifier already exists');
         }
 
         $customLayout = DataObject\ClassDefinition\CustomLayout::create(
@@ -381,7 +382,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             $customLayout->save();
 
             return $this->adminJson(['success' => true, 'id' => $customLayout->getId(), 'data' => $customLayout->getObjectVars()]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error($e->getMessage());
 
             return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
@@ -389,7 +390,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['PUT'])]
     public function saveAction(Request $request): JsonResponse
@@ -404,13 +405,13 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
         // check if the class was changed during editing in the frontend
         if ($class->getModificationDate() != $values['modificationDate']) {
-            throw new \Exception('The class was modified during editing, please reload the class and make your changes again');
+            throw new Exception('The class was modified during editing, please reload the class and make your changes again');
         }
 
         if ($values['name'] != $class->getName()) {
             $classByName = DataObject\ClassDefinition::getByName($values['name']);
             if ($classByName && $classByName->getId() !== $class->getId()) {
-                throw new \Exception('Class name already exists');
+                throw new Exception('Class name already exists');
             }
 
             $values['name'] = $this->correctClassname($values['name']);
@@ -464,7 +465,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             $class->setFieldDefinitions([]);
 
             return $this->adminJson(['success' => true, 'class' => $class]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error($e->getMessage());
 
             return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
@@ -532,7 +533,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
                     }
                     $customLayout->save();
                     $success = true;
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     Logger::error($e->getMessage());
                 }
             }
@@ -555,7 +556,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $classIds = explode(',', $request->get('classId'));
         $list = new DataObject\ClassDefinition\CustomLayout\Listing();
 
-        $list->setFilter(fn(DataObject\ClassDefinition\CustomLayout $layout) => in_array($layout->getClassId(), $classIds) && !str_contains($layout->getId(), '.brick.'));
+        $list->setFilter(fn (DataObject\ClassDefinition\CustomLayout $layout) => in_array($layout->getClassId(), $classIds) && !str_contains($layout->getId(), '.brick.'));
         $list = $list->load();
         $result = [];
         foreach ($list as $item) {
@@ -577,8 +578,8 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $mapping = [];
 
         $customLayouts = new DataObject\ClassDefinition\CustomLayout\Listing();
-        $customLayouts->setFilter(fn(DataObject\ClassDefinition\CustomLayout $layout) => !str_contains($layout->getId(), '.brick.'));
-        $customLayouts->setOrder(fn(DataObject\ClassDefinition\CustomLayout $a, DataObject\ClassDefinition\CustomLayout $b) => strcmp($a->getName(), $b->getName()));
+        $customLayouts->setFilter(fn (DataObject\ClassDefinition\CustomLayout $layout) => !str_contains($layout->getId(), '.brick.'));
+        $customLayouts->setOrder(fn (DataObject\ClassDefinition\CustomLayout $a, DataObject\ClassDefinition\CustomLayout $b) => strcmp($a->getName(), $b->getName()));
 
         $customLayouts = $customLayouts->load();
         foreach ($customLayouts as $layout) {
@@ -689,7 +690,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
                 foreach ($list as $fcName) {
                     if (strtolower($key) === strtolower($fcName)) {
-                        throw new \Exception('FieldCollection with the same name already exists (lower/upper cases may be different)');
+                        throw new Exception('FieldCollection with the same name already exists (lower/upper cases may be different)');
                     }
                 }
             }
@@ -718,7 +719,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             $fcDef->save();
 
             return $this->adminJson(['success' => true, 'id' => $fcDef->getKey()]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error($e->getMessage());
 
             return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
@@ -1027,7 +1028,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
                 foreach ($list as $brickName) {
                     if (strtolower($key) === strtolower($brickName)) {
-                        throw new \Exception('Brick with the same name already exists (lower/upper cases may be different)');
+                        throw new Exception('Brick with the same name already exists (lower/upper cases may be different)');
                     }
                 }
             }
@@ -1065,7 +1066,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             $brickDef->save();
 
             return $this->adminJson(['success' => true, 'id' => $brickDef->getKey()]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error($e->getMessage());
 
             return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
@@ -1387,7 +1388,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
     /**
      * Add option to export/import all class definitions/brick definitions etc. at once
      *
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/bulk-commit', name: 'bulkcommit', methods: ['POST'])]
     public function bulkCommitAction(Request $request): JsonResponse
@@ -1452,13 +1453,13 @@ class ClassController extends AdminAbstractController implements KernelControlle
                 if ($item['name'] == $layoutName && $item['className'] == $className) {
                     $class = DataObject\ClassDefinition::getByName($className);
                     if (!$class) {
-                        throw new \Exception('Class does not exist');
+                        throw new Exception('Class does not exist');
                     }
 
                     $classId = $class->getId();
 
                     $layoutList = new DataObject\ClassDefinition\CustomLayout\Listing();
-                    $layoutList->setFilter(fn(DataObject\ClassDefinition\CustomLayout $layout) => $layout->getName() === $layoutName && $layout->getClassId() === $classId);
+                    $layoutList->setFilter(fn (DataObject\ClassDefinition\CustomLayout $layout) => $layout->getName() === $layoutName && $layout->getClassId() === $classId);
                     $layoutList = $layoutList->load();
 
                     $layoutDefinition = null;
@@ -1477,7 +1478,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
                         $layoutDef = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($item['layoutDefinitions'], true);
                         $layoutDefinition->setLayoutDefinitions($layoutDef);
                         $layoutDefinition->save();
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         Logger::error($e->getMessage());
 
                         return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
@@ -1725,8 +1726,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             $colorIcons = rscandir($iconDir . '/flat-color-icons/');
             $twemoji = rscandir($iconDir . '/twemoji/');
             $icons = [...$classIcons, ...$colorIcons, ...$twemoji];
-        }
-        else {
+        } else {
             $icons = match($type) {
                 'color' => rscandir($iconDir . '/flat-color-icons/'),
                 'white' => rscandir($iconDir . '/flat-white-icons/'),
@@ -1935,7 +1935,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             $id = $request->get(DataObject\SelectOptions\Config::PROPERTY_ID);
 
             if ($request->get('task') === 'add' && (new DataObject\SelectOptions\Config\Listing())->hasConfig($id)) {
-                throw new \Exception('Select options with the same ID already exists (lower/upper cases may be different)');
+                throw new Exception('Select options with the same ID already exists (lower/upper cases may be different)');
             }
 
             $group = $request->get(DataObject\SelectOptions\Config::PROPERTY_GROUP);
@@ -1962,7 +1962,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             $selectOptionsConfiguration->save();
 
             return $this->adminJson(['success' => true, 'id' => $selectOptionsConfiguration->getId()]);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             Logger::error($exception->getMessage());
 
             return $this->adminJson(['success' => false, 'message' => $exception->getMessage()]);
@@ -2029,7 +2029,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             $this->getSelectOptionsConfig($id)->delete();
 
             return $this->adminJson(['success' => true]);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return $this->adminJson(['success' => false, 'message' => $exception->getMessage()]);
         }
     }

@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
+use Exception;
 use OpenDxp\Document\Editable\Block\BlockStateStack;
 use OpenDxp\Document\Editable\EditmodeEditableDefinitionCollector;
 use OpenDxp\Document\StaticPageGenerator;
@@ -50,7 +51,7 @@ class PageController extends DocumentControllerBase
     use RecursionBlockingEventDispatchHelperTrait;
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(Request $request, StaticPageGenerator $staticPageGenerator): JsonResponse
@@ -94,7 +95,7 @@ class PageController extends DocumentControllerBase
 
         $data['url'] = $page->getUrl();
         $data['scheduledTasks'] = array_map(
-            static fn(Task $task) => $task->getObjectVars(),
+            static fn (Task $task) => $task->getObjectVars(),
             $page->getScheduledTasks()
         );
 
@@ -102,7 +103,7 @@ class PageController extends DocumentControllerBase
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
     public function saveAction(Request $request, StaticPageGenerator $staticPageGenerator): JsonResponse
@@ -165,6 +166,7 @@ class PageController extends DocumentControllerBase
             ];
         }
         $treeData = $this->getTreeNodeConfig($page);
+
         return $this->adminJson(['success' => true, 'treeData' => $treeData, 'draft' => $draftData]);
     }
 
@@ -291,7 +293,7 @@ class PageController extends DocumentControllerBase
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/qr-code', name: 'qrcode', methods: ['GET'])]
     public function qrCodeAction(Request $request): BinaryFileResponse
@@ -326,7 +328,7 @@ class PageController extends DocumentControllerBase
     }
 
     /**
-     * @throws NotFoundHttpException|\Exception
+     * @throws NotFoundHttpException|Exception
      */
     #[Route('/areabrick-render-index-editmode', name: 'areabrick-render-index-editmode', methods: ['POST'])]
     public function areabrickRenderIndexEditmode(

@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject\Data\Hotspotimage;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -29,7 +30,7 @@ final class AssetMetadataGetter extends AbstractOperator
 
     private ?string $locale = null;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
@@ -37,9 +38,9 @@ final class AssetMetadataGetter extends AbstractOperator
         $this->locale = $config->locale ?? null;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): \stdClass
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
         $result->value = null;
 

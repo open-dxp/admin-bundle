@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Perspective;
 
+use Exception;
+use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Config\LocationAwareConfigRepository;
 use OpenDxp\Logger;
@@ -37,7 +39,7 @@ final class Config
     private static function getRepository(): LocationAwareConfigRepository
     {
         if (!self::$locationAwareConfigRepository) {
-            $containerConfig = \OpenDxp::getContainer()->getParameter('opendxp.config');
+            $containerConfig = OpenDxp::getContainer()->getParameter('opendxp.config');
             $config = $containerConfig[self::CONFIG_ID]['definitions'];
             $storageConfig = $containerConfig['config_location'][self::CONFIG_ID];
 
@@ -78,7 +80,7 @@ final class Config
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public static function save(array $data, ?array $deletedRecords): void
     {
@@ -89,7 +91,7 @@ final class Config
             [$configKey, $dataSource] = $repository->loadConfigByKey($key);
             if ($repository->isWriteable($key, $dataSource)) {
                 unset($value['writeable']);
-                $repository->saveConfig($key, $value, fn($key, $data) => [
+                $repository->saveConfig($key, $value, fn ($key, $data) => [
                     'opendxp' => [
                         'perspectives' => [
                             'definitions' => [
@@ -229,7 +231,7 @@ final class Config
             'result' => $result,
             'configName' => $currentConfigName,
         ]);
-        \OpenDxp::getEventDispatcher()->dispatch($event, AdminEvents::PERSPECTIVE_POST_GET_RUNTIME);
+        OpenDxp::getEventDispatcher()->dispatch($event, AdminEvents::PERSPECTIVE_POST_GET_RUNTIME);
 
         return $event->getArgument('result');
     }

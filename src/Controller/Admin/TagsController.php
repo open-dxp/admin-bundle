@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Model\Element\Tag;
@@ -43,13 +44,13 @@ class TagsController extends AdminAbstractController
             $tag->save();
 
             return $this->adminJson(['success' => true, 'id' => $tag->getId()]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/delete', name: 'opendxp_admin_tags_delete', methods: ['DELETE'])]
     public function deleteAction(Request $request): JsonResponse
@@ -62,11 +63,12 @@ class TagsController extends AdminAbstractController
 
             return $this->adminJson(['success' => true]);
         }
+
         throw $this->createNotFoundException('Tag with ID ' . $request->get('id') . ' not found.');
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/update', name: 'opendxp_admin_tags_update', methods: ['PUT'])]
     public function updateAction(Request $request): JsonResponse
@@ -87,6 +89,7 @@ class TagsController extends AdminAbstractController
 
             return $this->adminJson(['success' => true]);
         }
+
         throw $this->createNotFoundException('Tag with ID ' . $request->get('id') . ' not found.');
     }
 
@@ -205,6 +208,7 @@ class TagsController extends AdminAbstractController
 
             return $this->adminJson(['success' => true, 'id' => $tag->getId()]);
         }
+
         return $this->adminJson(['success' => false]);
     }
 
@@ -221,6 +225,7 @@ class TagsController extends AdminAbstractController
 
             return $this->adminJson(['success' => true, 'id' => $tag->getId()]);
         }
+
         return $this->adminJson(['success' => false]);
     }
 

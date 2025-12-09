@@ -17,11 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig;
 
+use InvalidArgumentException;
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\Factory\OperatorFactoryInterface;
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\OperatorInterface;
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Value\Factory\ValueFactoryInterface;
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Value\ValueInterface;
 use Psr\Container\ContainerInterface;
+use stdClass;
 
 /**
  * @internal
@@ -33,7 +35,7 @@ final readonly class Service
     }
 
     /**
-     * @param \stdClass[] $jsonConfigs
+     * @param stdClass[] $jsonConfigs
      *
      * @return ConfigElementInterface[]
      */
@@ -43,7 +45,7 @@ final readonly class Service
     }
 
     /**
-     * @param \stdClass[] $jsonConfigs
+     * @param stdClass[] $jsonConfigs
      *
      * @return ConfigElementInterface[]
      */
@@ -71,10 +73,10 @@ final readonly class Service
         return $config;
     }
 
-    private function buildOperator(string $name, \stdClass $configElement, array $context = []): ?OperatorInterface
+    private function buildOperator(string $name, stdClass $configElement, array $context = []): ?OperatorInterface
     {
         if (!$this->operatorFactories->has($name)) {
-            throw new \InvalidArgumentException(sprintf('Operator "%s" is not supported', $name));
+            throw new InvalidArgumentException(sprintf('Operator "%s" is not supported', $name));
         }
 
         /** @var OperatorFactoryInterface $factory */
@@ -83,10 +85,10 @@ final readonly class Service
         return $factory->build($configElement, $context);
     }
 
-    private function buildValue(string $name, \stdClass $configElement, mixed $context = null): ValueInterface
+    private function buildValue(string $name, stdClass $configElement, mixed $context = null): ValueInterface
     {
         if (!$this->valueFactories->has($name)) {
-            throw new \InvalidArgumentException(sprintf('Value "%s" is not supported', $name));
+            throw new InvalidArgumentException(sprintf('Value "%s" is not supported', $name));
         }
 
         /** @var ValueFactoryInterface $factory */

@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Value\Factory;
 
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Value\ValueInterface;
 use OpenDxp\Localization\LocaleServiceInterface;
+use stdClass;
 
 final readonly class DefaultValueFactory implements ValueFactoryInterface
 {
@@ -26,7 +27,7 @@ final readonly class DefaultValueFactory implements ValueFactoryInterface
     {
     }
 
-    public function build(\stdClass $configElement, mixed $context = null): ValueInterface
+    public function build(stdClass $configElement, mixed $context = null): ValueInterface
     {
         $value = new $this->className($configElement, $context);
 

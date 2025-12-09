@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -33,7 +34,7 @@ final class TranslateValue extends AbstractOperator
      */
     private mixed $locale = null;
 
-    public function __construct(private readonly LocaleAwareInterface|\stdClass|TranslatorInterface $translator, \stdClass $config, array $context = [])
+    public function __construct(private readonly LocaleAwareInterface|stdClass|TranslatorInterface $translator, stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
         $this->prefix = $config->prefix ?? '';
@@ -42,7 +43,7 @@ final class TranslateValue extends AbstractOperator
         }
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): ResultContainer|stdClass|null
     {
         $children = $this->getChildren();
         if (isset($children[0])) {

@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\System;
 
+use OpenDxp;
 use OpenDxp\Cache\RuntimeCache;
 use OpenDxp\Config\LocationAwareConfigRepository;
 use OpenDxp\Helper\SystemConfig;
@@ -38,7 +39,7 @@ final class AdminConfig
     private static function getRepository(): LocationAwareConfigRepository
     {
         if (!self::$locationAwareConfigRepository) {
-            $containerConfig = \OpenDxp::getContainer()->getParameter('opendxp_admin.config');
+            $containerConfig = OpenDxp::getContainer()->getParameter('opendxp_admin.config');
             $config[self::CONFIG_ID][self::BRANDING] = $containerConfig[self::BRANDING];
             $config[self::CONFIG_ID][self::ASSETS] = $containerConfig[self::ASSETS];
             $storageConfig = $containerConfig['config_location'][self::CONFIG_ID];
@@ -63,7 +64,7 @@ final class AdminConfig
         // If the read target is settings-store and no data is found there,
         // load the data from the container config
         if (!$data && $loadType === \OpenDxp\Config\LocationAwareConfigRepository::LOCATION_SETTINGS_STORE) {
-            $containerConfig = \OpenDxp::getContainer()->getParameter('opendxp_admin.config');
+            $containerConfig = OpenDxp::getContainer()->getParameter('opendxp_admin.config');
             $data[self::BRANDING] = $containerConfig[self::BRANDING];
             $data[self::ASSETS] = $containerConfig[self::ASSETS];
             $data['writeable'] = $repository->isWriteable();
@@ -89,7 +90,7 @@ final class AdminConfig
             'disable_tree_preview' => $values['assets.disable_tree_preview'],
         ];
 
-        $repository->saveConfig(self::CONFIG_ID, $data, fn($key, $data) => [
+        $repository->saveConfig(self::CONFIG_ID, $data, fn ($key, $data) => [
             'opendxp_admin' => $data,
         ]);
     }

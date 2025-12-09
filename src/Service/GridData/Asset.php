@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\GridData;
 
+use OpenDxp;
 use OpenDxp\Model;
 use OpenDxp\Model\Asset\MetaData\ClassDefinition\Data\Data;
 use OpenDxp\Model\Element\Service;
@@ -68,7 +69,7 @@ class Asset extends Element
                     if ($rawMetaData) {
                         $type = $rawMetaData['type'];
                         if (!$loader) {
-                            $loader = \OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
+                            $loader = OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
                         }
 
                         $metaData = $rawMetaData['data'] ?? null;

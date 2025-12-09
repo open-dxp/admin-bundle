@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig;
 
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 interface ConfigElementInterface
 {
@@ -25,7 +26,7 @@ interface ConfigElementInterface
     /**
      * @param ElementInterface|ElementInterface[] $element
      */
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null;
+    public function getLabeledValue(array|ElementInterface $element): ResultContainer|stdClass|null;
 
     public function getRenderer(): ?string;
 }

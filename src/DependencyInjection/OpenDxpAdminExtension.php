@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\DependencyInjection;
 
 use OpenDxp\Bundle\CoreBundle\DependencyInjection\ConfigurationHelper;
 use OpenDxp\Config\LocationAwareConfigRepository;
+use Override;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -35,7 +36,7 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
 
     public const string PARAM_DOCUMENTS_NOTES_EVENTS_TYPES = 'opendxp_admin.documents.notes_events.types';
 
-    #[\Override]
+    #[Override]
     public function getAlias(): string
     {
         return 'opendxp_admin';

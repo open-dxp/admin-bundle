@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\Factor
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\LFExpander;
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\OperatorInterface;
 use OpenDxp\Localization\LocaleServiceInterface;
+use stdClass;
 
 /**
  * @internal
@@ -30,7 +31,7 @@ final readonly class LFExpanderFactory implements OperatorFactoryInterface
     {
     }
 
-    public function build(\stdClass $configElement, array $context = []): OperatorInterface
+    public function build(stdClass $configElement, array $context = []): OperatorInterface
     {
         return new LFExpander($this->localeService, $configElement, $context);
     }
