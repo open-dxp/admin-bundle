@@ -32,39 +32,22 @@ use Twig\TwigFunction;
 /**
  * @internal
  */
-class AdminExtension extends AbstractExtension
+class AdminExtension
 {
     public function __construct(
-        private UrlGeneratorInterface $generator,
-        private EditmodeResolver $editmodeResolver,
-        private UserLoader $userLoader
+        private readonly UrlGeneratorInterface $generator,
+        private readonly EditmodeResolver $editmodeResolver,
+        private readonly UserLoader $userLoader
     ) {
     }
 
-    public function getFunctions(): array
-    {
-        return [
-            new TwigFunction('opendxp_language_flag', [$this, 'getLanguageFlagFile']),
-            new TwigFunction('opendxp_minimize_scripts', [$this, 'minimize']),
-            new TwigFunction('opendxp_editmode_admin_language', [$this, 'getAdminLanguage']),
-            new TwigFunction('opendxp_login_background_image', [$this, 'getLoginBackgroundImage']),
-        ];
-    }
-
-    public function getFilters(): array
-    {
-        return [
-            new TwigFilter('opendxp_inline_icon', [$this, 'inlineIcon']),
-            new TwigFilter('opendxp_lazy_icon', [$this, 'lazyIcon']),
-            new TwigFilter('opendxp_twemoji_variant_icon', [$this, 'twemojiVariantIcon']),
-        ];
-    }
-
+    #[\Twig\Attribute\AsTwigFunction('opendxp_language_flag')]
     public function getLanguageFlagFile(string $language, bool $absolutePath = true, bool $includeUnknown = true): string
     {
         return Tool::getLanguageFlagFile($language, $absolutePath, $includeUnknown);
     }
 
+    #[\Twig\Attribute\AsTwigFunction('opendxp_editmode_admin_language')]
     public function getAdminLanguage(): ?string
     {
         $openDxpUser = null;
@@ -75,6 +58,7 @@ class AdminExtension extends AbstractExtension
         return $openDxpUser?->getLanguage();
     }
 
+    #[\Twig\Attribute\AsTwigFunction('opendxp_minimize_scripts')]
     public function minimize(array $paths): string
     {
         $returnHtml = '';
@@ -99,9 +83,7 @@ class AdminExtension extends AbstractExtension
         $parameters = Admin::getMinimizedScriptPath($scriptContents);
         $url = $this->generator->generate('opendxp_admin_misc_scriptproxy', $parameters, UrlGeneratorInterface::ABSOLUTE_PATH);
 
-        $returnHtml .= $this->getScriptTag($url);
-
-        return $returnHtml;
+        return $returnHtml . $this->getScriptTag($url);
     }
 
     private function getScriptTag(string $url): string
@@ -109,6 +91,7 @@ class AdminExtension extends AbstractExtension
         return '<script src="' . $url . '"></script>' . "\n";
     }
 
+    #[\Twig\Attribute\AsTwigFunction('opendxp_login_background_image')]
     public function getLoginBackgroundImage(string $overwrite = ''): string
     {
         $possibleDefaultImages = [
@@ -122,14 +105,14 @@ class AdminExtension extends AbstractExtension
 
         $customImage = AdminConfig::get()['branding']['login_screen_custom_image'];
 
-        if (empty($customImage) === true) {
+        if (empty($customImage)) {
             return $backgroundImageUrl;
         }
 
         if (
             preg_match('@^https?://@', $customImage) === 1
-            || is_file(OPENDXP_WEB_ROOT . '/var/assets' . $customImage) === true
-            || is_file(OPENDXP_WEB_ROOT . $customImage) === true
+            || is_file(OPENDXP_WEB_ROOT . '/var/assets' . $customImage)
+            || is_file(OPENDXP_WEB_ROOT . $customImage)
         ) {
             return $customImage;
         }
@@ -152,6 +135,7 @@ class AdminExtension extends AbstractExtension
         return $backgroundImageUrl;
     }
 
+    #[\Twig\Attribute\AsTwigFilter('opendxp_inline_icon')]
     public function inlineIcon(string $icon): string
     {
         $content = file_get_contents($icon);
@@ -165,6 +149,7 @@ class AdminExtension extends AbstractExtension
         );
     }
 
+    #[\Twig\Attribute\AsTwigFilter('opendxp_lazy_icon')]
     public function lazyIcon(string $icon): string
     {
         return sprintf(
@@ -175,6 +160,7 @@ class AdminExtension extends AbstractExtension
         );
     }
 
+    #[\Twig\Attribute\AsTwigFilter('opendxp_twemoji_variant_icon')]
     public function twemojiVariantIcon(string $icon): string
     {
         return sprintf(

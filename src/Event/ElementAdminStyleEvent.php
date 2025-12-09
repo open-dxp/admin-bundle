@@ -38,20 +38,11 @@ class ElementAdminStyleEvent extends Event
      */
     const CONTEXT_SEARCH = 3;
 
-    protected ?int $context = null;
-
-    protected ElementInterface $element;
-
-    protected AdminStyle $adminStyle;
-
     /**
      * ElementAdminStyleEvent constructor.
      */
-    public function __construct(ElementInterface $element, AdminStyle $adminStyle, ?int $context = null)
+    public function __construct(protected ElementInterface $element, protected AdminStyle $adminStyle, protected ?int $context = null)
     {
-        $this->element = $element;
-        $this->adminStyle = $adminStyle;
-        $this->context = $context;
     }
 
     public function getElement(): ElementInterface

@@ -34,14 +34,8 @@ class UsageStatisticsListener implements EventSubscriberInterface
     use LoggerAwareTrait;
     use OpenDxpContextAwareTrait;
 
-    protected TokenStorageUserResolver $userResolver;
-
-    protected Config $config;
-
-    public function __construct(TokenStorageUserResolver $userResolver, Config $config)
+    public function __construct(protected TokenStorageUserResolver $userResolver, protected Config $config)
     {
-        $this->userResolver = $userResolver;
-        $this->config = $config;
     }
 
     public static function getSubscribedEvents(): array
@@ -88,17 +82,14 @@ class UsageStatisticsListener implements EventSubscriberInterface
         $disallowedKeys = ['_dc', 'module', 'controller', 'action', 'password'];
 
         // TODO is this enough?
-        $requestParams = array_merge(
-            $request->query->all(),
-            $request->request->all()
-        );
+        $requestParams = [...$request->query->all(), ...$request->request->all()];
 
         foreach ($requestParams as $key => $value) {
             if (is_json($value)) {
                 $value = json_decode($value);
                 if (is_array($value)) {
-                    array_walk_recursive($value, function (&$item, $key) {
-                        if (strpos((string)$key, 'pass') !== false) {
+                    array_walk_recursive($value, function (&$item, $key): void {
+                        if (str_contains((string)$key, 'pass')) {
                             $item = '*************';
                         }
                     });

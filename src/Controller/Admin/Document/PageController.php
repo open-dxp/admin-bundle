@@ -94,9 +94,7 @@ class PageController extends DocumentControllerBase
 
         $data['url'] = $page->getUrl();
         $data['scheduledTasks'] = array_map(
-            static function (Task $task) {
-                return $task->getObjectVars();
-            },
+            static fn(Task $task) => $task->getObjectVars(),
             $page->getScheduledTasks()
         );
 
@@ -117,14 +115,10 @@ class PageController extends DocumentControllerBase
         /** @var Document\Page|null $pageSession */
         $pageSession = $this->getFromSession($oldPage, $request->getSession());
 
-        if ($pageSession) {
-            $page = $pageSession;
-        } else {
-            $page = $this->getLatestVersion($oldPage);
-        }
+        $page = $pageSession ?: $this->getLatestVersion($oldPage);
 
         if ($request->get('missingRequiredEditable') !== null) {
-            $page->setMissingRequiredEditable(($request->get('missingRequiredEditable') == 'true') ? true : false);
+            $page->setMissingRequiredEditable($request->get('missingRequiredEditable') == 'true');
         }
 
         $settings = [];
@@ -160,22 +154,18 @@ class PageController extends DocumentControllerBase
                 'treeData' => $treeData,
                 'data' => $data,
             ]);
-        } else {
-            $this->saveToSession($page, $request->getSession());
-
-            $draftData = [];
-            if ($version) {
-                $draftData = [
-                    'id' => $version->getId(),
-                    'modificationDate' => $version->getDate(),
-                    'isAutoSave' => $version->isAutoSave(),
-                ];
-            }
-
-            $treeData = $this->getTreeNodeConfig($page);
-
-            return $this->adminJson(['success' => true, 'treeData' => $treeData, 'draft' => $draftData]);
         }
+        $this->saveToSession($page, $request->getSession());
+        $draftData = [];
+        if ($version) {
+            $draftData = [
+                'id' => $version->getId(),
+                'modificationDate' => $version->getDate(),
+                'isAutoSave' => $version->isAutoSave(),
+            ];
+        }
+        $treeData = $this->getTreeNodeConfig($page);
+        return $this->adminJson(['success' => true, 'treeData' => $treeData, 'draft' => $draftData]);
     }
 
     #[Route('/generate-previews', name: 'generatepreviews', methods: ['GET'])]
@@ -226,7 +216,7 @@ class PageController extends DocumentControllerBase
         $path = rtrim($path, '/');
 
         // must start with /
-        if ($path !== '' && strpos($path, '/') !== 0) {
+        if ($path !== '' && !str_starts_with($path, '/')) {
             $success = false;
             $message[] = 'URL must start with /.';
         }

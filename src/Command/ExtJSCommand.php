@@ -94,7 +94,7 @@ class ExtJSCommand extends AbstractCommand
             ksort($list);
 
             // replace this with loadOrder if we want to load the entire list
-            foreach ($loadOrder as $loadOrderIdx => $loadOrderItem) {
+            foreach ($loadOrder as $loadOrderItem) {
                 $count++;
                 $relativePath = $loadOrderItem['path'];
 

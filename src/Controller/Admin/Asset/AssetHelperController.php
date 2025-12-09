@@ -92,7 +92,7 @@ class AssetHelperController extends AdminAbstractController
 
         $userIds = [$user->getId()];
         // collect all roles
-        $userIds = array_merge($userIds, $user->getRoles());
+        $userIds = [...$userIds, ...$user->getRoles()];
         $userIds = implode(',', $userIds);
 
         $query = 'select distinct c1.id from gridconfigs c1, gridconfig_shares s
@@ -125,7 +125,7 @@ class AssetHelperController extends AdminAbstractController
         $gridConfig = GridConfig::getById($gridConfigId);
         $success = false;
         if ($gridConfig) {
-            if ($gridConfig->getOwnerId() != $this->getAdminUser()->getId()) {
+            if ($gridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
                 throw new \Exception("don't mess with someone elses grid config");
             }
 
@@ -168,7 +168,7 @@ class AssetHelperController extends AdminAbstractController
         $gridConfig = [];
         $searchType = $request->get('searchType');
 
-        if (strlen($requestedGridConfigId) == 0) {
+        if ((string) $requestedGridConfigId === '') {
             // check if there is a favourite view
             $favourite = GridConfigFavourite::getByOwnerAndClassAndObjectId($userId, $classId, 0, $searchType);
 
@@ -186,14 +186,14 @@ class AssetHelperController extends AdminAbstractController
 
                 try {
                     $userIds = [$this->getAdminUser()->getId()];
-                    $userIds = array_merge($userIds, $this->getAdminUser()->getRoles());
+                    $userIds = [...$userIds, ...$this->getAdminUser()->getRoles()];
                     $userIds = implode(',', $userIds);
-                    $shared = ($savedGridConfig->getOwnerId() != $userId && $savedGridConfig->isShareGlobally()) || $db->fetchOne('select * from gridconfig_shares where sharedWithUserId IN (' . $userIds . ') and gridConfigId = ' . $savedGridConfig->getId());
+                    $shared = ($savedGridConfig->getOwnerId() !== $userId && $savedGridConfig->isShareGlobally()) || $db->fetchOne('select * from gridconfig_shares where sharedWithUserId IN (' . $userIds . ') and gridConfigId = ' . $savedGridConfig->getId());
                 } catch (\Exception) {
                     // fail silently?
                 }
 
-                if (!$shared && $savedGridConfig->getOwnerId() != $this->getAdminUser()->getId()) {
+                if (!$shared && $savedGridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
                     throw new \Exception('You are neither the owner of this config nor it is shared with you');
                 }
                 $gridConfigId = $savedGridConfig->getId();
@@ -219,22 +219,16 @@ class AssetHelperController extends AdminAbstractController
         } else {
             $savedColumns = $gridConfig['columns'];
 
-            foreach ($savedColumns as $key => $sc) {
+            foreach ($savedColumns as $sc) {
                 if (!$sc['hidden']) {
-                    $colConfig = $this->getFieldGridConfig($sc, $language, null);
+                    $colConfig = $this->getFieldGridConfig($sc, $language);
                     if ($colConfig) {
                         $availableFields[] = $colConfig;
                     }
                 }
             }
         }
-        usort($availableFields, function ($a, $b) {
-            if ($a['position'] == $b['position']) {
-                return 0;
-            }
-
-            return ($a['position'] < $b['position']) ? -1 : 1;
-        });
+        usort($availableFields, fn($a, $b) => $a['position'] <=> $b['position']);
 
         $availableConfigs = $classId ? $this->getMyOwnGridColumnConfigs($userId, $classId, $searchType) : [];
         $sharedConfigs = $classId ? $this->getSharedGridColumnConfigs($this->getAdminUser(), $classId, $searchType) : [];
@@ -252,12 +246,12 @@ class AssetHelperController extends AdminAbstractController
         }
 
         return [
-            'sortinfo' => isset($gridConfig['sortinfo']) ? $gridConfig['sortinfo'] : false,
+            'sortinfo' => $gridConfig['sortinfo'] ?? false,
             'availableFields' => $availableFields,
             'settings' => $settings,
-            'onlyDirectChildren' => isset($gridConfig['onlyDirectChildren']) ? $gridConfig['onlyDirectChildren'] : false,
-            'onlyUnreferenced' => isset($gridConfig['onlyUnreferenced']) ? $gridConfig['onlyUnreferenced'] : false,
-            'pageSize' => isset($gridConfig['pageSize']) ? $gridConfig['pageSize'] : false,
+            'onlyDirectChildren' => $gridConfig['onlyDirectChildren'] ?? false,
+            'onlyUnreferenced' => $gridConfig['onlyUnreferenced'] ?? false,
+            'pageSize' => $gridConfig['pageSize'] ?? false,
             'availableConfigs' => $availableConfigs,
             'sharedConfigs' => $sharedConfigs,
             'context' => $context,
@@ -309,7 +303,7 @@ class AssetHelperController extends AdminAbstractController
         if ($type === 'select' && $predefined) {
             $field['fieldConfig']['layout']['config'] = $predefined->getConfig();
             $result['layout'] = $field['fieldConfig']['layout'];
-        } elseif ($type === 'document' || $type === 'asset' || $type === 'object') {
+        } elseif (in_array($type, ['document', 'asset', 'object'], true)) {
             $result['layout']['fieldtype'] = 'manyToOneRelation';
             $result['layout']['subtype'] = $type;
         }
@@ -320,9 +314,8 @@ class AssetHelperController extends AdminAbstractController
         ]);
 
         $this->eventDispatcher->dispatch($assetGetFieldGridConfig, AdminEvents::ASSET_GET_FIELD_GRID_CONFIG);
-        $result = $assetGetFieldGridConfig->getArgument('result');
 
-        return $result;
+        return $assetGetFieldGridConfig->getArgument('result');
     }
 
     public function getDefaultGridFields(bool $noSystemColumns, array $fields, array $context, array $types = []): array
@@ -332,7 +325,7 @@ class AssetHelperController extends AdminAbstractController
 
         if (!$noSystemColumns) {
             foreach (Asset\Service::GRID_SYSTEM_COLUMNS as $sc) {
-                if (empty($types)) {
+                if ($types === []) {
                     $availableFields[] = [
                         'key' => $sc . '~system',
                         'type' => 'system',
@@ -365,9 +358,9 @@ class AssetHelperController extends AdminAbstractController
             }
         }
 
-        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($helperColumns) {
+        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($helperColumns): void {
             $existingColumns = $session->get('helpercolumns', []);
-            $helperColumns = array_merge($helperColumns, $existingColumns);
+            $helperColumns = [...$helperColumns, ...$existingColumns];
             $session->set('helpercolumns', $helperColumns);
         }, 'opendxp_gridconfig');
 
@@ -394,14 +387,14 @@ class AssetHelperController extends AdminAbstractController
             $specializedConfigs = false;
 
             try {
-                if ($gridConfigId != 0) {
+                if ($gridConfigId !== 0) {
                     $gridConfig = GridConfig::getById($gridConfigId);
                     $favourite->setGridConfigId($gridConfig->getId());
                 }
 
                 $favourite->setObjectId(0);
                 $favourite->save();
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 $favourite->delete();
             }
 
@@ -422,12 +415,10 @@ class AssetHelperController extends AdminAbstractController
         $allShares = $db->fetchAllAssociative('select s.sharedWithUserId, u.type from gridconfig_shares s, users u
                       where s.sharedWithUserId = u.id and s.gridConfigId = ' . $gridConfigId);
 
-        if ($allShares) {
-            foreach ($allShares as $share) {
-                $type = $share['type'];
-                $key = 'shared' . ucfirst($type) . 'Ids';
-                $result[$key][] = $share['sharedWithUserId'];
-            }
+        foreach ($allShares as $share) {
+            $type = $share['type'];
+            $key = 'shared' . ucfirst($type) . 'Ids';
+            $result[$key][] = $share['sharedWithUserId'];
         }
 
         foreach ($result as $idx => $value) {
@@ -471,7 +462,7 @@ class AssetHelperController extends AdminAbstractController
                     $gridConfig = GridConfig::getById($gridConfigId);
                 }
 
-                if ($gridConfig && $gridConfig->getOwnerId() != $this->getAdminUser()->getId()) {
+                if ($gridConfig && $gridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
                     throw new \Exception("don't mess around with somebody else's configuration");
                 }
 
@@ -513,7 +504,7 @@ class AssetHelperController extends AdminAbstractController
                 $settings['gridConfigDescription'] = $gridConfig->getDescription();
                 $settings['shareGlobally'] = $gridConfig->isShareGlobally();
                 $settings['setAsFavourite'] = $gridConfig->isSetAsFavourite();
-                $settings['isShared'] = $gridConfig->getOwnerId() != $this->getAdminUser()->getId();
+                $settings['isShared'] = $gridConfig->getOwnerId() !== $this->getAdminUser()->getId();
 
                 return $this->adminJson([
                     'success' => true,
@@ -540,7 +531,7 @@ class AssetHelperController extends AdminAbstractController
             return;
         }
 
-        if ($gridConfig->getOwnerId() != $this->getAdminUser()->getId()) {
+        if ($gridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
             throw new \Exception("don't mess with someone elses grid config");
         }
         $combinedShares = [];
@@ -553,7 +544,7 @@ class AssetHelperController extends AdminAbstractController
 
         if ($sharedRoleIds) {
             $sharedRoleIds = explode(',', $sharedRoleIds);
-            $combinedShares = array_merge($combinedShares, $sharedRoleIds);
+            $combinedShares = [...$combinedShares, ...$sharedRoleIds];
         }
 
         $db = Db::get();
@@ -589,7 +580,7 @@ class AssetHelperController extends AdminAbstractController
             $sharedUserIds = $metadata['sharedUserIds'];
 
             if ($sharedUserIds) {
-                $sharedUsers = array_map('intval', explode(',', $sharedUserIds));
+                $sharedUsers = array_map(intval(...), explode(',', $sharedUserIds));
             }
         }
 
@@ -641,7 +632,7 @@ class AssetHelperController extends AdminAbstractController
     #[Route('/get-export-jobs', name: 'opendxp_admin_asset_assethelper_getexportjobs', methods: ['POST'])]
     public function getExportJobsAction(Request $request, GridHelperService $gridHelperService): JsonResponse
     {
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
         $list = $gridHelperService->prepareAssetListingForGrid($allParams, $this->getAdminUser());
 
         if (empty($ids = $allParams['ids'] ?? '')) {
@@ -707,7 +698,7 @@ class AssetHelperController extends AdminAbstractController
                     $line = implode($delimiter, $line) . "\r\n";
                     fwrite($temp, $line);
                 } else {
-                    fwrite($temp, implode($delimiter, array_map([$this, 'encodeFunc'], $line)) . "\r\n");
+                    fwrite($temp, implode($delimiter, array_map($this->encodeFunc(...), $line)) . "\r\n");
                 }
             }
             $storage->writeStream($csvFile, $temp);
@@ -751,11 +742,9 @@ class AssetHelperController extends AdminAbstractController
         $csv = [];
 
         $unsupportedFields = [0 => 'preview~system', 1 => 'size~system'];
-        $fields = array_filter($fields, function ($field) use ($unsupportedFields) {
-            return !in_array($field['key'], $unsupportedFields);
-        });
+        $fields = array_filter($fields, fn($field) => !in_array($field['key'], $unsupportedFields));
 
-        if ($addTitles && $header != 'no_header') {
+        if ($addTitles && $header !== 'no_header') {
             $columns = $fields;
             $titleIdx = $header === 'name' ? 'key' : 'label';
             foreach ($columns as $columnIdx => $columnKeys) {
@@ -834,7 +823,7 @@ class AssetHelperController extends AdminAbstractController
             $storage->delete($csvFile);
 
             return $response;
-        } catch (FilesystemException | UnableToReadFile $exception) {
+        } catch (FilesystemException | UnableToReadFile) {
             // handle the error
             throw $this->createNotFoundException('CSV file not found');
         }
@@ -849,7 +838,7 @@ class AssetHelperController extends AdminAbstractController
 
         try {
             return $gridHelperService->createXlsxExportFile($storage, $fileHandle, $csvFile);
-        } catch (\Exception | FilesystemException | UnableToReadFile $exception) {
+        } catch (\Exception | FilesystemException | UnableToReadFile) {
             // handle the error
             throw $this->createNotFoundException('XLSX file not found');
         }
@@ -915,7 +904,7 @@ class AssetHelperController extends AdminAbstractController
             $request->setLocale($request->get('language'));
         }
 
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
         $list = $gridHelperService->prepareAssetListingForGrid($allParams, $this->getAdminUser());
 
         $jobs = $list->loadIdList();
@@ -973,12 +962,12 @@ class AssetHelperController extends AdminAbstractController
                         $language = ($fieldDef[1] == 'none' ? '' : $fieldDef[1]);
                     }
 
-                    foreach ($metadata as $idx => &$em) {
+                    foreach ($metadata as &$em) {
                         if ($em['name'] == $name && $em['language'] == $language) {
                             try {
                                 $dataImpl = $loader->build($em['type']);
                                 $value = $dataImpl->getDataFromListfolderGrid($value, $em);
-                            } catch (UnsupportedException $le) {
+                            } catch (UnsupportedException) {
                                 Logger::error('could not resolve metadata implementation for ' . $em['type']);
                             }
                             $em['data'] = $value;
@@ -1001,7 +990,7 @@ class AssetHelperController extends AdminAbstractController
                             try {
                                 $dataImpl = $loader->build($newEm['type']);
                                 $newEm['data'] = $dataImpl->getDataFromListfolderGrid($value, $newEm);
-                            } catch (UnsupportedException $le) {
+                            } catch (UnsupportedException) {
                                 Logger::error('could not resolve metadata implementation for ' . $newEm['type']);
                             }
 
@@ -1010,7 +999,7 @@ class AssetHelperController extends AdminAbstractController
                         } else {
                             $predefined = Metadata\Predefined::getByName($name);
                             if ($predefined && (empty($predefined->getTargetSubtype())
-                                    || $predefined->getTargetSubtype() == $asset->getType())) {
+                                    || $predefined->getTargetSubtype() === $asset->getType())) {
                                 $newEm = [
                                     'name' => $name,
                                     'language' => $language,
@@ -1021,7 +1010,7 @@ class AssetHelperController extends AdminAbstractController
                                 try {
                                     $dataImpl = $loader->build($newEm['type']);
                                     $newEm['data'] = $dataImpl->getDataFromListfolderGrid($value, $newEm);
-                                } catch (UnsupportedException $le) {
+                                } catch (UnsupportedException) {
                                     Logger::error('could not resolve metadata implementation for ' . $newEm['type']);
                                 }
 

@@ -65,9 +65,7 @@ class SnippetController extends DocumentControllerBase
 
         $data['url'] = $snippet->getUrl();
         $data['scheduledTasks'] = array_map(
-            static function (Task $task) {
-                return $task->getObjectVars();
-            },
+            static fn(Task $task) => $task->getObjectVars(),
             $snippet->getScheduledTasks()
         );
 
@@ -92,14 +90,10 @@ class SnippetController extends DocumentControllerBase
         /** @var Document\Snippet|null $snippetSession */
         $snippetSession = $this->getFromSession($snippet, $request->getSession());
 
-        if ($snippetSession) {
-            $snippet = $snippetSession;
-        } else {
-            $snippet = $this->getLatestVersion($snippet);
-        }
+        $snippet = $snippetSession ?: $this->getLatestVersion($snippet);
 
         if ($request->get('missingRequiredEditable') !== null) {
-            $snippet->setMissingRequiredEditable(($request->get('missingRequiredEditable') == 'true') ? true : false);
+            $snippet->setMissingRequiredEditable($request->get('missingRequiredEditable') == 'true');
         }
 
         [$task, $snippet, $version] = $this->saveDocument($snippet, $request);

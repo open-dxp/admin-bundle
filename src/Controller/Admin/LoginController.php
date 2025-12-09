@@ -108,7 +108,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
         }
 
         $redirectUrl = $this->dispatchLoginRedirect($queryParams);
-        if ($this->generateUrl('opendxp_admin_login', $queryParams) != $redirectUrl) {
+        if ($this->generateUrl('opendxp_admin_login', $queryParams) !== $redirectUrl) {
             return new RedirectResponse($redirectUrl);
         }
 
@@ -281,24 +281,23 @@ class LoginController extends AdminAbstractController implements KernelControlle
         // check for deeplink
         $queryString = $_SERVER['QUERY_STRING'];
 
-        if (preg_match('/(document|asset|object)_([0-9]+)_([a-z]+)/', $queryString, $deeplink)) {
+        if (preg_match('/(document|asset|object)_(\d+)_([a-z]+)/', $queryString, $deeplink)) {
             $deeplink = $deeplink[0];
             $perspective = strip_tags($request->get('perspective', ''));
-
             if (strpos($queryString, 'token')) {
                 $url = $this->dispatchLoginRedirect([
                     'deeplink' => $deeplink,
                     'perspective' => $perspective,
                 ]);
                 $url .= '&' . $queryString;
-
                 return $this->redirect($url);
-            } elseif ($queryString) {
+            }
+
+            if ($queryString) {
                 $url = $this->dispatchLoginRedirect([
                     'deeplink' => 'true',
                     'perspective' => $perspective,
                 ]);
-
                 return $this->render('@OpenDxpAdmin/admin/login/deeplink.html.twig', [
                     'tab' => $deeplink,
                     'redirect' => $url,
@@ -419,7 +418,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
             $supported = true;
         }
         if ($browser->getBrowser() == \Browser::BROWSER_EDGE && $browserVersion >= 90) {
-            $supported = true;
+            return true;
         }
 
         return $supported;

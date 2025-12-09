@@ -21,7 +21,6 @@ return RectorConfig::configure()
         ExplicitBoolCompareRector::class,
         JoinStringConcatRector::class,
         NullToStrictStringFuncCallArgRector::class,     // todo: buggy?
-        CompleteDynamicPropertiesRector::class          // todo: we should get rid of this!
     ])
     ->withIndent(' ', 4)
     ->withPhpVersion(PhpVersion::PHP_83)

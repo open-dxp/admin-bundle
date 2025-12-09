@@ -32,12 +32,11 @@ abstract class AbstractRenderer extends AbstractOperator
 
         if (!$children) {
             return $result;
-        } else {
-            $c = $children[0];
-            $childResult = $c->getLabeledValue($element);
-            if ($childResult) {
-                $result->value = $childResult->value ?? null;
-            }
+        }
+        $c = $children[0];
+        $childResult = $c->getLabeledValue($element);
+        if ($childResult) {
+            $result->value = $childResult->value ?? null;
         }
 
         return $result;

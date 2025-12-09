@@ -31,14 +31,8 @@ class HttpCacheListener implements EventSubscriberInterface
 {
     use OpenDxpContextAwareTrait;
 
-    protected RequestHelper $requestHelper;
-
-    protected ResponseHelper $responseHelper;
-
-    public function __construct(RequestHelper $requestHelper, ResponseHelper $responseHelper)
+    public function __construct(protected RequestHelper $requestHelper, protected ResponseHelper $responseHelper)
     {
-        $this->requestHelper = $requestHelper;
-        $this->responseHelper = $responseHelper;
     }
 
     public static function getSubscribedEvents(): array

@@ -77,7 +77,7 @@ class Asset extends Element
                             /** @var Data $instance */
                             $instance = $loader->build($type);
                             $metaData = $instance->getDataForListfolderGrid($rawMetaData['data'] ?? null, $rawMetaData);
-                        } catch (UnsupportedException $e) {
+                        } catch (UnsupportedException) {
                         }
                     }
 

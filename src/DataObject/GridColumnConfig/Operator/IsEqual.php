@@ -60,10 +60,8 @@ final class IsEqual extends AbstractOperator
                     }
                     $valueArray[] = $value;
                 }
-            } else {
-                if (!$this->skipNull) {
-                    $valueArray[] = null;
-                }
+            } elseif (!$this->skipNull) {
+                $valueArray[] = null;
             }
         }
 

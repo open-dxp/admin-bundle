@@ -44,11 +44,9 @@ class MiscController extends AdminAbstractController
     {
         $controllerReferences = $provider->getControllerReferences();
 
-        $result = array_map(function ($controller) {
-            return [
-                'name' => $controller,
-            ];
-        }, $controllerReferences);
+        $result = array_map(fn($controller) => [
+            'name' => $controller,
+        ], $controllerReferences);
 
         return $this->adminJson([
             'success' => true,
@@ -64,11 +62,9 @@ class MiscController extends AdminAbstractController
 
         sort($templates, SORT_NATURAL | SORT_FLAG_CASE);
 
-        $result = array_map(static function ($template) {
-            return [
-                'path' => $template,
-            ];
-        }, $templates);
+        $result = array_map(static fn($template) => [
+            'path' => $template,
+        ], $templates);
 
         return $this->adminJson([
             'data' => $result,
@@ -144,9 +140,8 @@ class MiscController extends AdminAbstractController
             $response->headers->set('Expires', gmdate('D, d M Y H:i:s', time() + $lifetime) . ' GMT');
 
             return $response;
-        } else {
-            throw $this->createNotFoundException('Scripts not found');
         }
+        throw $this->createNotFoundException('Scripts not found');
     }
 
     #[Route('/admin-css', name: 'opendxp_admin_misc_admincss', methods: ['GET'])]
@@ -158,7 +153,7 @@ class MiscController extends AdminAbstractController
         // languages
         $languages = \OpenDxp\Tool::getValidLanguages();
         $adminLanguages = \OpenDxp\Tool\Admin::getLanguages();
-        $languages = array_unique(array_merge($languages, $adminLanguages));
+        $languages = array_unique([...$languages, ...$adminLanguages]);
 
         $response = $this->render('@OpenDxpAdmin/admin/misc/admin_css.html.twig', [
             'customviews' => $cvData,
@@ -224,7 +219,7 @@ class MiscController extends AdminAbstractController
         $options = [];
 
         foreach ($countries as $short => $translation) {
-            if (strlen($short) == 2) {
+            if (strlen($short) === 2) {
                 $options[] = [
                     'name' => $translation,
                     'code' => $short,
@@ -314,7 +309,7 @@ class MiscController extends AdminAbstractController
     {
         $locales = Tool::getSupportedLocales();
         $languageOptions = [];
-        foreach ($locales as $short => $translation) {
+        foreach (array_keys($locales) as $short) {
             if (!empty($short)) {
                 $flag = AdminTool::getLanguageFlagFile($short, true, false);
                 if ($flag) {

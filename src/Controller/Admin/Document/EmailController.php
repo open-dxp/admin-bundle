@@ -94,18 +94,16 @@ class EmailController extends DocumentControllerBase
                 ],
                 'treeData' => $treeData,
             ]);
-        } else {
-            $draftData = [];
-            if ($version) {
-                $draftData = [
-                    'id' => $version->getId(),
-                    'modificationDate' => $version->getDate(),
-                    'isAutoSave' => $version->isAutoSave(),
-                ];
-            }
-
-            return $this->adminJson(['success' => true, 'draft' => $draftData]);
         }
+        $draftData = [];
+        if ($version) {
+            $draftData = [
+                'id' => $version->getId(),
+                'modificationDate' => $version->getDate(),
+                'isAutoSave' => $version->isAutoSave(),
+            ];
+        }
+        return $this->adminJson(['success' => true, 'draft' => $draftData]);
     }
 
     protected function setValuesToDocument(Request $request, Document $document): void

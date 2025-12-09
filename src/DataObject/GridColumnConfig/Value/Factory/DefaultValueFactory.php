@@ -20,16 +20,10 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Value\Factory;
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Value\ValueInterface;
 use OpenDxp\Localization\LocaleServiceInterface;
 
-final class DefaultValueFactory implements ValueFactoryInterface
+final readonly class DefaultValueFactory implements ValueFactoryInterface
 {
-    private string $className;
-
-    private LocaleServiceInterface $localeService;
-
-    public function __construct(string $className, LocaleServiceInterface $localeService)
+    public function __construct(private string $className, private LocaleServiceInterface $localeService)
     {
-        $this->className = $className;
-        $this->localeService = $localeService;
     }
 
     public function build(\stdClass $configElement, mixed $context = null): ValueInterface

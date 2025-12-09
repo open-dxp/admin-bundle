@@ -86,6 +86,7 @@ class Installer extends SettingsStoreAwareInstaller
         }
     }
 
+    #[\Override]
     public function install(): void
     {
         $this->addPermissions();
@@ -125,6 +126,7 @@ class Installer extends SettingsStoreAwareInstaller
         }
     }
 
+    #[\Override]
     public function uninstall(): void
     {
         $this->removePermissions();

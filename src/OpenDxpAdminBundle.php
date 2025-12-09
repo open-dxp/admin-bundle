@@ -40,6 +40,7 @@ class OpenDxpAdminBundle extends AbstractOpenDxpBundle implements DependentBundl
         return 'open-dxp/admin-bundle';
     }
 
+    #[\Override]
     public function getContainerExtension(): ?ExtensionInterface
     {
         if (null === $this->extension) {
@@ -63,6 +64,7 @@ class OpenDxpAdminBundle extends AbstractOpenDxpBundle implements DependentBundl
         $container->addCompilerPass(new ContentSecurityPolicyUrlsPass());
     }
 
+    #[\Override]
     public function getPath(): string
     {
         return \dirname(__DIR__);

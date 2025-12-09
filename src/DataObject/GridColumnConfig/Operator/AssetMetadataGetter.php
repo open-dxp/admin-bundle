@@ -47,7 +47,6 @@ final class AssetMetadataGetter extends AbstractOperator
 
         if ($children) {
             $newChildrenResult = [];
-
             foreach ($children as $c) {
                 $childResult = $c->getLabeledValue($element);
                 $childValues = $childResult->value ?? null;
@@ -74,12 +73,7 @@ final class AssetMetadataGetter extends AbstractOperator
 
                 $newChildrenResult[] = $newValue;
             }
-
-            if (count($children) > 1) {
-                $result->value = $newChildrenResult;
-            } else {
-                $result->value = $newChildrenResult[0];
-            }
+            $result->value = count($children) > 1 ? $newChildrenResult : $newChildrenResult[0];
         }
 
         return $result;

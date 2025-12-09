@@ -145,7 +145,7 @@ class DataObject extends Element
                                     $context['outerFieldname'] = $key;
                                 }
 
-                                $params = array_merge($params, ['context' => $context]);
+                                $params = [...$params, 'context' => $context];
                                 if (!isset($params['purpose'])) {
                                     $params['purpose'] = 'gridview';
                                 }
@@ -196,7 +196,7 @@ class DataObject extends Element
                         if ($fieldDef->isEmpty($value)) {
                             $inheritedData = static::getInheritedData($object, $key, $requestedLanguage);
 
-                            if (!empty($inheritedData)) {
+                            if ($inheritedData !== []) {
                                 $parent = $inheritedData['parent'];
                                 $data[$dataKey] = $inheritedData['value'];
                                 $data['inheritedFields'][$dataKey] = [
@@ -207,23 +207,20 @@ class DataObject extends Element
                         }
                     }
 
-                    if ($needLocalizedPermissions) {
-                        if (!$user->isAdmin()) {
-                            $locale = \OpenDxp::getContainer()->get(LocaleServiceInterface::class)->findLocale();
+                    if ($needLocalizedPermissions && !$user->isAdmin()) {
+                        $locale = \OpenDxp::getContainer()->get(LocaleServiceInterface::class)->findLocale();
+                        $permissionTypes = ['View', 'Edit'];
+                        foreach ($permissionTypes as $permissionType) {
+                            //TODO, this needs refactoring! Ideally, call it only once!
+                            $languagesAllowed = Service::getLanguagePermissions($object, $user, 'l' . $permissionType);
 
-                            $permissionTypes = ['View', 'Edit'];
-                            foreach ($permissionTypes as $permissionType) {
-                                //TODO, this needs refactoring! Ideally, call it only once!
-                                $languagesAllowed = Service::getLanguagePermissions($object, $user, 'l' . $permissionType);
+                            if ($languagesAllowed) {
+                                $languagesAllowed = array_keys($languagesAllowed);
 
-                                if ($languagesAllowed) {
-                                    $languagesAllowed = array_keys($languagesAllowed);
-
-                                    if (!in_array($locale, $languagesAllowed)) {
-                                        $data['metadata']['permission'][$key]['no' . $permissionType] = 1;
-                                        if ($permissionType === 'View') {
-                                            $data[$key] = null;
-                                        }
+                                if (!in_array($locale, $languagesAllowed)) {
+                                    $data['metadata']['permission'][$key]['no' . $permissionType] = 1;
+                                    if ($permissionType === 'View') {
+                                        $data[$key] = null;
                                     }
                                 }
                             }
@@ -242,9 +239,7 @@ class DataObject extends Element
         if ($stack->getMainRequest()?->hasSession()) {
             $session = $stack->getSession();
 
-            return Session::useBag($session, function (AttributeBagInterface $session) {
-                return $session->get('helpercolumns', []);
-            }, 'opendxp_gridconfig');
+            return Session::useBag($session, fn(AttributeBagInterface $session) => $session->get('helpercolumns', []), 'opendxp_gridconfig');
         }
 
         return [];
@@ -348,7 +343,7 @@ class DataObject extends Element
                     $definition = \OpenDxp\Model\DataObject\Classificationstore\Service::getFieldDefinitionFromJson($definition, $type);
 
                     if (method_exists($definition, 'getDataForGrid')) {
-                        $fielddata = $definition->getDataForGrid($fielddata, $object);
+                        return $definition->getDataForGrid($fielddata, $object);
                     }
 
                     return $fielddata;

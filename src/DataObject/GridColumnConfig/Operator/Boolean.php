@@ -66,20 +66,14 @@ final class Boolean extends AbstractOperator
                     }
                     $valueArray[] = $value;
                 }
-            } else {
-                if (!$this->skipNull) {
-                    $valueArray[] = null;
-                }
+            } elseif (!$this->skipNull) {
+                $valueArray[] = null;
             }
         }
 
         $resultValue = current($valueArray);
         foreach ($valueArray as $val) {
-            if ($this->getOperator() === 'and') {
-                $resultValue = $val && $resultValue;
-            } else {
-                $resultValue = $val || $resultValue;
-            }
+            $resultValue = $this->getOperator() === 'and' ? $val && $resultValue : $val || $resultValue;
         }
 
         $result->value = $resultValue;

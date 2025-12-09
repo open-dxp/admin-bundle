@@ -24,13 +24,10 @@ use OpenDxp\Workflow\Place\StatusInfo;
 /**
  * @internal
  */
-final class WorkflowStateFactory implements OperatorFactoryInterface
+final readonly class WorkflowStateFactory implements OperatorFactoryInterface
 {
-    private StatusInfo $workflowStatusInfo;
-
-    public function __construct(StatusInfo $workflowStatusInfo)
+    public function __construct(private StatusInfo $workflowStatusInfo)
     {
-        $this->workflowStatusInfo = $workflowStatusInfo;
     }
 
     public function build(\stdClass $configElement, array $context = []): OperatorInterface

@@ -24,13 +24,10 @@ use OpenDxp\Localization\LocaleServiceInterface;
 /**
  * @internal
  */
-final class LocaleSwitcherFactory implements OperatorFactoryInterface
+final readonly class LocaleSwitcherFactory implements OperatorFactoryInterface
 {
-    private LocaleServiceInterface $localeService;
-
-    public function __construct(LocaleServiceInterface $localeService)
+    public function __construct(private LocaleServiceInterface $localeService)
     {
-        $this->localeService = $localeService;
     }
 
     public function build(\stdClass $configElement, array $context = []): OperatorInterface

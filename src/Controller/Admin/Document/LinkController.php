@@ -58,9 +58,7 @@ class LinkController extends DocumentControllerBase
         $data['locked'] = $link->isLocked();
         $data['rawHref'] = $link->getRawHref();
         $data['scheduledTasks'] = array_map(
-            static function (Task $task) {
-                return $task->getObjectVars();
-            },
+            static fn(Task $task) => $task->getObjectVars(),
             $link->getScheduledTasks()
         );
 

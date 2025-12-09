@@ -26,20 +26,16 @@ use OpenDxp\Tool;
  */
 final class LFExpander extends AbstractOperator
 {
-    private LocaleServiceInterface $localeService;
-
     /**
      * @var string[]
      */
-    private array $locales;
+    private readonly array $locales;
 
     private bool $asArray;
 
-    public function __construct(LocaleServiceInterface $localeService, \stdClass $config, array $context = [])
+    public function __construct(private readonly LocaleServiceInterface $localeService, \stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
-
-        $this->localeService = $localeService;
 
         $this->locales = $config->locales ?? [];
         $this->asArray = $config->asArray ?? false;
@@ -61,11 +57,7 @@ final class LFExpander extends AbstractOperator
                     $this->localeService->setLocale($validLanguage);
 
                     $childValue = $children[0]->getLabeledValue($element);
-                    if ($childValue && $childValue->value) {
-                        $resultValues[] = $childValue;
-                    } else {
-                        $resultValues[] = null;
-                    }
+                    $resultValues[] = $childValue && $childValue->value ? $childValue : null;
                 }
 
                 $this->localeService->setLocale($currentLocale);
@@ -73,16 +65,15 @@ final class LFExpander extends AbstractOperator
                 $result->value = $resultValues;
 
                 return $result;
-            } else {
-                $value = $children[0]->getLabeledValue($element);
             }
 
-            return $value;
+            return $children[0]->getLabeledValue($element);
         }
 
         return null;
     }
 
+    #[\Override]
     public function expandLocales(): bool
     {
         return true;
@@ -91,15 +82,14 @@ final class LFExpander extends AbstractOperator
     /**
      * @return string[]
      */
+    #[\Override]
     public function getValidLanguages(): array
     {
         if ($this->locales) {
-            $validLanguages = $this->locales;
-        } else {
-            $validLanguages = Tool::getValidLanguages();
+            return $this->locales;
         }
 
-        return $validLanguages;
+        return Tool::getValidLanguages();
     }
 
     public function getAsArray(): bool

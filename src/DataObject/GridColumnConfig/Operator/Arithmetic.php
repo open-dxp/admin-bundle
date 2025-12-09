@@ -67,36 +67,35 @@ final class Arithmetic extends AbstractOperator
                     }
                     $valueArray[] = $value;
                 }
-            } else {
-                if (!$this->skipNull) {
-                    $valueArray[] = null;
-                }
+            } elseif (!$this->skipNull) {
+                $valueArray[] = null;
             }
         }
 
         $resultValue = null;
-        for ($i = 0; $i < count($valueArray); $i++) {
+        $counter = count($valueArray);
+        for ($i = 0; $i < $counter; $i++) {
             $val = $valueArray[$i];
 
-            if ($i == 0) {
+            if ($i === 0) {
                 $resultValue = $val;
 
                 continue;
             }
 
             if ($this->getOperator() === '+') {
-                $resultValue = $resultValue + $val;
+                $resultValue += $val;
             } elseif ($this->getOperator() === '-') {
-                $resultValue = $resultValue - $val;
+                $resultValue -= $val;
             } elseif ($this->getOperator() === '*') {
-                $resultValue = $resultValue * $val;
+                $resultValue *= $val;
             } elseif ($this->getOperator() === '/') {
                 if ($resultValue == 0) {
                     $result->value = 'NaN';
 
                     return $result;
                 }
-                $resultValue = $resultValue / $val;
+                $resultValue /= $val;
             }
         }
 

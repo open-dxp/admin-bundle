@@ -45,7 +45,7 @@ class DataObjectController extends AdminAbstractController implements KernelCont
     #[Route('/search-data-objects', name: 'opendxp_admin_gdpr_dataobject_searchdataobjects', methods: ['GET'])]
     public function searchDataObjectsAction(Request $request, DataObjects $service): JsonResponse
     {
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
 
         $result = $service->searchData(
             (int)$allParams['id'],
@@ -77,10 +77,9 @@ class DataObjectController extends AdminAbstractController implements KernelCont
         $exportResult = $service->doExportData($object);
 
         $json = $this->encodeJson($exportResult, [], JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_PRETTY_PRINT);
-        $jsonResponse = new JsonResponse($json, 200, [
+
+        return new JsonResponse($json, 200, [
             'Content-Disposition' => 'attachment; filename="export-data-object-' . $object->getId() . '.json"',
         ], true);
-
-        return $jsonResponse;
     }
 }

@@ -281,9 +281,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
             // document types
             'document_types_configuration' => Document::getTypesConfiguration(),
             'document_search_types' => Document::getTypes(),
-            'document_valid_types' => array_values(array_filter(Document::getTypes(), function ($type) {
-                return $type !== 'folder';
-            })),
+            'document_valid_types' => array_values(array_filter(Document::getTypes(), fn($type) => $type !== 'folder')),
             // email search compatible document types
             'document_email_search_types' => $config['documents']['email_search'],
             'select_options_provider_class' => SelectOptionsOptionsProvider::class,
@@ -310,7 +308,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
         try {
             $instanceId = $this->getParameter('secret');
             $instanceId = sha1(substr($instanceId, 3, -3));
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             // nothing to do
         }
 
@@ -344,11 +342,9 @@ class IndexController extends AdminAbstractController implements KernelResponseE
     ): static {
         // check maintenance
         $maintenance_active = false;
-        if ($lastExecution = $maintenanceExecutor->getLastExecution()) {
-            // maintenance script should run at least every hour + a little tolerance
-            if ((time() - $lastExecution) < 3660) {
-                $maintenance_active = true;
-            }
+        // maintenance script should run at least every hour + a little tolerance
+        if (($lastExecution = $maintenanceExecutor->getLastExecution()) && time() - $lastExecution < 3660) {
+            $maintenance_active = true;
         }
 
         $settings['maintenance_active'] = $maintenance_active;
@@ -383,22 +379,20 @@ class IndexController extends AdminAbstractController implements KernelResponseE
         // still needed when publishing objects
         $cvConfig = \OpenDxp\Bundle\AdminBundle\CustomView\Config::get();
 
-        if ($cvConfig) {
-            foreach ($cvConfig as $node) {
-                $tmpData = $node;
-                // backwards compatibility
-                $treeType = $tmpData['treetype'] ? $tmpData['treetype'] : 'object';
-                $rootNode = Service::getElementByPath($treeType, $tmpData['rootfolder']);
+        foreach ($cvConfig as $node) {
+            $tmpData = $node;
+            // backwards compatibility
+            $treeType = $tmpData['treetype'] ?: 'object';
+            $rootNode = Service::getElementByPath($treeType, $tmpData['rootfolder']);
 
-                if ($rootNode) {
-                    $tmpData['rootId'] = $rootNode->getId();
-                    $tmpData['allowedClasses'] = $tmpData['classes'] ?? null;
-                    $tmpData['showroot'] = (bool)$tmpData['showroot'];
+            if ($rootNode) {
+                $tmpData['rootId'] = $rootNode->getId();
+                $tmpData['allowedClasses'] = $tmpData['classes'] ?? null;
+                $tmpData['showroot'] = (bool)$tmpData['showroot'];
 
-                    // Check if a user has privileges to that node
-                    if ($rootNode->isAllowed('list')) {
-                        $cvData[] = $tmpData;
-                    }
+                // Check if a user has privileges to that node
+                if ($rootNode->isAllowed('list')) {
+                    $cvData[] = $tmpData;
                 }
             }
         }

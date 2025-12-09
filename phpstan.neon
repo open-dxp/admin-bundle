@@ -9,8 +9,8 @@ parameters:
         - identifier: missingType.generics
 
     symfony:
-        containerXmlPath: var/cache/test/App_KernelTestDebugContainer.xml
+        containerXmlPath: ../../var/cache/test/App_KernelTestDebugContainer.xml
 
 includes:
-    - vendor/phpstan/phpstan-symfony/extension.neon
+    - ../../vendor/phpstan/phpstan-symfony/extension.neon
     - phpstan-baseline.neon

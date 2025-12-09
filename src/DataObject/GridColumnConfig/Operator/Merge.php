@@ -58,10 +58,8 @@ final class Merge extends AbstractOperator
                 } elseif ($childValues) {
                     $resultItems[] = $childValues;
                 }
-            } else {
-                if ($childValues) {
-                    $resultItems[] = $childValues;
-                }
+            } elseif ($childValues) {
+                $resultItems[] = $childValues;
             }
         }
 

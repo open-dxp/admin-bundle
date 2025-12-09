@@ -50,16 +50,14 @@ final class ElementCounter extends AbstractOperator
                 } else {
                     $count++;
                 }
-            } else {
-                if (is_array($childValues)) {
-                    foreach ($childValues as $childValue) {
-                        if ($childValue) {
-                            $count++;
-                        }
+            } elseif (is_array($childValues)) {
+                foreach ($childValues as $childValue) {
+                    if ($childValue) {
+                        $count++;
                     }
-                } elseif ($childValues) {
-                    $count++;
                 }
+            } elseif ($childValues) {
+                $count++;
             }
         }
 

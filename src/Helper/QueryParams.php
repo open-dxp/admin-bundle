@@ -31,14 +31,14 @@ class QueryParams
         $orderKey = null;
         $order = null;
 
-        $sortParam = isset($params['sort']) ? $params['sort'] : false;
+        $sortParam = $params['sort'] ?? false;
         if ($sortParam) {
             $sortParam = json_decode($sortParam, true);
             $sortParam = $sortParam[0];
 
             $order = strtoupper($sortParam['direction']) === 'DESC' ? 'DESC' : 'ASC';
 
-            if (substr($sortParam['property'], 0, 1) != '~') {
+            if (!str_starts_with($sortParam['property'], '~')) {
                 $orderKey = $sortParam['property'];
             } else {
                 $orderKey = $sortParam['property'];
@@ -129,8 +129,7 @@ class QueryParams
         }
         if ($returnString) {
             return implode(' OR ', $conditionsGrouped);
-        } else {
-            return $conditionsGrouped;
         }
+        return $conditionsGrouped;
     }
 }

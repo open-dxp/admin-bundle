@@ -52,7 +52,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
         $list->setOrderKey('date');
         $list->setOrder('DESC');
 
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings(array_merge($request->request->all(), $request->query->all()));
+        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings([...$request->request->all(), ...$request->query->all()]);
         if ($sortingSettings['orderKey']) {
             $list->setOrderKey($sortingSettings['orderKey']);
             $list->setOrder($sortingSettings['order']);
@@ -120,7 +120,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
             }
         }
 
-        if (!empty($conditionFilters)) {
+        if ($conditionFilters !== []) {
             $condition = implode(' AND ', $conditionFilters);
             $list->setCondition($condition);
         }

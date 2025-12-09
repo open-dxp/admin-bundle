@@ -83,12 +83,10 @@ class ElementController extends AdminAbstractController
 
         if (is_numeric($idOrPath)) {
             $el = Element\Service::getElementById($type, (int) $idOrPath);
+        } elseif ($type === 'document') {
+            $el = Document\Service::getByUrl($idOrPath);
         } else {
-            if ($type == 'document') {
-                $el = Document\Service::getByUrl($idOrPath);
-            } else {
-                $el = Element\Service::getElementByPath($type, $idOrPath);
-            }
+            $el = Element\Service::getElementByPath($type, $idOrPath);
         }
 
         if ($el) {
@@ -107,11 +105,10 @@ class ElementController extends AdminAbstractController
                 'type' => $type,
                 'success' => true,
             ]);
-        } else {
-            return $this->adminJson([
-                'success' => false,
-            ]);
         }
+        return $this->adminJson([
+            'success' => false,
+        ]);
     }
 
     protected function processNoteTypesFromParameters(string $parameterName): JsonResponse
@@ -130,16 +127,12 @@ class ElementController extends AdminAbstractController
     #[Route('/element/note-types', name: 'opendxp_admin_element_notetypes', methods: ['GET'])]
     public function noteTypes(Request $request): JsonResponse
     {
-        switch ($request->get('ctype')) {
-            case 'document':
-                return $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_DOCUMENTS_NOTES_EVENTS_TYPES);
-            case 'asset':
-                return $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_ASSETS_NOTES_EVENTS_TYPES);
-            case 'object':
-                return $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_DATAOBJECTS_NOTES_EVENTS_TYPES);
-            default:
-                return $this->adminJson(['noteTypes' => []]);
-        }
+        return match ($request->get('ctype')) {
+            'document' => $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_DOCUMENTS_NOTES_EVENTS_TYPES),
+            'asset' => $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_ASSETS_NOTES_EVENTS_TYPES),
+            'object' => $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_DATAOBJECTS_NOTES_EVENTS_TYPES),
+            default => $this->adminJson(['noteTypes' => []]),
+        };
     }
 
     #[Route('/element/note-list', name: 'opendxp_admin_element_notelist', methods: ['POST'])]
@@ -167,7 +160,7 @@ class ElementController extends AdminAbstractController
         $list->setLimit($limit);
         $list->setOffset($offset);
 
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings(array_merge($request->request->all(), $request->query->all()));
+        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings([...$request->request->all(), ...$request->query->all()]);
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $list->setOrderKey($sortingSettings['orderKey']);
             $list->setOrder($sortingSettings['order']);
@@ -226,20 +219,19 @@ class ElementController extends AdminAbstractController
                 }
                 // system field
                 $value = ($filter['value']??'');
-                if ($operator == 'LIKE') {
+                if ($operator === 'LIKE') {
                     $value = '%' . $value . '%';
                 }
 
                 if ($filter[$propertyKey] == 'user') {
                     $conditions[] = '`user` IN (SELECT `id` FROM `users` WHERE `name` LIKE ' . $list->quote($value) . ')';
+                } elseif ($filter['type'] == 'date' && $filter[$comparisonKey] == 'eq') {
+                    $maxTime = $value + (86400 - 1);
+                    //specifies the top point of the range used in the condition
+                    $dateCondition = '`' . $filter[$propertyKey] . '` ' . ' BETWEEN ' . $db->quote($value) . ' AND ' . $db->quote($maxTime);
+                    $conditions[] = $dateCondition;
                 } else {
-                    if ($filter['type'] == 'date' && $filter[$comparisonKey] == 'eq') {
-                        $maxTime = $value + (86400 - 1); //specifies the top point of the range used in the condition
-                        $dateCondition = '`' . $filter[$propertyKey] . '` ' . ' BETWEEN ' . $db->quote($value) . ' AND ' . $db->quote($maxTime);
-                        $conditions[] = $dateCondition;
-                    } else {
-                        $conditions[] = $db->quoteIdentifier($filter[$propertyKey]).' '.$operator.' '.$db->quote($value);
-                    }
+                    $conditions[] = $db->quoteIdentifier($filter[$propertyKey]).' '.$operator.' '.$db->quote($value);
                 }
             }
         }
@@ -248,7 +240,7 @@ class ElementController extends AdminAbstractController
             $conditions[] = '(cid = ' . $list->quote($request->get('cid')) . ' AND ctype = ' . $list->quote($request->get('ctype')) . ')';
         }
 
-        if (!empty($conditions)) {
+        if ($conditions !== []) {
             $condition = implode(' AND ', $conditions);
             $list->setCondition($condition);
         }
@@ -368,9 +360,8 @@ class ElementController extends AdminAbstractController
                 'success' => true,
                 'jobs' => $element->getDependencies()->getRequiredBy(),
             ]);
-        } else {
-            return $this->adminJson(['success' => false], Response::HTTP_NOT_FOUND);
         }
+        return $this->adminJson(['success' => false], Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/element/replace-assignments', name: 'opendxp_admin_element_replaceassignments', methods: ['POST'])]
@@ -384,7 +375,7 @@ class ElementController extends AdminAbstractController
 
         if ($element && $sourceEl && $targetEl
             && $request->get('sourceType') == $request->get('targetType')
-            && $sourceEl->getType() == $targetEl->getType()
+            && $sourceEl->getType() === $targetEl->getType()
             && $element->isAllowed('save')
         ) {
             $rewriteConfig = [
@@ -497,11 +488,7 @@ class ElementController extends AdminAbstractController
         $result = [];
         $id = $source['id'];
         $source = DataObject\Concrete::getById($id);
-        if ($request->get('context')) {
-            $context = $this->decodeJson($request->get('context'));
-        } else {
-            $context = [];
-        }
+        $context = $request->get('context') ? $this->decodeJson($request->get('context')) : [];
 
         $ownerType = $context['containerType'];
         $fieldname = $context['fieldname'];
@@ -519,7 +506,7 @@ class ElementController extends AdminAbstractController
                 $data = DataObject\Service::useInheritedValues(true, [$source, $methodName]);
                 $editModeData = $fd->getDataForEditmode($data, $source);
                 // Inherited values show as an empty array
-                if (is_array($editModeData) && !empty($editModeData)) {
+                if (is_array($editModeData) && $editModeData !== []) {
                     foreach ($editModeData as $relationObjectAttribute) {
                         $relationObjectAttribute['$$nicepath'] =
                             isset($relationObjectAttribute[$idProperty]) && isset($result[$relationObjectAttribute[$idProperty]]) ? $result[$relationObjectAttribute[$idProperty]] : null;
@@ -583,12 +570,10 @@ class ElementController extends AdminAbstractController
                     }
 
                     return $this->adminJson(['versions' => $versions]);
-                } else {
-                    throw $this->createAccessDeniedException('Permission denied, ' . $type . ' id [' . $id . ']');
                 }
-            } else {
-                throw $this->createNotFoundException($type . ' with id [' . $id . "] doesn't exist");
+                throw $this->createAccessDeniedException('Permission denied, ' . $type . ' id [' . $id . ']');
             }
+            throw $this->createNotFoundException($type . ' with id [' . $id . "] doesn't exist");
         }
 
         throw $this->createNotFoundException('Element type not found');
@@ -626,7 +611,7 @@ class ElementController extends AdminAbstractController
             ' AND date <> ' . $versions->quote($elementModificationdate) .
             ' AND ctype = ' . $versions->quote($elementType)
         );
-        foreach ($versions->load() as $vkey => $version) {
+        foreach ($versions->load() as $version) {
             $version->delete();
         }
 
@@ -673,9 +658,8 @@ class ElementController extends AdminAbstractController
                     $result['total'] = count($result['requires']);
 
                     return $this->adminJson($result);
-                } else {
-                    return $this->adminJson($elements);
                 }
+                return $this->adminJson($elements);
 
             }
 
@@ -733,9 +717,8 @@ class ElementController extends AdminAbstractController
                     $result['total'] = count($result['requiredBy']);
 
                     return $this->adminJson($result);
-                } else {
-                    return $this->adminJson($elements);
                 }
+                return $this->adminJson($elements);
 
             }
 
@@ -767,11 +750,7 @@ class ElementController extends AdminAbstractController
                 if (!str_contains($predefined->getCtype(), $type)) {
                     return false;
                 }
-                if ($query && stripos($translator->trans($predefined->getName(), [], 'admin'), $query) === false) {
-                    return false;
-                }
-
-                return true;
+                return !($query && stripos($translator->trans($predefined->getName(), [], 'admin'), (string) $query) === false);
             });
 
             foreach ($list->getProperties() as $type) {
@@ -822,7 +801,7 @@ class ElementController extends AdminAbstractController
         $fd = null;
 
         if ($ownerType == 'object') {
-            $subContainerType = isset($context['subContainerType']) ? $context['subContainerType'] : null;
+            $subContainerType = $context['subContainerType'] ?? null;
             if ($subContainerType) {
                 $subContainerKey = $context['subContainerKey'];
                 $subContainer = $source->getClass()->getFieldDefinition($subContainerKey);

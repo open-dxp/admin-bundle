@@ -45,7 +45,7 @@ class ImportConfigListener implements EventSubscriberInterface
         $db = Db::get();
         $importConfigIds = $db->fetchFirstColumn('select id from importconfigs where classId = ?', [$classId]);
         if ($importConfigIds) {
-            $db->executeQuery('delete from importconfig_shares where importConfigId in (' . implode($importConfigIds) . ')');
+            $db->executeQuery('delete from importconfig_shares where importConfigId in (' . implode('', $importConfigIds) . ')');
         }
 
         $this->cleanupImportConfigs('classId = ' . $db->quote($classId));
@@ -60,7 +60,7 @@ class ImportConfigListener implements EventSubscriberInterface
 
         $importConfigIds = $db->fetchFirstColumn('select id from importconfigs where ownerId = ?', [$userId]);
         if ($importConfigIds) {
-            $db->executeQuery('delete from importconfig_shares where importConfigId in (' . implode($importConfigIds) . ')');
+            $db->executeQuery('delete from importconfig_shares where importConfigId in (' . implode('', $importConfigIds) . ')');
         }
 
         $this->cleanupImportConfigs('ownerId = ' . $userId);

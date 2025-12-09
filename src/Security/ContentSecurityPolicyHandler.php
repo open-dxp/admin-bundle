@@ -30,7 +30,7 @@ class ContentSecurityPolicyHandler implements LoggerAwareInterface
 
     private ?string $nonce = null;
 
-    private const SELF = "'self'";
+    private const string SELF = "'self'";
 
     public const DEFAULT_OPT = 'default-src';
 
@@ -94,9 +94,7 @@ class ContentSecurityPolicyHandler implements LoggerAwareInterface
 
     public function getCspHeader(): string
     {
-        $cspHeaderOptions = array_map(function ($k, $v) {
-            return "$k $v " . $this->getAllowedUrls($k);
-        }, array_keys($this->cspHeaderOptions), array_values($this->cspHeaderOptions));
+        $cspHeaderOptions = array_map(fn($k, $v) => "$k $v " . $this->getAllowedUrls($k), array_keys($this->cspHeaderOptions), array_values($this->cspHeaderOptions));
 
         return implode(';', $cspHeaderOptions);
     }

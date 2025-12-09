@@ -37,7 +37,7 @@ class GridConfigShare extends AbstractModel
             $share->getDao()->getByGridConfigAndSharedWithId($gridConfigId, $sharedWithUserId);
 
             return $share;
-        } catch (NotFoundException $e) {
+        } catch (NotFoundException) {
             return null;
         }
     }

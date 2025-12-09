@@ -58,7 +58,7 @@ class SettingsController extends AdminAbstractController
 {
     use StopMessengerWorkersTrait;
 
-    private const CUSTOM_LOGO_PATH = 'custom-logo.image';
+    private const string CUSTOM_LOGO_PATH = 'custom-logo.image';
 
     public function __construct(protected TranslatorInterface $translator)
     {
@@ -81,12 +81,12 @@ class SettingsController extends AdminAbstractController
             try {
                 $mime = $storage->mimeType(self::CUSTOM_LOGO_PATH);
                 $stream = $storage->readStream(self::CUSTOM_LOGO_PATH);
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // do nothing
             }
         }
 
-        return new StreamedResponse(function () use ($stream) {
+        return new StreamedResponse(function () use ($stream): void {
             fpassthru($stream);
         }, 200, [
             'Content-Type' => $mime,
@@ -147,53 +147,43 @@ class SettingsController extends AdminAbstractController
                     throw new ConfigWriteException();
                 }
                 $metadata->delete();
-
                 return $this->adminJson(['success' => true, 'data' => []]);
-            } elseif ($request->get('xaction') == 'update') {
+            }
+            if ($request->get('xaction') == 'update') {
                 $data = $this->decodeJson($request->get('data'));
-
                 // save type
                 $metadata = Metadata\Predefined::getById($data['id']);
                 if (!$metadata->isWriteable()) {
                     throw new ConfigWriteException();
                 }
                 $metadata->setValues($data);
-
                 $existingItem = Metadata\Predefined\Listing::getByKeyAndLanguage($metadata->getName(), $metadata->getLanguage(), $metadata->getTargetSubtype());
-                if ($existingItem && $existingItem->getId() != $metadata->getId()) {
+                if ($existingItem && $existingItem->getId() !== $metadata->getId()) {
                     return $this->adminJson(['message' => 'predefined_metadata_definitions_error_name_exists_msg', 'success' => false]);
                 }
-
                 $metadata->minimize();
                 $metadata->save();
                 $metadata->expand();
-
                 $responseData = $metadata->getObjectVars();
                 $responseData['writeable'] = $metadata->isWriteable();
-
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
-            } elseif ($request->get('xaction') == 'create') {
+            }
+            if ($request->get('xaction') == 'create') {
                 if (!(new Metadata\Predefined())->isWriteable()) {
                     throw new ConfigWriteException();
                 }
                 $data = $this->decodeJson($request->get('data'));
                 unset($data['id']);
-
                 // save type
                 $metadata = Metadata\Predefined::create();
-
                 $metadata->setValues($data);
-
                 $existingItem = Metadata\Predefined\Listing::getByKeyAndLanguage($metadata->getName(), $metadata->getLanguage(), $metadata->getTargetSubtype());
                 if ($existingItem) {
                     return $this->adminJson(['message' => 'rule_violation', 'success' => false]);
                 }
-
                 $metadata->save();
-
                 $responseData = $metadata->getObjectVars();
                 $responseData['writeable'] = $metadata->isWriteable();
-
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
             }
         } else {
@@ -203,7 +193,7 @@ class SettingsController extends AdminAbstractController
             if ($filter = $request->get('filter')) {
                 $list->setFilter(function (Metadata\Predefined $predefined) use ($filter) {
                     foreach ($predefined->getObjectVars() as $value) {
-                        if (stripos((string)$value, $filter) !== false) {
+                        if (stripos((string)$value, (string) $filter) !== false) {
                             return true;
                         }
                     }
@@ -252,7 +242,6 @@ class SettingsController extends AdminAbstractController
     {
         if ($request->get('data')) {
             $this->checkPermission('predefined_properties');
-
             if ($request->get('xaction') == 'destroy') {
                 $data = $this->decodeJson($request->get('data'));
                 $id = $data['id'];
@@ -261,11 +250,10 @@ class SettingsController extends AdminAbstractController
                     throw new ConfigWriteException();
                 }
                 $property->delete();
-
                 return $this->adminJson(['success' => true, 'data' => []]);
-            } elseif ($request->get('xaction') == 'update') {
+            }
+            if ($request->get('xaction') == 'update') {
                 $data = $this->decodeJson($request->get('data'));
-
                 // save type
                 $property = Property\Predefined::getById($data['id']);
                 if (!$property->isWriteable()) {
@@ -275,29 +263,24 @@ class SettingsController extends AdminAbstractController
                     $data['ctype'] = implode(',', $data['ctype']);
                 }
                 $property->setValues($data);
-
                 $property->save();
-
                 $responseData = $property->getObjectVars();
                 $responseData['writeable'] = $property->isWriteable();
-
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
-            } elseif ($request->get('xaction') == 'create') {
+            }
+
+            if ($request->get('xaction') == 'create') {
                 if (!(new Property\Predefined())->isWriteable()) {
                     throw new ConfigWriteException();
                 }
                 $data = $this->decodeJson($request->get('data'));
                 unset($data['id']);
-
                 // save type
                 $property = Property\Predefined::create();
                 $property->setValues($data);
-
                 $property->save();
-
                 $responseData = $property->getObjectVars();
                 $responseData['writeable'] = $property->isWriteable();
-
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
             }
         } else {
@@ -311,7 +294,7 @@ class SettingsController extends AdminAbstractController
                             $cellValues = is_array($value) ? $value : [$value];
 
                             foreach ($cellValues as $cellValue) {
-                                if (stripos((string)$cellValue, $filter) !== false) {
+                                if (stripos((string)$cellValue, (string) $filter) !== false) {
                                     return true;
                                 }
                             }
@@ -356,7 +339,7 @@ class SettingsController extends AdminAbstractController
 
         // If required languages is empty it's the same as if all langauges are required. Therefore, we
         // need to overwrite the value with the valid languages value to have all languages required
-        if (empty($config['general']['required_languages']) === true) {
+        if (empty($config['general']['required_languages'])) {
             $config['general']['required_languages'] = $config['general']['valid_languages'];
         }
 
@@ -424,7 +407,7 @@ class SettingsController extends AdminAbstractController
 
         $eventDispatcher->addListener(KernelEvents::TERMINATE, function (TerminateEvent $event) use (
             $cache, $eventDispatcher, $filesystem
-        ) {
+        ): void {
             // we need to clear the cache with a delay, because the cache is used by messenger:stop-workers
             // to send the stop signal to all worker processes
             sleep(2);
@@ -456,7 +439,7 @@ class SettingsController extends AdminAbstractController
 
         $eventDispatcher->addListener(KernelEvents::TERMINATE, function (TerminateEvent $event) use (
             $cache, $eventDispatcher, $filesystem
-        ) {
+        ): void {
             // we need to clear the cache with a delay, because the cache is used by messenger:stop-workers
             // to send the stop signal to all worker processes
             sleep(2);
@@ -534,15 +517,10 @@ class SettingsController extends AdminAbstractController
 
         if (!is_array($environments)) {
             $environments = trim((string)$environments);
-
-            if (empty($environments)) {
-                $environments = [];
-            } else {
-                $environments = [$environments];
-            }
+            $environments = empty($environments) ? [] : [$environments];
         }
 
-        if (empty($environments)) {
+        if ($environments === []) {
             $environments = [$kernel->getEnvironment()];
         }
 
@@ -567,10 +545,7 @@ class SettingsController extends AdminAbstractController
                 $errors = $result['errors'] ?? [];
                 $errors[] = $e->getMessage();
 
-                $result = array_merge($result, [
-                    'success' => false,
-                    'errors' => $errors,
-                ]);
+                $result = [...$result, 'success' => false, 'errors' => $errors];
             }
         }
     }
@@ -626,9 +601,7 @@ class SettingsController extends AdminAbstractController
             }
         }
 
-        usort($langs, function ($a, $b) {
-            return strcmp($a['display'], $b['display']);
-        });
+        usort($langs, fn($a, $b) => strcmp($a['display'], $b['display']));
 
         return $this->adminJson($langs);
     }
@@ -639,7 +612,7 @@ class SettingsController extends AdminAbstractController
         try {
             // we need to check documents permission for listing purposes in sites ext model & url-slugs
             $this->checkPermission('documents');
-        } catch (AccessDeniedHttpException $e) {
+        } catch (AccessDeniedHttpException) {
             Logger::log('[Startup] Sites are not loaded as "documents" permission is missing');
 
             //return empty string to avoid error on startup
@@ -690,7 +663,7 @@ class SettingsController extends AdminAbstractController
         $options = [];
 
         foreach ($countries as $short => $translation) {
-            if (strlen($short) == 2) {
+            if (strlen($short) === 2) {
                 $options[] = [
                     'key' => $translation . ' (' . $short . ')',
                     'value' => $short,
@@ -763,9 +736,7 @@ class SettingsController extends AdminAbstractController
             }
         }
 
-        foreach ($groups as $group) {
-            $thumbnails[] = $group;
-        }
+        $thumbnails = $groups;
 
         return $this->adminJson($thumbnails);
     }
@@ -776,9 +747,7 @@ class SettingsController extends AdminAbstractController
         $thumbnails = [];
 
         $list = new Asset\Image\Thumbnail\Config\Listing();
-        $list->setFilter(function (Asset\Image\Thumbnail\Config $config) {
-            return $config->isDownloadable();
-        });
+        $list->setFilter(fn(Asset\Image\Thumbnail\Config $config) => $config->isDownloadable());
 
         foreach ($list->getThumbnails() as $item) {
             $thumbnails[] = [
@@ -804,15 +773,11 @@ class SettingsController extends AdminAbstractController
             if (!$pipe->isWriteable()) {
                 throw new ConfigWriteException();
             }
-
             $pipe->setName($request->get('name'));
             $pipe->save();
-
             $success = true;
-        } else {
-            if (!$pipe->isWriteable()) {
-                throw new ConfigWriteException();
-            }
+        } elseif (!$pipe->isWriteable()) {
+            throw new ConfigWriteException();
         }
 
         return $this->adminJson(['success' => $success, 'id' => $pipe->getName()]);
@@ -955,9 +920,7 @@ class SettingsController extends AdminAbstractController
             }
         }
 
-        foreach ($groups as $group) {
-            $thumbnails[] = $group;
-        }
+        $thumbnails = $groups;
 
         return $this->adminJson($thumbnails);
     }
@@ -994,15 +957,11 @@ class SettingsController extends AdminAbstractController
             if (!$pipe->isWriteable()) {
                 throw new ConfigWriteException();
             }
-
             $pipe->setName($request->get('name'));
             $pipe->save();
-
             $success = true;
-        } else {
-            if (!$pipe->isWriteable()) {
-                throw new ConfigWriteException();
-            }
+        } elseif (!$pipe->isWriteable()) {
+            throw new ConfigWriteException();
         }
 
         return $this->adminJson(['success' => $success, 'id' => $pipe->getName()]);
@@ -1150,7 +1109,7 @@ class SettingsController extends AdminAbstractController
             $list->setLimit((int) $request->get('limit', 50));
             $list->setOffset((int) $request->get('start', 0));
 
-            $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings(array_merge($request->request->all(), $request->query->all()));
+            $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings([...$request->request->all(), ...$request->query->all()]);
             if ($sortingSettings['orderKey']) {
                 $list->setOrderKey($sortingSettings['orderKey']);
                 $list->setOrder($sortingSettings['order']);

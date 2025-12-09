@@ -24,11 +24,11 @@ use OpenDxp\Model\Element\ElementInterface;
  */
 final class FieldCollectionGetter extends AbstractOperator
 {
-    private string $attr;
+    private readonly string $attr;
 
-    private int $idx;
+    private readonly int $idx;
 
-    private string $colAttr;
+    private readonly string $colAttr;
 
     public function __construct(\stdClass $config, array $context = [])
     {

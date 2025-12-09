@@ -64,7 +64,7 @@ class VariantsController extends AdminAbstractController
             throw new \Exception('Permission denied');
         }
 
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
         $allParams['folderId'] = $parentObject->getId();
         $allParams['classId'] = $parentObject->getClassId();
 

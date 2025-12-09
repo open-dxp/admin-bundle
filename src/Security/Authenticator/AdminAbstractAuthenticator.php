@@ -129,13 +129,14 @@ abstract class AdminAbstractAuthenticator extends AbstractAuthenticator implemen
         if (Authentication::isValidUser($user->getUser())) {
             $openDxpUser = $user->getUser();
 
-            Session::useBag($session, function (AttributeBagInterface $adminSession, SessionInterface $session) use ($openDxpUser) {
+            Session::useBag($session, function (AttributeBagInterface $adminSession, SessionInterface $session) use ($openDxpUser): void {
                 $session->migrate();
                 $adminSession->set('user', $openDxpUser);
             });
         }
     }
 
+    #[\Override]
     public function createToken(Passport $passport, string $firewallName): TokenInterface
     {
         if ($this->twoFactorRequired) {
@@ -144,8 +145,7 @@ abstract class AdminAbstractAuthenticator extends AbstractAuthenticator implemen
                 $firewallName,
                 $passport->getUser()->getRoles()
             );
-        } else {
-            return parent::createToken($passport, $firewallName);
         }
+        return parent::createToken($passport, $firewallName);
     }
 }

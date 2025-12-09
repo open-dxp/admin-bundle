@@ -120,63 +120,56 @@ class UserController extends AdminAbstractController implements KernelController
             if ($request->get('rid')) {
                 $rid = (int)$request->get('rid');
                 $rObject = $className::getById($rid);
-                if ($rObject) {
-                    if ($type === 'user' || $type === 'role') {
-                        $user->setParentId($rObject->getParentId());
-                        if ($rObject->getClasses()) {
-                            $user->setClasses(implode(',', $rObject->getClasses()));
-                        }
-                        if ($rObject->getDocTypes()) {
-                            $user->setDocTypes(implode(',', $rObject->getDocTypes()));
-                        }
-
-                        $keys = ['asset', 'document', 'object'];
-                        foreach ($keys as $key) {
-                            $getter = 'getWorkspaces' . ucfirst($key);
-                            $setter = 'setWorkspaces' . ucfirst($key);
-                            $workspaces = $rObject->$getter();
-                            $clonedWorkspaces = [];
-                            if (is_array($workspaces)) {
-                                /** @var User\Workspace\AbstractWorkspace $workspace */
-                                foreach ($workspaces as $workspace) {
-                                    $vars = $workspace->getObjectVars();
-                                    if ($key === 'object') {
-                                        $workspaceClass = '\\OpenDxp\\Model\\User\\Workspace\\DataObject';
-                                    } else {
-                                        $workspaceClass = '\\OpenDxp\\Model\\User\\Workspace\\' . ucfirst($key);
-                                    }
-                                    $newWorkspace = new $workspaceClass();
-                                    foreach ($vars as $varKey => $varValue) {
-                                        $newWorkspace->setObjectVar($varKey, $varValue);
-                                    }
-                                    $newWorkspace->setUserId($user->getId());
-                                    $clonedWorkspaces[] = $newWorkspace;
-                                }
-                            }
-
-                            $user->$setter($clonedWorkspaces);
-                        }
-
-                        $user->setPerspectives($rObject->getPerspectives());
-                        $user->setPermissions($rObject->getPermissions());
-
-                        if ($type === 'user') {
-                            $user->setAdmin(false);
-                            if ($this->getAdminUser()->isAdmin()) {
-                                $user->setAdmin($rObject->getAdmin());
-                            }
-                            $user->setActive($rObject->getActive());
-                            $user->setRoles($rObject->getRoles());
-                            $user->setWelcomeScreen($rObject->getWelcomescreen());
-                            $user->setMemorizeTabs($rObject->getMemorizeTabs());
-                            $user->setCloseWarning($rObject->getCloseWarning());
-                        }
-
-                        $user->setWebsiteTranslationLanguagesView($rObject->getWebsiteTranslationLanguagesView());
-                        $user->setWebsiteTranslationLanguagesEdit($rObject->getWebsiteTranslationLanguagesEdit());
-
-                        $user->save();
+                if ($rObject && ($type === 'user' || $type === 'role')) {
+                    $user->setParentId($rObject->getParentId());
+                    if ($rObject->getClasses()) {
+                        $user->setClasses(implode(',', $rObject->getClasses()));
                     }
+                    if ($rObject->getDocTypes()) {
+                        $user->setDocTypes(implode(',', $rObject->getDocTypes()));
+                    }
+                    $keys = ['asset', 'document', 'object'];
+                    foreach ($keys as $key) {
+                        $getter = 'getWorkspaces' . ucfirst($key);
+                        $setter = 'setWorkspaces' . ucfirst($key);
+                        $workspaces = $rObject->$getter();
+                        $clonedWorkspaces = [];
+                        if (is_array($workspaces)) {
+                            /** @var User\Workspace\AbstractWorkspace $workspace */
+                            foreach ($workspaces as $workspace) {
+                                $vars = $workspace->getObjectVars();
+                                if ($key === 'object') {
+                                    $workspaceClass = \OpenDxp\Model\User\Workspace\DataObject::class;
+                                } else {
+                                    $workspaceClass = '\\OpenDxp\\Model\\User\\Workspace\\' . ucfirst($key);
+                                }
+                                $newWorkspace = new $workspaceClass();
+                                foreach ($vars as $varKey => $varValue) {
+                                    $newWorkspace->setObjectVar($varKey, $varValue);
+                                }
+                                $newWorkspace->setUserId($user->getId());
+                                $clonedWorkspaces[] = $newWorkspace;
+                            }
+                        }
+
+                        $user->$setter($clonedWorkspaces);
+                    }
+                    $user->setPerspectives($rObject->getPerspectives());
+                    $user->setPermissions($rObject->getPermissions());
+                    if ($type === 'user') {
+                        $user->setAdmin(false);
+                        if ($this->getAdminUser()->isAdmin()) {
+                            $user->setAdmin($rObject->getAdmin());
+                        }
+                        $user->setActive($rObject->getActive());
+                        $user->setRoles($rObject->getRoles());
+                        $user->setWelcomeScreen($rObject->getWelcomescreen());
+                        $user->setMemorizeTabs($rObject->getMemorizeTabs());
+                        $user->setCloseWarning($rObject->getCloseWarning());
+                    }
+                    $user->setWebsiteTranslationLanguagesView($rObject->getWebsiteTranslationLanguagesView());
+                    $user->setWebsiteTranslationLanguagesEdit($rObject->getWebsiteTranslationLanguagesEdit());
+                    $user->save();
                 }
             }
 
@@ -240,10 +233,8 @@ class UserController extends AdminAbstractController implements KernelController
                 $user = $list[$i];
                 $user->delete();
             }
-        } else {
-            if ($user->getId()) {
-                $user->delete();
-            }
+        } elseif ($user->getId()) {
+            $user->delete();
         }
 
         return $this->adminJson(['success' => true]);
@@ -341,7 +332,7 @@ class UserController extends AdminAbstractController implements KernelController
         if ($user instanceof User && $request->get('keyBindings')) {
             $keyBindings = json_decode($request->get('keyBindings'), true);
             $tmpArray = [];
-            foreach ($keyBindings as $action => $item) {
+            foreach ($keyBindings as $item) {
                 $tmpArray[] = json_decode($item, true);
             }
             $tmpArray = array_values(array_filter($tmpArray));
@@ -498,13 +489,7 @@ class UserController extends AdminAbstractController implements KernelController
         //TODO Can be completely validated with Symfony Validator
         $user = $this->getAdminUser();
 
-        $isPasswordReset = Tool\Session::useBag($request->getSession(), function (AttributeBagInterface $adminSession) {
-            if ($adminSession->get('password_reset')) {
-                return true;
-            }
-
-            return false;
-        });
+        $isPasswordReset = Tool\Session::useBag($request->getSession(), fn(AttributeBagInterface $adminSession) => (bool) $adminSession->get('password_reset'));
 
         if ($user != null) {
             if ($user->getId() == $request->get('id')) {
@@ -551,7 +536,7 @@ class UserController extends AdminAbstractController implements KernelController
                 if ($request->get('keyBindings')) {
                     $keyBindings = json_decode($request->get('keyBindings'), true);
                     $tmpArray = [];
-                    foreach ($keyBindings as $action => $item) {
+                    foreach ($keyBindings as $item) {
                         $tmpArray[] = json_decode($item, true);
                     }
                     $tmpArray = array_values(array_filter($tmpArray));
@@ -563,14 +548,11 @@ class UserController extends AdminAbstractController implements KernelController
                 $user->save();
 
                 return $this->adminJson(['success' => true]);
-            } else {
-                Logger::warn('prevented save current user, because ids do not match. ');
-
-                return $this->adminJson(false);
             }
-        } else {
+            Logger::warn('prevented save current user, because ids do not match. ');
             return $this->adminJson(false);
         }
+        return $this->adminJson(false);
     }
 
     #[Route('/user/get-current-user', name: 'opendxp_admin_user_getcurrentuser', methods: ['GET'])]
@@ -597,9 +579,7 @@ class UserController extends AdminAbstractController implements KernelController
         $userData['twoFactorAuthentication']['isActive'] = $user->getTwoFactorAuthentication('enabled') && $user->getTwoFactorAuthentication('secret');
         $userData['hasImage'] = $user->hasImage();
 
-        $userData['isPasswordReset'] = Tool\Session::useBag($request->getSession(), function (AttributeBagInterface $adminSession) {
-            return $adminSession->get('password_reset');
-        });
+        $userData['isPasswordReset'] = Tool\Session::useBag($request->getSession(), fn(AttributeBagInterface $adminSession) => $adminSession->get('password_reset'));
 
         $userData['validLocales'] = Tool::getSupportedJSLocales();
 
@@ -683,9 +663,7 @@ class UserController extends AdminAbstractController implements KernelController
             $role->{'setWorkspaces' . ucfirst($type)}($workspaces);
         }
 
-        $replaceFn = static function ($value) {
-            return $value->getObjectVars();
-        };
+        $replaceFn = (static fn($value) => $value->getObjectVars());
 
         // get available permissions
         $availableUserPermissionsList = new User\Permission\Definition\Listing();
@@ -829,7 +807,7 @@ class UserController extends AdminAbstractController implements KernelController
         }
         $stream = $userObj->getImage();
 
-        return new StreamedResponse(function () use ($stream) {
+        return new StreamedResponse(function () use ($stream): void {
             fpassthru($stream);
         }, 200, [
             'Content-Type' => 'image/png',
@@ -1050,7 +1028,7 @@ class UserController extends AdminAbstractController implements KernelController
 
                     $success = true;
                     $message = sprintf($translator->trans('invitation_link_sent', [], 'admin_ext'), $user->getEmail());
-                } catch (\Exception $e) {
+                } catch (\Exception) {
                     $message .= 'could not send email';
                 }
             }
@@ -1087,7 +1065,7 @@ class UserController extends AdminAbstractController implements KernelController
 
             //try to generate invitation link for custom admin point
             $loginUrl = $this->generateUrl($adminEntryPointRoute, $params, $referenceType);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             //use default login check for invitation link
             $loginUrl = $this->generateUrl($fallbackUrl, $params, $referenceType);
         }

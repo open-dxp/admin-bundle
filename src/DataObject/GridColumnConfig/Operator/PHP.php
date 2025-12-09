@@ -24,7 +24,7 @@ use OpenDxp\Tool\Serialize;
  */
 final class PHP extends AbstractOperator
 {
-    private string $mode;
+    private readonly string $mode;
 
     public function __construct(\stdClass $config, array $context = [])
     {
@@ -65,11 +65,7 @@ final class PHP extends AbstractOperator
             $valueArray[] = null;
         }
 
-        if ($isArrayType) {
-            $result->value = $valueArray;
-        } else {
-            $result->value = $valueArray[0];
-        }
+        $result->value = $isArrayType ? $valueArray : $valueArray[0];
 
         if ($this->mode === 's') {
             $result->value = Serialize::serialize($result->value);

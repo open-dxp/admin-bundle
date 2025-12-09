@@ -23,7 +23,7 @@ use OpenDxp\Model\Element\ElementInterface;
  */
 final class Base64 extends AbstractOperator
 {
-    private string $mode;
+    private readonly string $mode;
 
     public function __construct(\stdClass $config, array $context = [])
     {
@@ -64,11 +64,7 @@ final class Base64 extends AbstractOperator
             $valueArray[] = null;
         }
 
-        if ($isArrayType) {
-            $result->value = $valueArray;
-        } else {
-            $result->value = $valueArray[0];
-        }
+        $result->value = $isArrayType ? $valueArray : $valueArray[0];
 
         if ($this->mode === 'e') {
             $result->value = base64_encode($result->value);

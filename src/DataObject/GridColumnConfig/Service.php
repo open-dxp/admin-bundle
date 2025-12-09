@@ -26,18 +26,10 @@ use Psr\Container\ContainerInterface;
 /**
  * @internal
  */
-final class Service
+final readonly class Service
 {
-    private ContainerInterface $operatorFactories;
-
-    private ContainerInterface $valueFactories;
-
-    public function __construct(
-        ContainerInterface $operatorFactories,
-        ContainerInterface $valueFactories
-    ) {
-        $this->operatorFactories = $operatorFactories;
-        $this->valueFactories = $valueFactories;
+    public function __construct(private ContainerInterface $operatorFactories, private ContainerInterface $valueFactories)
+    {
     }
 
     /**
@@ -57,7 +49,7 @@ final class Service
      */
     private function doBuildConfig(array $jsonConfigs, array $config, array $context = []): array
     {
-        if (empty($jsonConfigs)) {
+        if ($jsonConfigs === []) {
             return $config;
         }
 

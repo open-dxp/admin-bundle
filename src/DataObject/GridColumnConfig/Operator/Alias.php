@@ -53,11 +53,7 @@ final class Alias extends AbstractOperator
         }
 
         $result->isArrayType = $isArrayType;
-        if ($isArrayType) {
-            $result->value = $valueArray;
-        } else {
-            $result->value = $valueArray[0] ?? null;
-        }
+        $result->value = $isArrayType ? $valueArray : $valueArray[0] ?? null;
 
         return $result;
     }

@@ -103,7 +103,7 @@ abstract class ElementControllerBase extends AdminAbstractController
                 if (!$hasDependency) {
                     $hasDependency = $element->getDependencies()->isRequired();
                 }
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 Logger::err('failed to access element with id: ' . $id);
 
                 continue;

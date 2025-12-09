@@ -23,9 +23,9 @@ use OpenDxp\Model\Element\ElementInterface;
  */
 final class Concatenator extends AbstractOperator
 {
-    private string $glue;
+    private readonly string $glue;
 
-    private bool $forceValue;
+    private readonly bool $forceValue;
 
     public function __construct(\stdClass $config, array $context = [])
     {
@@ -54,11 +54,7 @@ final class Concatenator extends AbstractOperator
 
             foreach ($childValues as $value) {
                 if (!$hasValue) {
-                    if (is_object($value) && method_exists($value, 'isEmpty')) {
-                        $hasValue = !$value->isEmpty();
-                    } else {
-                        $hasValue = !empty($value);
-                    }
+                    $hasValue = is_object($value) && method_exists($value, 'isEmpty') ? !$value->isEmpty() : !empty($value);
                 }
 
                 if ($value !== null) {

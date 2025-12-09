@@ -22,11 +22,8 @@ use OpenDxp\Logger;
 
 class DefaultOperatorFactory implements OperatorFactoryInterface
 {
-    private string $className;
-
-    public function __construct(string $className)
+    public function __construct(private readonly string $className)
     {
-        $this->className = $className;
     }
 
     public function build(\stdClass $configElement, array $context = []): ?OperatorInterface

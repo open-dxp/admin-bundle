@@ -23,7 +23,7 @@ use OpenDxp\Model\Element\ElementInterface;
  */
 final class CaseConverter extends AbstractOperator
 {
-    private int $capitalization;
+    private readonly int $capitalization;
 
     public function __construct(\stdClass $config, array $context = [])
     {
@@ -69,11 +69,7 @@ final class CaseConverter extends AbstractOperator
             $valueArray[] = null;
         }
 
-        if ($isArrayType) {
-            $result->value = $valueArray;
-        } else {
-            $result->value = $valueArray[0];
-        }
+        $result->value = $isArrayType ? $valueArray : $valueArray[0];
 
         return $result;
     }

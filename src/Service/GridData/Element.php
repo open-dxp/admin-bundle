@@ -37,11 +37,7 @@ abstract class Element
             'modificationDate' => $element->getModificationDate(),
         ];
 
-        if (method_exists($element, 'isPublished')) {
-            $data['published'] = $element->isPublished();
-        } else {
-            $data['published'] = true;
-        }
+        $data['published'] = method_exists($element, 'isPublished') ? $element->isPublished() : true;
 
         return $data;
     }

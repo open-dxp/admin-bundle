@@ -23,7 +23,7 @@ use OpenDxp\Model\Element\ElementInterface;
  */
 final class Text extends AbstractOperator
 {
-    private string $textValue;
+    private readonly string $textValue;
 
     public function __construct(\stdClass $config, array $context = [])
     {

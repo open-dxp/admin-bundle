@@ -30,7 +30,7 @@ final class DateFormatter extends AbstractOperator
     {
         parent::__construct($config, $context);
 
-        $this->format = ($config->format ? $config->format : null);
+        $this->format = ($config->format ?: null);
     }
 
     public function getLabeledValue(array|ElementInterface $element): \stdClass
@@ -44,7 +44,6 @@ final class DateFormatter extends AbstractOperator
         if ($children) {
             $newChildrenResult = [];
             $isArrayType = null;
-
             foreach ($children as $c) {
                 $childResult = $c->getLabeledValue($element);
                 $isArrayType = $childResult->isArrayType ?? false;
@@ -73,13 +72,8 @@ final class DateFormatter extends AbstractOperator
 
                 $newChildrenResult[] = $newValue;
             }
-
             $result->isArrayType = $isArrayType;
-            if ($isArrayType) {
-                $result->value = $newChildrenResult;
-            } else {
-                $result->value = $newChildrenResult[0];
-            }
+            $result->value = $isArrayType ? $newChildrenResult : $newChildrenResult[0];
         }
 
         return $result;

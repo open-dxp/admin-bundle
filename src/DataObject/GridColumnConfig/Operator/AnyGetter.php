@@ -102,11 +102,7 @@ final class AnyGetter extends AbstractOperator
                 $valueContainer = $c->getLabeledValue($forwardObject);
 
                 $value = $valueContainer->value;
-                if ($value || $this->getReturnLastResult()) {
-                    $resultElementValue = $value;
-                } else {
-                    $resultElementValue = null;
-                }
+                $resultElementValue = $value || $this->getReturnLastResult() ? $value : null;
 
                 if ($this->getisArrayType()) {
                     if (is_array($value)) {
@@ -134,11 +130,7 @@ final class AnyGetter extends AbstractOperator
                 }
                 $resultElements[] = $resultElementValue;
             }
-            if (count($children) == 1) {
-                $result->value = $resultElements[0];
-            } else {
-                $result->value = $resultElements;
-            }
+            $result->value = count($children) === 1 ? $resultElements[0] : $resultElements;
         }
 
         return $result;

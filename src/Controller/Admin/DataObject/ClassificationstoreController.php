@@ -193,7 +193,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $start = (int) $request->get('start');
         }
 
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
         $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($allParams);
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $sortingSettings['orderKey'];
@@ -241,7 +241,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
         if ($searchfilter) {
             $searchFilterConditions = [];
 
-            $searchTerms = array_merge([$searchfilter], $this->getTranslatedSearchFilterTerms($searchfilter));
+            $searchTerms = [$searchfilter, ...$this->getTranslatedSearchFilterTerms($searchfilter)];
             foreach ($searchTerms as $searchFilterTerm) {
                 $searchFilterConditions[] = 'name LIKE '.$db->quote('%'.$searchFilterTerm.'%').' OR description LIKE '.$db->quote('%'.$searchFilterTerm.'%');
             }
@@ -359,7 +359,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $start = (int) $request->get('start');
         }
 
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
         $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($allParams);
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $sortingSettings['orderKey'];
@@ -385,7 +385,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
         if ($searchfilter) {
             $searchFilterConditions = [];
 
-            $searchTerms = array_merge([$searchfilter], $this->getTranslatedSearchFilterTerms($searchfilter));
+            $searchTerms = [$searchfilter, ...$this->getTranslatedSearchFilterTerms($searchfilter)];
             foreach ($searchTerms as $searchFilterTerm) {
                 $searchFilterConditions[] = 'name LIKE '.$db->quote('%'.$searchFilterTerm.'%').' OR description LIKE '.$db->quote('%'.$searchFilterTerm.'%');
             }
@@ -498,7 +498,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $order = $request->get('dir');
         }
 
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
         $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($allParams);
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $sortingSettings['orderKey'];
@@ -586,7 +586,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $dataParam = $request->get('data');
             $data = $this->decodeJson($dataParam);
 
-            if (count($data) == count($data, 1)) {
+            if (count($data) === count($data, 1)) {
                 $data = [$data];
             }
 
@@ -647,7 +647,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $order = $request->get('dir');
         }
 
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
         $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($allParams);
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $sortingSettings['orderKey'];
@@ -701,7 +701,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
         if ($searchfilter) {
             $searchFilterConditions = [];
 
-            $searchTerms = array_merge([$searchfilter], $this->getTranslatedSearchFilterTerms($searchfilter));
+            $searchTerms = [$searchfilter, ...$this->getTranslatedSearchFilterTerms($searchfilter)];
             foreach ($searchTerms as $searchFilterTerm) {
                 $searchFilterConditions[] = Classificationstore\KeyConfig\Dao::TABLE_NAME_KEYS.'.name LIKE '.$db->quote('%'.$searchFilterTerm.'%')
                     .' OR '.Classificationstore\GroupConfig\Dao::TABLE_NAME_GROUPS.'.name LIKE '.$db->quote('%'.$searchFilterTerm.'%')
@@ -761,7 +761,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $order = $request->get('dir');
         }
 
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
         $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($allParams);
 
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
@@ -1126,7 +1126,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $order = $request->get('dir');
         }
 
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
         $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($allParams);
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $sortingSettings['orderKey'];
@@ -1273,7 +1273,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
     protected function getKeyConfigItem(Classificationstore\KeyConfig $config): array
     {
         $item = $this->getConfigItem($config);
-        $item['type'] = $config->getType() ? $config->getType() : 'input';
+        $item['type'] = $config->getType() ?: 'input';
         $definition = $config->getDefinition();
         $item['definition'] = $definition;
 
@@ -1417,7 +1417,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
 
         $sorter = ' order by `' . $sortKey .  '` ' . $sortDir;
 
-        if ($table == 'keys') {
+        if ($table === 'keys') {
             $query = '
                 select *, (item.pos - 1)/ ' . $pageSize . ' + 1  as page from (
                     select * from (

@@ -46,7 +46,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[Route('/workflow')]
 class WorkflowController extends AdminAbstractController implements KernelControllerEventInterface
 {
-    private ConcreteObject|Document|Asset|null $element;
+    private ConcreteObject|Document|Asset|null $element = null;
 
     public function __construct(protected TranslatorInterface $translator)
     {
@@ -112,10 +112,8 @@ class WorkflowController extends AdminAbstractController implements KernelContro
                 ];
             } catch (ValidationException $e) {
                 $reason = '';
-                if (count((array)$e->getSubItems()) > 0) {
-                    $reason = '<ul>' . implode('', array_map(function ($item) {
-                        return '<li>' . $item . '</li>';
-                    }, $e->getSubItems())) . '</ul>';
+                if (count($e->getSubItems()) > 0) {
+                    $reason = '<ul>' . implode('', array_map(fn($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
                 }
 
                 $data = [
@@ -134,9 +132,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
         } else {
             $blockTransitionList = $workflow->buildTransitionBlockerList($this->element, $request->get('transition'));
 
-            $reasons = array_map(function ($blockTransitionItem) {
-                return $blockTransitionItem->getMessage();
-            }, iterator_to_array($blockTransitionList->getIterator(), true));
+            $reasons = array_map(fn($blockTransitionItem) => $blockTransitionItem->getMessage(), iterator_to_array($blockTransitionList->getIterator(), true));
 
             $data = [
                 'success' => false,
@@ -176,10 +172,8 @@ class WorkflowController extends AdminAbstractController implements KernelContro
             ];
         } catch (ValidationException $e) {
             $reason = '';
-            if (count((array)$e->getSubItems()) > 0) {
-                $reason = '<ul>' . implode('', array_map(function ($item) {
-                    return '<li>' . $item . '</li>';
-                }, $e->getSubItems())) . '</ul>';
+            if (count($e->getSubItems()) > 0) {
+                $reason = '<ul>' . implode('', array_map(fn($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
             }
 
             $data = [

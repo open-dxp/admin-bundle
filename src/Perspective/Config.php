@@ -30,7 +30,7 @@ use Symfony\Component\EventDispatcher\GenericEvent;
  */
 final class Config
 {
-    private const CONFIG_ID = 'perspectives';
+    private const string CONFIG_ID = 'perspectives';
 
     private static ?LocationAwareConfigRepository $locationAwareConfigRepository = null;
 
@@ -65,7 +65,7 @@ final class Config
             $configKey = $repository->loadConfigByKey(($key));
             if (isset($configKey[0])) {
                 $configKey[0]['writeable'] = $repository->isWriteable($key, $configKey[1]);
-                $config = array_merge($config, [$key => $configKey[0]]);
+                $config = [...$config, $key => $configKey[0]];
             }
         }
 
@@ -87,19 +87,17 @@ final class Config
         foreach ($data as $key => $value) {
             $key = (string) $key;
             [$configKey, $dataSource] = $repository->loadConfigByKey($key);
-            if ($repository->isWriteable($key, $dataSource) === true) {
+            if ($repository->isWriteable($key, $dataSource)) {
                 unset($value['writeable']);
-                $repository->saveConfig($key, $value, function ($key, $data) {
-                    return [
-                        'opendxp' => [
-                            'perspectives' => [
-                                'definitions' => [
-                                    $key => $data,
-                                ],
+                $repository->saveConfig($key, $value, fn($key, $data) => [
+                    'opendxp' => [
+                        'perspectives' => [
+                            'definitions' => [
+                                $key => $data,
                             ],
                         ],
-                    ];
-                });
+                    ],
+                ]);
             }
         }
 
@@ -143,18 +141,16 @@ final class Config
         ];
 
         $cvConfigs = \OpenDxp\Bundle\AdminBundle\CustomView\Config::get();
-        if ($cvConfigs) {
-            foreach ($cvConfigs as $cvConfig) {
-                if (isset($cvConfig['id'])) {
-                    $elementTree[] = [
-                        'type' => 'customview',
-                        'id' => $cvConfig['id'],
-                        'position' => $cvConfig['position'] ?? 'left',
-                        'expanded' => $cvConfig['expanded'] ?? false,
-                        'hidden' => $cvConfig['hidden'] ?? false,
-                        'sort' => $cvConfig['sort'] ?? 999,
-                    ];
-                }
+        foreach ($cvConfigs as $cvConfig) {
+            if (isset($cvConfig['id'])) {
+                $elementTree[] = [
+                    'type' => 'customview',
+                    'id' => $cvConfig['id'],
+                    'position' => $cvConfig['position'] ?? 'left',
+                    'expanded' => $cvConfig['expanded'] ?? false,
+                    'hidden' => $cvConfig['hidden'] ?? false,
+                    'sort' => $cvConfig['sort'] ?? 999,
+                ];
             }
         }
 
@@ -200,11 +196,11 @@ final class Config
 
     public static function getRuntimePerspective(?User $currentUser = null): mixed
     {
-        if (null === $currentUser) {
+        if (!$currentUser instanceof \OpenDxp\Model\User) {
             $currentUser = Tool\Admin::getCurrentUser();
         }
 
-        $currentConfigName = $currentUser->getActivePerspective() ? $currentUser->getActivePerspective() : $currentUser->getFirstAllowedPerspective();
+        $currentConfigName = $currentUser->getActivePerspective() ?: $currentUser->getFirstAllowedPerspective();
 
         $config = self::get();
         $result = [];
@@ -255,31 +251,29 @@ final class Config
 
         $cvConfigs = \OpenDxp\Bundle\AdminBundle\CustomView\Config::get();
 
-        if ($cvConfigs) {
-            foreach ($cvConfigs as $node) {
-                $tmpData = $node;
-                if (!isset($tmpData['id'])) {
-                    Logger::error('custom view ID is missing ' . var_export($tmpData, true));
+        foreach ($cvConfigs as $node) {
+            $tmpData = $node;
+            if (!isset($tmpData['id'])) {
+                Logger::error('custom view ID is missing ' . var_export($tmpData, true));
 
-                    continue;
-                }
+                continue;
+            }
 
-                if (!empty($tmpData['hidden'])) {
-                    continue;
-                }
+            if (!empty($tmpData['hidden'])) {
+                continue;
+            }
 
-                // backwards compatibility
-                $treeType = $tmpData['treetype'] ? $tmpData['treetype'] : 'object';
-                $rootNode = \OpenDxp\Model\Element\Service::getElementByPath($treeType, $tmpData['rootfolder']);
+            // backwards compatibility
+            $treeType = $tmpData['treetype'] ?: 'object';
+            $rootNode = \OpenDxp\Model\Element\Service::getElementByPath($treeType, $tmpData['rootfolder']);
 
-                if ($rootNode) {
-                    $tmpData['type'] = 'customview';
-                    $tmpData['rootId'] = $rootNode->getId();
-                    $tmpData['allowedClasses'] = $tmpData['classes'] ?? null;
-                    $tmpData['showroot'] = (bool)$tmpData['showroot'];
-                    $customViewId = $tmpData['id'];
-                    $cfConfigMapping[$customViewId] = $tmpData;
-                }
+            if ($rootNode) {
+                $tmpData['type'] = 'customview';
+                $tmpData['rootId'] = $rootNode->getId();
+                $tmpData['allowedClasses'] = $tmpData['classes'] ?? null;
+                $tmpData['showroot'] = (bool)$tmpData['showroot'];
+                $customViewId = $tmpData['id'];
+                $cfConfigMapping[$customViewId] = $tmpData;
             }
         }
 
@@ -295,7 +289,7 @@ final class Config
 
                     continue;
                 }
-                $customViewCfg = isset($cfConfigMapping[$customViewId]) ? $cfConfigMapping[$customViewId] : null;
+                $customViewCfg = $cfConfigMapping[$customViewId] ?? null;
                 if (!$customViewCfg) {
                     Logger::error('no custom view config for id  ' . $customViewId);
 
@@ -333,7 +327,7 @@ final class Config
                 $config = [];
                 $roleIds = $user->getRoles();
                 $userIds = [$user->getId()];
-                $userIds = array_merge($userIds, $roleIds);
+                $userIds = [...$userIds, ...$roleIds];
 
                 foreach ($userIds as $userId) {
                     if (in_array($userId, $roleIds)) {
@@ -343,12 +337,10 @@ final class Config
                     }
                     if ($userOrRoleToCheck instanceof UserRole) {
                         $perspectives = $userOrRoleToCheck->getPerspectives();
-                        if ($perspectives) {
-                            foreach ($perspectives as $perspectiveName) {
-                                $mainDef = $mainConfig[$perspectiveName] ?? null;
-                                if ($mainDef) {
-                                    $config[$perspectiveName] = $mainDef;
-                                }
+                        foreach ($perspectives as $perspectiveName) {
+                            $mainDef = $mainConfig[$perspectiveName] ?? null;
+                            if ($mainDef) {
+                                $config[$perspectiveName] = $mainDef;
                             }
                         }
                     }

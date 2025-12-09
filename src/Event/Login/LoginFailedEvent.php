@@ -20,13 +20,10 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 class LoginFailedEvent extends Event
 {
-    protected array $credentials;
-
     protected ?User $user = null;
 
-    public function __construct(array $credentials)
+    public function __construct(protected array $credentials)
     {
-        $this->credentials = $credentials;
     }
 
     public function getCredentials(): array
@@ -36,11 +33,7 @@ class LoginFailedEvent extends Event
 
     public function getCredential(string $name, mixed $default = null): mixed
     {
-        if (isset($this->credentials[$name])) {
-            return $this->credentials[$name];
-        }
-
-        return $default;
+        return $this->credentials[$name] ?? $default;
     }
 
     public function getUser(): ?User
@@ -60,6 +53,6 @@ class LoginFailedEvent extends Event
 
     public function hasUser(): bool
     {
-        return null !== $this->user;
+        return $this->user instanceof \OpenDxp\Model\User;
     }
 }

@@ -48,7 +48,7 @@ class GridConfigFavourite extends AbstractModel
             $favourite->getDao()->getByOwnerAndClassAndObjectId($ownerId, $classId, $objectId, $searchType);
 
             return $favourite;
-        } catch (NotFoundException $e) {
+        } catch (NotFoundException) {
             return null;
         }
     }

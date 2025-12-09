@@ -61,11 +61,9 @@ class AdminExceptionListener implements EventSubscriberInterface
                 'traceString' => '',
             ];
 
-            if (!\OpenDxp::inDebugMode()) {
-                // DBAL exceptions do include SQL statements, we don't want to expose them
-                if ($ex instanceof DBALException) {
-                    $message = 'Database error, see logs for details';
-                }
+            // DBAL exceptions do include SQL statements, we don't want to expose them
+            if (!\OpenDxp::inDebugMode() && $ex instanceof DBALException) {
+                $message = 'Database error, see logs for details';
             }
 
             if (\OpenDxp::inDebugMode()) {

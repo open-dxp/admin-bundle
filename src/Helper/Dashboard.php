@@ -26,15 +26,12 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 final class Dashboard
 {
-    protected User $user;
-
     protected ?array $dashboards = null;
 
     protected Filesystem $filesystem;
 
-    public function __construct(User $user)
+    public function __construct(protected User $user)
     {
-        $this->user = $user;
         $this->filesystem = new Filesystem();
     }
 
@@ -112,7 +109,7 @@ final class Dashboard
             }
         }
 
-        return $dashboard ? $dashboard : ['positions' => [[], []]];
+        return $dashboard ?: ['positions' => [[], []]];
     }
 
     public function saveDashboard(string $key, ?array $configuration = null): void

@@ -89,3 +89,4 @@ jobs:
             EXPERIMENTAL: ${{ matrix.matrix.experimental }}
             OPENDXP_VERSION: ${{ matrix.matrix.opendxp_version }}
             COMPOSER_OPTIONS: ${{ matrix.matrix.composer_options }}
+            CACHE_CLEAR: 'true'

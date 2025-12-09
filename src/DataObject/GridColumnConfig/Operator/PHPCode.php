@@ -24,7 +24,7 @@ use OpenDxp\Model\Element\ElementInterface;
  */
 final class PHPCode extends AbstractOperator
 {
-    private \stdClass $config;
+    private readonly \stdClass $config;
 
     private string $phpClass;
 
@@ -49,6 +49,7 @@ final class PHPCode extends AbstractOperator
         $this->instance = null;
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return $this->getInstance()->getLabel();
@@ -58,7 +59,7 @@ final class PHPCode extends AbstractOperator
     {
         try {
             return $this->getInstance()->getLabeledValue($element);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return null;
         }
     }
@@ -68,7 +69,7 @@ final class PHPCode extends AbstractOperator
      */
     private function getInstance(): OperatorInterface
     {
-        if (null === $this->instance) {
+        if (!$this->instance instanceof \OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\OperatorInterface) {
             $this->instance = $this->buildInstance();
         }
 
@@ -83,9 +84,7 @@ final class PHPCode extends AbstractOperator
         $phpClass = $this->getPhpClass();
 
         if ($phpClass && class_exists($phpClass)) {
-            $operatorInstance = new $phpClass($this->config, $this->context);
-
-            return $operatorInstance;
+            return new $phpClass($this->config, $this->context);
         }
 
         throw new \Exception('PHPCode operator class does not exist: ' . $phpClass);

@@ -79,7 +79,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
         try {
             // we need to check objects permission for listing in opendxp.model.objecttypes ext model
             $this->checkPermission('objects');
-        } catch (AccessDeniedHttpException $e) {
+        } catch (AccessDeniedHttpException) {
             Logger::log('[Startup] Object types are not loaded as "objects" permission is missing');
 
             //return empty string to avoid error on startup
@@ -168,7 +168,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
         }
 
         $treeNodes = [];
-        if (!empty($groups)) {
+        if ($groups !== []) {
             $types = array_column($groups, 'type');
             array_multisort($types, SORT_ASC, array_keys($groups), SORT_ASC, $groups);
         }
@@ -409,7 +409,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
         if ($values['name'] != $class->getName()) {
             $classByName = DataObject\ClassDefinition::getByName($values['name']);
-            if ($classByName && $classByName->getId() != $class->getId()) {
+            if ($classByName && $classByName->getId() !== $class->getId()) {
                 throw new \Exception('Class name already exists');
             }
 
@@ -474,9 +474,8 @@ class ClassController extends AdminAbstractController implements KernelControlle
     protected function correctClassname(string $name): string
     {
         $name = preg_replace('/[^a-zA-Z0-9_]+/', '', $name);
-        $name = preg_replace('/^[0-9]+/', '', $name);
 
-        return $name;
+        return preg_replace('/^\d+/', '', $name);
     }
 
     #[Route('/import-class', name: 'importclass', methods: ['POST', 'PUT'])]
@@ -524,7 +523,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
                 try {
                     $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($importData['layoutDefinitions'], true);
                     $customLayout->setLayoutDefinitions($layout);
-                    if (isset($importData['name']) === true) {
+                    if (isset($importData['name'])) {
                         $customLayout->setName($importData['name']);
                     }
                     $customLayout->setDescription($importData['description']);
@@ -556,9 +555,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $classIds = explode(',', $request->get('classId'));
         $list = new DataObject\ClassDefinition\CustomLayout\Listing();
 
-        $list->setFilter(function (DataObject\ClassDefinition\CustomLayout $layout) use ($classIds) {
-            return in_array($layout->getClassId(), $classIds) && !str_contains($layout->getId(), '.brick.');
-        });
+        $list->setFilter(fn(DataObject\ClassDefinition\CustomLayout $layout) => in_array($layout->getClassId(), $classIds) && !str_contains($layout->getId(), '.brick.'));
         $list = $list->load();
         $result = [];
         foreach ($list as $item) {
@@ -580,12 +577,8 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $mapping = [];
 
         $customLayouts = new DataObject\ClassDefinition\CustomLayout\Listing();
-        $customLayouts->setFilter(function (DataObject\ClassDefinition\CustomLayout $layout) {
-            return !str_contains($layout->getId(), '.brick.');
-        });
-        $customLayouts->setOrder(function (DataObject\ClassDefinition\CustomLayout $a, DataObject\ClassDefinition\CustomLayout $b) {
-            return strcmp($a->getName(), $b->getName());
-        });
+        $customLayouts->setFilter(fn(DataObject\ClassDefinition\CustomLayout $layout) => !str_contains($layout->getId(), '.brick.'));
+        $customLayouts->setOrder(fn(DataObject\ClassDefinition\CustomLayout $a, DataObject\ClassDefinition\CustomLayout $b) => strcmp($a->getName(), $b->getName()));
 
         $customLayouts = $customLayouts->load();
         foreach ($customLayouts as $layout) {
@@ -805,7 +798,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
         }
         $object = DataObject\Concrete::getById((int) $request->get('object_id'));
 
-        $currentLayoutId = $request->get('layoutId', null);
+        $currentLayoutId = $request->get('layoutId');
         $user = \OpenDxp\Tool\Admin::getCurrentUser();
 
         $groups = [];
@@ -867,9 +860,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             }
         }
 
-        foreach ($groups as $group) {
-            $definitions[] = $group;
-        }
+        $definitions = $groups;
 
         $event = new GenericEvent($this, [
             'list' => $definitions,
@@ -946,8 +937,8 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $filteredDefinitions = DataObject\Service::getCustomLayoutDefinitionForGridColumnConfig($class, $objectId);
 
         /** @var DataObject\ClassDefinition\Layout $layoutDefinitions */
-        $layoutDefinitions = isset($filteredDefinitions['layoutDefinition']) ? $filteredDefinitions['layoutDefinition'] : false;
-        $filteredFieldDefinition = isset($filteredDefinitions['fieldDefinition']) ? $filteredDefinitions['fieldDefinition'] : false;
+        $layoutDefinitions = $filteredDefinitions['layoutDefinition'] ?? false;
+        $filteredFieldDefinition = $filteredDefinitions['fieldDefinition'] ?? false;
 
         $class->setFieldDefinitions([]);
 
@@ -1207,7 +1198,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
                         }
                     }
 
-                    if ($itemLayoutDefinitions === null) {
+                    if (!$itemLayoutDefinitions instanceof \OpenDxp\Model\DataObject\ClassDefinition\Layout) {
                         $itemLayoutDefinitions = $item->getLayoutDefinitions();
                     }
 
@@ -1228,7 +1219,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
                 if ($forObjectEditor) {
                     $layout = $item->getLayoutDefinitions();
 
-                    $currentLayoutId = $request->get('layoutId', null);
+                    $currentLayoutId = $request->get('layoutId');
 
                     $user = $this->getAdminUser();
                     if ($currentLayoutId == -1 && $user->isAdmin()) {
@@ -1255,9 +1246,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             }
         }
 
-        foreach ($groups as $group) {
-            $definitions[] = $group;
-        }
+        $definitions = $groups;
 
         $event = new GenericEvent($this, [
             'list' => $definitions,
@@ -1305,7 +1294,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
                 $layout = $type->getLayoutDefinitions();
 
-                $currentLayoutId = $request->get('layoutId', null);
+                $currentLayoutId = $request->get('layoutId');
 
                 $user = $this->getAdminUser();
                 if ($currentLayoutId == -1 && $user->isAdmin()) {
@@ -1352,7 +1341,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $tmpName = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/bulk-import-' . uniqid() . '.tmp';
         file_put_contents($tmpName, $json);
 
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($tmpName) {
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($tmpName): void {
             $session->set('class_bulk_import_file', $tmpName);
         }, 'opendxp_objects');
 
@@ -1427,7 +1416,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
                 }
                 $success = DataObject\ClassDefinition\Service::importClassDefinitionFromJson($class, json_encode($item), true);
 
-                return $this->adminJson(['success' => $success !== false]);
+                return $this->adminJson(['success' => $success]);
             }
 
             if ($type === 'objectbrick' && $item['key'] == $name) {
@@ -1439,7 +1428,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
                 $success = DataObject\ClassDefinition\Service::importObjectBrickFromJson($brick, json_encode($item), true);
 
-                return $this->adminJson(['success' => $success !== false]);
+                return $this->adminJson(['success' => $success]);
             }
 
             if ($type === 'fieldcollection' && $item['key'] == $name) {
@@ -1451,7 +1440,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
                 $success = DataObject\ClassDefinition\Service::importFieldCollectionFromJson($fieldCollection, json_encode($item), true);
 
-                return $this->adminJson(['success' => $success !== false]);
+                return $this->adminJson(['success' => $success]);
             }
 
             if ($type === 'customlayout') {
@@ -1469,9 +1458,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
                     $classId = $class->getId();
 
                     $layoutList = new DataObject\ClassDefinition\CustomLayout\Listing();
-                    $layoutList->setFilter(function (DataObject\ClassDefinition\CustomLayout $layout) use ($layoutName, $classId) {
-                        return $layout->getName() === $layoutName && $layout->getClassId() === $classId;
-                    });
+                    $layoutList->setFilter(fn(DataObject\ClassDefinition\CustomLayout $layout) => $layout->getName() === $layoutName && $layout->getClassId() === $classId);
                     $layoutList = $layoutList->load();
 
                     $layoutDefinition = null;
@@ -1510,7 +1497,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
     {
         $data = $request->get('data');
 
-        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($data) {
+        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($data): void {
             $session->set('class_bulk_export_settings', $data);
         }, 'opendxp_objects');
 
@@ -1729,16 +1716,17 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $type = $request->query->has('type') ? $request->query->getString('type') : null;
 
         $iconDir = OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img';
-
         if ($type === '') {
             return $this->adminJson([]);
-        } elseif ($type === null) {
+        }
+
+        if ($type === null) {
             $classIcons = rscandir($iconDir . '/object-icons/');
             $colorIcons = rscandir($iconDir . '/flat-color-icons/');
             $twemoji = rscandir($iconDir . '/twemoji/');
-
-            $icons = array_merge($classIcons, $colorIcons, $twemoji);
-        } else {
+            $icons = [...$classIcons, ...$colorIcons, ...$twemoji];
+        }
+        else {
             $icons = match($type) {
                 'color' => rscandir($iconDir . '/flat-color-icons/'),
                 'white' => rscandir($iconDir . '/flat-white-icons/'),
@@ -1946,10 +1934,8 @@ class ClassController extends AdminAbstractController implements KernelControlle
         try {
             $id = $request->get(DataObject\SelectOptions\Config::PROPERTY_ID);
 
-            if ($request->get('task') === 'add') {
-                if ((new DataObject\SelectOptions\Config\Listing())->hasConfig($id)) {
-                    throw new \Exception('Select options with the same ID already exists (lower/upper cases may be different)');
-                }
+            if ($request->get('task') === 'add' && (new DataObject\SelectOptions\Config\Listing())->hasConfig($id)) {
+                throw new \Exception('Select options with the same ID already exists (lower/upper cases may be different)');
             }
 
             $group = $request->get(DataObject\SelectOptions\Config::PROPERTY_GROUP);
@@ -2051,7 +2037,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
     protected function getSelectOptionsConfig(string $id): DataObject\SelectOptions\Config
     {
         $selectOptions = DataObject\SelectOptions\Config::getById($id);
-        if ($selectOptions === null) {
+        if (!$selectOptions instanceof \OpenDxp\Model\DataObject\SelectOptions\Config) {
             throw new NotFoundHttpException('Not Found', code: 1677133720896);
         }
 

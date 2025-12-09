@@ -66,7 +66,7 @@ class EmailController extends AdminAbstractController
                 $parts = explode(' ', $filterTerm);
                 $parts = array_map(static function ($part) {
                     if (strpos($part, '@')) {
-                        $part = '"' . $part . '"';
+                        return '"' . $part . '"';
                     }
 
                     return $part;
@@ -139,7 +139,7 @@ class EmailController extends AdminAbstractController
         if ($type === 'params') {
             try {
                 $params = $emailLog->getParams();
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 Logger::warning('Could not decode JSON param string');
                 $params = [];
             }
@@ -172,11 +172,7 @@ class EmailController extends AdminAbstractController
 
             if (!empty($data['objectId']) && $reflection->implementsInterface(ElementInterface::class)) {
                 $obj = $class::getById($data['objectId']);
-                if (is_null($obj)) {
-                    $data['objectPath'] = '';
-                } else {
-                    $data['objectPath'] = $obj->getRealFullPath();
-                }
+                $data['objectPath'] = is_null($obj) ? '' : $obj->getRealFullPath();
 
                 //check for classmapping
                 if (stristr($class, '\\OpenDxp\\Model') === false) {
@@ -220,27 +216,14 @@ class EmailController extends AdminAbstractController
                 if (($data['objectClassBase'] ?? '') === 'DataObject') {
                     $fullEntry['iconCls'] = 'opendxp_icon_object';
                 } elseif (($data['objectClassBase'] ?? '') === 'Asset') {
-                    switch ($data['objectClassSubType']) {
-                        case 'Image':
-                            $fullEntry['iconCls'] = 'opendxp_icon_image';
-
-                            break;
-                        case 'Video':
-                            $fullEntry['iconCls'] = 'opendxp_icon_wmv';
-
-                            break;
-                        case 'Text':
-                            $fullEntry['iconCls'] = 'opendxp_icon_txt';
-
-                            break;
-                        case 'Document':
-                            $fullEntry['iconCls'] = 'opendxp_icon_pdf';
-
-                            break;
-                        default:
-                            $fullEntry['iconCls'] = 'opendxp_icon_asset';
-                    }
-                } elseif (strpos($data['objectClass'] ?? '', 'Document') === 0) {
+                    $fullEntry['iconCls'] = match ($data['objectClassSubType']) {
+                        'Image' => 'opendxp_icon_image',
+                        'Video' => 'opendxp_icon_wmv',
+                        'Text' => 'opendxp_icon_txt',
+                        'Document' => 'opendxp_icon_pdf',
+                        default => 'opendxp_icon_asset',
+                    };
+                } elseif (str_starts_with($data['objectClass'] ?? '', 'Document')) {
                     $fullEntry['iconCls'] = 'opendxp_icon_' . strtolower($data['objectClassSubType']);
                 } else {
                     $data['iconCls'] = 'opendxp_icon_text';
@@ -332,7 +315,7 @@ class EmailController extends AdminAbstractController
             // re-add params
             try {
                 $params = $emailLog->getParams();
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 Logger::warning('Could not decode JSON param string');
                 $params = [];
             }
@@ -388,12 +371,10 @@ class EmailController extends AdminAbstractController
             if ($doc instanceof \OpenDxp\Model\Document\Email) {
                 $mail->setDocument($doc);
 
-                if ($request->get('mailParamaters')) {
-                    if ($mailParamsArray = json_decode($request->get('mailParamaters'), true)) {
-                        foreach ($mailParamsArray as $mailParam) {
-                            if ($mailParam['key']) {
-                                $mail->setParam($mailParam['key'], $mailParam['value']);
-                            }
+                if ($request->get('mailParamaters') && $mailParamsArray = json_decode($request->get('mailParamaters'), true)) {
+                    foreach ($mailParamsArray as $mailParam) {
+                        if ($mailParam['key']) {
+                            $mail->setParam($mailParam['key'], $mailParam['value']);
                         }
                     }
                 }

@@ -55,11 +55,9 @@ class ElementService implements ElementServiceInterface
     public function getCustomViewById(string $id): ?array
     {
         $customViews = CustomView\Config::get();
-        if ($customViews) {
-            foreach ($customViews as $customView) {
-                if ($customView['id'] == $id) {
-                    return $customView;
-                }
+        foreach ($customViews as $customView) {
+            if ($customView['id'] == $id) {
+                return $customView;
             }
         }
 
@@ -122,7 +120,7 @@ class ElementService implements ElementServiceInterface
             '_dc' => $asset->getModificationDate(),
         ];
 
-        $params = array_merge($defaults, $params);
+        $params = [...$defaults, ...$params];
 
         switch ($asset) {
             case $asset instanceof Asset\Image:
@@ -259,7 +257,7 @@ class ElementService implements ElementServiceInterface
         $tmpNode['loaded'] = !$hasChildren;
 
         // set type specific settings
-        if ($element->getType() == 'page') {
+        if ($element->getType() === 'page') {
             $tmpNode['leaf'] = false;
             $tmpNode['expanded'] = !$hasChildren;
 
@@ -268,14 +266,12 @@ class ElementService implements ElementServiceInterface
                 $site->setRootDocument(null);
                 $tmpNode['site'] = $site->getObjectVars();
             }
-        } elseif ($element->getType() == 'folder' ||
-            $element->getType() == 'link' ||
-            $element->getType() == 'hardlink') {
+        } elseif (in_array($element->getType(), ['folder', 'link', 'hardlink'])) {
             $tmpNode['leaf'] = false;
             $tmpNode['expanded'] = !$hasChildren;
         } elseif (method_exists($element, 'getTreeNodeConfig')) { //for BC reasons
             $tmp = $element->getTreeNodeConfig();
-            $tmpNode = array_merge($tmpNode, $tmp);
+            $tmpNode = [...$tmpNode, ...$tmp];
         }
 
         $this->assignDocumentSpecificSettings($element, $tmpNode);
@@ -377,6 +373,6 @@ class ElementService implements ElementServiceInterface
             $workflowPermission['delete'] = !$workflowManager->isDeniedInWorkflow($element, 'delete');
         }
 
-        return array_merge($permissions, $workflowPermission);
+        return [...$permissions, ...$workflowPermission];
     }
 }

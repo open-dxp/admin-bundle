@@ -23,7 +23,7 @@ use OpenDxp\Model\Element\ElementInterface;
  */
 final class Anonymizer extends AbstractOperator
 {
-    private string $mode;
+    private readonly string $mode;
 
     public function __construct(\stdClass $config, array $context = [])
     {
@@ -57,11 +57,7 @@ final class Anonymizer extends AbstractOperator
             }
         }
 
-        if (count($children) === 1) {
-            $result->value = $resultItems[0];
-        } else {
-            $result->value = $resultItems;
-        }
+        $result->value = count($children) === 1 ? $resultItems[0] : $resultItems;
 
         return $result;
     }

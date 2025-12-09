@@ -25,15 +25,11 @@ use OpenDxp\Model\Element\ElementInterface;
  */
 final class LocaleSwitcher extends AbstractOperator
 {
-    private LocaleServiceInterface $localeService;
+    private readonly ?string $locale;
 
-    private ?string $locale;
-
-    public function __construct(LocaleServiceInterface $localeService, \stdClass $config, array $context = [])
+    public function __construct(private readonly LocaleServiceInterface $localeService, \stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
-
-        $this->localeService = $localeService;
         $this->locale = $config->locale ?? null;
     }
 
@@ -46,17 +42,12 @@ final class LocaleSwitcher extends AbstractOperator
 
         if (!$children) {
             return $result;
-        } else {
-            $c = $children[0];
-
-            $currentLocale = $this->localeService->getLocale();
-
-            $this->localeService->setLocale($this->locale);
-
-            $result = $c->getLabeledValue($element);
-
-            $this->localeService->setLocale($currentLocale);
         }
+        $c = $children[0];
+        $currentLocale = $this->localeService->getLocale();
+        $this->localeService->setLocale($this->locale);
+        $result = $c->getLabeledValue($element);
+        $this->localeService->setLocale($currentLocale);
 
         return $result;
     }

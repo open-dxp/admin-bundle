@@ -23,16 +23,10 @@ class LostPasswordEvent extends Event
 {
     use ResponseAwareTrait;
 
-    protected User $user;
-
-    protected string $loginUrl;
-
     protected bool $sendMail = true;
 
-    public function __construct(User $user, string $loginUrl)
+    public function __construct(protected User $user, protected string $loginUrl)
     {
-        $this->user = $user;
-        $this->loginUrl = $loginUrl;
     }
 
     public function getUser(): User

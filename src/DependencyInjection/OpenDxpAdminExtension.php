@@ -35,6 +35,7 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
 
     public const string PARAM_DOCUMENTS_NOTES_EVENTS_TYPES = 'opendxp_admin.documents.notes_events.types';
 
+    #[\Override]
     public function getAlias(): string
     {
         return 'opendxp_admin';

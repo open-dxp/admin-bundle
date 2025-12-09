@@ -100,9 +100,7 @@ final class Configuration implements ConfigurationInterface
             ->scalarNode('custom_admin_path_identifier')
                 ->defaultNull()
                 ->validate()
-                    ->ifTrue(function ($v) {
-                        return strlen($v) < 20;
-                    })
+                    ->ifTrue(fn($v) => strlen($v) < 20)
                     ->thenInvalid('custom_admin_path_identifier must be at least 20 characters long')
                 ->end()
             ->end()
@@ -367,9 +365,8 @@ final class Configuration implements ConfigurationInterface
                                 ->ifArray()->then(function ($v) use ($normalizers) {
                                     if (isAssocArray($v)) {
                                         return $normalizers['assoc']($v);
-                                    } else {
-                                        return $normalizers['sequential']($v);
                                     }
+                                    return $normalizers['sequential']($v);
                                 })
                             ->end()
                             ->example([

@@ -26,14 +26,8 @@ use OpenDxp\Security\User\TokenStorageUserResolver;
  */
 class OpenDxpUsers implements DataProviderInterface
 {
-    protected TokenStorageUserResolver $userResolver;
-
-    private string $logsDir;
-
-    public function __construct(TokenStorageUserResolver $userResolver, string $logsDir)
+    public function __construct(protected TokenStorageUserResolver $userResolver, private readonly string $logsDir)
     {
-        $this->userResolver = $userResolver;
-        $this->logsDir = $logsDir;
     }
 
     public function getName(): string
@@ -128,9 +122,8 @@ class OpenDxpUsers implements DataProviderInterface
     protected function getVersionDataForUser(User\AbstractUser $user): array
     {
         $db = Db::get();
-        $versions = $db->fetchAllAssociative("SELECT ctype, cid, note, FROM_UNIXTIME(`date`) AS 'date' FROM versions WHERE userId = ?", [$user->getId()]);
 
-        return $versions;
+        return $db->fetchAllAssociative("SELECT ctype, cid, note, FROM_UNIXTIME(`date`) AS 'date' FROM versions WHERE userId = ?", [$user->getId()]);
     }
 
     protected function getUsageLogDataForUser(User\AbstractUser $user): array
@@ -142,7 +135,7 @@ class OpenDxpUsers implements DataProviderInterface
         if ($handle) {
             while (!feof($handle)) {
                 $buffer = fgets($handle);
-                if ($buffer && strpos($buffer, $pattern) !== false) {
+                if ($buffer && str_contains($buffer, $pattern)) {
                     $matches[] = $buffer;
                 }
             }
@@ -155,7 +148,7 @@ class OpenDxpUsers implements DataProviderInterface
             if ($handle) {
                 while (!feof($handle)) {
                     $buffer = fgets($handle);
-                    if (strpos($buffer, $pattern) !== false) {
+                    if (str_contains($buffer, $pattern)) {
                         $matches[] = $buffer;
                     }
                 }
