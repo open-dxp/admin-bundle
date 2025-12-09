@@ -35,11 +35,8 @@ class UserPerspectiveListener implements EventSubscriberInterface, LoggerAwareIn
     use LoggerAwareTrait;
     use OpenDxpContextAwareTrait;
 
-    protected TokenStorageUserResolver $userResolver;
-
-    public function __construct(TokenStorageUserResolver $userResolver)
+    public function __construct(protected TokenStorageUserResolver $userResolver)
     {
-        $this->userResolver = $userResolver;
     }
 
     public static function getSubscribedEvents(): array
@@ -71,17 +68,15 @@ class UserPerspectiveListener implements EventSubscriberInterface, LoggerAwareIn
         // update perspective settings
         $requestedPerspective = $request->get('perspective');
 
-        if ($requestedPerspective) {
-            if ($requestedPerspective !== $user->getActivePerspective()) {
-                $existingPerspectives = array_keys(\OpenDxp\Bundle\AdminBundle\Perspective\Config::get());
-                if (!in_array($requestedPerspective, $existingPerspectives)) {
-                    $this->logger->warning('Requested perspective {perspective} for {user} does not exist.', [
-                        'user' => $user->getName(),
-                        'perspective' => $requestedPerspective,
-                    ]);
+        if ($requestedPerspective && $requestedPerspective !== $user->getActivePerspective()) {
+            $existingPerspectives = array_keys(\OpenDxp\Bundle\AdminBundle\Perspective\Config::get());
+            if (!in_array($requestedPerspective, $existingPerspectives)) {
+                $this->logger->warning('Requested perspective {perspective} for {user} does not exist.', [
+                    'user' => $user->getName(),
+                    'perspective' => $requestedPerspective,
+                ]);
 
-                    $requestedPerspective = null;
-                }
+                $requestedPerspective = null;
             }
         }
 

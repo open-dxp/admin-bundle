@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\GDPR\DataProvider;
 
+use Exception;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject\AbstractObject;
 use OpenDxp\Model\DataObject\ClassDefinition\Data;
@@ -77,7 +78,7 @@ class Exporter
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public static function doExportFieldcollection(Concrete $object, array &$result, Fieldcollection $container, Data\Fieldcollections $containerDef): void
     {
@@ -114,7 +115,7 @@ class Exporter
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public static function doExportObject(Concrete $object, array &$result = []): void
     {

@@ -18,8 +18,9 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Value\Factory;
 
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Value\ValueInterface;
+use stdClass;
 
 interface ValueFactoryInterface
 {
-    public function build(\stdClass $configElement, mixed $context = null): ValueInterface;
+    public function build(stdClass $configElement, mixed $context = null): ValueInterface;
 }

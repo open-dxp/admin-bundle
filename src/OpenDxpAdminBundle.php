@@ -27,9 +27,11 @@ use OpenDxp\Extension\Bundle\AbstractOpenDxpBundle;
 use OpenDxp\Extension\Bundle\Traits\PackageVersionTrait;
 use OpenDxp\HttpKernel\Bundle\DependentBundleInterface;
 use OpenDxp\HttpKernel\BundleCollection\BundleCollection;
+use Override;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\WebpackEncoreBundle\WebpackEncoreBundle;
+use function dirname;
 
 class OpenDxpAdminBundle extends AbstractOpenDxpBundle implements DependentBundleInterface
 {
@@ -40,6 +42,7 @@ class OpenDxpAdminBundle extends AbstractOpenDxpBundle implements DependentBundl
         return 'open-dxp/admin-bundle';
     }
 
+    #[Override]
     public function getContainerExtension(): ?ExtensionInterface
     {
         if (null === $this->extension) {
@@ -63,9 +66,10 @@ class OpenDxpAdminBundle extends AbstractOpenDxpBundle implements DependentBundl
         $container->addCompilerPass(new ContentSecurityPolicyUrlsPass());
     }
 
+    #[Override]
     public function getPath(): string
     {
-        return \dirname(__DIR__);
+        return dirname(__DIR__);
     }
 
     public static function registerDependentBundles(BundleCollection $collection): void

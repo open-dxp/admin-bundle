@@ -17,19 +17,18 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Value;
 
+use stdClass;
+
 abstract class AbstractValue implements ValueInterface
 {
     protected string $attribute;
 
     protected string $label;
 
-    protected mixed $context;
-
-    public function __construct(\stdClass $config, mixed $context = null)
+    public function __construct(stdClass $config, protected mixed $context = null)
     {
         $this->attribute = $config->attribute;
         $this->label = $config->label;
-        $this->context = $context;
     }
 
     public function getLabel(): string

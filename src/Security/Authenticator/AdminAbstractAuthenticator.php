@@ -16,12 +16,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Security\Authenticator;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Security\Authentication\Token\TwoFactorRequiredToken;
 use OpenDxp\Cache\RuntimeCache;
 use OpenDxp\Model\User as UserModel;
 use OpenDxp\Security\User\User;
 use OpenDxp\Tool\Authentication;
 use OpenDxp\Tool\Session;
+use Override;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -80,7 +82,7 @@ abstract class AdminAbstractAuthenticator extends AbstractAuthenticator implemen
     {
         $securityUser = $token->getUser();
         if (!$securityUser instanceof User) {
-            throw new \Exception('Invalid user object. User has to be instance of ' . User::class);
+            throw new Exception('Invalid user object. User has to be instance of ' . User::class);
         }
 
         /** @var UserModel $user */
@@ -129,13 +131,14 @@ abstract class AdminAbstractAuthenticator extends AbstractAuthenticator implemen
         if (Authentication::isValidUser($user->getUser())) {
             $openDxpUser = $user->getUser();
 
-            Session::useBag($session, function (AttributeBagInterface $adminSession, SessionInterface $session) use ($openDxpUser) {
+            Session::useBag($session, function (AttributeBagInterface $adminSession, SessionInterface $session) use ($openDxpUser): void {
                 $session->migrate();
                 $adminSession->set('user', $openDxpUser);
             });
         }
     }
 
+    #[Override]
     public function createToken(Passport $passport, string $firewallName): TokenInterface
     {
         if ($this->twoFactorRequired) {
@@ -144,8 +147,8 @@ abstract class AdminAbstractAuthenticator extends AbstractAuthenticator implemen
                 $firewallName,
                 $passport->getUser()->getRoles()
             );
-        } else {
-            return parent::createToken($passport, $firewallName);
         }
+
+        return parent::createToken($passport, $firewallName);
     }
 }

@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -26,8 +27,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class TranslateValue extends AbstractOperator
 {
-    private LocaleAwareInterface|\stdClass|TranslatorInterface $translator;
-
     private string $prefix;
 
     /**
@@ -35,29 +34,30 @@ final class TranslateValue extends AbstractOperator
      */
     private mixed $locale = null;
 
-    public function __construct(TranslatorInterface $translator, \stdClass $config, array $context = [])
-    {
+    public function __construct(
+        private readonly LocaleAwareInterface|stdClass|TranslatorInterface $translator,
+        stdClass $config,
+        array $context = []
+    ) {
         parent::__construct($config, $context);
-
-        $this->translator = $translator;
         $this->prefix = $config->prefix ?? '';
         if (isset($context['language'])) {
             $this->locale = $context['language'];
         }
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): ResultContainer|stdClass|null
     {
         $children = $this->getChildren();
         if (isset($children[0])) {
             $value = $children[0]->getLabeledValue($element);
-            if ((string)$value->value != '') {
+            if ((string)$value->value !== '') {
                 $currentLocale = $this->translator->getLocale();
                 if (null != $this->locale) {
                     $this->translator->setLocale($this->locale);
                 }
 
-                $value->value = $this->translator->trans($this->prefix .(string)$value->value, []);
+                $value->value = $this->translator->trans($this->prefix .$value->value, []);
 
                 $this->translator->setLocale($currentLocale);
             }

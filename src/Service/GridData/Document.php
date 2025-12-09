@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Service\GridData;
 use OpenDxp\Model;
 
 /**
- *
  * @internal
  */
 class Document extends Element

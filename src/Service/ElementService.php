@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service;
 
+use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\AdminStyleTrait;
 use OpenDxp\Bundle\AdminBundle\CustomView;
@@ -30,8 +31,8 @@ use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Element\Service;
 use OpenDxp\Model\Site;
 use OpenDxp\Security\User\UserLoader;
-use OpenDxp\Tool\Frontend;
 
+use OpenDxp\Tool\Frontend;
 use OpenDxp\Workflow\Manager;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -55,11 +56,9 @@ class ElementService implements ElementServiceInterface
     public function getCustomViewById(string $id): ?array
     {
         $customViews = CustomView\Config::get();
-        if ($customViews) {
-            foreach ($customViews as $customView) {
-                if ($customView['id'] == $id) {
-                    return $customView;
-                }
+        foreach ($customViews as $customView) {
+            if ($customView['id'] == $id) {
+                return $customView;
             }
         }
 
@@ -67,7 +66,7 @@ class ElementService implements ElementServiceInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function getElementTreeNodeConfig(ElementInterface $element): array
     {
@@ -122,7 +121,7 @@ class ElementService implements ElementServiceInterface
             '_dc' => $asset->getModificationDate(),
         ];
 
-        $params = array_merge($defaults, $params);
+        $params = [...$defaults, ...$params];
 
         switch ($asset) {
             case $asset instanceof Asset\Image:
@@ -153,7 +152,7 @@ class ElementService implements ElementServiceInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function assignAssetTreeConfig(
         Asset $element,
@@ -188,7 +187,7 @@ class ElementService implements ElementServiceInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function assignDataObjectTreeConfig(DataObject\AbstractObject $element, array &$tmpNode): void
     {
@@ -228,7 +227,7 @@ class ElementService implements ElementServiceInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function assignDocumentTreeConfig(
         Document $element,
@@ -259,7 +258,7 @@ class ElementService implements ElementServiceInterface
         $tmpNode['loaded'] = !$hasChildren;
 
         // set type specific settings
-        if ($element->getType() == 'page') {
+        if ($element->getType() === 'page') {
             $tmpNode['leaf'] = false;
             $tmpNode['expanded'] = !$hasChildren;
 
@@ -268,14 +267,12 @@ class ElementService implements ElementServiceInterface
                 $site->setRootDocument(null);
                 $tmpNode['site'] = $site->getObjectVars();
             }
-        } elseif ($element->getType() == 'folder' ||
-            $element->getType() == 'link' ||
-            $element->getType() == 'hardlink') {
+        } elseif (in_array($element->getType(), ['folder', 'link', 'hardlink'])) {
             $tmpNode['leaf'] = false;
             $tmpNode['expanded'] = !$hasChildren;
         } elseif (method_exists($element, 'getTreeNodeConfig')) { //for BC reasons
             $tmp = $element->getTreeNodeConfig();
-            $tmpNode = array_merge($tmpNode, $tmp);
+            $tmpNode = [...$tmpNode, ...$tmp];
         }
 
         $this->assignDocumentSpecificSettings($element, $tmpNode);
@@ -314,7 +311,7 @@ class ElementService implements ElementServiceInterface
 
                     break;
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error('Cannot get dimensions of asset, seems to be broken. Reason: ' . $e->getMessage());
         }
     }
@@ -377,6 +374,6 @@ class ElementService implements ElementServiceInterface
             $workflowPermission['delete'] = !$workflowManager->isDeniedInWorkflow($element, 'delete');
         }
 
-        return array_merge($permissions, $workflowPermission);
+        return [...$permissions, ...$workflowPermission];
     }
 }

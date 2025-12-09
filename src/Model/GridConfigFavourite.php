@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Model;
 
+use Exception;
 use OpenDxp\Model\AbstractModel;
 use OpenDxp\Model\Exception\NotFoundException;
 
@@ -48,13 +49,13 @@ class GridConfigFavourite extends AbstractModel
             $favourite->getDao()->getByOwnerAndClassAndObjectId($ownerId, $classId, $objectId, $searchType);
 
             return $favourite;
-        } catch (NotFoundException $e) {
+        } catch (NotFoundException) {
             return null;
         }
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function save(): void
     {

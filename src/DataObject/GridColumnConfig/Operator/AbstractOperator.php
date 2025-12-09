@@ -18,23 +18,21 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ConfigElementInterface;
 use OpenDxp\Tool;
+use stdClass;
 
 abstract class AbstractOperator implements OperatorInterface
 {
     protected string $label;
-
-    protected array $context = [];
 
     /**
      * @var ConfigElementInterface[]
      */
     protected array $children;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, protected array $context = [])
     {
         $this->label = $config->label;
         $this->children = $config->children;
-        $this->context = $context;
     }
 
     /**

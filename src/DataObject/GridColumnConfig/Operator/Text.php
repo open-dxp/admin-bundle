@@ -17,24 +17,25 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
  */
 final class Text extends AbstractOperator
 {
-    private string $textValue;
+    private readonly string $textValue;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
         $this->textValue = $config->textValue ?? '';
     }
 
-    public function getLabeledValue(array|ElementInterface $element): \stdClass
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
         $result->value = $this->textValue;
 

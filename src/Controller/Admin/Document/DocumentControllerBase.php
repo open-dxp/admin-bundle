@@ -15,6 +15,8 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
+use Exception;
+use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\AdminStyleTrait;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\ApplySchedulerDataTrait;
@@ -68,7 +70,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function preSendDataActions(array &$data, Model\Document $document, ?Version $draftVersion = null): JsonResponse
     {
@@ -79,7 +81,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
         $data['idPath'] = Element\Service::getIdPath($document);
 
         $data['php'] = [
-            'classes' => array_merge([get_class($document)], array_values(class_parents($document))),
+            'classes' => [$document::class, ...array_values(class_parents($document))],
             'interfaces' => array_values(class_implements($document)),
         ];
 
@@ -97,7 +99,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
             'data' => $data,
             'document' => $document,
         ]);
-        \OpenDxp::getEventDispatcher()->dispatch($event, AdminEvents::DOCUMENT_GET_PRE_SEND_DATA);
+        OpenDxp::getEventDispatcher()->dispatch($event, AdminEvents::DOCUMENT_GET_PRE_SEND_DATA);
         $data = $event->getArgument('data');
 
         if ($document->isAllowed('view')) {
@@ -138,7 +140,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
                         }
 
                         $properties[$propertyName] = $property;
-                    } catch (\Exception $e) {
+                    } catch (Exception) {
                         Logger::warning("Can't add " . $propertyName . ' to document ' . $document->getRealFullPath());
                     }
                 }
@@ -155,16 +157,12 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
     protected function addSettingsToDocument(Request $request, Model\Document $document): void
     {
         // settings
-        if ($request->get('settings')) {
-            if ($document->isAllowed('settings')) {
-                $settings = $this->decodeJson($request->get('settings'));
-
-                if (array_key_exists('prettyUrl', $settings)) {
-                    $settings['prettyUrl'] = htmlspecialchars($settings['prettyUrl']);
-                }
-
-                $document->setValues($settings);
+        if ($request->get('settings') && $document->isAllowed('settings')) {
+            $settings = $this->decodeJson($request->get('settings'));
+            if (array_key_exists('prettyUrl', $settings)) {
+                $settings['prettyUrl'] = htmlspecialchars($settings['prettyUrl']);
             }
+            $document->setValues($settings);
         }
     }
 
@@ -303,7 +301,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
     /**
      * This is used for pages and snippets to change the main document (which is not saved with the normal save button)
      *
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/change-main-document', name: 'changemaindocument', methods: ['PUT'])]
     public function changeMainDocumentAction(Request $request): JsonResponse
@@ -355,7 +353,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
 
     /**
      * @throws Element\ValidationException
-     * @throws \Exception
+     * @throws Exception
      */
     protected function saveDocument(Model\Document $document, Request $request, bool $latestVersion = false, ?string $task = null): array
     {
@@ -417,7 +415,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
     protected function populateUsersNames(Document $document, array &$data): void
     {
         $userOwnerName = $this->getUserName($document->getUserOwner());
-        $userModificationName = ($document->getUserOwner() == $document->getUserModification()) ? $userOwnerName : $this->getUserName($document->getUserModification());
+        $userModificationName = ($document->getUserOwner() === $document->getUserModification()) ? $userOwnerName : $this->getUserName($document->getUserModification());
         $data['userOwnerUsername'] = $userOwnerName['userName'];
         $data['userOwnerFullname'] = $userOwnerName['fullName'];
         $data['userModificationUsername'] = $userModificationName['userName'];

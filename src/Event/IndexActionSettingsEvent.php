@@ -21,13 +21,10 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 class IndexActionSettingsEvent extends Event
 {
-    private array $settings;
-
     private ?string $template = null;
 
-    public function __construct(array $settings)
+    public function __construct(private array $settings)
     {
-        $this->settings = $settings;
     }
 
     public function getSettings(): array

@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Helper;
 
 use Carbon\Carbon;
+use Exception;
 
 /**
  * @internal
@@ -31,14 +32,14 @@ class QueryParams
         $orderKey = null;
         $order = null;
 
-        $sortParam = isset($params['sort']) ? $params['sort'] : false;
+        $sortParam = $params['sort'] ?? false;
         if ($sortParam) {
             $sortParam = json_decode($sortParam, true);
             $sortParam = $sortParam[0];
 
             $order = strtoupper($sortParam['direction']) === 'DESC' ? 'DESC' : 'ASC';
 
-            if (substr($sortParam['property'], 0, 1) != '~') {
+            if (!str_starts_with($sortParam['property'], '~')) {
                 $orderKey = $sortParam['property'];
             } else {
                 $orderKey = $sortParam['property'];
@@ -70,7 +71,7 @@ class QueryParams
      *
      *
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public static function getFilterCondition(string $filterString, array $matchExact = ['id', 'id'], bool $returnString = true, array $callbacks = []): array|string
     {
@@ -115,7 +116,7 @@ class QueryParams
                     $conditions[$f->property][] = ' ' . $f->property . ' > ' . $db->quote($date->addDay()->subSecond()->getTimestamp());
                 }
             } else {
-                throw new \Exception('Filer of type ' . $f->type . ' not jet supported.');
+                throw new Exception('Filer of type ' . $f->type . ' not jet supported.');
             }
         }
 
@@ -129,8 +130,8 @@ class QueryParams
         }
         if ($returnString) {
             return implode(' OR ', $conditionsGrouped);
-        } else {
-            return $conditionsGrouped;
         }
+
+        return $conditionsGrouped;
     }
 }

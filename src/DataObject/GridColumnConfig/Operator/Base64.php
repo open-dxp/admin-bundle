@@ -17,24 +17,25 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
  */
 final class Base64 extends AbstractOperator
 {
-    private string $mode;
+    private readonly string $mode;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
         $this->mode = $config->mode ?? '';
     }
 
-    public function getLabeledValue(array|ElementInterface $element): \stdClass
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $children = $this->getChildren();
@@ -64,11 +65,7 @@ final class Base64 extends AbstractOperator
             $valueArray[] = null;
         }
 
-        if ($isArrayType) {
-            $result->value = $valueArray;
-        } else {
-            $result->value = $valueArray[0];
-        }
+        $result->value = $isArrayType ? $valueArray : $valueArray[0];
 
         if ($this->mode === 'e') {
             $result->value = base64_encode($result->value);

@@ -15,6 +15,7 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Model\GridConfigShare\Listing;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigShare;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigShare\Listing;
 use OpenDxp\Model;
@@ -49,7 +50,7 @@ class Dao extends Model\Listing\Dao\AbstractDao
     {
         try {
             return (int) $this->db->fetchOne('SELECT COUNT(*) FROM gridconfig_shares ' . $this->getCondition(), $this->model->getConditionVariables());
-        } catch (\Exception $e) {
+        } catch (Exception) {
             return 0;
         }
     }

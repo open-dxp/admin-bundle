@@ -44,15 +44,13 @@ class AdminTokenAuthenticator extends AdminAbstractAuthenticator
         if ($openDxpUser) {
             $openDxpUser->setTwoFactorAuthentication('required', false);
 
-            $userBadge = new UserBadge($openDxpUser->getUsername(), function () use ($openDxpUser) {
-                return new User($openDxpUser);
-            });
+            $userBadge = new UserBadge($openDxpUser->getUsername(), fn () => new User($openDxpUser));
 
             if ($request->get('reset', false)) {
                 // save the information to session when the user want's to reset the password
                 // this is because otherwise the old password is required
 
-                Session::useBag($request->getSession(), function (AttributeBagInterface $adminSession) {
+                Session::useBag($request->getSession(), function (AttributeBagInterface $adminSession): void {
                     $adminSession->set('password_reset', true);
                 });
             }

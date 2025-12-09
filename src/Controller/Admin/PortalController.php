@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use DateTime;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Helper\Dashboard;
 use OpenDxp\Controller\KernelControllerEventInterface;
@@ -51,7 +52,7 @@ class PortalController extends AdminAbstractController implements KernelControll
         $dashboards = $this->dashboardHelper->getAllDashboards();
 
         $data = [];
-        foreach ($dashboards as $key => $config) {
+        foreach (array_keys($dashboards) as $key) {
             if ($key != 'welcome') {
                 $data[] = $key;
             }
@@ -65,16 +66,17 @@ class PortalController extends AdminAbstractController implements KernelControll
     {
         $dashboards = $this->dashboardHelper->getAllDashboards();
         $key = trim($request->request->get('key', ''));
-
         if (isset($dashboards[$key])) {
             return $this->adminJson(['success' => false, 'message' => 'name_already_in_use']);
-        } elseif (!empty($key)) {
+        }
+
+        if (!empty($key)) {
             $this->dashboardHelper->saveDashboard($key);
 
             return $this->adminJson(['success' => true]);
-        } else {
-            return $this->adminJson(['success' => false, 'message' => 'empty']);
         }
+
+        return $this->adminJson(['success' => false, 'message' => 'empty']);
     }
 
     #[Route('/delete-dashboard', name: 'opendxp_admin_portal_deletedashboard', methods: ['DELETE'])]
@@ -126,7 +128,7 @@ class PortalController extends AdminAbstractController implements KernelControll
             }
         }
 
-        $nextId = $nextId + 1;
+        $nextId += 1;
         $config['positions'][0][] = ['id' => $nextId, 'type' => $request->get('type'), 'config' => null];
 
         $this->saveConfiguration($request, $config);
@@ -286,7 +288,7 @@ class PortalController extends AdminAbstractController implements KernelControll
             $a = $db->fetchOne('SELECT COUNT(*) AS count FROM assets WHERE modificationDate > '.$start . ' AND modificationDate < '.$end);
             $d = $db->fetchOne('SELECT COUNT(*) AS count FROM documents WHERE modificationDate > '.$start . ' AND modificationDate < '.$end);
 
-            $date = new \DateTime();
+            $date = new DateTime();
             $date->setTimestamp($start);
 
             $data[] = [

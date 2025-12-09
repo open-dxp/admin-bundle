@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\EventListener;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Service\Workflow\ActionsButtonService;
 use OpenDxp\Model\DataObject;
@@ -36,10 +37,10 @@ class WorkflowManagementListener implements EventSubscriberInterface
     protected bool $enabled = true;
 
     public function __construct(
-        private Manager $workflowManager,
-        private Place\StatusInfo $placeStatusInfo,
-        private RequestStack $requestStack,
-        private ActionsButtonService $actionsButtonService
+        private readonly Manager $workflowManager,
+        private readonly Place\StatusInfo $placeStatusInfo,
+        private readonly RequestStack $requestStack,
+        private readonly ActionsButtonService $actionsButtonService
     ) {
     }
 
@@ -56,11 +57,11 @@ class WorkflowManagementListener implements EventSubscriberInterface
      * Fired before information is sent back to the admin UI about an element
      *
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function onAdminElementGetPreSendData(GenericEvent $e): void
     {
-        $element = self::extractElementFromEvent($e);
+        $element = $this->extractElementFromEvent($e);
         $data = $e->getArgument('data');
 
         //create a new namespace for WorkflowManagement
@@ -78,7 +79,7 @@ class WorkflowManagementListener implements EventSubscriberInterface
             }
 
             $data['workflowManagement']['hasWorkflowManagement'] = true;
-            $data['workflowManagement']['workflows'] = $data['workflowManagement']['workflows'] ?? [];
+            $data['workflowManagement']['workflows'] ??= [];
 
             // Fix: places stored as empty string ("") considered uninitialized prior to Symfony 4.4.8
             $this->workflowManager->ensureInitialPlace($workflowName, $element);
@@ -102,10 +103,7 @@ class WorkflowManagementListener implements EventSubscriberInterface
             $permissionsRespected = false;
             foreach ($this->workflowManager->getOrderedPlaceConfigs($workflow, $marking) as $placeConfig) {
                 if (!$permissionsRespected && !empty($placeConfig->getPermissions($workflow, $element))) {
-                    $data['userPermissions'] = array_merge(
-                        isset($data['userPermissions']) ? (array)$data['userPermissions'] : [],
-                        $placeConfig->getUserPermissions($workflow, $element)
-                    );
+                    $data['userPermissions'] = [...isset($data['userPermissions']) ? (array)$data['userPermissions'] : [], ...$placeConfig->getUserPermissions($workflow, $element)];
 
                     if ($element instanceof ConcreteObject) {
                         $workflowLayoutId = $placeConfig->getObjectLayout($workflow, $element);
@@ -144,9 +142,9 @@ class WorkflowManagementListener implements EventSubscriberInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
-    private static function extractElementFromEvent(GenericEvent $e): ElementInterface
+    private function extractElementFromEvent(GenericEvent $e): ElementInterface
     {
         $element = null;
 
@@ -157,7 +155,7 @@ class WorkflowManagementListener implements EventSubscriberInterface
         }
 
         if (empty($element)) {
-            throw new \Exception('No element found in event');
+            throw new Exception('No element found in event');
         }
 
         return $element;

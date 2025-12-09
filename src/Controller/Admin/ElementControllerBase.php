@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AssetEvents;
 use OpenDxp\Bundle\AdminBundle\Event\Model\AssetDeleteInfoEvent;
@@ -77,7 +78,7 @@ abstract class ElementControllerBase extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/delete-info', name: 'deleteinfo', methods: ['GET'])]
     public function deleteInfoAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
@@ -103,7 +104,7 @@ abstract class ElementControllerBase extends AdminAbstractController
                 if (!$hasDependency) {
                     $hasDependency = $element->getDependencies()->isRequired();
                 }
-            } catch (\Exception $e) {
+            } catch (Exception) {
                 Logger::err('failed to access element with id: ' . $id);
 
                 continue;

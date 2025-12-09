@@ -37,7 +37,7 @@ final class GDPRDataProviderPass implements CompilerPassInterface
         $providers = $container->findTaggedServiceIds('opendxp.gdpr.data-provider');
 
         $mapping = [];
-        foreach ($providers as $id => $tags) {
+        foreach (array_keys($providers) as $id) {
             $mapping[$id] = new Reference($id);
         }
 

@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
+use Exception;
 use OpenDxp\Model\Document;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,7 +29,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class FolderController extends DocumentControllerBase
 {
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(Request $request): JsonResponse
@@ -52,7 +53,7 @@ class FolderController extends DocumentControllerBase
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
     public function saveAction(Request $request): JsonResponse

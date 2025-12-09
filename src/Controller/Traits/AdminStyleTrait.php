@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Traits;
 
+use Exception;
+use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\ElementAdminStyleEvent;
 use OpenDxp\Model\Element\AdminStyle;
@@ -27,12 +29,12 @@ use OpenDxp\Model\Element\ElementInterface;
 trait AdminStyleTrait
 {
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function addAdminStyle(ElementInterface $element, ?int $context = null, array &$data = []): void
     {
         $event = new ElementAdminStyleEvent($element, new AdminStyle($element), $context);
-        \OpenDxp::getEventDispatcher()->dispatch($event, AdminEvents::RESOLVE_ELEMENT_ADMIN_STYLE);
+        OpenDxp::getEventDispatcher()->dispatch($event, AdminEvents::RESOLVE_ELEMENT_ADMIN_STYLE);
         $adminStyle = $event->getAdminStyle();
 
         $data['iconCls'] = $adminStyle->getElementIconClass() !== false ? $adminStyle->getElementIconClass() : null;

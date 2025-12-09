@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
+use Exception;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\Schedule\Task;
@@ -30,7 +31,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class SnippetController extends DocumentControllerBase
 {
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(Request $request): JsonResponse
@@ -65,9 +66,7 @@ class SnippetController extends DocumentControllerBase
 
         $data['url'] = $snippet->getUrl();
         $data['scheduledTasks'] = array_map(
-            static function (Task $task) {
-                return $task->getObjectVars();
-            },
+            static fn (Task $task) => $task->getObjectVars(),
             $snippet->getScheduledTasks()
         );
 
@@ -79,7 +78,7 @@ class SnippetController extends DocumentControllerBase
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(Request $request): JsonResponse
@@ -92,14 +91,10 @@ class SnippetController extends DocumentControllerBase
         /** @var Document\Snippet|null $snippetSession */
         $snippetSession = $this->getFromSession($snippet, $request->getSession());
 
-        if ($snippetSession) {
-            $snippet = $snippetSession;
-        } else {
-            $snippet = $this->getLatestVersion($snippet);
-        }
+        $snippet = $snippetSession ?: $this->getLatestVersion($snippet);
 
         if ($request->get('missingRequiredEditable') !== null) {
-            $snippet->setMissingRequiredEditable(($request->get('missingRequiredEditable') == 'true') ? true : false);
+            $snippet->setMissingRequiredEditable($request->get('missingRequiredEditable') == 'true');
         }
 
         [$task, $snippet, $version] = $this->saveDocument($snippet, $request);

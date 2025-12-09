@@ -26,7 +26,7 @@ final class Tool
         $basePath = '/bundles/opendxpadmin/img/flags';
         $iconFsBasePath = OPENDXP_WEB_ROOT . $basePath;
 
-        if ($absolutePath === true) {
+        if ($absolutePath) {
             $basePath = OPENDXP_WEB_ROOT . $basePath;
         }
 
@@ -47,7 +47,7 @@ final class Tool
 
         $iconPath = '';
         if ($includeUnknown) {
-            $iconPath = ($absolutePath === true ? $iconFsBasePath : $basePath) . '/countries/_unknown.svg';
+            $iconPath = ($absolutePath ? $iconFsBasePath : $basePath) . '/countries/_unknown.svg';
         }
 
         $languageCountryMapping = [

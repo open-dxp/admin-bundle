@@ -94,9 +94,9 @@ class GridHelperService
                 $slugKey = null;
                 $mappedKey = null;
 
-                if (substr($filterField, 0, 1) == '~') {
+                if (str_starts_with($filterField, '~')) {
                     $type = $keyParts[1];
-                    if ($type != 'classificationstore') {
+                    if ($type !== 'classificationstore') {
                         continue;
                     }
 
@@ -160,7 +160,7 @@ class GridHelperService
                     $brickType = $keyParts[0];
                     $brickKey = $keyParts[1];
 
-                    if (strpos($brickType, '?') !== false) {
+                    if (str_contains($brickType, '?')) {
                         $brickDescriptor = substr($brickType, 1);
                         $brickDescriptor = json_decode($brickDescriptor, true);
                         $brickType = $brickDescriptor['containerKey'];
@@ -171,11 +171,9 @@ class GridHelperService
                         $slugKey = $brickKey;
                         $slugJoins[] = ['fieldname' => $brickKey];
                     }
-                } else {
-                    if ($slugFd = $class->getFieldDefinition($filterField) instanceof ClassDefinition\Data\UrlSlug) {
-                        $slugKey = $filterField;
-                        $slugJoins[] = ['fieldname' => $filterField];
-                    }
+                } elseif ($slugFd = $class->getFieldDefinition($filterField) instanceof ClassDefinition\Data\UrlSlug) {
+                    $slugKey = $filterField;
+                    $slugJoins[] = ['fieldname' => $filterField];
                 }
 
                 if ($field && $slugFd) {
@@ -191,14 +189,12 @@ class GridHelperService
             }
         }
 
-        $result = [
+        return [
             'featureJoins' => $featureJoins,
             'slugJoins' => $slugJoins,
             'featureConditions' => $featureConditions,
             'slugConditions' => $slugConditions,
         ];
-
-        return $result;
     }
 
     public function getFilterCondition(string $filterJson, ClassDefinition $class, ?string $tablePrefix = null): string
@@ -251,14 +247,12 @@ class GridHelperService
                         } else {
                             continue;
                         }
-                    } else {
-                        if ($filterOperator == 'lt') {
-                            $operator = '<';
-                        } elseif ($filterOperator == 'gt') {
-                            $operator = '>';
-                        } elseif ($filterOperator == 'eq') {
-                            $operator = '=';
-                        }
+                    } elseif ($filterOperator == 'lt') {
+                        $operator = '<';
+                    } elseif ($filterOperator == 'gt') {
+                        $operator = '>';
+                    } elseif ($filterOperator == 'eq') {
+                        $operator = '=';
                     }
 
                     $field = $class->getFieldDefinition($filterField);
@@ -277,7 +271,7 @@ class GridHelperService
                         //if the definition doesn't exist check for object brick
                         $keyParts = explode('~', $filterField);
 
-                        if (substr($filterField, 0, 1) === '~') {
+                        if (str_starts_with($filterField, '~')) {
                             // not needed for now
                             //                            $type = $keyParts[1];
                             //                            $field = $keyParts[2];
@@ -286,7 +280,7 @@ class GridHelperService
                             $brickType = $keyParts[0];
                             $brickKey = $keyParts[1];
 
-                            if (strpos($brickType, '?') !== false) {
+                            if (str_contains($brickType, '?')) {
                                 $brickDescriptor = substr($brickType, 1);
                                 $brickDescriptor = json_decode($brickDescriptor, true);
                                 $brickType = $brickDescriptor['containerKey'];
@@ -314,22 +308,16 @@ class GridHelperService
                     }
                     if ($field instanceof ClassDefinition\Data\Objectbricks || $brickDescriptor) {
                         // custom field
-                        if ($brickDescriptor) {
-                            $brickFilterField = $brickDescriptor['fieldname'];
-                        } else {
-                            $brickFilterField = $field->getName();
-                        }
+                        $brickFilterField = $brickDescriptor ? $brickDescriptor['fieldname'] : $field->getName();
 
                         $db = Db::get();
 
                         if ($isLocalized) {
                             $brickPrefix = $db->quoteIdentifier($brickType . '_localized') . '.';
+                        } elseif ($brickField instanceof ClassDefinition\Data\UrlSlug) {
+                            $brickPrefix = $db->quoteIdentifier($brickKey) . '.';
                         } else {
-                            if ($brickField instanceof ClassDefinition\Data\UrlSlug) {
-                                $brickPrefix = $db->quoteIdentifier($brickKey) . '.';
-                            } else {
-                                $brickPrefix = $db->quoteIdentifier($brickType) . '.';
-                            }
+                            $brickPrefix = $db->quoteIdentifier($brickType) . '.';
                         }
 
                         if (is_array($filter['value'])) {
@@ -341,7 +329,7 @@ class GridHelperService
                                 $fieldConditions[] = $brickCondition;
                             }
 
-                            if (!empty($fieldConditions)) {
+                            if ($fieldConditions !== []) {
                                 $conditionPartsFilters[] = '(' . implode(' OR ', $fieldConditions) . ')';
                             }
                         } else {
@@ -359,7 +347,7 @@ class GridHelperService
                                 $fieldConditions[] = $field->getFilterCondition($filterValue, $operator, ['brickPrefix' => ($tablePrefix ? $tablePrefix . '.' : null)]);
                             }
 
-                            if (!empty($fieldConditions)) {
+                            if ($fieldConditions !== []) {
                                 $conditionPartsFilters[] = '(' . implode(' OR ', $fieldConditions) . ')';
                             }
                         } else {
@@ -379,7 +367,7 @@ class GridHelperService
                             $conditionPartsFilters[] = 'oo_id ' . $operator . ' (' . $filter['value'] . ')';
                         } else {
                             $filterField = $db->quoteIdentifier($filterField);
-                            if ($filter['type'] == 'date' && $operator == '=') {
+                            if ($filter['type'] == 'date' && $operator === '=') {
                                 //if the equal operator is chosen with the date type, condition has to be changed
                                 $maxTime = $filter['value'] + (86400 - 1); //specifies the top point of the range used in the condition
                                 $conditionPartsFilters[] = $filterField . ' BETWEEN ' . $db->quote($filter['value']) . ' AND ' . $db->quote($maxTime);
@@ -412,25 +400,23 @@ class GridHelperService
     protected function extractBricks(array $fields): array
     {
         $bricks = [];
-        if ($fields) {
-            foreach ($fields as $f) {
-                $fieldName = $f;
-                $parts = explode('~', $f);
-                if (substr($f, 0, 1) == '~') {
-                    // key value, ignore for now
-                } elseif (count($parts) > 1) {
-                    $brickType = $parts[0];
+        foreach ($fields as $f) {
+            $fieldName = $f;
+            $parts = explode('~', $f);
+            if (str_starts_with($f, '~')) {
+                // key value, ignore for now
+            } elseif (count($parts) > 1) {
+                $brickType = $parts[0];
 
-                    if (strpos($brickType, '?') !== false) {
-                        $brickDescriptor = substr($brickType, 1);
-                        $brickDescriptor = json_decode($brickDescriptor, true);
-                        $brickType = $brickDescriptor['containerKey'];
-                    }
-
-                    $bricks[$brickType] = $brickType;
+                if (str_contains($brickType, '?')) {
+                    $brickDescriptor = substr($brickType, 1);
+                    $brickDescriptor = json_decode($brickDescriptor, true);
+                    $brickType = $brickDescriptor['containerKey'];
                 }
-                $newFields[] = $fieldName;
+
+                $bricks[$brickType] = $brickType;
             }
+            $newFields[] = $fieldName;
         }
 
         return $bricks;
@@ -449,7 +435,7 @@ class GridHelperService
                 $class,
                 $featureAndSlugFilters,
                 $me
-            ) {
+            ): void {
                 $db = Db::get();
 
                 $alreadyJoined = [];
@@ -505,7 +491,7 @@ class GridHelperService
                 $slugJoins,
                 $featureAndSlugFilters,
                 $me
-            ) {
+            ): void {
                 $db = Db::get();
 
                 $alreadyJoined = [];
@@ -582,9 +568,9 @@ class GridHelperService
         if ($sortingSettings['order']) {
             $order = $sortingSettings['order'];
         }
-        if ($sortingSettings['orderKey'] !== null && strlen($sortingSettings['orderKey']) > 0) {
+        if ($sortingSettings['orderKey'] !== null && (string) $sortingSettings['orderKey'] !== '') {
             $orderKey = $sortingSettings['orderKey'];
-            if (substr($orderKey, 0, 1) !== '~') {
+            if (!str_starts_with($orderKey, '~')) {
                 if (array_key_exists($orderKey, $colMappings)) {
                     $orderKey = $colMappings[$orderKey];
                 } elseif ($orderKey === 'fullpath') {
@@ -596,10 +582,10 @@ class GridHelperService
                 } elseif ($class->getFieldDefinition($orderKey) instanceof ClassDefinition\Data\RgbaColor) {
                     $orderKey = 'concat(' . $orderKey . '__rgb, ' . $orderKey . '__a)';
                     $doNotQuote = true;
-                } elseif (strpos($orderKey, '~') !== false) {
+                } elseif (str_contains($orderKey, '~')) {
                     $orderKeyParts = explode('~', $orderKey);
 
-                    if (strpos($orderKey, '?') !== false) {
+                    if (str_contains($orderKey, '?')) {
                         $brickDescriptor = substr($orderKeyParts[0], 1);
                         $brickDescriptor = json_decode($brickDescriptor, true);
                         $orderKey = $list->quoteIdentifier($brickDescriptor['containerKey'] . '_localized')
@@ -655,8 +641,8 @@ class GridHelperService
             $conditionFilters[] = $this->getFilterCondition($requestParams['filter'], $class, $list->getDao()->getTableName());
             $featureAndSlugFilters = $this->getFeatureAndSlugFilters($requestParams['filter'], $class, $requestedLanguage);
             if ($featureAndSlugFilters) {
-                $featureJoins = array_merge($featureJoins, $featureAndSlugFilters['featureJoins']);
-                $slugJoins = array_merge($slugJoins, $featureAndSlugFilters['slugJoins']);
+                $featureJoins = [...$featureJoins, ...$featureAndSlugFilters['featureJoins']];
+                $slugJoins = [...$slugJoins, ...$featureAndSlugFilters['slugJoins']];
             }
         }
         if (!empty($requestParams['condition']) && $adminUser->isAdmin()) {
@@ -683,14 +669,12 @@ class GridHelperService
             }
         }
 
-        if (!empty($bricks)) {
-            foreach ($bricks as $b) {
-                $brickType = $b;
-                if (is_array($brickType)) {
-                    $brickType = $brickType['containerKey'];
-                }
-                $list->addObjectbrick($brickType);
+        foreach ($bricks as $b) {
+            $brickType = $b;
+            if (is_array($brickType)) {
+                $brickType = $brickType['containerKey'];
             }
+            $list->addObjectbrick($brickType);
         }
 
         $list->setCondition(implode(' AND ', $conditionFilters));
@@ -722,7 +706,7 @@ class GridHelperService
             foreach ($requestParams['ids'] as $id) {
                 $quotedIds[] = $list->quote($id);
             }
-            if (!empty($quotedIds)) {
+            if ($quotedIds !== []) {
                 //add a condition if id numbers are specified
                 $list->addConditionParam('oo_id IN (' . implode(',', $quotedIds) . ')');
             }
@@ -844,27 +828,21 @@ class GridHelperService
                 }
                 // system field
                 $value = $filter['value'] ?? '';
-                if ($operator == 'LIKE') {
+                if ($operator === 'LIKE') {
                     $value = $db->quote('%' . $value . '%');
-                } elseif ($operator == 'IN') {
+                } elseif ($operator === 'IN') {
                     if (empty($value)) {
                         continue;
                     }
-                    $quoted = array_map(function ($val) use ($db) {
-                        return $db->quote($val);
-                    }, $value);
+                    $quoted = array_map(fn ($val) => $db->quote($val), $value);
                     $value = '(' . implode(',', $quoted) . ')';
-                } elseif ($operator == 'BETWEEN') {
+                } elseif ($operator === 'BETWEEN') {
                 } else {
                     $value = $db->quote($value);
                 }
 
                 if (isset($filterDef[1]) && $filterDef[1] == 'system') {
-                    if ($filterField == 'fullpath') {
-                        $filterField = 'CONCAT(`path`,filename)';
-                    } else {
-                        $filterField = $db->quoteIdentifier($filterField);
-                    }
+                    $filterField = $filterField === 'fullpath' ? 'CONCAT(`path`,filename)' : $db->quoteIdentifier($filterField);
                     $conditionFilters[] = $filterField . ' ' . $operator . ' ' . $value;
                 } else {
                     $language = $allParams['language'];
@@ -919,7 +897,7 @@ class GridHelperService
 
     protected function filterQueryParam(string $query): string
     {
-        if ($query == '*') {
+        if ($query === '*') {
             $query = '';
         }
 
@@ -1012,8 +990,6 @@ class GridHelperService
     }
 
     /**
-     *
-     *
      * @internal
      */
     public function getPermittedPathsByUser(string $type, User $user): string
@@ -1051,11 +1027,11 @@ class GridHelperService
             // the result would be like `(((path1 OR path2) AND (not_path3 AND not_path4)))`
             $forbiddenAndAllowedSql = '(';
 
-            if (!empty($allowedPathSql) || !empty($forbiddenPathSql)) {
+            if ($allowedPathSql !== [] || $forbiddenPathSql !== []) {
                 $forbiddenAndAllowedSql .= '(';
                 $forbiddenAndAllowedSql .= $allowedPathSql ? '( ' . implode(' OR ', $allowedPathSql) . ' )' : '';
 
-                if (!empty($forbiddenPathSql)) {
+                if ($forbiddenPathSql !== []) {
                     //if $allowedPathSql "implosion" is present, we need `AND` in between
                     $forbiddenAndAllowedSql .= $allowedPathSql ? ' AND ' : '';
                     $forbiddenAndAllowedSql .= implode(' AND ', $forbiddenPathSql);

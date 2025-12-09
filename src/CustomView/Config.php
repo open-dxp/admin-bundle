@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\CustomView;
 
+use Exception;
+use OpenDxp;
 use OpenDxp\Config\LocationAwareConfigRepository;
 
 /**
@@ -23,14 +25,14 @@ use OpenDxp\Config\LocationAwareConfigRepository;
  */
 final class Config
 {
-    private const CONFIG_ID = 'custom_views';
+    private const string CONFIG_ID = 'custom_views';
 
     private static ?LocationAwareConfigRepository $locationAwareConfigRepository = null;
 
     private static function getRepository(): LocationAwareConfigRepository
     {
         if (!self::$locationAwareConfigRepository) {
-            $containerConfig = \OpenDxp::getContainer()->getParameter('opendxp.config');
+            $containerConfig = OpenDxp::getContainer()->getParameter('opendxp.config');
             $config = $containerConfig[self::CONFIG_ID]['definitions'];
 
             $storageConfig = $containerConfig['config_location'][self::CONFIG_ID];
@@ -49,11 +51,10 @@ final class Config
     {
         if (empty($data['classes'])) {
             return [];
-        } else {
-            $tempClasses = explode(',', $data['classes']);
-
-            return array_fill_keys($tempClasses, null);
         }
+        $tempClasses = explode(',', $data['classes']);
+
+        return array_fill_keys($tempClasses, null);
     }
 
     /**
@@ -67,7 +68,7 @@ final class Config
         foreach ($keys as $key) {
             [$data, $dataSource] = $repository->loadConfigByKey(($key));
             $data['writeable'] = $repository->isWriteable($key, $dataSource);
-            $data['id'] = $data['id'] ?? $key;
+            $data['id'] ??= $key;
             if (!is_array($data['classes'] ?? [])) {
                 $data['classes'] = self::flipArray($data);
             }
@@ -79,7 +80,7 @@ final class Config
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public static function save(array $data, ?array $deletedRecords): void
     {
@@ -88,19 +89,17 @@ final class Config
         foreach ($data as $key => $value) {
             $key = (string) $key;
             [$configKey, $dataSource] = $repository->loadConfigByKey($key);
-            if ($repository->isWriteable($key, $dataSource) === true) {
+            if ($repository->isWriteable($key, $dataSource)) {
                 unset($value['writeable']);
-                $repository->saveConfig($key, $value, function ($key, $data) {
-                    return [
-                        'opendxp' => [
-                            'custom_views' => [
-                                'definitions' => [
-                                    $key => $data,
-                                ],
+                $repository->saveConfig($key, $value, fn ($key, $data) => [
+                    'opendxp' => [
+                        'custom_views' => [
+                            'definitions' => [
+                                $key => $data,
                             ],
                         ],
-                    ];
-                });
+                    ],
+                ]);
             }
         }
 

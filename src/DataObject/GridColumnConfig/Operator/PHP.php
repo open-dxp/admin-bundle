@@ -18,24 +18,25 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Tool\Serialize;
+use stdClass;
 
 /**
  * @internal
  */
 final class PHP extends AbstractOperator
 {
-    private string $mode;
+    private readonly string $mode;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
         $this->mode = $config->mode ?? '';
     }
 
-    public function getLabeledValue(array|ElementInterface $element): \stdClass
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $children = $this->getChildren();
@@ -65,11 +66,7 @@ final class PHP extends AbstractOperator
             $valueArray[] = null;
         }
 
-        if ($isArrayType) {
-            $result->value = $valueArray;
-        } else {
-            $result->value = $valueArray[0];
-        }
+        $result->value = $isArrayType ? $valueArray : $valueArray[0];
 
         if ($this->mode === 's') {
             $result->value = Serialize::serialize($result->value);
