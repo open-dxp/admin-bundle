@@ -44,7 +44,7 @@ class AdminExtension extends AbstractExtension
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('opendxp_language_flag', [Tool::class, 'getLanguageFlagFile']),
+            new TwigFunction('opendxp_language_flag', [$this, 'getLanguageFlagFile']),
             new TwigFunction('opendxp_minimize_scripts', [$this, 'minimize']),
             new TwigFunction('opendxp_editmode_admin_language', [$this, 'getAdminLanguage']),
             new TwigFunction('opendxp_login_background_image', [$this, 'getLoginBackgroundImage']),
@@ -58,6 +58,11 @@ class AdminExtension extends AbstractExtension
             new TwigFilter('opendxp_lazy_icon', [$this, 'lazyIcon']),
             new TwigFilter('opendxp_twemoji_variant_icon', [$this, 'twemojiVariantIcon']),
         ];
+    }
+
+    public function getLanguageFlagFile(string $language, bool $absolutePath = true, bool $includeUnknown = true): string
+    {
+        return Tool::getLanguageFlagFile($language, $absolutePath, $includeUnknown);
     }
 
     public function getAdminLanguage(): ?string
