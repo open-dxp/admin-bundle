@@ -15,6 +15,7 @@ permissions:
 jobs:
     php-style:
         uses: open-dxp/workflows-collection-public/.github/workflows/reusable-php-cs-fixer.yaml@main
+        if: github.repository_owner == 'open-dxp'
         secrets:
             PHP_CS_FIXER_GITHUB_TOKEN: ${{ secrets.PHP_CS_FIXER_GITHUB_TOKEN }}
         with:
