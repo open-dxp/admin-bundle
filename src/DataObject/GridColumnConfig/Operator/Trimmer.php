@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
 
 /**
@@ -25,7 +24,9 @@ use OpenDxp\Model\Element\ElementInterface;
 final class Trimmer extends AbstractOperator
 {
     public const int LEFT = 1;
+
     public const int RIGHT = 2;
+
     public const int BOTH = 3;
 
     private int $trim;

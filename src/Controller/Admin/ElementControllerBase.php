@@ -21,7 +21,6 @@ use OpenDxp\Bundle\AdminBundle\Event\AssetEvents;
 use OpenDxp\Bundle\AdminBundle\Event\Model\AssetDeleteInfoEvent;
 use OpenDxp\Bundle\AdminBundle\Event\Model\DataObjectDeleteInfoEvent;
 use OpenDxp\Bundle\AdminBundle\Event\Model\DocumentDeleteInfoEvent;
-use OpenDxp\Bundle\AdminBundle\Event\Model\ElementDeleteInfoEventInterface;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Event\DataObjectEvents;
 use OpenDxp\Event\DocumentEvents;

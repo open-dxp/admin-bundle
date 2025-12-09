@@ -30,7 +30,9 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 final class OpenDxpAdminExtension extends Extension implements PrependExtensionInterface
 {
     public const string PARAM_DATAOBJECTS_NOTES_EVENTS_TYPES = 'opendxp_admin.dataObjects.notes_events.types';
+
     public const string PARAM_ASSETS_NOTES_EVENTS_TYPES = 'opendxp_admin.assets.notes_events.types';
+
     public const string PARAM_DOCUMENTS_NOTES_EVENTS_TYPES = 'opendxp_admin.documents.notes_events.types';
 
     public function getAlias(): string

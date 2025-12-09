@@ -15,7 +15,6 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
-use function is_callable;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\AdminStyleTrait;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\ApplySchedulerDataTrait;
@@ -35,7 +34,6 @@ use OpenDxp\File;
 use OpenDxp\Loader\ImplementationLoader\Exception\UnsupportedException;
 use OpenDxp\Logger;
 use OpenDxp\Messenger\AssetPreviewImageMessage;
-use OpenDxp\Messenger\AssetUpdateTasksMessage;
 use OpenDxp\Model;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Asset\Enum\PdfScanStatus;
