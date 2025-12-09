@@ -24,7 +24,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- *
  * @internal
  */
 #[Route('/hardlink', name: 'opendxp_admin_document_hardlink_')]

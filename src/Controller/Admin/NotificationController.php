@@ -30,7 +30,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 use UnexpectedValueException;
 
 /**
- *
  * @internal
  */
 #[Route('/notification')]

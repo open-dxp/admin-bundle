@@ -34,8 +34,11 @@ final class TranslateValue extends AbstractOperator
      */
     private mixed $locale = null;
 
-    public function __construct(private readonly LocaleAwareInterface|stdClass|TranslatorInterface $translator, stdClass $config, array $context = [])
-    {
+    public function __construct(
+        private readonly LocaleAwareInterface|stdClass|TranslatorInterface $translator,
+        stdClass $config,
+        array $context = []
+    ) {
         parent::__construct($config, $context);
         $this->prefix = $config->prefix ?? '';
         if (isset($context['language'])) {

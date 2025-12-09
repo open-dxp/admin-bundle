@@ -37,7 +37,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- *
  * @internal
  */
 class ElementController extends AdminAbstractController

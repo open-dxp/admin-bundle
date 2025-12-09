@@ -33,7 +33,6 @@ use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Throwable;
 
 /**
- *
  * @internal
  */
 class DataObject extends Element
@@ -378,7 +377,6 @@ class DataObject extends Element
     /**
      * The actual data could be a plain array for tables,
      * an associative array for RGB or Quantity Value where the value is a key.
-     *
      */
     private static function normalizeValue(mixed $data): mixed
     {

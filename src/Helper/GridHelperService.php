@@ -990,8 +990,6 @@ class GridHelperService
     }
 
     /**
-     *
-     *
      * @internal
      */
     public function getPermittedPathsByUser(string $type, User $user): string

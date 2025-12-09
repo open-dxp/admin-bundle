@@ -23,7 +23,6 @@ use OpenDxp\Model\Element\Service;
 use OpenDxp\Model\Exception\UnsupportedException;
 
 /**
- *
  * @internal
  */
 class Asset extends Element

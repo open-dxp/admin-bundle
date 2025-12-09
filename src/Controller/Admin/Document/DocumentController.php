@@ -75,15 +75,15 @@ class DocumentController extends ElementControllerBase implements KernelControll
 
     protected Document\Service $_documentService;
 
-    #[Route('/tree-get-root', name: 'opendxp_admin_document_document_treegetroot', methods: ['GET'])]
     #[Override]
+    #[Route('/tree-get-root', name: 'opendxp_admin_document_document_treegetroot', methods: ['GET'])]
     public function treeGetRootAction(Request $request): JsonResponse
     {
         return parent::treeGetRootAction($request);
     }
 
-    #[Route('/delete-info', name: 'opendxp_admin_document_document_deleteinfo', methods: ['GET'])]
     #[Override]
+    #[Route('/delete-info', name: 'opendxp_admin_document_document_deleteinfo', methods: ['GET'])]
     public function deleteInfoAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
         return parent::deleteInfoAction($request, $eventDispatcher);

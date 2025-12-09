@@ -25,7 +25,6 @@ use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- *
  * @internal
  */
 class AdminController extends AdminAbstractController implements KernelControllerEventInterface

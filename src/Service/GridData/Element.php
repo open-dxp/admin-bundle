@@ -20,7 +20,6 @@ use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Element\Service;
 
 /**
- *
  * @internal
  */
 abstract class Element

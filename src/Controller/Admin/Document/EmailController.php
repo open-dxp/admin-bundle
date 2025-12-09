@@ -24,7 +24,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- *
  * @internal
  */
 #[Route('/email', name: 'opendxp_admin_document_email_')]
