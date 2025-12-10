@@ -1184,12 +1184,17 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         if ($request->get('treepreview')) {
             $thumbnailConfig = Asset\Image\Thumbnail\Config::getPreviewConfig();
-            if ($request->get('origin') === 'treeNode' && !$image->getThumbnail($thumbnailConfig)->exists()) {
-                OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
-                    new AssetPreviewImageMessage($image->getId())
-                );
+            $exists = $image->getThumbnail($thumbnailConfig)->exists();
+            if (!$exists) {
+                if ($request->get('origin') === 'treeNode') {
+                    OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
+                        new AssetPreviewImageMessage($image->getId())
+                    );
 
-                throw $this->createNotFoundException(sprintf('Tree preview thumbnail not available for asset %s', $image->getId()));
+                    throw $this->createNotFoundException(sprintf('Tree preview thumbnail not available for asset %s', $image->getId()));
+                } elseif ($request->get('origin') === 'folderPreview') {
+                    return new BinaryFileResponse(OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/video-loading.gif');
+                }
             }
         }
 
@@ -1693,7 +1698,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     'type' => $asset->getType(),
                     'filename' => $asset->getFilename(),
                     'filenameDisplay' => htmlspecialchars($filenameDisplay ?? ''),
-                    'url' => $this->elementService->getThumbnailUrl($asset),
+                    'url' => $this->elementService->getThumbnailUrl($asset, ['origin' => 'folderPreview']),
                     'idPath' => $data['idPath'] = Element\Service::getIdPath($asset),
                 ];
             }

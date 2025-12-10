@@ -468,7 +468,7 @@ opendxp.object.tags.fieldcollections = Class.create(opendxp.object.tags.abstract
                 containerName: this.fieldConfig.name,
                 containerKey: type,
                 index: index,
-                applyDefaults: true,
+                applyDefaults: !ignoreChange,
             },
             false,
             false,
