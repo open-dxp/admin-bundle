@@ -26,19 +26,13 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class AdminUserTranslator implements TranslatorInterface, LocaleAwareInterface
 {
-    private TranslatorInterface $translator;
-
-    private UserLoader $userLoader;
-
-    public function __construct(TranslatorInterface $translator, UserLoader $userLoader)
+    public function __construct(private readonly TranslatorInterface $translator, private readonly UserLoader $userLoader)
     {
-        $this->translator = $translator;
-        $this->userLoader = $userLoader;
     }
 
     private function getUserLocale(): ?string
     {
-        if (null !== $user = $this->userLoader->getUser()) {
+        if (($user = $this->userLoader->getUser()) instanceof \OpenDxp\Model\User) {
             return $user->getLanguage();
         }
 
@@ -47,8 +41,8 @@ class AdminUserTranslator implements TranslatorInterface, LocaleAwareInterface
 
     public function trans(string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string
     {
-        $domain = $domain ?? 'admin';
-        $locale = $locale ?? $this->getUserLocale();
+        $domain ??= 'admin';
+        $locale ??= $this->getUserLocale();
 
         return $this->translator->trans($id, $parameters, $domain, $locale);
     }

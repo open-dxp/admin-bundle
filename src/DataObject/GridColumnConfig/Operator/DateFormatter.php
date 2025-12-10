@@ -17,8 +17,8 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
 use Carbon\Carbon;
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -27,16 +27,16 @@ final class DateFormatter extends AbstractOperator
 {
     private ?string $format = null;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
-        $this->format = ($config->format ? $config->format : null);
+        $this->format = ($config->format ?: null);
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
         $result->value = null;
 
@@ -45,7 +45,6 @@ final class DateFormatter extends AbstractOperator
         if ($children) {
             $newChildrenResult = [];
             $isArrayType = null;
-
             foreach ($children as $c) {
                 $childResult = $c->getLabeledValue($element);
                 $isArrayType = $childResult->isArrayType ?? false;
@@ -74,13 +73,8 @@ final class DateFormatter extends AbstractOperator
 
                 $newChildrenResult[] = $newValue;
             }
-
             $result->isArrayType = $isArrayType;
-            if ($isArrayType) {
-                $result->value = $newChildrenResult;
-            } else {
-                $result->value = $newChildrenResult[0];
-            }
+            $result->value = $isArrayType ? $newChildrenResult : $newChildrenResult[0];
         }
 
         return $result;
@@ -98,7 +92,9 @@ final class DateFormatter extends AbstractOperator
 
         if ($timestamp && $this->format) {
             return date($this->format, $timestamp);
-        } elseif ($theValue instanceof Carbon) {
+        }
+
+        if ($theValue instanceof Carbon) {
             return $theValue->toDateString();
         }
 

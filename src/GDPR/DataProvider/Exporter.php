@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\GDPR\DataProvider;
 
+use Exception;
 use OpenDxp\Model\Asset;
-use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\AbstractObject;
 use OpenDxp\Model\DataObject\ClassDefinition\Data;
 use OpenDxp\Model\DataObject\Concrete;
@@ -67,8 +67,7 @@ class Exporter
                 foreach ($fDefs as $fd) {
                     $getter = 'get' . ucfirst($fd->getName());
                     $value = $brickValue->$getter();
-                    if ($fd instanceof NormalizerInterface
-                        && $fd instanceof DataObject\ClassDefinition\Data) {
+                    if ($fd instanceof NormalizerInterface) {
                         $marshalledValue = $fd->normalize($value);
                         $resultContainer[$brickType][$fd->getName()] = $marshalledValue;
                     }
@@ -79,7 +78,7 @@ class Exporter
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public static function doExportFieldcollection(Concrete $object, array &$result, Fieldcollection $container, Data\Fieldcollections $containerDef): void
     {
@@ -98,8 +97,7 @@ class Exporter
                 $getter = 'get' . ucfirst($fd->getName());
                 $value = $item->$getter();
 
-                if ($fd instanceof NormalizerInterface
-                    && $fd instanceof DataObject\ClassDefinition\Data) {
+                if ($fd instanceof NormalizerInterface) {
                     $marshalledValue = $fd->normalize($value);
                     $itemValues[$fd->getName()] = $marshalledValue;
                 }
@@ -117,7 +115,7 @@ class Exporter
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public static function doExportObject(Concrete $object, array &$result = []): void
     {
@@ -131,12 +129,9 @@ class Exporter
                 self::doExportFieldcollection($object, $result, $value, $fd);
             } elseif ($fd instanceof Data\Objectbricks && $value instanceof Objectbrick) {
                 self::doExportBrick($object, $result, $value, $fd);
-            } else {
-                if ($fd instanceof NormalizerInterface
-                    && $fd instanceof DataObject\ClassDefinition\Data) {
-                    $marshalledValue = $fd->normalize($value);
-                    $result[$fd->getName()] = $marshalledValue;
-                }
+            } elseif ($fd instanceof NormalizerInterface) {
+                $marshalledValue = $fd->normalize($value);
+                $result[$fd->getName()] = $marshalledValue;
             }
         }
     }

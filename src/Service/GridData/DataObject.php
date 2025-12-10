@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\GridData;
 
+use OpenDxp;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Model;
 use OpenDxp\Model\DataObject\AbstractObject;
@@ -27,10 +28,11 @@ use OpenDxp\Model\DataObject\Objectbrick;
 use OpenDxp\Model\DataObject\Service;
 use OpenDxp\Tool\Admin as AdminTool;
 use OpenDxp\Tool\Session;
+use stdClass;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
+use Throwable;
 
 /**
- *
  * @internal
  */
 class DataObject extends Element
@@ -145,7 +147,7 @@ class DataObject extends Element
                                     $context['outerFieldname'] = $key;
                                 }
 
-                                $params = array_merge($params, ['context' => $context]);
+                                $params = [...$params, 'context' => $context];
                                 if (!isset($params['purpose'])) {
                                     $params['purpose'] = 'gridview';
                                 }
@@ -196,7 +198,7 @@ class DataObject extends Element
                         if ($fieldDef->isEmpty($value)) {
                             $inheritedData = static::getInheritedData($object, $key, $requestedLanguage);
 
-                            if (!empty($inheritedData)) {
+                            if ($inheritedData !== []) {
                                 $parent = $inheritedData['parent'];
                                 $data[$dataKey] = $inheritedData['value'];
                                 $data['inheritedFields'][$dataKey] = [
@@ -207,23 +209,20 @@ class DataObject extends Element
                         }
                     }
 
-                    if ($needLocalizedPermissions) {
-                        if (!$user->isAdmin()) {
-                            $locale = \OpenDxp::getContainer()->get(LocaleServiceInterface::class)->findLocale();
+                    if ($needLocalizedPermissions && !$user->isAdmin()) {
+                        $locale = OpenDxp::getContainer()->get(LocaleServiceInterface::class)->findLocale();
+                        $permissionTypes = ['View', 'Edit'];
+                        foreach ($permissionTypes as $permissionType) {
+                            //TODO, this needs refactoring! Ideally, call it only once!
+                            $languagesAllowed = Service::getLanguagePermissions($object, $user, 'l' . $permissionType);
 
-                            $permissionTypes = ['View', 'Edit'];
-                            foreach ($permissionTypes as $permissionType) {
-                                //TODO, this needs refactoring! Ideally, call it only once!
-                                $languagesAllowed = Service::getLanguagePermissions($object, $user, 'l' . $permissionType);
+                            if ($languagesAllowed) {
+                                $languagesAllowed = array_keys($languagesAllowed);
 
-                                if ($languagesAllowed) {
-                                    $languagesAllowed = array_keys($languagesAllowed);
-
-                                    if (!in_array($locale, $languagesAllowed)) {
-                                        $data['metadata']['permission'][$key]['no' . $permissionType] = 1;
-                                        if ($permissionType === 'View') {
-                                            $data[$key] = null;
-                                        }
+                                if (!in_array($locale, $languagesAllowed)) {
+                                    $data['metadata']['permission'][$key]['no' . $permissionType] = 1;
+                                    if ($permissionType === 'View') {
+                                        $data[$key] = null;
                                     }
                                 }
                             }
@@ -238,13 +237,11 @@ class DataObject extends Element
 
     public static function getHelperDefinitions(): array
     {
-        $stack = \OpenDxp::getContainer()->get('request_stack');
+        $stack = OpenDxp::getContainer()->get('request_stack');
         if ($stack->getMainRequest()?->hasSession()) {
             $session = $stack->getSession();
 
-            return Session::useBag($session, function (AttributeBagInterface $session) {
-                return $session->get('helpercolumns', []);
-            }, 'opendxp_gridconfig');
+            return Session::useBag($session, fn (AttributeBagInterface $session) => $session->get('helpercolumns', []), 'opendxp_gridconfig');
         }
 
         return [];
@@ -253,16 +250,16 @@ class DataObject extends Element
     /**
      * gets value for given object and getter, including inherited values
      *
-     * @return \stdClass value and objectid where the value comes from
+     * @return stdClass value and objectid where the value comes from
      */
-    private static function getValueForObject(Concrete $object, string $key, ?string $brickType = null, ?string $brickKey = null, ?ClassDefinition\Data $fieldDefinition = null, array $context = [], ?array $brickDescriptor = null, ?string $requestedLanguage = null): \stdClass
+    private static function getValueForObject(Concrete $object, string $key, ?string $brickType = null, ?string $brickKey = null, ?ClassDefinition\Data $fieldDefinition = null, array $context = [], ?array $brickDescriptor = null, ?string $requestedLanguage = null): stdClass
     {
         $getter = 'get' . ucfirst($key);
         $value = null;
 
         try {
             $value = $object->$getter($requestedLanguage ?? AdminTool::getCurrentUser()?->getLanguage());
-        } catch (\Throwable) {
+        } catch (Throwable) {
         }
 
         if (empty($value)) {
@@ -304,7 +301,7 @@ class DataObject extends Element
             }
         }
 
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->value = $value;
         $result->objectid = $object->getId();
 
@@ -348,7 +345,7 @@ class DataObject extends Element
                     $definition = \OpenDxp\Model\DataObject\Classificationstore\Service::getFieldDefinitionFromJson($definition, $type);
 
                     if (method_exists($definition, 'getDataForGrid')) {
-                        $fielddata = $definition->getDataForGrid($fielddata, $object);
+                        return $definition->getDataForGrid($fielddata, $object);
                     }
 
                     return $fielddata;
@@ -380,7 +377,6 @@ class DataObject extends Element
     /**
      * The actual data could be a plain array for tables,
      * an associative array for RGB or Quantity Value where the value is a key.
-     *
      */
     private static function normalizeValue(mixed $data): mixed
     {

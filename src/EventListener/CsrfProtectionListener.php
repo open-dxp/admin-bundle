@@ -33,11 +33,8 @@ class CsrfProtectionListener implements EventSubscriberInterface
 
     protected Environment $twig;
 
-    protected CsrfProtectionHandler $csrfProtectionHandler;
-
-    public function __construct(CsrfProtectionHandler $csrfProtectionHandler)
+    public function __construct(protected CsrfProtectionHandler $csrfProtectionHandler)
     {
-        $this->csrfProtectionHandler = $csrfProtectionHandler;
     }
 
     public static function getSubscribedEvents(): array

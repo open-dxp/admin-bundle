@@ -24,11 +24,8 @@ use Symfony\Component\Workflow\WorkflowInterface;
 
 class ActionsButtonService
 {
-    private Manager $workflowManager;
-
-    public function __construct(Manager $workflowManager)
+    public function __construct(private readonly Manager $workflowManager)
     {
-        $this->workflowManager = $workflowManager;
     }
 
     public function getAllowedTransitions(WorkflowInterface $workflow, ElementInterface $element): array
@@ -83,7 +80,7 @@ class ActionsButtonService
         if (!empty($notes['commentGetterFn'])) {
             $commentGetterFn = $notes['commentGetterFn'];
             $notes['commentPrefill'] = $object->$commentGetterFn();
-        } elseif (!empty($notes)) {
+        } elseif ($notes !== []) {
             $notes['commentPrefill'] = '';
         }
 

@@ -82,7 +82,7 @@ class LogoutListener implements EventSubscriberInterface, LoggerAwareInterface
             $event = null;
 
             $user = Authentication::authenticateSession($request);
-            if ($user && $user instanceof User) {
+            if ($user instanceof User) {
                 $event = new OpenDxpLogoutEvent($request, $user);
                 $this->eventDispatcher->dispatch($event, AdminEvents::LOGIN_LOGOUT);
 

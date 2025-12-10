@@ -21,7 +21,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
  */
 final class GeopointRenderer extends AbstractRenderer
 {
-    public function getRenderer(): ?string
+    public function getRenderer(): string
     {
         return 'geopoint';
     }

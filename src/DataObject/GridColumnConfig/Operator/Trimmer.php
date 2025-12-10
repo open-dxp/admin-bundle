@@ -16,71 +16,67 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
  */
 final class Trimmer extends AbstractOperator
 {
-    const LEFT = 1;
+    public const int LEFT = 1;
 
-    const RIGHT = 2;
+    public const int RIGHT = 2;
 
-    const BOTH = 3;
+    public const int BOTH = 3;
 
-    private int $trim;
+    private readonly int $trim;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
         $this->trim = $config->trim ?? 0;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $children = $this->getChildren();
 
         if (!$children) {
             return $result;
-        } else {
-            $c = $children[0];
+        }
 
-            $valueArray = [];
+        $c = $children[0];
 
-            $childResult = $c->getLabeledValue($element);
-            $isArrayType = $childResult->isArrayType ?? false;
-            $childValues = $childResult->value ?? null;
-            if ($childValues && !$isArrayType) {
-                $childValues = [$childValues];
-            }
+        $valueArray = [];
 
-            if ($childValues) {
-                /** @var string $childValue */
-                foreach ($childValues as $childValue) {
-                    if ($this->trim == self::LEFT) {
-                        $childValue = ltrim($childValue);
-                    } elseif ($this->trim == self::RIGHT) {
-                        $childValue = rtrim($childValue);
-                    } elseif ($this->trim == self::BOTH) {
-                        $childValue = trim($childValue);
-                    }
-                    $valueArray[] = $childValue;
+        $childResult = $c->getLabeledValue($element);
+        $isArrayType = $childResult->isArrayType ?? false;
+        $childValues = $childResult->value ?? null;
+        if ($childValues && !$isArrayType) {
+            $childValues = [$childValues];
+        }
+
+        if ($childValues) {
+            /** @var string $childValue */
+            foreach ($childValues as $childValue) {
+                if ($this->trim === self::LEFT) {
+                    $childValue = ltrim($childValue);
+                } elseif ($this->trim === self::RIGHT) {
+                    $childValue = rtrim($childValue);
+                } elseif ($this->trim === self::BOTH) {
+                    $childValue = trim($childValue);
                 }
-            }
-
-            $result->isArrayType = $isArrayType;
-            if ($isArrayType) {
-                $result->value = $valueArray;
-            } else {
-                $result->value = $valueArray[0] ?? null;
+                $valueArray[] = $childValue;
             }
         }
+
+        $result->isArrayType = $isArrayType;
+        $result->value = $isArrayType ? $valueArray : $valueArray[0] ?? null;
 
         return $result;
     }

@@ -34,11 +34,8 @@ class DataObjects extends Elements implements DataProviderInterface
 {
     protected array $exportIds = [];
 
-    protected array $config = [];
-
-    public function __construct(array $config)
+    public function __construct(protected array $config)
     {
-        $this->config = $config;
     }
 
     public function getName(): string

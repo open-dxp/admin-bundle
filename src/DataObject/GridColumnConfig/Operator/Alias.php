@@ -16,49 +16,45 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
  */
 final class Alias extends AbstractOperator
 {
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $children = $this->getChildren();
 
         if (!$children) {
             return $result;
-        } else {
-            $c = $children[0];
+        }
 
-            $valueArray = [];
+        $c = $children[0];
 
-            $childResult = $c->getLabeledValue($element);
-            $isArrayType = $childResult->isArrayType ?? null;
-            $childValues = $childResult->value;
-            if ($childValues && !$isArrayType) {
-                $childValues = [$childValues];
-            }
+        $valueArray = [];
 
-            if ($childValues) {
-                /** @var string $childValue */
-                foreach ($childValues as $childValue) {
-                    $valueArray[] = $childValue;
-                }
-            }
+        $childResult = $c->getLabeledValue($element);
+        $isArrayType = $childResult->isArrayType ?? null;
+        $childValues = $childResult->value;
+        if ($childValues && !$isArrayType) {
+            $childValues = [$childValues];
+        }
 
-            $result->isArrayType = $isArrayType;
-            if ($isArrayType) {
-                $result->value = $valueArray;
-            } else {
-                $result->value = $valueArray[0] ?? null;
+        if ($childValues) {
+            /** @var string $childValue */
+            foreach ($childValues as $childValue) {
+                $valueArray[] = $childValue;
             }
         }
+
+        $result->isArrayType = $isArrayType;
+        $result->value = $isArrayType ? $valueArray : $valueArray[0] ?? null;
 
         return $result;
     }

@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Model\DataObject\Data\QuantityValue;
 use OpenDxp\Model\DataObject\QuantityValue\Service as QuantityValueService;
@@ -60,7 +61,7 @@ class QuantityValueController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/unit-proxy', name: 'unitproxyget', methods: ['GET'])]
     public function unitProxyGetAction(Request $request): JsonResponse
@@ -72,7 +73,7 @@ class QuantityValueController extends AdminAbstractController
         $order = ['ASC', 'ASC', 'ASC'];
         $orderKey = ['baseunit', 'factor', 'abbreviation'];
 
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
         $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($allParams);
 
         // Prepend user-requested sorting settings but keep the others to keep secondary order of quantity values in respective order
@@ -114,7 +115,7 @@ class QuantityValueController extends AdminAbstractController
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/unit-proxy', name: 'unitproxy', methods: ['POST', 'PUT'])]
     public function unitProxyAction(Request $request): JsonResponse
@@ -130,10 +131,11 @@ class QuantityValueController extends AdminAbstractController
                     $unit->delete();
 
                     return $this->adminJson(['data' => [], 'success' => true]);
-                } else {
-                    throw new \Exception('Unit with id ' . $id . ' not found.');
                 }
-            } elseif ($request->get('xaction') == 'update') {
+
+                throw new Exception('Unit with id ' . $id . ' not found.');
+            }
+            if ($request->get('xaction') == 'update') {
                 $data = json_decode($request->get('data'), true);
                 $unit = Unit::getById($data['id']);
                 if (!empty($unit)) {
@@ -144,24 +146,22 @@ class QuantityValueController extends AdminAbstractController
                     $unit->save();
 
                     return $this->adminJson(['data' => $unit->getObjectVars(), 'success' => true]);
-                } else {
-                    throw new \Exception('Unit with id ' . $data['id'] . ' not found.');
                 }
-            } elseif ($request->get('xaction') == 'create') {
+
+                throw new Exception('Unit with id ' . $data['id'] . ' not found.');
+            }
+            if ($request->get('xaction') == 'create') {
                 $data = json_decode($request->get('data'), true);
                 if (isset($data['baseunit']) && $data['baseunit'] === -1) {
                     $data['baseunit'] = null;
                 }
-
                 $id = $data['id'];
                 if (Unit::getById($id)) {
-                    throw new \Exception('unit with ID [' . $id . '] already exists');
+                    throw new Exception('unit with ID [' . $id . '] already exists');
                 }
-
                 if (mb_strlen($id) > 50) {
-                    throw new \Exception('The maximal character length for the unit ID is 50 characters, the provided ID has ' . mb_strlen($id) . ' characters.');
+                    throw new Exception('The maximal character length for the unit ID is 50 characters, the provided ID has ' . mb_strlen($id) . ' characters.');
                 }
-
                 $unit = new Unit();
                 $unit->setValues($data);
                 $unit->save();
@@ -214,7 +214,7 @@ class QuantityValueController extends AdminAbstractController
                         true));
                 }
                 $result[] = $unit->getObjectVars();
-            } catch (\Exception $e) {
+            } catch (Exception) {
                 // nothing to do ...
             }
         }
@@ -238,7 +238,7 @@ class QuantityValueController extends AdminAbstractController
 
         try {
             $convertedValue = $conversionService->convert(new QuantityValue($request->get('value'), $fromUnit), $toUnit);
-        } catch (\Exception $e) {
+        } catch (Exception) {
             return $this->adminJson(['success' => false]);
         }
 
@@ -267,7 +267,7 @@ class QuantityValueController extends AdminAbstractController
                 $convertedValue = $conversionService->convert(new QuantityValue($request->get('value'), $fromUnit), $targetUnit);
 
                 $convertedValues[] = ['unit' => $targetUnit->getAbbreviation(), 'unitName' => $targetUnit->getLongname(), 'value' => round($convertedValue->getValue(), 4)];
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
             }
         }

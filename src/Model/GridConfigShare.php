@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Model;
 
+use Exception;
 use OpenDxp\Model\AbstractModel;
 use OpenDxp\Model\Exception\NotFoundException;
 
@@ -37,13 +38,13 @@ class GridConfigShare extends AbstractModel
             $share->getDao()->getByGridConfigAndSharedWithId($gridConfigId, $sharedWithUserId);
 
             return $share;
-        } catch (NotFoundException $e) {
+        } catch (NotFoundException) {
             return null;
         }
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function save(): void
     {

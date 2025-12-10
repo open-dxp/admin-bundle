@@ -44,7 +44,7 @@ class OpenDxpUsersController extends AdminAbstractController implements KernelCo
     #[Route('/search-users', name: 'opendxp_admin_gdpr_opendxpusers_searchusers', methods: ['GET'])]
     public function searchUsersAction(Request $request, OpenDxpUsers $openDxpUsers): JsonResponse
     {
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
 
         $result = $openDxpUsers->searchData(
             (int)$allParams['id'],
@@ -66,10 +66,9 @@ class OpenDxpUsersController extends AdminAbstractController implements KernelCo
         $userData = $openDxpUsers->getExportData((int)$request->get('id'));
 
         $json = $this->encodeJson($userData, [], JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_PRETTY_PRINT);
-        $jsonResponse = new JsonResponse($json, 200, [
+
+        return new JsonResponse($json, 200, [
             'Content-Disposition' => 'attachment; filename="export-userdata-' . $userData['id'] . '.json"',
         ], true);
-
-        return $jsonResponse;
     }
 }

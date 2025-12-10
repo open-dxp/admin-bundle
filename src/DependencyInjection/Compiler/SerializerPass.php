@@ -47,13 +47,13 @@ final class SerializerPass implements CompilerPassInterface
         // Looks for all the services tagged "serializer.normalizer" and adds them to the Serializer service
         $normalizers = $this->findAndSortTaggedServices('opendxp_admin.serializer.normalizer', $container);
 
-        if (empty($normalizers)) {
+        if ($normalizers === []) {
             throw new RuntimeException('You must tag at least one service as "opendxp_admin.serializer.normalizer" to use the Admin Serializer service');
         }
 
         // Looks for all the services tagged "serializer.encoders" and adds them to the Serializer service
         $encoders = $this->findAndSortTaggedServices('opendxp_admin.serializer.encoder', $container);
-        if (empty($encoders)) {
+        if ($encoders === []) {
             throw new RuntimeException('You must tag at least one service as "opendxp_admin.serializer.encoder" to use the Admin Serializer service');
         }
 

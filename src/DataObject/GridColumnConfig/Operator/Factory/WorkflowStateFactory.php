@@ -20,20 +20,18 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\Factor
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\OperatorInterface;
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\WorkflowState;
 use OpenDxp\Workflow\Place\StatusInfo;
+use stdClass;
 
 /**
  * @internal
  */
-final class WorkflowStateFactory implements OperatorFactoryInterface
+final readonly class WorkflowStateFactory implements OperatorFactoryInterface
 {
-    private StatusInfo $workflowStatusInfo;
-
-    public function __construct(StatusInfo $workflowStatusInfo)
+    public function __construct(private StatusInfo $workflowStatusInfo)
     {
-        $this->workflowStatusInfo = $workflowStatusInfo;
     }
 
-    public function build(\stdClass $configElement, array $context = []): OperatorInterface
+    public function build(stdClass $configElement, array $context = []): OperatorInterface
     {
         $operator = new WorkflowState($configElement, $context);
         $operator->setWorkflowStatusInfo($this->workflowStatusInfo);

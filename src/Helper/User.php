@@ -24,7 +24,7 @@ use OpenDxp\Security\User\User as UserProxy;
  */
 final class User
 {
-    protected const DEFAULT_KEY_BINDINGS = 'default_key_bindings';
+    protected const string DEFAULT_KEY_BINDINGS = 'default_key_bindings';
 
     /**
      * @internal
@@ -37,6 +37,7 @@ final class User
 
         $defaultKeyBindings = [];
         $container = OpenDxp::getContainer();
+        /** @var array|null $userConfig */
         $userConfig = $container->getParameter('opendxp_admin.user');
         // make sure the default key binding node is in the config
         if (is_array($userConfig) && array_key_exists(self::DEFAULT_KEY_BINDINGS, $userConfig)) {

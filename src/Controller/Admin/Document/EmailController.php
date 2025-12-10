@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
+use Exception;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Element;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,14 +24,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- *
  * @internal
  */
 #[Route('/email', name: 'opendxp_admin_document_email_')]
 class EmailController extends DocumentControllerBase
 {
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(Request $request): JsonResponse
@@ -70,7 +70,7 @@ class EmailController extends DocumentControllerBase
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
     public function saveAction(Request $request): JsonResponse
@@ -94,18 +94,17 @@ class EmailController extends DocumentControllerBase
                 ],
                 'treeData' => $treeData,
             ]);
-        } else {
-            $draftData = [];
-            if ($version) {
-                $draftData = [
-                    'id' => $version->getId(),
-                    'modificationDate' => $version->getDate(),
-                    'isAutoSave' => $version->isAutoSave(),
-                ];
-            }
-
-            return $this->adminJson(['success' => true, 'draft' => $draftData]);
         }
+        $draftData = [];
+        if ($version) {
+            $draftData = [
+                'id' => $version->getId(),
+                'modificationDate' => $version->getDate(),
+                'isAutoSave' => $version->isAutoSave(),
+            ];
+        }
+
+        return $this->adminJson(['success' => true, 'draft' => $draftData]);
     }
 
     protected function setValuesToDocument(Request $request, Document $document): void
@@ -113,6 +112,6 @@ class EmailController extends DocumentControllerBase
         $this->addSettingsToDocument($request, $document);
         $this->addDataToDocument($request, $document);
         $this->addPropertiesToDocument($request, $document);
-        $this->applySchedulerDataToElement($request, $document);
+        $this->applySchedulerDataToElement($request, $document, $this->getAdminUser());
     }
 }

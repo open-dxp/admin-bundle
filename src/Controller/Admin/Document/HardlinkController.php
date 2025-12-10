@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
+use Exception;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Schedule\Task;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,14 +24,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- *
  * @internal
  */
 #[Route('/hardlink', name: 'opendxp_admin_document_hardlink_')]
 class HardlinkController extends DocumentControllerBase
 {
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(Request $request): JsonResponse
@@ -51,9 +51,7 @@ class HardlinkController extends DocumentControllerBase
         $data = $link->getObjectVars();
         $data['locked'] = $link->isLocked();
         $data['scheduledTasks'] = array_map(
-            static function (Task $task) {
-                return $task->getObjectVars();
-            },
+            static fn (Task $task) => $task->getObjectVars(),
             $link->getScheduledTasks()
         );
 
@@ -69,7 +67,7 @@ class HardlinkController extends DocumentControllerBase
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(Request $request): JsonResponse
@@ -112,6 +110,6 @@ class HardlinkController extends DocumentControllerBase
         }
 
         $this->addPropertiesToDocument($request, $document);
-        $this->applySchedulerDataToElement($request, $document);
+        $this->applySchedulerDataToElement($request, $document, $this->getAdminUser());
     }
 }

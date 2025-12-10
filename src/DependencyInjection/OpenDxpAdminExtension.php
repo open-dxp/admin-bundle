@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\DependencyInjection;
 
 use OpenDxp\Bundle\CoreBundle\DependencyInjection\ConfigurationHelper;
 use OpenDxp\Config\LocationAwareConfigRepository;
+use Override;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -29,12 +30,13 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
  */
 final class OpenDxpAdminExtension extends Extension implements PrependExtensionInterface
 {
-    const PARAM_DATAOBJECTS_NOTES_EVENTS_TYPES = 'opendxp_admin.dataObjects.notes_events.types';
+    public const string PARAM_DATAOBJECTS_NOTES_EVENTS_TYPES = 'opendxp_admin.dataObjects.notes_events.types';
 
-    const PARAM_ASSETS_NOTES_EVENTS_TYPES = 'opendxp_admin.assets.notes_events.types';
+    public const string PARAM_ASSETS_NOTES_EVENTS_TYPES = 'opendxp_admin.assets.notes_events.types';
 
-    const PARAM_DOCUMENTS_NOTES_EVENTS_TYPES = 'opendxp_admin.documents.notes_events.types';
+    public const string PARAM_DOCUMENTS_NOTES_EVENTS_TYPES = 'opendxp_admin.documents.notes_events.types';
 
+    #[Override]
     public function getAlias(): string
     {
         return 'opendxp_admin';
@@ -51,7 +53,6 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
         );
 
         $loader->load('services.yaml');
-
         $loader->load('security_services.yaml');
         $loader->load('event_listeners.yaml');
         $loader->load('export.yaml');
@@ -84,7 +85,6 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
         ];
 
         $container->prependExtensionConfig('webpack_encore', [
-            //'output_path' => realpath(__DIR__ . '/../Resources/public/build')
             'output_path' => false,
             'builds' => $builds,
         ]);

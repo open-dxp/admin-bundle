@@ -16,8 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -28,7 +28,7 @@ final class Arithmetic extends AbstractOperator
 
     private string $operator;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
@@ -36,9 +36,9 @@ final class Arithmetic extends AbstractOperator
         $this->operator = $config->operator ?? '';
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
         $result->value = 0;
 
@@ -50,57 +50,57 @@ final class Arithmetic extends AbstractOperator
 
         if (!$children) {
             return $result;
-        } else {
-            $valueArray = [];
-            foreach ($children as $c) {
-                $childResult = $c->getLabeledValue($element);
-                $isArrayType = $childResult->isArrayType ?? false;
-                $childValues = $childResult->value ?? null;
-                if ($childValues && !$isArrayType) {
-                    $childValues = [$childValues];
-                }
-
-                if (is_array($childValues)) {
-                    foreach ($childValues as $value) {
-                        if (is_null($value) && $this->skipNull) {
-                            continue;
-                        }
-                        $valueArray[] = $value;
-                    }
-                } else {
-                    if (!$this->skipNull) {
-                        $valueArray[] = null;
-                    }
-                }
-            }
-
-            $resultValue = null;
-            for ($i = 0; $i < count($valueArray); $i++) {
-                $val = $valueArray[$i];
-
-                if ($i == 0) {
-                    $resultValue = $val;
-
-                    continue;
-                }
-
-                if ($this->getOperator() == '+') {
-                    $resultValue = $resultValue + $val;
-                } elseif ($this->getOperator() == '-') {
-                    $resultValue = $resultValue - $val;
-                } elseif ($this->getOperator() == '*') {
-                    $resultValue = $resultValue * $val;
-                } elseif ($this->getOperator() == '/') {
-                    if ($resultValue == 0) {
-                        $result->value = 'NaN';
-
-                        return $result;
-                    }
-                    $resultValue = $resultValue / $val;
-                }
-            }
-            $result->value = $resultValue;
         }
+
+        $valueArray = [];
+        foreach ($children as $c) {
+            $childResult = $c->getLabeledValue($element);
+            $isArrayType = $childResult->isArrayType ?? false;
+            $childValues = $childResult->value ?? null;
+            if ($childValues && !$isArrayType) {
+                $childValues = [$childValues];
+            }
+
+            if (is_array($childValues)) {
+                foreach ($childValues as $value) {
+                    if (is_null($value) && $this->skipNull) {
+                        continue;
+                    }
+                    $valueArray[] = $value;
+                }
+            } elseif (!$this->skipNull) {
+                $valueArray[] = null;
+            }
+        }
+
+        $resultValue = null;
+        $counter = count($valueArray);
+        for ($i = 0; $i < $counter; $i++) {
+            $val = $valueArray[$i];
+
+            if ($i === 0) {
+                $resultValue = $val;
+
+                continue;
+            }
+
+            if ($this->getOperator() === '+') {
+                $resultValue += $val;
+            } elseif ($this->getOperator() === '-') {
+                $resultValue -= $val;
+            } elseif ($this->getOperator() === '*') {
+                $resultValue *= $val;
+            } elseif ($this->getOperator() === '/') {
+                if ($resultValue == 0) {
+                    $result->value = 'NaN';
+
+                    return $result;
+                }
+                $resultValue /= $val;
+            }
+        }
+
+        $result->value = $resultValue;
 
         return $result;
     }

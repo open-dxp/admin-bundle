@@ -15,7 +15,10 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
-use function is_callable;
+use DateInterval;
+use DateTime;
+use Exception;
+use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\AdminStyleTrait;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\ApplySchedulerDataTrait;
@@ -35,7 +38,6 @@ use OpenDxp\File;
 use OpenDxp\Loader\ImplementationLoader\Exception\UnsupportedException;
 use OpenDxp\Logger;
 use OpenDxp\Messenger\AssetPreviewImageMessage;
-use OpenDxp\Messenger\AssetUpdateTasksMessage;
 use OpenDxp\Model;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Asset\Enum\PdfScanStatus;
@@ -47,6 +49,7 @@ use OpenDxp\Model\Element\ValidationException;
 use OpenDxp\Model\Metadata;
 use OpenDxp\Model\Schedule\Task;
 use OpenDxp\Tool;
+use Override;
 use RuntimeException;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Filesystem\Filesystem;
@@ -65,6 +68,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 use Twig\Extension\CoreExtension;
+use ZipArchive;
 
 /**
  * @internal
@@ -77,16 +81,18 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     use ApplySchedulerDataTrait;
     use UserNameTrait;
 
-    final const PDF_MIMETYPE =  'application/pdf';
+    final const string PDF_MIMETYPE =  'application/pdf';
 
     protected Asset\Service $_assetService;
 
+    #[Override]
     #[Route('/tree-get-root', name: 'opendxp_admin_asset_treegetroot', methods: ['GET'])]
     public function treeGetRootAction(Request $request): JsonResponse
     {
         return parent::treeGetRootAction($request);
     }
 
+    #[Override]
     #[Route('/delete-info', name: 'opendxp_admin_asset_deleteinfo', methods: ['GET'])]
     public function deleteInfoAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
@@ -135,16 +141,13 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             if (\OpenDxp\Video::isAvailable()) {
                 $config = Asset\Video\Thumbnail\Config::getPreviewConfig();
                 $thumbnail = $asset->getThumbnail($config, ['mp4']);
-                if ($thumbnail) {
-                    if ($thumbnail['status'] == 'finished') {
-                        $videoInfo['previewUrl'] = $thumbnail['formats']['mp4'];
-                        $videoInfo['width'] = $asset->getWidth();
-                        $videoInfo['height'] = $asset->getHeight();
-
-                        $metaData = $asset->getSphericalMetaData();
-                        if (isset($metaData['ProjectionType']) && strtolower($metaData['ProjectionType']) == 'equirectangular') {
-                            $videoInfo['isVrVideo'] = true;
-                        }
+                if ($thumbnail && $thumbnail['status'] == 'finished') {
+                    $videoInfo['previewUrl'] = $thumbnail['formats']['mp4'];
+                    $videoInfo['width'] = $asset->getWidth();
+                    $videoInfo['height'] = $asset->getHeight();
+                    $metaData = $asset->getSphericalMetaData();
+                    if (isset($metaData['ProjectionType']) && strtolower($metaData['ProjectionType']) === 'equirectangular') {
+                        $videoInfo['isVrVideo'] = true;
                     }
                 }
             }
@@ -206,14 +209,12 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $request->getSchemeAndHttpHost() . $frontendPath;
 
         $data['scheduledTasks'] = array_map(
-            static function (Task $task) {
-                return $task->getObjectVars();
-            },
+            static fn (Task $task) => $task->getObjectVars(),
             $asset->getScheduledTasks()
         );
 
         $userOwnerName = $this->getUserName($asset->getUserOwner());
-        $userModificationName = ($asset->getUserOwner() == $asset->getUserModification()) ? $userOwnerName : $this->getUserName($asset->getUserModification());
+        $userModificationName = ($asset->getUserOwner() === $asset->getUserModification()) ? $userOwnerName : $this->getUserName($asset->getUserModification());
         $data['userOwnerUsername'] = $userOwnerName['userName'];
         $data['userOwnerFullname'] = $userOwnerName['fullName'];
         $data['userModificationUsername'] = $userModificationName['userName'];
@@ -222,7 +223,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $this->addAdminStyle($asset, ElementAdminStyleEvent::CONTEXT_EDITOR, $data);
 
         $data['php'] = [
-            'classes' => array_merge([get_class($asset)], array_values(class_parents($asset))),
+            'classes' => [$asset::class, ...array_values(class_parents($asset))],
             'interfaces' => array_values(class_implements($asset)),
         ];
 
@@ -243,7 +244,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_asset_treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
 
         $assets = [];
         $cv = [];
@@ -252,7 +253,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $filter = $request->get('filter');
         $limit = (int)$allParams['limit'];
         if (!is_null($filter)) {
-            if (substr($filter, -1) != '*') {
+            if (!str_ends_with($filter, '*')) {
                 $filter .= '*';
             }
             $filter = str_replace('*', '%', $filter);
@@ -321,12 +322,12 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 'total' => $asset->getChildAmount($this->getAdminUser()),
                 'overflow' => !is_null($filter) && ($filteredTotalCount > $limit),
                 'nodes' => $assets,
-                'filter' => $request->get('filter') ? $request->get('filter') : '',
+                'filter' => $request->get('filter') ?: '',
                 'inSearch' => (int)$request->get('inSearch'),
             ]);
-        } else {
-            return $this->adminJson($assets);
         }
+
+        return $this->adminJson($assets);
     }
 
     #[Route('/add-asset', name: 'opendxp_admin_asset_addasset', methods: ['POST'])]
@@ -348,7 +349,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             }
 
             return $this->adminJson($response);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->adminJson([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -373,7 +374,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $response->headers->set('Content-Type', 'text/html');
 
             return $response;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->adminJson([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -382,7 +383,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/exists', name: 'opendxp_admin_asset_exists', methods: ['GET'])]
     public function existsAction(Request $request): JsonResponse
@@ -393,8 +394,8 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         if ($dir) {
             // this is for uploading folders with Drag&Drop
             // param "dir" contains the relative path of the file
-            if (strpos($dir, '..') !== false) {
-                throw new \Exception('not allowed');
+            if (str_contains($dir, '..')) {
+                throw new Exception('not allowed');
             }
             $dir =  '/' . trim($dir, '/ ');
         }
@@ -409,7 +410,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     /**
      * @return array{success: bool, asset: ?Asset}
      *
-     * @throws \Exception
+     * @throws Exception
      */
     protected function addAsset(Request $request, Config $config): array
     {
@@ -425,7 +426,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $filesystem = new Filesystem();
             $filesystem->dumpFile($sourcePath, base64_decode($data));
         } else {
-            throw new \Exception('The filename of the asset is empty');
+            throw new Exception('The filename of the asset is empty');
         }
 
         $parentId = $request->query->getInt('parentId');
@@ -436,8 +437,8 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             // param "dir" contains the relative path of the file
             $parent = Asset::getById((int) $request->get('parentId'));
             $dir = $request->get('dir');
-            if (strpos($dir, '..') !== false) {
-                throw new \Exception('not allowed');
+            if (str_contains($dir, '..')) {
+                throw new Exception('not allowed');
             }
 
             $newPath = $parent->getRealFullPath() . '/' . trim($dir, '/ ');
@@ -449,9 +450,9 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     $newParent = Asset\Service::createFolderByPath($newPath);
 
                     break;
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     if ($retries < ($maxRetries - 1)) {
-                        $waitTime = rand(100000, 900000); // microseconds
+                        $waitTime = random_int(100000, 900000); // microseconds
                         usleep($waitTime); // wait specified time until we restart the transaction
                     } else {
                         // if the transaction still fail after $maxRetries retries, we throw out the exception
@@ -473,7 +474,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         $filename = Element\Service::getValidKey($filename, 'asset');
         if (empty($filename)) {
-            throw new \Exception('The filename of the asset is empty');
+            throw new Exception('The filename of the asset is empty');
         }
 
         $context = $request->get('context');
@@ -486,7 +487,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $event = new ResolveUploadTargetEvent($parentId, $filename);
             $event->setArgument('context', $context);
 
-            \OpenDxp::getEventDispatcher()->dispatch($event, AssetEvents::RESOLVE_UPLOAD_TARGET);
+            OpenDxp::getEventDispatcher()->dispatch($event, AssetEvents::RESOLVE_UPLOAD_TARGET);
             $filename = Element\Service::getValidKey($event->getFilename(), 'asset');
             $parentId = $event->getParentId();
         }
@@ -507,11 +508,12 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 'Missing the permission to create new assets in the folder: ' . $parentAsset->getRealFullPath()
             );
         }
-
         if (is_file($sourcePath) && filesize($sourcePath) < 1) {
-            throw new \Exception('File is empty!');
-        } elseif (!is_file($sourcePath)) {
-            throw new \Exception('Something went wrong, please check upload_max_filesize and post_max_size in your php.ini as well as the write permissions of your temporary directories.');
+            throw new Exception('File is empty!');
+        }
+
+        if (!is_file($sourcePath)) {
+            throw new Exception('Something went wrong, please check upload_max_filesize and post_max_size in your php.ini as well as the write permissions of your temporary directories.');
         }
 
         // check if there is a requested type and if matches the asset type of the uploaded file
@@ -521,7 +523,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $assetType = Asset::getTypeFromMimeMapping($mimetype, $filename);
 
             if ($uploadAssetType !== $assetType) {
-                throw new \Exception("Mime type $mimetype does not match with asset type: $uploadAssetType");
+                throw new Exception("Mime type $mimetype does not match with asset type: $uploadAssetType");
             }
         }
 
@@ -553,7 +555,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $originalFileextension = empty($pathinfo['extension']) ? '' : '.' . $pathinfo['extension'];
         $count = 1;
 
-        if ($targetPath == '/') {
+        if ($targetPath === '/') {
             $targetPath = '';
         }
 
@@ -568,7 +570,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/replace-asset', name: 'opendxp_admin_asset_replaceasset', methods: ['POST', 'PUT'])]
     public function replaceAssetAction(Request $request, TranslatorInterface $translator): JsonResponse
@@ -579,7 +581,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $mimetype = MimeTypes::getDefault()->guessMimeType($_FILES['Filedata']['tmp_name']);
         $newType = Asset::getTypeFromMimeMapping($mimetype, $newFilename);
 
-        if ($newType != $asset->getType()) {
+        if ($newType !== $asset->getType()) {
             return $this->adminJson([
                 'success' => false,
                 'message' => sprintf($translator->trans('asset_type_change_not_allowed', [], 'admin'), $newType, $asset->getType()),
@@ -616,9 +618,9 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $response->headers->set('Content-Type', 'text/html');
 
             return $response;
-        } else {
-            throw new \Exception('missing permission');
         }
+
+        throw new Exception('missing permission');
     }
 
     #[Route('/add-folder', name: 'opendxp_admin_asset_addfolder', methods: ['POST'])]
@@ -689,15 +691,16 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
+    #[Override]
     protected function getTreeNodeConfig(ElementInterface $element): array
     {
         return $this->elementService->getElementTreeNodeConfig($element);
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      * @throws RuntimeException
      */
     #[Route('/update', name: 'opendxp_admin_asset_update', methods: ['PUT'])]
@@ -706,7 +709,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $data = ['success' => false];
         $allowUpdate = true;
 
-        $updateData = array_merge($request->request->all(), $request->query->all());
+        $updateData = [...$request->request->all(), ...$request->query->all()];
 
         $asset = Asset::getById((int) $request->get('id'));
         if ($asset->isAllowed('settings')) {
@@ -717,7 +720,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 $parentAsset = Asset::getById((int) $parentId);
 
                 //check if parent is changed i.e. asset is moved
-                if ($asset->getParentId() != $parentAsset->getId()) {
+                if ($asset->getParentId() !== $parentAsset->getId()) {
                     if (!$parentAsset->isAllowed('create')) {
                         throw new RuntimeException('Prevented moving asset - no create permission on new parent.');
                     }
@@ -754,7 +757,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                         'success' => true,
                         'treeData' => $this->getTreeNodeConfig($asset),
                     ];
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
                 }
             } else {
@@ -773,7 +776,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     'success' => true,
                     'treeData' => $this->getTreeNodeConfig($asset),
                 ];
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
             }
         } else {
@@ -784,7 +787,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/save', name: 'opendxp_admin_asset_save', methods: ['PUT', 'POST'])]
     public function saveAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
@@ -831,7 +834,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                             $property->setInheritable($propertyData['inheritable']);
 
                             $properties[$propertyName] = $property;
-                        } catch (\Exception $e) {
+                        } catch (Exception) {
                             Logger::err("Can't add " . $propertyName . ' to asset ' . $asset->getRealFullPath());
                         }
                     }
@@ -840,7 +843,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 }
             }
 
-            $this->applySchedulerDataToElement($request, $asset);
+            $this->applySchedulerDataToElement($request, $asset, $this->getAdminUser());
 
             if ($request->get('data')) {
                 $asset->setData($request->get('data'));
@@ -879,9 +882,9 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 ],
                 'treeData' => $treeData,
             ]);
-        } else {
-            throw $this->createAccessDeniedHttpException();
         }
+
+        throw $this->createAccessDeniedHttpException();
     }
 
     #[Route('/publish-version', name: 'opendxp_admin_asset_publishversion', methods: ['POST'])]
@@ -904,7 +907,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 $treeData = $this->getTreeNodeConfig($asset);
 
                 return $this->adminJson(['success' => true, 'treeData' => $treeData]);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
             }
         }
@@ -942,7 +945,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $twig->getExtension(CoreExtension::class)->setTimezone($timezone);
         }
 
-        $loader = \OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
+        $loader = OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
 
         return $this->render(
             '@OpenDxpAdmin/admin/asset/show_version_' . strtolower($asset->getType()) . '.html.twig',
@@ -973,7 +976,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             throw $this->createNotFoundException('Unable to get resource for asset ' . $asset->getId());
         }
 
-        return new StreamedResponse(function () use ($stream) {
+        return new StreamedResponse(function () use ($stream): void {
             fpassthru($stream);
         }, 200, [
             'Content-Type' => $asset->getMimeType(),
@@ -1038,11 +1041,11 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $thumbnailConfig = new Asset\Image\Thumbnail\Config();
             $thumbnailConfig->setName('opendxp-download-' . $image->getId() . '-' . md5($request->get('config')));
 
-            if ($config['resize_mode'] == 'scaleByWidth') {
+            if ($config['resize_mode'] === 'scaleByWidth') {
                 $thumbnailConfig->addItem('scaleByWidth', [
                     'width' => $config['width'],
                 ]);
-            } elseif ($config['resize_mode'] == 'scaleByHeight') {
+            } elseif ($config['resize_mode'] === 'scaleByHeight') {
                 $thumbnailConfig->addItem('scaleByHeight', [
                     'height' => $config['height'],
                 ]);
@@ -1063,7 +1066,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
             $thumbnailConfig->setRasterizeSVG(true);
 
-            if ($thumbnailConfig->getFormat() == 'JPEG') {
+            if ($thumbnailConfig->getFormat() === 'JPEG') {
                 $thumbnailConfig->setPreserveMetaData(true);
 
                 if (empty($config['quality'])) {
@@ -1075,7 +1078,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $thumbnailFile = $thumbnail->getLocalFile();
 
             $exiftool = \OpenDxp\Tool\Console::getExecutable('exiftool');
-            if ($thumbnailConfig->getFormat() == 'JPEG' && $exiftool && isset($config['dpi']) && $config['dpi']) {
+            if ($thumbnailConfig->getFormat() === 'JPEG' && $exiftool && isset($config['dpi']) && $config['dpi']) {
                 $process = new Process([$exiftool, '-overwrite_original', '-xresolution=' . (int)$config['dpi'], '-yresolution=' . (int)$config['dpi'], '-resolutionunit=inches', $thumbnailFile]);
                 $process->run();
             }
@@ -1092,7 +1095,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $thumbnailFile = $thumbnailFile ?: $thumbnail->getLocalFile();
 
             $downloadFilename = preg_replace(
-                '/\.' . preg_quote(pathinfo($image->getFilename(), PATHINFO_EXTENSION)) . '$/i',
+                '/\.' . preg_quote(pathinfo($image->getFilename(), PATHINFO_EXTENSION), '/') . '$/i',
                 '.' . $thumbnail->getFileExtension(),
                 $image->getFilename()
             );
@@ -1130,7 +1133,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             throw $this->createNotFoundException('Unable to get resource for asset ' . $image->getId());
         }
 
-        $response = new StreamedResponse(function () use ($stream) {
+        $response = new StreamedResponse(function () use ($stream): void {
             fpassthru($stream);
         }, 200, [
             'Content-Type' => $image->getMimeType(),
@@ -1164,7 +1167,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             if ($request->get('config')) {
                 $thumbnailConfig = $image->getThumbnail($this->decodeJson($request->get('config')))->getConfig();
             } else {
-                $thumbnailConfig = $image->getThumbnail(array_merge($request->request->all(), $request->query->all()))->getConfig();
+                $thumbnailConfig = $image->getThumbnail([...$request->request->all(), ...$request->query->all()])->getConfig();
             }
         } else {
             // no high-res images in admin mode (editmode)
@@ -1174,7 +1177,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         }
 
         $format = strtolower($thumbnailConfig->getFormat());
-        if ($format == 'source' || $format == 'print') {
+        if ($format === 'source' || $format === 'print') {
             $thumbnailConfig->setFormat('PNG');
             $thumbnailConfig->setRasterizeSVG(true);
         }
@@ -1184,7 +1187,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $exists = $image->getThumbnail($thumbnailConfig)->exists();
             if (!$exists) {
                 if ($request->get('origin') === 'treeNode') {
-                    \OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
+                    OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
                         new AssetPreviewImageMessage($image->getId())
                     );
 
@@ -1221,7 +1224,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             return new BinaryFileResponse(OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/filetype-not-supported.svg');
         }
 
-        $response = new StreamedResponse(function () use ($stream) {
+        $response = new StreamedResponse(function () use ($stream): void {
             fpassthru($stream);
         }, 200, [
             'Content-Type' => $thumbnail->getMimeType(),
@@ -1248,13 +1251,12 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 $stream = $folder->getPreviewImage();
                 if (!$stream) {
                     throw $this->createNotFoundException(sprintf('Tree preview thumbnail not available for asset %s', $folder->getId()));
-                } else {
-                    $response = new StreamedResponse(function () use ($stream) {
-                        fpassthru($stream);
-                    }, 200, [
-                        'Content-Type' => 'image/jpg',
-                    ]);
                 }
+                $response = new StreamedResponse(function () use ($stream): void {
+                    fpassthru($stream);
+                }, 200, [
+                    'Content-Type' => 'image/jpg',
+                ]);
 
                 $this->addThumbnailCacheHeaders($response);
 
@@ -1284,7 +1286,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             throw $this->createAccessDeniedException('not allowed to view thumbnail');
         }
 
-        $thumbnail = array_merge($request->request->all(), $request->query->all());
+        $thumbnail = [...$request->request->all(), ...$request->query->all()];
 
         if ($request->get('treepreview')) {
             $thumbnail = Asset\Image\Thumbnail\Config::getPreviewConfig();
@@ -1315,7 +1317,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $thumb = $video->getImageThumbnail($thumbnail, $time, $image);
 
         if ($request->get('origin') === 'treeNode' && !$thumb->exists()) {
-            \OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
+            OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
                 new AssetPreviewImageMessage($video->getId())
             );
 
@@ -1327,7 +1329,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             throw $this->createNotFoundException('Unable to get video thumbnail for video ' . $video->getId());
         }
 
-        $response = new StreamedResponse(function () use ($stream) {
+        $response = new StreamedResponse(function () use ($stream): void {
             fpassthru($stream);
         }, 200, [
             'Content-Type' => 'image/' . $thumb->getFileExtension(),
@@ -1351,10 +1353,10 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             throw $this->createAccessDeniedException('not allowed to view thumbnail');
         }
 
-        $thumbnail = Asset\Image\Thumbnail\Config::getByAutoDetect(array_merge($request->request->all(), $request->query->all()));
+        $thumbnail = Asset\Image\Thumbnail\Config::getByAutoDetect([...$request->request->all(), ...$request->query->all()]);
 
         $format = strtolower($thumbnail->getFormat());
-        if ($format == 'source') {
+        if ($format === 'source') {
             $thumbnail->setFormat('jpeg'); // default format for documents is JPEG not PNG (=too big)
         }
 
@@ -1370,7 +1372,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $thumb = $document->getImageThumbnail($thumbnail, $page);
 
         if ($request->get('origin') === 'treeNode' && !$thumb->exists()) {
-            \OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
+            OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
                 new AssetPreviewImageMessage($document->getId())
             );
 
@@ -1379,7 +1381,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         $stream = $thumb->getStream();
         if ($stream) {
-            $response = new StreamedResponse(function () use ($stream) {
+            $response = new StreamedResponse(function () use ($stream): void {
                 fpassthru($stream);
             }, 200, [
                 'Content-Type' => 'image/' . $thumb->getFileExtension(),
@@ -1396,8 +1398,8 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     protected function addThumbnailCacheHeaders(Response $response): void
     {
         $lifetime = 300;
-        $date = new \DateTime('now');
-        $date->add(new \DateInterval('PT' . $lifetime . 'S'));
+        $date = new DateTime('now');
+        $date->add(new DateInterval('PT' . $lifetime . 'S'));
 
         $response->setMaxAge($lifetime);
         $response->setPublic();
@@ -1406,18 +1408,17 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     }
 
     #[Route('/get-preview-document', name: 'opendxp_admin_asset_getpreviewdocument', methods: ['GET'])]
-    public function getPreviewDocumentAction(
-        Request $request,
-        TranslatorInterface $translator
-    ): StreamedResponse|Response {
+    public function getPreviewDocumentAction(Request $request): StreamedResponse|Response
+    {
         $asset = Asset\Document::getById((int) $request->get('id'));
 
-        if (!$asset) {
+        if (!$asset instanceof Asset\Document) {
             throw $this->createNotFoundException('could not load document asset');
         }
 
         if ($asset->isAllowed('view')) {
-            if ($asset instanceof Asset\Document && $asset->getMimeType() === self::PDF_MIMETYPE) {
+
+            if ($asset->getMimeType() === self::PDF_MIMETYPE) {
                 $scanResponse = $this->getResponseByScanStatus($asset);
                 $openPdfConfig = Config::getSystemConfiguration('assets')['document']['open_pdf_in_new_tab'];
 
@@ -1435,24 +1436,27 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
                 if ($scanResponse === PdfScanStatus::IN_PROGRESS) {
                     return $this->render('@OpenDxpAdmin/admin/asset/get_preview_pdf_in_progress.html.twig');
-                } elseif ($scanResponse === PdfScanStatus::UNSAFE) {
+                }
+
+                if ($scanResponse === PdfScanStatus::UNSAFE) {
                     return $this->render('@OpenDxpAdmin/admin/asset/get_preview_pdf_unsafe.html.twig');
                 }
             }
 
             $stream = $this->getDocumentPreviewPdf($asset);
             if ($stream) {
-                return new StreamedResponse(function () use ($stream) {
+                return new StreamedResponse(function () use ($stream): void {
                     fpassthru($stream);
                 }, 200, [
                     'Content-Type' => self::PDF_MIMETYPE,
                 ]);
-            } else {
-                throw $this->createNotFoundException('Unable to get preview for asset ' . $asset->getId());
             }
-        } else {
-            throw $this->createAccessDeniedException('Access to asset ' . $asset->getId() . ' denied');
+
+            throw $this->createNotFoundException('Unable to get preview for asset ' . $asset->getId());
+
         }
+
+        throw $this->createAccessDeniedException('Access to asset ' . $asset->getId() . ' denied');
     }
 
     private function getResponseByScanStatus(Asset\Document $asset, bool $processBackground = true): ?PdfScanStatus
@@ -1462,17 +1466,10 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         }
 
         $scanStatus = $asset->getScanStatus();
-        if ($scanStatus === null) {
+        if (!$scanStatus instanceof \OpenDxp\Model\Asset\Enum\PdfScanStatus) {
             $scanStatus = Asset\Enum\PdfScanStatus::IN_PROGRESS;
             if ($processBackground) {
-                if (is_callable([$asset, 'addToUpdateTaskQueue'])) {
-                    $asset->addToUpdateTaskQueue();
-                } else {
-                    // Todo: BC layer, remove with 2.0 release
-                    \OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
-                        new AssetUpdateTasksMessage($asset->getId())
-                    );
-                }
+                $asset->addToUpdateTaskQueue();
             }
         }
 
@@ -1499,7 +1496,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             try {
                 $document = \OpenDxp\Document::getInstance();
                 $stream = $document->getPdf($asset);
-            } catch (\Exception $e) {
+            } catch (Exception) {
                 // nothing to do
             }
         }
@@ -1541,18 +1538,18 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     '@OpenDxpAdmin/admin/asset/get_preview_video_display.html.twig',
                     $previewData
                 );
-            } else {
-                return $this->render(
-                    '@OpenDxpAdmin/admin/asset/get_preview_video_error.html.twig',
-                    $previewData
-                );
             }
-        } else {
+
             return $this->render(
                 '@OpenDxpAdmin/admin/asset/get_preview_video_error.html.twig',
                 $previewData
             );
         }
+
+        return $this->render(
+            '@OpenDxpAdmin/admin/asset/get_preview_video_error.html.twig',
+            $previewData
+        );
     }
 
     #[Route('/serve-video-preview', name: 'opendxp_admin_asset_servevideopreview', methods: ['GET'])]
@@ -1583,16 +1580,16 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $fs = $storage->fileSize($storagePath);
             $stream = $storage->readStream($storagePath);
 
-            return new StreamedResponse(function () use ($stream) {
+            return new StreamedResponse(function () use ($stream): void {
                 fpassthru($stream);
             }, 200, [
                 'Content-Type' => 'video/mp4',
                 'Content-Length' => $fs,
                 'Accept-Ranges' => 'bytes',
             ]);
-        } else {
-            throw $this->createNotFoundException('Video thumbnail not found');
         }
+
+        throw $this->createNotFoundException('Video thumbnail not found');
     }
 
     #[Route('/image-editor', name: 'opendxp_admin_asset_imageeditor', methods: ['GET'])]
@@ -1638,7 +1635,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         EventDispatcherInterface $eventDispatcher,
         GridHelperService $gridHelperService): JsonResponse
     {
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
 
         $filterPrepareEvent = new GenericEvent($this, [
             'requestParams' => $allParams,
@@ -1661,7 +1658,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         $conditionFilters = [];
         $list = new Asset\Listing();
-        $conditionFilters[] = '`path` LIKE ' . ($folder->getRealFullPath() == '/' ? "'/%'" : $list->quote(Helper::escapeLike($folder->getRealFullPath()) . '/%')) . " AND `type` != 'folder'";
+        $conditionFilters[] = '`path` LIKE ' . ($folder->getRealFullPath() === '/' ? "'/%'" : $list->quote(Helper::escapeLike($folder->getRealFullPath()) . '/%')) . " AND `type` != 'folder'";
 
         $adminUser = $this->getAdminUser();
 
@@ -1727,7 +1724,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $transactionId = time();
         $pasteJobs = [];
 
-        Tool\Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($transactionId) {
+        Tool\Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($transactionId): void {
             $session->set((string) $transactionId, []);
         }, 'opendxp_copy');
 
@@ -1881,7 +1878,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     $quotedSelectedIds[] = $db->quote($selectedId);
                 }
             }
-            if (!empty($quotedSelectedIds)) {
+            if ($quotedSelectedIds !== []) {
                 //add a condition if id numbers are specified
                 $conditionFilters[] = 'id IN (' . implode(',', $quotedSelectedIds) . ')';
             }
@@ -1937,12 +1934,8 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         }
 
         if ($asset->isAllowed('view')) {
-            $zip = new \ZipArchive();
-            if (!is_file($zipFile)) {
-                $zipState = $zip->open($zipFile, \ZipArchive::CREATE);
-            } else {
-                $zipState = $zip->open($zipFile);
-            }
+            $zip = new ZipArchive();
+            $zipState = is_file($zipFile) ? $zip->open($zipFile) : $zip->open($zipFile, ZipArchive::CREATE);
 
             if ($zipState === true) {
                 $parentPath = $asset->getRealFullPath();
@@ -1986,12 +1979,14 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 $assetList->setLimit((int)$request->get('limit'));
 
                 foreach ($assetList as $a) {
-                    if ($a->isAllowed('view')) {
-                        if (!$a instanceof Asset\Folder) {
-                            // add the file with the relative path to the parent directory
-                            $zip->addFile($a->getLocalFile(), preg_replace('@^' . preg_quote($asset->getRealPath(), '@') . '@i', '', $a->getRealFullPath()));
-                        }
+                    if (!$a->isAllowed('view')) {
+                        continue;
                     }
+                    if ($a instanceof Asset\Folder) {
+                        continue;
+                    }
+                    // add the file with the relative path to the parent directory
+                    $zip->addFile($a->getLocalFile(), preg_replace('@^' . preg_quote($asset->getRealPath(), '@') . '@i', '', $a->getRealFullPath()));
                 }
 
                 $zip->close();
@@ -2056,7 +2051,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         copy($_FILES['Filedata']['tmp_name'], $zipFile);
 
-        $zip = new \ZipArchive;
+        $zip = new ZipArchive;
         $retCode = $zip->open($zipFile);
         if ($retCode === true) {
             $jobAmount = ceil($zip->numFiles / $filesPerJob);
@@ -2070,7 +2065,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                         'limit' => $filesPerJob,
                         'jobId' => $jobId,
                         'last' => (($i + 1) >= $jobAmount) ? 'true' : '',
-                        'allowOverwrite' => $request->get('allowOverwrite') ? $request->get('allowOverwrite') : 'false',
+                        'allowOverwrite' => $request->get('allowOverwrite') ?: 'false',
                     ],
                 ]];
             }
@@ -2086,12 +2081,12 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             ]);
 
             return new Response($responseJson);
-        } else {
-            return $this->adminJson([
-                'success' => false,
-                'message' => $translator->trans('could_not_open_zip_file', [], 'admin'),
-            ]);
         }
+
+        return $this->adminJson([
+            'success' => false,
+            'message' => $translator->trans('could_not_open_zip_file', [], 'admin'),
+        ]);
     }
 
     #[Route('/import-zip-files', name: 'opendxp_admin_asset_importzipfiles', methods: ['POST'])]
@@ -2108,53 +2103,51 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $filesystem->mkdir($tmpDir);
         }
 
-        $zip = new \ZipArchive;
+        $zip = new ZipArchive;
         if ($zip->open($zipFile) === true) {
             for ($i = $offset; $i < ($offset + $limit); $i++) {
                 $path = $zip->getNameIndex($i);
-
-                if (str_starts_with($path, '__MACOSX/') || str_ends_with($path, '/Thumbs.db') || str_ends_with($path, '/.DS_Store')) {
+                if (str_starts_with($path, '__MACOSX/')) {
+                    continue;
+                }
+                if (str_ends_with($path, '/Thumbs.db')) {
+                    continue;
+                }
+                if (str_ends_with($path, '/.DS_Store')) {
                     continue;
                 }
 
-                if ($path !== false) {
-                    if ($zip->extractTo($tmpDir . '/', $path)) {
-                        $tmpFile = $tmpDir . '/' . preg_replace('@^/@', '', $path);
-
-                        $filename = Element\Service::getValidKey(basename($path), 'asset');
-
-                        $relativePath = '';
-                        if (dirname($path) != '.') {
-                            $relativePath = dirname($path);
-                        }
-
-                        $parentPath = $importAsset->getRealFullPath() . '/' . preg_replace('@^/@', '', $relativePath);
-                        $parent = Asset\Service::createFolderByPath($parentPath);
-
-                        // check for duplicate filename
-                        if ($request->get('allowOverwrite') && $request->get('allowOverwrite') !== 'true') {
-                            $filename = $this->getSafeFilename($parent->getRealFullPath(), $filename);
-                        }
-
-                        if ($parent->isAllowed('create')) {
-                            if ($request->get('allowOverwrite') && $request->get('allowOverwrite') === 'true'
-                                && Asset\Service::pathExists($parent->getRealFullPath().'/'.$filename)) {
-                                $asset = Asset::getByPath($parent->getRealFullPath().'/'.$filename);
-                                $asset->setStream(fopen($tmpFile, 'rb', false, File::getContext()));
-                                $asset->save();
-                            } else {
-                                Asset::create($parent->getId(), [
-                                    'filename' => $filename,
-                                    'sourcePath' => $tmpFile,
-                                    'userOwner' => $this->getAdminUser()->getId(),
-                                    'userModification' => $this->getAdminUser()->getId(),
-                                ]);
-                            }
-
-                            @unlink($tmpFile);
+                if ($path !== false && $zip->extractTo($tmpDir . '/', $path)) {
+                    $tmpFile = $tmpDir . '/' . preg_replace('@^/@', '', $path);
+                    $filename = Element\Service::getValidKey(basename($path), 'asset');
+                    $relativePath = '';
+                    if (dirname($path) !== '.') {
+                        $relativePath = dirname($path);
+                    }
+                    $parentPath = $importAsset->getRealFullPath() . '/' . preg_replace('@^/@', '', $relativePath);
+                    $parent = Asset\Service::createFolderByPath($parentPath);
+                    // check for duplicate filename
+                    if ($request->get('allowOverwrite') && $request->get('allowOverwrite') !== 'true') {
+                        $filename = $this->getSafeFilename($parent->getRealFullPath(), $filename);
+                    }
+                    if ($parent->isAllowed('create')) {
+                        if ($request->get('allowOverwrite') && $request->get('allowOverwrite') === 'true'
+                            && Asset\Service::pathExists($parent->getRealFullPath().'/'.$filename)) {
+                            $asset = Asset::getByPath($parent->getRealFullPath().'/'.$filename);
+                            $asset->setStream(fopen($tmpFile, 'rb', false, File::getContext()));
+                            $asset->save();
                         } else {
-                            Logger::debug('prevented creating asset because of missing permissions');
+                            Asset::create($parent->getId(), [
+                                'filename' => $filename,
+                                'sourcePath' => $tmpFile,
+                                'userOwner' => $this->getAdminUser()->getId(),
+                                'userModification' => $this->getAdminUser()->getId(),
+                            ]);
                         }
+
+                        @unlink($tmpFile);
+                    } else {
+                        Logger::debug('prevented creating asset because of missing permissions');
                     }
                 }
             }
@@ -2176,16 +2169,14 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $success = false;
 
         if ($asset = Asset::getById((int) $request->get('id'))) {
-            if (method_exists($asset, 'clearThumbnails')) {
-                if (!$asset->isAllowed('publish')) {
-                    throw $this->createAccessDeniedException('not allowed to publish');
-                }
-
-                $asset->clearThumbnails(true); // force clear
-                $asset->save();
-
-                $success = true;
+            if (!$asset->isAllowed('publish')) {
+                throw $this->createAccessDeniedException('not allowed to publish');
             }
+
+            $asset->clearThumbnails(true); // force clear
+            $asset->save();
+
+            $success = true;
         }
 
         return $this->adminJson(['success' => $success]);
@@ -2194,7 +2185,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     #[Route('/grid-proxy', name: 'opendxp_admin_asset_gridproxy', methods: ['GET', 'POST', 'PUT'])]
     public function gridProxyAction(Request $request, EventDispatcherInterface $eventDispatcher, GridHelperService $gridHelperService, CsrfProtectionHandler $csrfProtection): JsonResponse
     {
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
 
         $filterPrepareEvent = new GenericEvent($this, [
             'requestParams' => $allParams,
@@ -2205,7 +2196,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         $allParams = $filterPrepareEvent->getArgument('requestParams');
 
-        $loader = \OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
+        $loader = OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
 
         if (isset($allParams['data']) && $allParams['data']) {
             $csrfProtection->checkCsrfToken($request);
@@ -2251,12 +2242,12 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                             $language = ($fieldDef[1] == 'none' ? '' : $fieldDef[1]);
                         }
 
-                        foreach ($metadata as $idx => &$em) {
+                        foreach ($metadata as &$em) {
                             if ($em['name'] == $key && $em['language'] == $language) {
                                 try {
                                     $dataImpl = $loader->build($em['type']);
                                     $value = $dataImpl->getDataFromListfolderGrid($value, $em);
-                                } catch (UnsupportedException $le) {
+                                } catch (UnsupportedException) {
                                     Logger::error('could not resolve metadata implementation for ' . $em['type']);
                                 }
 
@@ -2280,7 +2271,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                                 try {
                                     $dataImpl = $loader->build($newEm['type']);
                                     $newEm['data'] = $dataImpl->getDataFromListfolderGrid($value, $newEm);
-                                } catch (UnsupportedException $le) {
+                                } catch (UnsupportedException) {
                                     Logger::error('could not resolve metadata implementation for ' . $newEm['type']);
                                 }
 
@@ -2290,7 +2281,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                             } else {
                                 $predefined = Model\Metadata\Predefined::getByName($key);
                                 if ($predefined && (empty($predefined->getTargetSubtype())
-                                        || $predefined->getTargetSubtype() == $asset->getType())) {
+                                        || $predefined->getTargetSubtype() === $asset->getType())) {
                                     $newEm = [
                                         'name' => $key,
                                         'language' => $language,
@@ -2301,7 +2292,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                                     try {
                                         $dataImpl = $loader->build($newEm['type']);
                                         $newEm['data'] = $dataImpl->getDataFromListfolderGrid($value, $newEm);
-                                    } catch (UnsupportedException $le) {
+                                    } catch (UnsupportedException) {
                                         Logger::error('could not resolve metadata implementation for ' . $newEm['type']);
                                     }
 
@@ -2327,7 +2318,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     }
 
                     return $this->adminJson(['success' => false, 'message' => 'something went wrong.']);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
                 }
             }
@@ -2345,7 +2336,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $list->load();
 
             $assets = [];
-            foreach ($list->getAssets() as $index => $asset) {
+            foreach ($list->getAssets() as $asset) {
                 // Like for treeGetChildrenByIdAction, so we respect isAllowed method which can be extended (object DI) for custom permissions, so relying only users_workspaces_asset is insufficient and could lead security breach
                 if ($asset->isAllowed('list')) {
                     $a = GridData\Asset::getData($asset, $allParams['fields'], $allParams['language'] ?? '');

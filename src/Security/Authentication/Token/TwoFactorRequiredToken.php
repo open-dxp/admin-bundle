@@ -20,7 +20,6 @@ use Symfony\Component\Security\Http\Authenticator\Token\PostAuthenticationToken;
 
 /**
  * @internal
- *
  */
 class TwoFactorRequiredToken extends PostAuthenticationToken
 {

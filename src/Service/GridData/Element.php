@@ -20,7 +20,6 @@ use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Element\Service;
 
 /**
- *
  * @internal
  */
 abstract class Element
@@ -37,11 +36,7 @@ abstract class Element
             'modificationDate' => $element->getModificationDate(),
         ];
 
-        if (method_exists($element, 'isPublished')) {
-            $data['published'] = $element->isPublished();
-        } else {
-            $data['published'] = true;
-        }
+        $data['published'] = method_exists($element, 'isPublished') ? $element->isPublished() : true;
 
         return $data;
     }

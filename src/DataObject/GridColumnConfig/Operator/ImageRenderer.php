@@ -21,7 +21,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
  */
 final class ImageRenderer extends AbstractRenderer
 {
-    public function getRenderer(): ?string
+    public function getRenderer(): string
     {
         return 'image';
     }

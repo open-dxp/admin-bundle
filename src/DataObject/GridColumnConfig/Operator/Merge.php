@@ -16,8 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -28,7 +28,7 @@ final class Merge extends AbstractOperator
 
     private bool $unique;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
@@ -36,9 +36,9 @@ final class Merge extends AbstractOperator
         $this->unique = $config->unique ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
         $result->isArrayType = true;
 
@@ -59,10 +59,8 @@ final class Merge extends AbstractOperator
                 } elseif ($childValues) {
                     $resultItems[] = $childValues;
                 }
-            } else {
-                if ($childValues) {
-                    $resultItems[] = $childValues;
-                }
+            } elseif ($childValues) {
+                $resultItems[] = $childValues;
             }
         }
 

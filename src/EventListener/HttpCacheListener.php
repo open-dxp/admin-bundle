@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\EventListener;
 
+use OpenDxp;
 use OpenDxp\Bundle\CoreBundle\EventListener\Traits\OpenDxpContextAwareTrait;
 use OpenDxp\Http\Request\Resolver\OpenDxpContextResolver;
 use OpenDxp\Http\RequestHelper;
@@ -31,14 +32,8 @@ class HttpCacheListener implements EventSubscriberInterface
 {
     use OpenDxpContextAwareTrait;
 
-    protected RequestHelper $requestHelper;
-
-    protected ResponseHelper $responseHelper;
-
-    public function __construct(RequestHelper $requestHelper, ResponseHelper $responseHelper)
+    public function __construct(protected RequestHelper $requestHelper, protected ResponseHelper $responseHelper)
     {
-        $this->requestHelper = $requestHelper;
-        $this->responseHelper = $responseHelper;
     }
 
     public static function getSubscribedEvents(): array
@@ -64,7 +59,7 @@ class HttpCacheListener implements EventSubscriberInterface
                 $disable = true;
             }
 
-            if (\OpenDxp::inDebugMode()) {
+            if (OpenDxp::inDebugMode()) {
                 $disable = true;
             }
         }

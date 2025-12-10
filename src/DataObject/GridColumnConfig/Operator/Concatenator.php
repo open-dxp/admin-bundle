@@ -16,19 +16,19 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
  */
 final class Concatenator extends AbstractOperator
 {
-    private string $glue;
+    private readonly string $glue;
 
-    private bool $forceValue;
+    private readonly bool $forceValue;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
@@ -36,9 +36,9 @@ final class Concatenator extends AbstractOperator
         $this->forceValue = $config->forceValue ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $hasValue = true;
@@ -55,11 +55,7 @@ final class Concatenator extends AbstractOperator
 
             foreach ($childValues as $value) {
                 if (!$hasValue) {
-                    if (is_object($value) && method_exists($value, 'isEmpty')) {
-                        $hasValue = !$value->isEmpty();
-                    } else {
-                        $hasValue = !empty($value);
-                    }
+                    $hasValue = is_object($value) && method_exists($value, 'isEmpty') ? !$value->isEmpty() : !empty($value);
                 }
 
                 if ($value !== null) {

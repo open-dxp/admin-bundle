@@ -55,7 +55,7 @@ class RenderletController extends AdminAbstractController
         $element = $this->loadElement($request);
 
         $event = new GenericEvent($this, [
-            'requestParams' => array_merge($request->request->all(), $request->query->all()),
+            'requestParams' => [...$request->request->all(), ...$request->query->all()],
             'element' => $element,
         ]);
         $eventDispatcher->dispatch($event, DocumentEvents::EDITABLE_RENDERLET_PRE_RENDER);

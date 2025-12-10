@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Value;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
+use Exception;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Model\DataObject\ClassDefinition\Data;
 use OpenDxp\Model\DataObject\Classificationstore;
@@ -24,6 +24,7 @@ use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\DataObject\Objectbrick;
 use OpenDxp\Model\DataObject\Service;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -38,12 +39,12 @@ final class DefaultValue extends AbstractValue
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
-    private function getValueForObject(Concrete $object, string $key, ?string $brickType = null, ?string $brickKey = null): \stdClass
+    private function getValueForObject(Concrete $object, string $key, ?string $brickType = null, ?string $brickKey = null): stdClass
     {
         if (!$key) {
-            throw new \Exception('Empty key');
+            throw new Exception('Empty key');
         }
 
         $fieldDefinition = null;
@@ -87,7 +88,7 @@ final class DefaultValue extends AbstractValue
             }
         }
 
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->value = $value;
         $result->label = $fieldDefinition->getTitle();
         $result->def = $fieldDefinition;
@@ -97,11 +98,11 @@ final class DefaultValue extends AbstractValue
         return $result;
     }
 
-    private function getClassificationStoreValueForObject(Concrete $object, string $key): ?\stdClass
+    private function getClassificationStoreValueForObject(Concrete $object, string $key): ?stdClass
     {
         $keyParts = explode('~', $key);
 
-        if (strpos($key, '~') === 0) {
+        if (str_starts_with($key, '~')) {
             $type = $keyParts[1];
             if ($type === 'classificationstore') {
                 $field = $keyParts[2];
@@ -130,7 +131,7 @@ final class DefaultValue extends AbstractValue
                     $definition = json_decode($keyConfig->getDefinition(), true);
                     $definition = Classificationstore\Service::getFieldDefinitionFromJson($definition, $type);
 
-                    $result = new \stdClass();
+                    $result = new stdClass();
                     $result->value = $fielddata;
                     $result->label = $definition->getTitle();
                     $result->def = $definition;
@@ -145,9 +146,9 @@ final class DefaultValue extends AbstractValue
         return null;
     }
 
-    private function getDefaultValue(mixed $value): \stdClass
+    private function getDefaultValue(mixed $value): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->value = $value;
         $result->label = $this->label;
         $result->def = null;
@@ -161,7 +162,7 @@ final class DefaultValue extends AbstractValue
         return $result;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): ?stdClass
     {
         $attributeParts = explode('~', $this->attribute);
 
@@ -188,7 +189,7 @@ final class DefaultValue extends AbstractValue
             if ($element instanceof Concrete) {
                 try {
                     $result = $this->getValueForObject($element, $this->attribute, $brickType, $brickKey);
-                } catch (\Exception $e) {
+                } catch (Exception) {
                     $result = $this->getDefaultValue($element->$getter());
                 }
             } else {

@@ -16,8 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -30,7 +30,7 @@ final class StringReplace extends AbstractOperator
 
     private bool $insensitive;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
@@ -39,9 +39,9 @@ final class StringReplace extends AbstractOperator
         $this->insensitive = $config->insensitive ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
         $result->value = null;
 
@@ -88,9 +88,9 @@ final class StringReplace extends AbstractOperator
     {
         if ($this->getInsensitive()) {
             return str_ireplace($this->getSearch(), $this->getReplace(), $value);
-        } else {
-            return str_replace($this->getSearch(), $this->getReplace(), $value);
         }
+
+        return str_replace($this->getSearch(), $this->getReplace(), $value);
     }
 
     public function getSearch(): string

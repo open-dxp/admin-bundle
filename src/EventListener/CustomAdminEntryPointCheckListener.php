@@ -31,11 +31,8 @@ class CustomAdminEntryPointCheckListener implements EventSubscriberInterface
 {
     use OpenDxpContextAwareTrait;
 
-    protected ?string $customAdminPathIdentifier = null;
-
-    public function __construct(?string $customAdminPathIdentifier)
+    public function __construct(protected ?string $customAdminPathIdentifier)
     {
-        $this->customAdminPathIdentifier = $customAdminPathIdentifier;
     }
 
     public static function getSubscribedEvents(): array
@@ -48,11 +45,9 @@ class CustomAdminEntryPointCheckListener implements EventSubscriberInterface
     public function onKernelRequest(RequestEvent $event): void
     {
         $request = $event->getRequest();
-        if ($event->isMainRequest() && $this->customAdminPathIdentifier && $this->matchesOpenDxpContext($request, OpenDxpContextResolver::CONTEXT_ADMIN)) {
-            if ($this->customAdminPathIdentifier !== $request->cookies->get('opendxp_custom_admin')) {
-                // display standard 404 error page, we don't expose that /admin exists but access is prohibited
-                throw new NotFoundHttpException();
-            }
+        if ($event->isMainRequest() && $this->customAdminPathIdentifier && $this->matchesOpenDxpContext($request, OpenDxpContextResolver::CONTEXT_ADMIN) && $this->customAdminPathIdentifier !== $request->cookies->get('opendxp_custom_admin')) {
+            // display standard 404 error page, we don't expose that /admin exists but access is prohibited
+            throw new NotFoundHttpException();
         }
     }
 }

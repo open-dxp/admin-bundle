@@ -16,9 +16,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Traits;
 
-use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Schedule\Task;
+use OpenDxp\Model\User;
+use OpenDxp\Security\User\User as UserProxy;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -26,10 +27,8 @@ use Symfony\Component\HttpFoundation\Request;
  */
 trait ApplySchedulerDataTrait
 {
-    protected function applySchedulerDataToElement(Request $request, ElementInterface $element): void
+    protected function applySchedulerDataToElement(Request $request, ElementInterface $element, UserProxy|User|null $adminUser): void
     {
-        /** @var AdminAbstractController $this */
-
         // scheduled tasks
         if ($request->get('scheduler')) {
             $tasks = [];
@@ -37,7 +36,7 @@ trait ApplySchedulerDataTrait
 
             if (!empty($tasksData)) {
                 foreach ($tasksData as $taskData) {
-                    $taskData['userId'] = $this->getAdminUser()->getId();
+                    $taskData['userId'] = $adminUser?->getId();
 
                     $task = new Task($taskData);
                     $tasks[] = $task;

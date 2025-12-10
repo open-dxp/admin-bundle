@@ -17,10 +17,12 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject\DataObjectController;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
 use OpenDxp\Tests\Support\Util\TestHelper;
+use ReflectionException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -207,7 +209,7 @@ class ModelDataObjectPermissionsTest extends AbstractPermissionTest
     /**
      * @param array|null $expectedChildren When null,the main permission is disabled
      *
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     protected function doTestTreeGetChildrenById(
         DataObject\AbstractObject $element,
@@ -227,7 +229,7 @@ class ModelDataObjectPermissionsTest extends AbstractPermissionTest
                 $request,
                 $eventDispatcher
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             if (is_null($expectedChildren)) {
                 $this->assertInstanceOf(AccessDeniedHttpException::class, $e, 'Assert main object permission');
 

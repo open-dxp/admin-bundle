@@ -16,20 +16,20 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
  */
 final class ObjectFieldGetter extends AbstractOperator
 {
-    private string $attribute;
+    private readonly string $attribute;
 
-    private string $forwardAttribute;
+    private readonly string $forwardAttribute;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
@@ -37,9 +37,9 @@ final class ObjectFieldGetter extends AbstractOperator
         $this->forwardAttribute = $config->forwardAttribute ?? '';
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $children = $this->getChildren();
@@ -78,15 +78,20 @@ final class ObjectFieldGetter extends AbstractOperator
             if (is_array($value)) {
                 $newValues = [];
                 foreach ($value as $o) {
-                    if ($o instanceof Concrete) {
-                        if ($this->attribute && method_exists($o, $getter)) {
-                            $targetValue = $o->$getter();
-                            if (is_array($targetValue)) {
-                                $newValues = array_merge($newValues, $targetValue);
-                            } else {
-                                $newValues[] = $targetValue;
-                            }
-                        }
+                    if (!$o instanceof Concrete) {
+                        continue;
+                    }
+                    if (!$this->attribute) {
+                        continue;
+                    }
+                    if (!method_exists($o, $getter)) {
+                        continue;
+                    }
+                    $targetValue = $o->$getter();
+                    if (is_array($targetValue)) {
+                        $newValues = [...$newValues, ...$targetValue];
+                    } else {
+                        $newValues[] = $targetValue;
                     }
                 }
                 $result->value = $newValues;

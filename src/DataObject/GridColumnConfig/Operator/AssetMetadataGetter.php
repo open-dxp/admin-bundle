@@ -16,10 +16,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject\Data\Hotspotimage;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -30,7 +30,7 @@ final class AssetMetadataGetter extends AbstractOperator
 
     private ?string $locale = null;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
@@ -38,9 +38,9 @@ final class AssetMetadataGetter extends AbstractOperator
         $this->locale = $config->locale ?? null;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
         $result->value = null;
 
@@ -48,7 +48,6 @@ final class AssetMetadataGetter extends AbstractOperator
 
         if ($children) {
             $newChildrenResult = [];
-
             foreach ($children as $c) {
                 $childResult = $c->getLabeledValue($element);
                 $childValues = $childResult->value ?? null;
@@ -75,12 +74,7 @@ final class AssetMetadataGetter extends AbstractOperator
 
                 $newChildrenResult[] = $newValue;
             }
-
-            if (count($children) > 1) {
-                $result->value = $newChildrenResult;
-            } else {
-                $result->value = $newChildrenResult[0];
-            }
+            $result->value = count($children) > 1 ? $newChildrenResult : $newChildrenResult[0];
         }
 
         return $result;
@@ -94,9 +88,7 @@ final class AssetMetadataGetter extends AbstractOperator
         }
 
         if ($asset instanceof Asset) {
-            $metaValue = $asset->getMetadata($this->getMetaField(), $this->getLocale());
-
-            return $metaValue;
+            return $asset->getMetadata($this->getMetaField(), $this->getLocale());
         }
 
         return null;

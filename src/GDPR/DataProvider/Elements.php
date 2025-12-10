@@ -24,14 +24,13 @@ abstract class Elements implements DataProviderInterface
 {
     protected function prepareQueryString(string $query): string
     {
-        if ($query == '*') {
+        if ($query === '*') {
             $query = '';
         }
 
         $query = str_replace('%', '*', $query);
         $query = str_replace('@', '#', $query);
-        $query = preg_replace("@([^ ])\-@", '$1 ', $query);
 
-        return $query;
+        return preg_replace("@([^ ])\-@", '$1 ', $query);
     }
 }

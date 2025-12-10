@@ -16,21 +16,24 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
+use Override;
+use stdClass;
 
 /**
  * @internal
  */
 final class PHPCode extends AbstractOperator
 {
-    private \stdClass $config;
+    private readonly stdClass $config;
 
     private string $phpClass;
 
     private ?OperatorInterface $instance = null;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
@@ -49,26 +52,27 @@ final class PHPCode extends AbstractOperator
         $this->instance = null;
     }
 
+    #[Override]
     public function getLabel(): string
     {
         return $this->getInstance()->getLabel();
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): ResultContainer|stdClass|null
     {
         try {
             return $this->getInstance()->getLabeledValue($element);
-        } catch (\Exception $e) {
+        } catch (Exception) {
             return null;
         }
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function getInstance(): OperatorInterface
     {
-        if (null === $this->instance) {
+        if (!$this->instance instanceof \OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\OperatorInterface) {
             $this->instance = $this->buildInstance();
         }
 
@@ -76,18 +80,16 @@ final class PHPCode extends AbstractOperator
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function buildInstance(): OperatorInterface
     {
         $phpClass = $this->getPhpClass();
 
         if ($phpClass && class_exists($phpClass)) {
-            $operatorInstance = new $phpClass($this->config, $this->context);
-
-            return $operatorInstance;
+            return new $phpClass($this->config, $this->context);
         }
 
-        throw new \Exception('PHPCode operator class does not exist: ' . $phpClass);
+        throw new Exception('PHPCode operator class does not exist: ' . $phpClass);
     }
 }

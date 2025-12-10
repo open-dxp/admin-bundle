@@ -15,13 +15,7 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
-use function base64_encode;
-use function basename;
-use function date;
 use Exception;
-use function file_exists;
-use function file_get_contents;
-use function file_put_contents;
 use Imagick;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
@@ -46,8 +40,8 @@ use OpenDxp\Model\Site;
 use OpenDxp\Model\Version;
 use OpenDxp\Tool;
 use OpenDxp\Tool\Session;
+use Override;
 use RuntimeException;
-use function sprintf;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -59,6 +53,13 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use function base64_encode;
+use function basename;
+use function date;
+use function file_exists;
+use function file_get_contents;
+use function file_put_contents;
+use function sprintf;
 use function uniqid;
 use function unlink;
 
@@ -74,12 +75,14 @@ class DocumentController extends ElementControllerBase implements KernelControll
 
     protected Document\Service $_documentService;
 
+    #[Override]
     #[Route('/tree-get-root', name: 'opendxp_admin_document_document_treegetroot', methods: ['GET'])]
     public function treeGetRootAction(Request $request): JsonResponse
     {
         return parent::treeGetRootAction($request);
     }
 
+    #[Override]
     #[Route('/delete-info', name: 'opendxp_admin_document_document_deleteinfo', methods: ['GET'])]
     public function deleteInfoAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
@@ -100,14 +103,14 @@ class DocumentController extends ElementControllerBase implements KernelControll
         $data['versionDate'] = $document->getModificationDate();
 
         $userOwnerName = $this->getUserName($document->getUserOwner());
-        $userModificationName = ($document->getUserOwner() == $document->getUserModification()) ? $userOwnerName : $this->getUserName($document->getUserModification());
+        $userModificationName = ($document->getUserOwner() === $document->getUserModification()) ? $userOwnerName : $this->getUserName($document->getUserModification());
         $data['userOwnerUsername'] = $userOwnerName['userName'];
         $data['userOwnerFullname'] = $userOwnerName['fullName'];
         $data['userModificationUsername'] = $userModificationName['userName'];
         $data['userModificationFullname'] = $userModificationName['fullName'];
 
         $data['php'] = [
-            'classes' => array_merge([get_class($document)], array_values(class_parents($document))),
+            'classes' => [$document::class, ...array_values(class_parents($document))],
             'interfaces' => array_values(class_implements($document)),
         ];
 
@@ -130,14 +133,14 @@ class DocumentController extends ElementControllerBase implements KernelControll
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_document_document_treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
 
         $filter = $request->get('filter');
         $limit = (int)($allParams['limit'] ?? 100000000);
         $offset = (int)($allParams['start'] ?? 0);
 
         if (!is_null($filter)) {
-            if (substr($filter, -1) != '*') {
+            if (!str_ends_with($filter, '*')) {
                 $filter .= '*';
             }
             $filter = str_replace('*', '%', $filter);
@@ -224,12 +227,12 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 'limit' => $limit,
                 'total' => $document->getChildAmount($this->getAdminUser()),
                 'nodes' => $documents,
-                'filter' => $request->get('filter') ? $request->get('filter') : '',
+                'filter' => $request->get('filter') ?: '',
                 'inSearch' => (int)$request->get('inSearch'),
             ]);
-        } else {
-            return $this->adminJson($documents);
         }
+
+        return $this->adminJson($documents);
     }
 
     #[Route('/add', name: 'opendxp_admin_document_document_add', methods: ['POST'])]
@@ -266,7 +269,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                         $createValues['template'] = $translationsBaseDocument->getTemplate();
                         $createValues['controller'] = $translationsBaseDocument->getController();
                     }
-                } elseif ($request->get('type') == 'page' || $request->get('type') == 'snippet' || $request->get('type') == 'email') {
+                } elseif (in_array($request->get('type'), ['page', 'snippet', 'email'])) {
                     $createValues['controller'] = $this->getParameter('opendxp.documents.default_controller');
                 }
 
@@ -277,8 +280,8 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 switch ($request->get('type')) {
                     case 'page':
                         $document = Document\Page::create($parentDocument->getId(), $createValues, false);
-                        $document->setTitle($request->get('title', null));
-                        $document->setProperty('navigation_name', 'text', $request->get('name', null), false, false);
+                        $document->setTitle($request->get('title'));
+                        $document->setProperty('navigation_name', 'text', $request->get('name'), false, false);
                         $document->save();
                         $success = true;
 
@@ -316,7 +319,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
 
                         break;
                     default:
-                        $classname = \OpenDxp::getContainer()->get('opendxp.class.resolver.document')->resolve($request->get('type'));
+                        $classname = OpenDxp::getContainer()->get('opendxp.class.resolver.document')->resolve($request->get('type'));
 
                         if (Tool::classExists($classname)) {
                             $document = $classname::create($parentDocument->getId(), $createValues);
@@ -349,7 +352,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 $translationsBaseDocument = Document::getById((int) $translationsBaseDocumentId);
 
                 $properties = $translationsBaseDocument->getProperties();
-                $properties = array_merge($properties, $document->getProperties());
+                $properties = [...$properties, ...$document->getProperties()];
                 $document->setProperties($properties);
                 $document->setProperty('language', 'text', $request->get('language'), false, true);
                 $document->save();
@@ -454,7 +457,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 $parentDocument = Document::getById((int) $parentId);
 
                 //check if parent is changed
-                if ($document->getParentId() != $parentDocument->getId()) {
+                if ($document->getParentId() !== $parentDocument->getId()) {
                     if (!$parentDocument->isAllowed('create')) {
                         throw new RuntimeException('Prevented moving document - no create permission on new parent.');
                     }
@@ -485,7 +488,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                     Logger::debug('prevented renaming document because of missing permissions ');
                 }
 
-                $updateData = array_merge($request->request->all(), $request->query->all());
+                $updateData = [...$request->request->all(), ...$request->query->all()];
 
                 foreach ($updateData as $key => $value) {
                     if (!in_array($key, $blockedVars)) {
@@ -555,7 +558,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
 
     protected function updateIndexesOfDocumentSiblings(Document $document, int $newIndex): void
     {
-        $updateLatestVersionIndex = function ($document, $newIndex) {
+        $updateLatestVersionIndex = function ($document, $newIndex): void {
             if ($document instanceof Document\PageSnippet && $latestVersion = $document->getLatestVersion()) {
                 $document = $latestVersion->loadData();
                 $document->setIndex($newIndex);
@@ -575,7 +578,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
 
         $count = 0;
         foreach ($childrenList as $child) {
-            if ($count == $newIndex) {
+            if ($count === $newIndex) {
                 $count++;
             }
             $child->saveIndex($count);
@@ -609,7 +612,6 @@ class DocumentController extends ElementControllerBase implements KernelControll
             $this->checkPermission('document_types');
 
             $data = $this->decodeJson($request->get('data'));
-
             if ($request->get('xaction') === 'destroy') {
                 $type = Document\DocType::getById($data['id']);
                 if (!$type->isWriteable()) {
@@ -618,34 +620,30 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 $type->delete();
 
                 return $this->adminJson(['success' => true, 'data' => []]);
-            } elseif ($request->get('xaction') === 'update') {
+            }
+            if ($request->get('xaction') === 'update') {
                 // save type
                 $type = Document\DocType::getById($data['id']);
-
                 if (!$type->isWriteable()) {
                     throw new ConfigWriteException();
                 }
-
                 $type->setValues($data);
                 $type->save();
-
                 $responseData = $type->getObjectVars();
                 $responseData['writeable'] = $type->isWriteable();
 
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
-            } elseif ($request->get('xaction') === 'create') {
+            }
+
+            if ($request->get('xaction') === 'create') {
                 if (!(new DocType())->isWriteable()) {
                     throw new ConfigWriteException();
                 }
-
                 unset($data['id']);
-
                 // save type
                 $type = Document\DocType::create();
                 $type->setValues($data);
-
                 $type->save();
-
                 $responseData = $type->getObjectVars();
                 $responseData['writeable'] = $type->isWriteable();
 
@@ -667,9 +665,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
             if (!Document\Service::isValidType($type)) {
                 throw new BadRequestHttpException('Invalid type: ' . $type);
             }
-            $list->setFilter(static function (DocType $docType) use ($type) {
-                return $docType->getType() === $type;
-            });
+            $list->setFilter(static fn (DocType $docType) => $docType->getType() === $type);
         }
 
         $docTypes = [];
@@ -779,7 +775,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
         $transactionId = time();
         $pasteJobs = [];
 
-        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($transactionId) {
+        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($transactionId): void {
             $session->set((string) $transactionId, ['idMapping' => []]);
         }, 'opendxp_copy');
 
@@ -871,9 +867,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
     {
         $transactionId = $request->get('transactionId');
 
-        $idStore = Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($transactionId) {
-            return $session->get($transactionId);
-        }, 'opendxp_copy');
+        $idStore = Session::useBag($request->getSession(), fn (AttributeBagInterface $session) => $session->get($transactionId), 'opendxp_copy');
 
         if (!array_key_exists('rewrite-stack', $idStore)) {
             $idStore['rewrite-stack'] = array_values($idStore['idMapping']);
@@ -887,7 +881,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
             $rewriteConfig = ['document' => $idStore['idMapping']];
 
             $document = Document\Service::rewriteIds($document, $rewriteConfig, [
-                'enableInheritance' => ($request->get('enableInheritance') == 'true') ? true : false,
+                'enableInheritance' => $request->get('enableInheritance') == 'true',
             ]);
 
             $document->setUserModification($this->getAdminUser()->getId());
@@ -895,7 +889,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
         }
 
         // write the store back to the session
-        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($transactionId, $idStore) {
+        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($transactionId, $idStore): void {
             $session->set($transactionId, $idStore);
         }, 'opendxp_copy');
 
@@ -942,14 +936,14 @@ class DocumentController extends ElementControllerBase implements KernelControll
                     }
 
                     if ($request->get('type') == 'child') {
-                        $enableInheritance = ($request->get('enableInheritance') == 'true') ? true : false;
+                        $enableInheritance = $request->get('enableInheritance') == 'true';
 
                         $language = (string) $request->request->get('language') ?: null;
                         if ($language && !Tool::isValidLanguage($language)) {
                             throw new BadRequestHttpException('Invalid language: ' . $language);
                         }
 
-                        $resetIndex = ($request->get('resetIndex') == 'true') ? true : false;
+                        $resetIndex = $request->get('resetIndex') == 'true';
 
                         $newDocument = $this->_documentService->copyAsChild($target, $source, $enableInheritance, $resetIndex, $language);
 
@@ -1036,7 +1030,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
         $image1 = new Imagick($fromImageFile);
         $image2 = new Imagick($toImageFile);
 
-        if ($image1->getImageWidth() == $image2->getImageWidth() && $image1->getImageHeight() == $image2->getImageHeight()) {
+        if ($image1->getImageWidth() === $image2->getImageWidth() && $image1->getImageHeight() === $image2->getImageHeight()) {
             $result = $image1->compareImages($image2, Imagick::METRIC_MEANSQUAREERROR);
             $result[0]->setImageFormat('png');
 
@@ -1066,9 +1060,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
     {
         $file = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/' . basename($request->get('id'));
         if (file_exists($file)) {
-            $response = new BinaryFileResponse($file);
-
-            return $response;
+            return new BinaryFileResponse($file);
         }
 
         throw $this->createNotFoundException('Version diff file not found');
@@ -1082,9 +1074,9 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 'id' => $doc->getId(),
                 'type' => $doc->getType(),
             ]);
-        } else {
-            return $this->adminJson(false);
         }
+
+        return $this->adminJson(false);
     }
 
     #[Route('/language-tree', name: 'opendxp_admin_document_document_languagetree', methods: ['GET'])]
@@ -1337,6 +1329,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
         $this->_documentService = new Document\Service($this->getAdminUser());
     }
 
+    #[Override]
     public function getTreeNodeConfig(ElementInterface $element): array
     {
         return $this->elementService->getElementTreeNodeConfig($element);

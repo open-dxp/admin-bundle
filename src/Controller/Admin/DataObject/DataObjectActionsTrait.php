@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
 use OpenDxp\Bundle\AdminBundle\Service\GridData;
@@ -36,14 +37,14 @@ trait DataObjectActionsTrait
     {
         try {
             if (!$object instanceof DataObject) {
-                throw new \Exception('No Object found for given id.');
+                throw new Exception('No Object found for given id.');
             }
 
             $object->setKey($key);
             $object->save();
 
             return ['success' => true];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error((string) $e);
 
             return ['success' => false, 'message' => $e->getMessage()];
@@ -86,7 +87,7 @@ trait DataObjectActionsTrait
                 $objectData = $this->prepareObjectData($data, $object, $requestedLanguage, $localeService);
                 $object->setValues($objectData);
 
-                if ($object->getPublished() == false) {
+                if ($object->getPublished() === false) {
                     $object->setOmitMandatoryCheck(true);
                 }
                 $object->save();
@@ -95,7 +96,7 @@ trait DataObjectActionsTrait
                     'success' => true,
                     'data' => GridData\DataObject::getData($object, $allParams['fields'], $requestedLanguage),
                 ];
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return [
                     'success' => false,
                     'message' => $e->getMessage(),
@@ -157,7 +158,7 @@ trait DataObjectActionsTrait
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     private function prepareObjectData(
         array $data,
@@ -179,11 +180,11 @@ trait DataObjectActionsTrait
         $objectData = [];
         foreach ($data as $key => $value) {
             $parts = explode('~', $key);
-            if (substr($key, 0, 1) == '~') {
+            if (str_starts_with($key, '~')) {
                 [, $type, $field, $keyId] = $parts;
 
-                if ($type == 'classificationstore') {
-                    $groupKeyId = array_map('intval', explode('-', $keyId));
+                if ($type === 'classificationstore') {
+                    $groupKeyId = array_map(intval(...), explode('-', $keyId));
                     [$groupId, $keyId] = $groupKeyId;
 
                     $getter = 'get' . ucfirst($field);
@@ -221,7 +222,7 @@ trait DataObjectActionsTrait
                 $brickType = $parts[0];
                 $brickDescriptor = null;
 
-                if (strpos($brickType, '?') !== false) {
+                if (str_contains($brickType, '?')) {
                     $brickDescriptor = substr($brickType, 1);
                     $brickDescriptor = json_decode($brickDescriptor, true);
                     $brickType = $brickDescriptor['containerKey'];
@@ -292,22 +293,16 @@ trait DataObjectActionsTrait
 
     protected function getFieldDefinition(DataObject\ClassDefinition $class, string $key): ?DataObject\ClassDefinition\Data
     {
-        $fieldDefinition = $class->getFieldDefinition($key);
-        if ($fieldDefinition) {
-            return $fieldDefinition;
-        }
-
-        return $fieldDefinition;
+        return $class->getFieldDefinition($key);
     }
 
     protected function getFieldDefinitionFromBrick(string $brickType, string $key): ?DataObject\ClassDefinition\Data
     {
         $brickDefinition = DataObject\Objectbrick\Definition::getByKey($brickType);
-        $fieldDefinition = null;
         if ($brickDefinition) {
-            $fieldDefinition = $brickDefinition->getFieldDefinition($key);
+            return $brickDefinition->getFieldDefinition($key);
         }
 
-        return $fieldDefinition;
+        return null;
     }
 }

@@ -11,11 +11,11 @@ framework:
                 default_lifetime: 31536000  # 1 year
                 adapter: cache.adapter.array
 
-
 doctrine:
     dbal:
         connections:
             default:
+                server_version: '10.11'
                 url: '%opendxp_test.db.dsn%'
                 host: ~
                 port: ~

@@ -18,6 +18,9 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use Doctrine\DBAL\Exception\SyntaxErrorException;
 use Doctrine\DBAL\Query\QueryBuilder as DoctrineQueryBuilder;
+use Exception;
+use InvalidArgumentException;
+use Locale;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Logger;
@@ -49,7 +52,7 @@ class TranslationController extends AdminAbstractController
         $domain = $request->get('domain', Translation::DOMAIN_DEFAULT);
         $admin = $domain == Translation::DOMAIN_ADMIN;
 
-        $dialect = $request->get('csvSettings', null);
+        $dialect = $request->get('csvSettings');
         $session = Session::getSessionBag($request->getSession(), 'opendxp_importconfig');
         $tmpFile = $session->get('translation_import_file');
 
@@ -88,7 +91,7 @@ class TranslationController extends AdminAbstractController
             foreach ($delta as $item) {
                 $lg = $item['lg'];
                 $currentLocale = $localeService->findLocale();
-                $item['lgname'] = \Locale::getDisplayLanguage($lg, $currentLocale);
+                $item['lgname'] = Locale::getDisplayLanguage($lg, $currentLocale);
                 $item['icon'] = $this->generateUrl('opendxp_admin_misc_getlanguageflag', ['language' => $lg]);
                 $item['current'] = $item['text'];
                 $enrichedDelta[] = $item;
@@ -115,7 +118,7 @@ class TranslationController extends AdminAbstractController
         $importFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/' . $filename;
         $filesystem->dumpFile($importFile, $tmpData);
 
-        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($importFile) {
+        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($importFile): void {
             $session->set('translation_import_file', $importFile);
         }, 'opendxp_importconfig');
 
@@ -159,29 +162,29 @@ class TranslationController extends AdminAbstractController
         $list->setOrderKey($tableName . '.key', false);
 
         $conditions = $this->getGridFilterCondition($request, $tableName, false, $admin);
-        if (!empty($conditions)) {
+        if ($conditions !== []) {
             $list->setCondition($conditions['condition'], $conditions['params']);
         }
 
         $filters = $this->getGridFilterCondition($request, $tableName, true, $admin);
 
         if ($filters) {
-            $joins = array_merge($joins, $filters['joins']);
+            $joins = [...$joins, ...$filters['joins']];
         }
 
         $this->extendTranslationQuery($joins, $list, $tableName, $filters);
 
         try {
             $list->load();
-        } catch (SyntaxErrorException $syntaxErrorException) {
-            throw new \InvalidArgumentException('Check your arguments.');
+        } catch (SyntaxErrorException) {
+            throw new InvalidArgumentException('Check your arguments.');
         }
 
         $translations = [];
         $translationObjects = $list->getTranslations();
 
         // fill with one dummy translation if the store is empty
-        if (empty($translationObjects)) {
+        if ($translationObjects === []) {
             if ($admin) {
                 $t = new Translation();
                 $t->setDomain(Translation::DOMAIN_ADMIN);
@@ -201,13 +204,7 @@ class TranslationController extends AdminAbstractController
         foreach ($translationObjects as $t) {
             $row = $t->getTranslations();
             $row = Element\Service::escapeCsvRecord($row);
-            $translations[] = array_merge(
-                ['key' => $t->getKey(),
-                    'creationDate' => $t->getCreationDate(),
-                    'modificationDate' => $t->getModificationDate(),
-                ],
-                $row
-            );
+            $translations[] = ['key' => $t->getKey(), 'creationDate' => $t->getCreationDate(), 'modificationDate' => $t->getModificationDate(), ...$row];
         }
 
         //header column
@@ -228,7 +225,7 @@ class TranslationController extends AdminAbstractController
 
         //remove invalid languages
         foreach ($columns as $key => $column) {
-            if (strtolower(trim($column)) != 'key' && !in_array($column, $languages)) {
+            if (strtolower(trim($column)) !== 'key' && !in_array($column, $languages)) {
                 unset($columns[$key]);
             }
         }
@@ -278,7 +275,7 @@ class TranslationController extends AdminAbstractController
 
                 try {
                     $t = Translation::getByKey($translationData, Translation::DOMAIN_ADMIN);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     Logger::log((string) $e);
                 }
                 if (!$t instanceof Translation) {
@@ -294,7 +291,7 @@ class TranslationController extends AdminAbstractController
 
                     try {
                         $t->save();
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         Logger::log((string) $e);
                     }
                 }
@@ -325,14 +322,16 @@ class TranslationController extends AdminAbstractController
         if ($request->get('data')) {
             $data = $this->decodeJson($request->get('data'));
 
-            if ($request->get('xaction') == 'destroy') {
+            if ($request->get('xaction') === 'destroy') {
                 $t = Translation::getByKey($data['key'], $domain);
                 if ($t instanceof Translation) {
                     $t->delete();
                 }
 
                 return $this->adminJson(['success' => true, 'data' => []]);
-            } elseif ($request->get('xaction') == 'update') {
+            }
+
+            if ($request->get('xaction') === 'update') {
                 $t = Translation::getByKey($data['key'], $domain);
 
                 foreach ($data as $key => $value) {
@@ -352,18 +351,12 @@ class TranslationController extends AdminAbstractController
                 $t->setModificationDate(time());
                 $t->save();
 
-                $return = array_merge(
-                    [
-                        'key' => $t->getKey(),
-                        'creationDate' => $t->getCreationDate(),
-                        'modificationDate' => $t->getModificationDate(),
-                        'type' => $t->getType(),
-                    ],
-                    $this->prefixTranslations($t->getTranslations())
-                );
+                $return = ['key' => $t->getKey(), 'creationDate' => $t->getCreationDate(), 'modificationDate' => $t->getModificationDate(), 'type' => $t->getType(), ...$this->prefixTranslations($t->getTranslations())];
 
                 return $this->adminJson(['data' => $return, 'success' => true]);
-            } elseif ($request->get('xaction') == 'create') {
+            }
+
+            if ($request->get('xaction') === 'create') {
                 $t = Translation::getByKey($data['key'], $domain);
                 if ($t) {
                     return $this->adminJson([
@@ -384,15 +377,7 @@ class TranslationController extends AdminAbstractController
                 }
                 $t->save();
 
-                $return = array_merge(
-                    [
-                        'key' => $t->getKey(),
-                        'creationDate' => $t->getCreationDate(),
-                        'modificationDate' => $t->getModificationDate(),
-                        'type' => $t->getType(),
-                    ],
-                    $this->prefixTranslations($t->getTranslations())
-                );
+                $return = ['key' => $t->getKey(), 'creationDate' => $t->getCreationDate(), 'modificationDate' => $t->getModificationDate(), 'type' => $t->getType(), ...$this->prefixTranslations($t->getTranslations())];
 
                 return $this->adminJson(['data' => $return, 'success' => true]);
             }
@@ -408,7 +393,7 @@ class TranslationController extends AdminAbstractController
             $list->setLanguages($validLanguages);
 
             $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings(
-                array_merge($request->request->all(), $request->query->all())
+                [...$request->request->all(), ...$request->query->all()]
             );
 
             $joins = [];
@@ -435,10 +420,10 @@ class TranslationController extends AdminAbstractController
             $filters = $this->getGridFilterCondition($request, $tableName, true, $admin);
 
             if ($filters) {
-                $joins = array_merge($joins, $filters['joins']);
+                $joins = [...$joins, ...$filters['joins']];
             }
 
-            if (!empty($conditions)) {
+            if ($conditions !== []) {
                 $list->setCondition($conditions['condition'], $conditions['params']);
             }
 
@@ -451,21 +436,11 @@ class TranslationController extends AdminAbstractController
             foreach ($list->getTranslations() as $t) {
                 //Reload translation to get complete data,
                 //if translation fetched based on the text not key
-                if ($searchString && !strpos($searchString, $t->getKey())) {
-                    if (!$t = Translation::getByKey($t->getKey(), $domain)) {
-                        continue;
-                    }
+                if ($searchString && !strpos($searchString, (string) $t->getKey()) && !$t = Translation::getByKey($t->getKey(), $domain)) {
+                    continue;
                 }
 
-                $translations[] = array_merge(
-                    $this->prefixTranslations($t->getTranslations()),
-                    [
-                        'key' => $t->getKey(),
-                        'creationDate' => $t->getCreationDate(),
-                        'modificationDate' => $t->getModificationDate(),
-                        'type' => $t->getType(),
-                    ]
-                );
+                $translations[] = [...$this->prefixTranslations($t->getTranslations()), 'key' => $t->getKey(), 'creationDate' => $t->getCreationDate(), 'modificationDate' => $t->getModificationDate(), 'type' => $t->getType()];
             }
 
             return $this->adminJson(['data' => $translations, 'success' => true, 'total' => $list->getTotalCount()]);
@@ -476,10 +451,6 @@ class TranslationController extends AdminAbstractController
 
     protected function prefixTranslations(array $translations): array
     {
-        if (!is_array($translations)) {
-            return $translations;
-        }
-
         $prefixedTranslations = [];
         foreach ($translations as $lang => $trans) {
             $prefixedTranslations['_' . $lang] = $trans;
@@ -496,7 +467,7 @@ class TranslationController extends AdminAbstractController
                     $joins,
                     $tableName,
                     $filters
-                ) {
+                ): void {
                     $db = \OpenDxp\Db::get();
 
                     $alreadyJoined = [];
@@ -557,9 +528,10 @@ class TranslationController extends AdminAbstractController
                     $fieldname = ltrim($fieldname, '_');
                 }
                 $fieldname = str_replace('--', '', $fieldname);
-
-                if (!$languageMode && in_array($fieldname, $validLanguages)
-                    || $languageMode && !in_array($fieldname, $validLanguages)) {
+                if (!$languageMode && in_array($fieldname, $validLanguages)) {
+                    continue;
+                }
+                if ($languageMode && !in_array($fieldname, $validLanguages)) {
                     continue;
                 }
 
@@ -624,7 +596,7 @@ class TranslationController extends AdminAbstractController
             ];
         }
 
-        if (!empty($conditionFilters)) {
+        if ($conditionFilters !== []) {
             $conditions = [];
             $params = [];
             foreach ($conditionFilters as $conditionFilter) {
@@ -700,7 +672,7 @@ class TranslationController extends AdminAbstractController
                     }
                     $list->setCondition(
                         'path LIKE ?',
-                        [$list->escapeLike($el->getRealFullPath() . ($el->getRealFullPath() != '/' ? '/' : '')) . '%']
+                        [$list->escapeLike($el->getRealFullPath() . ($el->getRealFullPath() !== '/' ? '/' : '')) . '%']
                     );
                     $children = $list->load();
 

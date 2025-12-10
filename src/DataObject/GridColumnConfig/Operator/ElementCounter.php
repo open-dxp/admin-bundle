@@ -16,8 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 
-use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\ResultContainer;
 use OpenDxp\Model\Element\ElementInterface;
+use stdClass;
 
 /**
  * @internal
@@ -26,16 +26,16 @@ final class ElementCounter extends AbstractOperator
 {
     private bool $countEmpty;
 
-    public function __construct(\stdClass $config, array $context = [])
+    public function __construct(stdClass $config, array $context = [])
     {
         parent::__construct($config, $context);
 
         $this->countEmpty = $config->countEmpty ?? false;
     }
 
-    public function getLabeledValue(array|ElementInterface $element): ResultContainer|\stdClass|null
+    public function getLabeledValue(array|ElementInterface $element): stdClass
     {
-        $result = new \stdClass();
+        $result = new stdClass();
         $result->label = $this->label;
 
         $children = $this->getChildren();
@@ -51,16 +51,14 @@ final class ElementCounter extends AbstractOperator
                 } else {
                     $count++;
                 }
-            } else {
-                if (is_array($childValues)) {
-                    foreach ($childValues as $childValue) {
-                        if ($childValue) {
-                            $count++;
-                        }
+            } elseif (is_array($childValues)) {
+                foreach ($childValues as $childValue) {
+                    if ($childValue) {
+                        $count++;
                     }
-                } elseif ($childValues) {
-                    $count++;
                 }
+            } elseif ($childValues) {
+                $count++;
             }
         }
 

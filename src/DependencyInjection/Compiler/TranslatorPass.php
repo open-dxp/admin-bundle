@@ -36,8 +36,8 @@ final class TranslatorPass implements CompilerPassInterface
             ->addMethodCall('setAdminPath', [$translationPath])
             ->addMethodCall('setAdminTranslationMapping', [$translationMapping]);
 
-        $editableHandlerDefinition = $container->getDefinition('OpenDxp\\Document\\Editable\\EditableHandler');
-        $adminUserTranslatorReference = new Reference('OpenDxp\\Bundle\\AdminBundle\\Translation\\AdminUserTranslator');
+        $editableHandlerDefinition = $container->getDefinition(\OpenDxp\Document\Editable\EditableHandler::class);
+        $adminUserTranslatorReference = new Reference(\OpenDxp\Bundle\AdminBundle\Translation\AdminUserTranslator::class);
         $editableHandlerDefinition->setArgument('$translator', $adminUserTranslatorReference);
     }
 }

@@ -19,21 +19,19 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\Factor
 
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\OperatorInterface;
 use OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator\TranslateValue;
+use stdClass;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @internal
  */
-final class TranslateValueFactory implements OperatorFactoryInterface
+final readonly class TranslateValueFactory implements OperatorFactoryInterface
 {
-    private TranslatorInterface $translator;
-
-    public function __construct(TranslatorInterface $translator)
+    public function __construct(private TranslatorInterface $translator)
     {
-        $this->translator = $translator;
     }
 
-    public function build(\stdClass $configElement, array $context = []): OperatorInterface
+    public function build(stdClass $configElement, array $context = []): OperatorInterface
     {
         return new TranslateValue($this->translator, $configElement, $context);
     }

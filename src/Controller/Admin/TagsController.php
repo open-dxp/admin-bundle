@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Model\Element\Tag;
@@ -43,13 +44,13 @@ class TagsController extends AdminAbstractController
             $tag->save();
 
             return $this->adminJson(['success' => true, 'id' => $tag->getId()]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/delete', name: 'opendxp_admin_tags_delete', methods: ['DELETE'])]
     public function deleteAction(Request $request): JsonResponse
@@ -61,13 +62,13 @@ class TagsController extends AdminAbstractController
             $tag->delete();
 
             return $this->adminJson(['success' => true]);
-        } else {
-            throw $this->createNotFoundException('Tag with ID ' . $request->get('id') . ' not found.');
         }
+
+        throw $this->createNotFoundException('Tag with ID ' . $request->get('id') . ' not found.');
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/update', name: 'opendxp_admin_tags_update', methods: ['PUT'])]
     public function updateAction(Request $request): JsonResponse
@@ -87,9 +88,9 @@ class TagsController extends AdminAbstractController
             $tag->save();
 
             return $this->adminJson(['success' => true]);
-        } else {
-            throw $this->createNotFoundException('Tag with ID ' . $request->get('id') . ' not found.');
         }
+
+        throw $this->createNotFoundException('Tag with ID ' . $request->get('id') . ' not found.');
     }
 
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_tags_treegetchildrenbyid', methods: ['GET'])]
@@ -132,7 +133,7 @@ class TagsController extends AdminAbstractController
                 }
             }
 
-            $filterIds = array_unique(array_values($filterIds));
+            $filterIds = array_unique($filterIds);
             $tagList->setCondition('id IN('.implode(',', $filterIds).')');
             $recursiveChildren = true;
         }
@@ -206,9 +207,9 @@ class TagsController extends AdminAbstractController
             Tag::addTagToElement($assginmentCType, $assginmentCId, $tag);
 
             return $this->adminJson(['success' => true, 'id' => $tag->getId()]);
-        } else {
-            return $this->adminJson(['success' => false]);
         }
+
+        return $this->adminJson(['success' => false]);
     }
 
     #[Route('/remove-tag-from-element', name: 'opendxp_admin_tags_removetagfromelement', methods: ['DELETE'])]
@@ -223,9 +224,9 @@ class TagsController extends AdminAbstractController
             Tag::removeTagFromElement($assginmentCType, $assginmentCId, $tag);
 
             return $this->adminJson(['success' => true, 'id' => $tag->getId()]);
-        } else {
-            return $this->adminJson(['success' => false]);
         }
+
+        return $this->adminJson(['success' => false]);
     }
 
     #[Route('/get-batch-assignment-jobs', name: 'opendxp_admin_tags_getbatchassignmentjobs', methods: ['GET'])]

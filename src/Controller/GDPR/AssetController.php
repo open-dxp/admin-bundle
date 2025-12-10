@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\Assets;
 use OpenDxp\Controller\KernelControllerEventInterface;
@@ -48,7 +49,7 @@ class AssetController extends AdminAbstractController implements KernelControlle
     #[Route('/search-assets', name: 'opendxp_admin_gdpr_asset_searchasset', methods: ['GET'])]
     public function searchAssetAction(Request $request, Assets $service): JsonResponse
     {
-        $allParams = array_merge($request->request->all(), $request->query->all());
+        $allParams = [...$request->request->all(), ...$request->query->all()];
 
         $result = $service->searchData(
             (int)$allParams['id'],
@@ -64,7 +65,7 @@ class AssetController extends AdminAbstractController implements KernelControlle
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route('/export', name: 'opendxp_admin_gdpr_asset_exportassets', methods: ['GET'])]
     public function exportAssetsAction(Request $request, Assets $service): Response
@@ -76,8 +77,7 @@ class AssetController extends AdminAbstractController implements KernelControlle
         if (!$asset->isAllowed('view')) {
             throw $this->createAccessDeniedException('Export denied');
         }
-        $exportResult = $service->doExportData($asset);
 
-        return $exportResult;
+        return $service->doExportData($asset);
     }
 }
