@@ -363,7 +363,7 @@ final class Configuration implements ConfigurationInterface
                             ->useAttributeAsKey('name')
                             ->beforeNormalization()
                                 ->ifArray()->then(function ($v) use ($normalizers) {
-                                    if (isAssocArray($v)) {
+                                    if (!array_is_list($v)) {
                                         return $normalizers['assoc']($v);
                                     }
 

@@ -320,8 +320,8 @@ class IndexController extends AdminAbstractController implements KernelResponseE
     protected function addSystemVarSettings(array &$settings): static
     {
         // upload limit
-        $max_upload = filesize2bytes(ini_get('upload_max_filesize') . 'B');
-        $max_post = filesize2bytes(ini_get('post_max_size') . 'B');
+        $max_upload = OpenDxp\Helper\FileSystemHelper::filesizeToBytes(ini_get('upload_max_filesize') . 'B');
+        $max_post = OpenDxp\Helper\FileSystemHelper::filesizeToBytes(ini_get('post_max_size') . 'B');
         $upload_mb = min($max_upload, $max_post) ?: $max_upload;
 
         $settings['upload_max_filesize'] = (int) $upload_mb;

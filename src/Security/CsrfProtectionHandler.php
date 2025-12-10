@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Security;
 
+use OpenDxp\Helper\StringHelper;
 use OpenDxp\Tool\Session;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -69,9 +70,9 @@ class CsrfProtectionHandler implements LoggerAwareInterface
 
     public function regenerateCsrfToken(SessionInterface $session, bool $force = true): void
     {
-        $this->csrfToken = Session::useBag($session, function (AttributeBagInterface $adminSession) use ($force) {
+        $this->csrfToken = Session::useBag($session, static function (AttributeBagInterface $adminSession) use ($force) {
             if ($force || !$adminSession->get('csrfToken')) {
-                $adminSession->set('csrfToken', sha1(generateRandomSymfonySecret()));
+                $adminSession->set('csrfToken', sha1(StringHelper::generateRandomSymfonySecret()));
             }
 
             return $adminSession->get('csrfToken');

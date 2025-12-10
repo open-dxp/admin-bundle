@@ -53,7 +53,7 @@ class Asset extends Element
                         $data[$field] = self::getPreviewThumbnail($asset, ['treepreview' => true, 'width' => 108, 'height' => 70, 'frame' => true]);
                     } elseif ($fieldDef[0] === 'size') {
                         $size = $asset->getFileSize();
-                        $data[$field] = formatBytes($size);
+                        $data[$field] = OpenDxp\Helper\FileSystemHelper::formatBytes($size);
                     }
                 } else {
                     if (isset($fieldDef[1])) {
