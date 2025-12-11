@@ -14,7 +14,7 @@ opendxp:
             en: ''
             de: ''
         default_language: ''
-        disable_usage_statistics: false
+        disable_usage_statistics: true
     documents:
         versions:
             days: null
@@ -67,4 +67,4 @@ opendxp_admin:
         color_admin_interface: ''
         login_screen_custom_image: ''
     translations:
-        path: "@OpenDxpCoreBundle/translations"
+        path: '@OpenDxpCoreBundle/translations'
