@@ -1,3 +1,6 @@
+parameters:
+    secret: ThisTokenIsNotSoSecretChangeItImmediately
+
 opendxp:
     general:
         timezone: Europe/Berlin
