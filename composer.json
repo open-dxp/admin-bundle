@@ -2,8 +2,6 @@
     "name": "open-dxp/admin-bundle",
     "license": "GPL-3.0+",
     "type": "opendxp-bundle",
-    "prefer-stable": true,
-    "minimum-stability": "dev",
     "require": {
         "php": "~8.3.0 || ~8.4.0",
         "cbschuld/browser.php": "^1.9.6",
