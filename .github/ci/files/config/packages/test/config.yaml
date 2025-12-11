@@ -15,13 +15,7 @@ doctrine:
     dbal:
         connections:
             default:
-                server_version: '10.11'
                 url: '%opendxp_test.db.dsn%'
-                host: ~
-                port: ~
-                dbname: ~
-                user: ~
-                password: ~
                 mapping_types:
                     enum: string
                     bit: boolean
