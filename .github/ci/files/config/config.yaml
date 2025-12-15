@@ -1,3 +1,82 @@
-imports:
-    - { resource: services.yaml }
-    - { resource: system.yaml }
+parameters:
+    secret: ThisTokenIsNotSoSecretChangeItImmediately
+    opendxp_test.db.dsn: '%env(OPENDXP_TEST_DB_DSN)%'
+    env(OPENDXP_TEST_DB_DSN): ~
+    opendxp.encryption.secret: 'def00000fc1e34a17a03e2ef85329325b0736a5941633f8062f6b0a1a20f416751af119256bea0abf83ac33ef656b3fff087e1ce71fa6b8810d7f854fe2781f3fe4507f6'
+
+doctrine:
+    dbal:
+        connections:
+            default:
+                url: '%opendxp_test.db.dsn%'
+                mapping_types:
+                    enum: string
+                    bit: boolean
+
+opendxp:
+    general:
+        timezone: Europe/Berlin
+        path_variable: ''
+        domain: opendxp-test.dev
+        redirect_to_maindomain: false
+        valid_languages:
+            - en
+            - de
+        fallback_languages:
+            en: ''
+            de: ''
+        default_language: ''
+        disable_usage_statistics: true
+    documents:
+        versions:
+            days: null
+            steps: 10
+        error_pages:
+            default: /error
+        allow_trailing_slash: 'no'
+        generate_preview: true
+    objects:
+        versions:
+            days: null
+            steps: 10
+    assets:
+        versions:
+            days: null
+            steps: 10
+        icc_rgb_profile: ''
+        icc_cmyk_profile: ''
+    full_page_cache:
+        enabled: false
+        lifetime: null
+        exclude_patterns: ''
+        exclude_cookie: ''
+    httpclient:
+        adapter: Socket
+        proxy_host: ''
+        proxy_port: ''
+        proxy_user: ''
+        proxy_pass: ''
+    email:
+        sender:
+            name: opendxp
+            email: contact@example.com
+        return:
+            name: opendxp
+            email: contact@example.com
+        debug:
+            email_addresses: ''
+    applicationlog:
+        mail_notification:
+            send_log_summary: false
+            filter_priority: null
+            mail_receiver: ''
+        archive_treshold: '30'
+        archive_alternative_database: ''
+
+opendxp_admin:
+    branding:
+        color_login_screen: ''
+        color_admin_interface: ''
+        login_screen_custom_image: ''
+    translations:
+        path: '@OpenDxpCoreBundle/translations'

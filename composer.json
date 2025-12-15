@@ -1,15 +1,27 @@
 {
     "name": "open-dxp/admin-bundle",
-    "license": "GPL-3.0+",
+    "license": "GPL-3.0-or-later",
     "type": "opendxp-bundle",
-    "prefer-stable": true,
-    "minimum-stability": "dev",
+    "homepage": "https://www.opendxp.io",
+    "authors": [
+        {
+            "name": "OpenDXP Team",
+            "email": "contact@opendxp.ch",
+            "homepage": "https://www.opendxp.io",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/open-dxp/admin-bundle",
+        "issues": "https://github.com/open-dxp/admin-bundle/issues",
+        "forum": "https://github.com/open-dxp/admin-bundle/discussions"
+    },
     "require": {
         "php": "~8.3.0 || ~8.4.0",
         "cbschuld/browser.php": "^1.9.6",
         "endroid/qr-code": "^4 || ^5.1",
         "phpoffice/phpspreadsheet": "^2.2 || ^3.3",
-        "open-dxp/opendxp": "^1.0",
+        "open-dxp/opendxp": "^1.1.2",
         "symfony/webpack-encore-bundle": "^2.1.1"
     },
     "require-dev": {
@@ -48,10 +60,6 @@
     },
     "config": {
         "sort-packages": true,
-        "preferred-install": {
-            "open-dxp/opendxp": "source",
-            "*": "dist"
-        },
         "allow-plugins": {
             "php-http/discovery": false,
             "symfony/runtime": true

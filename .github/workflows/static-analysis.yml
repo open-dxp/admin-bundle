@@ -1,20 +1,22 @@
 name: Static analysis [centralised]
 
 on:
+    workflow_dispatch:
     schedule:
         -   cron: '0 3 * * 1,3,5'
-    workflow_dispatch:
     push:
         branches:
-            - "[0-9]+.[0-9]+"
-            - "[0-9]+.x"
-            - "feature-*"
+            - '[0-9]+.[0-9]+'
+            - '[0-9]+.x'
+        paths-ignore:
+            - 'doc/**'
     pull_request:
         types: [ opened, synchronize, reopened ]
+        paths-ignore:
+            - 'doc/**'
 
 env:
     OPENDXP_PROJECT_ROOT: ${{ github.workspace }}
-    PRIVATE_REPO: ${{ github.event.repository.private }}
 
 jobs:
     setup-matrix:
@@ -22,7 +24,6 @@ jobs:
         outputs:
             php_versions: ${{ steps.parse-php-versions.outputs.php_versions }}
             matrix: ${{ steps.set-matrix.outputs.matrix }}
-            private_repo: ${{ env.PRIVATE_REPO }}
         steps:
             -   name: Checkout code
                 uses: actions/checkout@v4
@@ -40,13 +41,10 @@ jobs:
                     if [ -f composer.json ]; then
                       php_versions=$(jq -r '.require.php' composer.json | grep -oP '\d+\.\d+' | tr '\n' ',' | sed 's/,$//')
                       if [ -z "$php_versions" ]; then
-                        echo "No PHP versions found in composer.json"
-                        echo "Setting default PHP value"
-                        echo "php_versions=default" >> $GITHUB_OUTPUT
-                      else
-                        echo "php_versions=$php_versions" >> $GITHUB_OUTPUT
-                        echo "#### php versions #### : $php_versions"
+                        echo "No PHP versions found in composer.json, using default"
+                        php_versions="default"
                       fi
+                      echo "php_versions=$php_versions" >> $GITHUB_OUTPUT
                     else
                       echo "composer.json not found"
                       exit 1
@@ -55,24 +53,14 @@ jobs:
             -   name: Set up matrix
                 id: set-matrix
                 run: |
-                    php_versions="${{ steps.parse-php-versions.outputs.php_versions }}"
-                    
-                    MATRIX_JSON=$(cat reusable-workflows/phpstan-configuration/matrix-config.json)
-                    
-                    IFS=',' read -ra VERSIONS_ARRAY <<< "$php_versions"
-                    
-                    FILTERED_MATRIX_JSON=$(echo $MATRIX_JSON | jq --arg php_versions "$php_versions" '
-                    {
-                      matrix: [
-                        .configs[] |
-                        select(.php_version == $php_versions) |
-                        .matrix[]
-                      ]
-                    }')
-                    
-                    ENCODED_MATRIX_JSON=$(echo $FILTERED_MATRIX_JSON | jq -c .)
-                    
-                    echo "matrix=${ENCODED_MATRIX_JSON}" >> $GITHUB_OUTPUT
+                     
+                     php_versions="${{ steps.parse-php-versions.outputs.php_versions }}"
+      
+                     matrix_json=$(jq -c --arg php_versions "$php_versions" \
+                        '{matrix: [.configs[] | select(.php_version == $php_versions) | .matrix[]]}' \
+                        reusable-workflows/phpstan-configuration/matrix-config.json)
+                      
+                     echo "matrix=${matrix_json}" >> $GITHUB_OUTPUT
 
     static-analysis:
         needs: setup-matrix
@@ -80,13 +68,14 @@ jobs:
             matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
         uses: open-dxp/workflows-collection-public/.github/workflows/reusable-static-analysis-centralized.yaml@main
         with:
-            APP_ENV: test
-            OPENDXP_TEST: 1
-            PRIVATE_REPO: ${{ needs.setup-matrix.outputs.private_repo}}
-            PHP_VERSION: ${{ matrix.matrix.php-version }}
-            SYMFONY: ${{ matrix.matrix.symfony }}
-            DEPENDENCIES: ${{ matrix.matrix.dependencies }}
-            EXPERIMENTAL: ${{ matrix.matrix.experimental }}
-            OPENDXP_VERSION: ${{ matrix.matrix.opendxp_version }}
-            COMPOSER_OPTIONS: ${{ matrix.matrix.composer_options }}
-            CACHE_CLEAR: 'true'
+            app_env: test
+            opendxp_test: 1
+            php_version: ${{ matrix.matrix.php-version }}
+            symfony: ${{ matrix.matrix.symfony }}
+            dependencies: ${{ matrix.matrix.dependencies }}
+            experimental: ${{ matrix.matrix.experimental }}
+            opendxp_version: ${{ matrix.matrix.opendxp_version }}
+            opendxp_admin_version: ${{ matrix.matrix.opendxp_admin_version }}
+            composer_options: ${{ matrix.matrix.composer_options }}
+            composer_root_version: ${{ matrix.matrix.composer_root_version }}
+            cache_clear: true
