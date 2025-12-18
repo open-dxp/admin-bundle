@@ -744,7 +744,9 @@ class SettingsController extends AdminAbstractController
             }
         }
 
-        $thumbnails = $groups;
+        foreach ($groups as $group) {
+            $thumbnails[] = $group;
+        }
 
         return $this->adminJson($thumbnails);
     }
@@ -928,7 +930,9 @@ class SettingsController extends AdminAbstractController
             }
         }
 
-        $thumbnails = $groups;
+        foreach ($groups as $group) {
+            $thumbnails[] = $group;
+        }
 
         return $this->adminJson($thumbnails);
     }
