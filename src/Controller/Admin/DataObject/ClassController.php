@@ -861,7 +861,9 @@ class ClassController extends AdminAbstractController implements KernelControlle
             }
         }
 
-        $definitions = $groups;
+        foreach ($groups as $group) {
+            $definitions[] = $group;
+        }
 
         $event = new GenericEvent($this, [
             'list' => $definitions,
@@ -1247,7 +1249,9 @@ class ClassController extends AdminAbstractController implements KernelControlle
             }
         }
 
-        $definitions = $groups;
+        foreach ($groups as $group) {
+            $definitions[] = $group;
+        }
 
         $event = new GenericEvent($this, [
             'list' => $definitions,
