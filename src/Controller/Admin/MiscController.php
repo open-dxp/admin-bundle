@@ -23,6 +23,7 @@ use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
 use OpenDxp\Bundle\AdminBundle\Tool as AdminTool;
 use OpenDxp\Config;
 use OpenDxp\Controller\Config\ControllerDataProvider;
+use OpenDxp\Helper\FileSystemHelper;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Tool;
 use OpenDxp\Tool\Storage;
@@ -272,9 +273,9 @@ class MiscController extends AdminAbstractController
         $extraInfo = null;
 
         $icons = match ($type) {
-            'color' => rscandir($iconDir . '/flat-color-icons/'),
-            'white' => rscandir($iconDir . '/flat-white-icons/'),
-            'twemoji' => rscandir($iconDir . '/twemoji/'),
+            'color' => FileSystemHelper::scanDirectory($iconDir . '/flat-color-icons/'),
+            'white' => FileSystemHelper::scanDirectory($iconDir . '/flat-white-icons/'),
+            'twemoji' => FileSystemHelper::scanDirectory($iconDir . '/twemoji/'),
             'flags' => $this->getFlags(),
             default => []
         };

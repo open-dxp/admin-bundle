@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\EventListener;
 
 use OpenDxp\Bundle\CoreBundle\EventListener\Traits\OpenDxpContextAwareTrait;
 use OpenDxp\Config;
+use OpenDxp\Helper\StringHelper;
 use OpenDxp\Http\Request\Resolver\OpenDxpContextResolver;
 use OpenDxp\Security\User\TokenStorageUserResolver;
 use Psr\Log\LoggerAwareTrait;
@@ -85,10 +86,10 @@ class UsageStatisticsListener implements EventSubscriberInterface
         $requestParams = [...$request->query->all(), ...$request->request->all()];
 
         foreach ($requestParams as $key => $value) {
-            if (is_json($value)) {
+            if (StringHelper::isValidJson($value)) {
                 $value = json_decode($value);
                 if (is_array($value)) {
-                    array_walk_recursive($value, function (&$item, $key): void {
+                    array_walk_recursive($value, static function (&$item, $key): void {
                         if (str_contains((string)$key, 'pass')) {
                             $item = '*************';
                         }

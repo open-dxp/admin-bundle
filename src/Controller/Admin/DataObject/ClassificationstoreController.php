@@ -20,6 +20,7 @@ use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use OpenDxp\Db;
+use OpenDxp\Helper\ArrayHelper;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\ClassDefinition\Data\LayoutDefinitionEnrichmentInterface;
 use OpenDxp\Model\DataObject\Classificationstore;
@@ -1391,7 +1392,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
     public function getPageAction(Request $request): JsonResponse
     {
         $tableSuffix = $request->get('table');
-        if (!in_arrayi($tableSuffix, ['keys', 'groups'])) {
+        if (!ArrayHelper::inArrayCaseInsensitive($tableSuffix, ['keys', 'groups'])) {
             $tableSuffix = 'keys';
         }
 
@@ -1409,11 +1410,11 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $sortDir = 'ASC';
         }
 
-        if (!in_arrayi($sortDir, ['DESC', 'ASC'])) {
+        if (!ArrayHelper::inArrayCaseInsensitive($sortDir, ['DESC', 'ASC'])) {
             $sortDir = 'DESC';
         }
 
-        if (!in_arrayi($sortKey, ['name', 'title', 'description', 'id', 'type', 'creationDate', 'modificationDate', 'enabled', 'parentId', 'storeId'])) {
+        if (!ArrayHelper::inArrayCaseInsensitive($sortKey, ['name', 'title', 'description', 'id', 'type', 'creationDate', 'modificationDate', 'enabled', 'parentId', 'storeId'])) {
             $sortKey = 'name';
         }
 

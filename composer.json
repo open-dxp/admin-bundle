@@ -21,7 +21,7 @@
         "cbschuld/browser.php": "^1.9.6",
         "endroid/qr-code": "^4 || ^5.1",
         "phpoffice/phpspreadsheet": "^2.2 || ^3.3",
-        "open-dxp/opendxp": "^1.1.2",
+        "open-dxp/opendxp": "^1.2.0",
         "symfony/webpack-encore-bundle": "^2.1.1"
     },
     "require-dev": {

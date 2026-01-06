@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Security;
 
 use OpenDxp\Config;
+use OpenDxp\Helper\StringHelper;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -145,7 +146,7 @@ class ContentSecurityPolicyHandler implements LoggerAwareInterface
     private function getNonce(): string
     {
         if (!$this->nonce) {
-            $this->nonce = generateRandomSymfonySecret();
+            $this->nonce = StringHelper::generateRandomSymfonySecret();
         }
 
         return $this->nonce;

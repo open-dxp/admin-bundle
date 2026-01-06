@@ -21,6 +21,7 @@ use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use OpenDxp\Db;
+use OpenDxp\Helper\FileSystemHelper;
 use OpenDxp\Logger;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject;
@@ -1726,17 +1727,17 @@ class ClassController extends AdminAbstractController implements KernelControlle
         }
 
         if ($type === null) {
-            $classIcons = rscandir($iconDir . '/object-icons/');
-            $colorIcons = rscandir($iconDir . '/flat-color-icons/');
-            $twemoji = rscandir($iconDir . '/twemoji/');
+            $classIcons = FileSystemHelper::scanDirectory($iconDir . '/object-icons/');
+            $colorIcons = FileSystemHelper::scanDirectory($iconDir . '/flat-color-icons/');
+            $twemoji = FileSystemHelper::scanDirectory($iconDir . '/twemoji/');
             $icons = [...$classIcons, ...$colorIcons, ...$twemoji];
         } else {
             $icons = match($type) {
-                'color' => rscandir($iconDir . '/flat-color-icons/'),
-                'white' => rscandir($iconDir . '/flat-white-icons/'),
+                'color' => FileSystemHelper::scanDirectory($iconDir . '/flat-color-icons/'),
+                'white' => FileSystemHelper::scanDirectory($iconDir . '/flat-white-icons/'),
                 'twemoji-1', 'twemoji-2', 'twemoji-3',
                 'twemoji_variants-1', 'twemoji_variants-2', 'twemoji_variants-3'
-                => rscandir($iconDir . '/twemoji/'),
+                => FileSystemHelper::scanDirectory($iconDir . '/twemoji/'),
                 default => [],
             };
         }

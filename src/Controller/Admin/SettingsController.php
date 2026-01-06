@@ -24,6 +24,7 @@ use OpenDxp\Cache\Core\CoreCacheHandler;
 use OpenDxp\Cache\Symfony\CacheClearer;
 use OpenDxp\Db;
 use OpenDxp\Event\SystemEvents;
+use OpenDxp\Helper\FileSystemHelper;
 use OpenDxp\Helper\StopMessengerWorkersTrait;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Logger;
@@ -586,7 +587,7 @@ class SettingsController extends AdminAbstractController
         Tool\Storage::get('asset_cache')->deleteDirectory('/');
 
         // system files
-        recursiveDelete(OPENDXP_SYSTEM_TEMP_DIRECTORY, false);
+        FileSystemHelper::recursiveDelete(OPENDXP_SYSTEM_TEMP_DIRECTORY, false);
 
         $eventDispatcher->dispatch(new GenericEvent(), SystemEvents::CACHE_CLEAR_TEMPORARY_FILES);
 
