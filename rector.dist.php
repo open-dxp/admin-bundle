@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\CodeQuality\Rector\Concat\JoinStringConcatRector;
+use Rector\CodeQuality\Rector\Foreach_\ForeachItemsAssignToEmptyArrayToAssignRector;
 use Rector\CodeQuality\Rector\If_\ExplicitBoolCompareRector;
 use Rector\CodingStyle\Rector\FuncCall\ArraySpreadInsteadOfArrayMergeRector;
 use Rector\Config\RectorConfig;
@@ -19,7 +20,10 @@ return RectorConfig::configure()
         DisallowedEmptyRuleFixerRector::class,
         ExplicitBoolCompareRector::class,
         JoinStringConcatRector::class,
-        NullToStrictStringFuncCallArgRector::class,     // todo: buggy?
+        // todo: buggy?
+        NullToStrictStringFuncCallArgRector::class,
+        // @see https://github.com/rectorphp/rector/issues/9587
+        ForeachItemsAssignToEmptyArrayToAssignRector::class,
     ])
     ->withIndent(' ', 4)
     ->withPhpVersion(PhpVersion::PHP_83)
