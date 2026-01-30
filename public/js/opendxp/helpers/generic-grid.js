@@ -18,13 +18,9 @@ opendxp.helpers.grid = {};
 
 opendxp.helpers.grid.buildDefaultStore = function (url, fields, itemsPerPage, customConfig) {
 
-    if (url.indexOf('?') === -1) {
-        url = url + "?";
-    } else {
-        url = url + "&";
-    }
+    url = url.indexOf('?') === -1 ? url + '?' : url + '&';
 
-    var proxy = new Ext.data.proxy.Ajax({
+    var proxy = Ext.create('opendxp.data.proxy.ajax', {
         timeout: 120000,
         batchActions: false,
         type: 'ajax',
@@ -39,27 +35,17 @@ opendxp.helpers.grid.buildDefaultStore = function (url, fields, itemsPerPage, cu
             encode: 'true'
         },
         api: {
-            create: url + "xaction=create",
-            read: url + "xaction=read",
-            update: url + "xaction=update",
-            destroy: url + "xaction=destroy"
+            create: url + 'xaction=create',
+            read: url + 'xaction=read',
+            update: url + 'xaction=update',
+            destroy: url + 'xaction=destroy'
         },
         actionMethods: {
             create: 'POST',
             read: 'POST',
             update: 'POST',
             destroy: 'POST'
-        }/*,
-        listeners: {
-            exception: function(proxy, response, operation){
-                Ext.MessageBox.show({
-                    title: 'REMOTE EXCEPTION',
-                    msg: operation.getError(),
-                    icon: Ext.MessageBox.ERROR,
-                    buttons: Ext.Msg.OK
-                });
-            }
-        }*/
+        }
     });
 
     var config = {
@@ -76,11 +62,8 @@ opendxp.helpers.grid.buildDefaultStore = function (url, fields, itemsPerPage, cu
         Ext.apply(config, customConfig);
     }
 
-    var store = Ext.create('Ext.data.Store', config);
-
-    return store;
+    return Ext.create('Ext.data.Store', config);
 };
-
 
 opendxp.helpers.grid.getDefaultPageSize = function (scale) {
     if (scale < 0) {
@@ -95,33 +78,33 @@ opendxp.helpers.grid.buildDefaultPagingToolbar = function (store, options) {
         store: store,
         displayInfo: true,
         displayMsg: '{0} - {1} / {2}',
-        emptyMsg: t("no_items_found"),
+        emptyMsg: t('no_items_found'),
         scrollable: true
     };
-    if (typeof options !== "undefined") {
+    if (typeof options !== 'undefined') {
         config = Ext.applyIf(options, config);
     }
     var pagingtoolbar = Ext.create('Ext.PagingToolbar', config);
 
     if (!config.hideSelection) {
         // add per-page selection
-        pagingtoolbar.add("-");
+        pagingtoolbar.add('-');
 
         pagingtoolbar.add(Ext.create('Ext.Toolbar.TextItem', {
-            text: t("items_per_page")
+            text: t('items_per_page')
         }));
         pagingtoolbar.add(Ext.create('Ext.form.ComboBox', {
             store: [
-                [25, "25"],
-                [50, "50"],
-                [100, "100"],
-                [200, "200"],
-                [999999, t("all")]
+                [25, '25'],
+                [50, '50'],
+                [100, '100'],
+                [200, '200'],
+                [999999, t('all')]
             ],
-            mode: "local",
+            mode: 'local',
             width: 80,
             value: config.pageSize,
-            triggerAction: "all",
+            triggerAction: 'all',
             editable: true,
             listeners: {
                 change: function (box, newValue, oldValue) {

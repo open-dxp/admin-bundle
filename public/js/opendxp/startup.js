@@ -16,7 +16,7 @@
  */
 
 // debug
-if (typeof console == "undefined") {
+if (typeof console == 'undefined') {
     console = {
         log: function (v) {
         },
@@ -308,6 +308,26 @@ Ext.onReady(function () {
     let localeDateTime = opendxp.localeDateTime;
     opendxp.globalmanager.add("localeDateTime", localeDateTime);
     localeDateTime.setDefaultDateTime(user.datetimeLocale);
+
+    // removes empty properties from payload before executing request
+    Ext.define('opendxp.data.proxy.ajax', {
+        extend: 'Ext.data.proxy.Ajax',
+        buildRequest: function (operation) {
+
+            var request = this.callParent(arguments),
+                params = request.getParams();
+
+            Ext.Object.each(params, function (key, value) {
+                if (value === null || value === undefined || value === '') {
+                    delete params[key];
+                }
+            });
+
+            request.setParams(params);
+
+            return request;
+        }
+    });
 
     // document types
     Ext.define('opendxp.model.doctypes', {
