@@ -34,7 +34,7 @@ class FolderController extends DocumentControllerBase
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(Request $request): JsonResponse
     {
-        $folder = Document\Folder::getById((int)$request->get('id'));
+        $folder = Document\Folder::getById((int)$request->query->get('id'));
         if (!$folder) {
             throw $this->createNotFoundException('Folder not found');
         }
@@ -58,7 +58,7 @@ class FolderController extends DocumentControllerBase
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
     public function saveAction(Request $request): JsonResponse
     {
-        $folder = Document\Folder::getById((int) $request->get('id'));
+        $folder = Document\Folder::getById((int) $request->request->get('id'));
         if (!$folder) {
             throw $this->createNotFoundException('Folder not found');
         }

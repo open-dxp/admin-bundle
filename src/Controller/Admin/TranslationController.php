@@ -31,6 +31,7 @@ use OpenDxp\Tool;
 use OpenDxp\Tool\Session;
 use OpenDxp\Translation\Translator;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -44,15 +45,15 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[Route('/translation')]
 class TranslationController extends AdminAbstractController
 {
-    protected const PLACEHOLDER_NAME = 'placeHolder';
+    protected const string PLACEHOLDER_NAME = 'placeHolder';
 
     #[Route('/import', name: 'opendxp_admin_translation_import', methods: ['POST'])]
     public function importAction(Request $request, LocaleServiceInterface $localeService): JsonResponse
     {
-        $domain = $request->get('domain', Translation::DOMAIN_DEFAULT);
+        $domain = $request->request->get('domain', Translation::DOMAIN_DEFAULT);
         $admin = $domain == Translation::DOMAIN_ADMIN;
 
-        $dialect = $request->get('csvSettings');
+        $dialect = $request->request->get('csvSettings');
         $session = Session::getSessionBag($request->getSession(), 'opendxp_importconfig');
         $tmpFile = $session->get('translation_import_file');
 
@@ -62,7 +63,7 @@ class TranslationController extends AdminAbstractController
 
         $this->checkPermission(($admin ? 'admin_' : '') . 'translations');
 
-        $merge = $request->get('merge');
+        $merge = $request->query->get('merge');
         $overwrite = !$merge;
 
         $allowedLanguages = $this->getAdminUser()->getAllowedLanguagesForEditingWebsiteTranslations();
@@ -111,14 +112,17 @@ class TranslationController extends AdminAbstractController
     #[Route('/upload-import', name: 'opendxp_admin_translation_uploadimportfile', methods: ['POST'])]
     public function uploadImportFileAction(Request $request, Filesystem $filesystem): JsonResponse
     {
-        $tmpData = file_get_contents($_FILES['Filedata']['tmp_name']);
+        /** @var UploadedFile $file */
+        $file = $request->files->get('Filedata');
+
+        $tmpData = file_get_contents($file->getPathname());
 
         //store data for further usage
-        $filename = uniqid('import_translations-');
+        $filename = uniqid('import_translations-', false);
         $importFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/' . $filename;
         $filesystem->dumpFile($importFile, $tmpData);
 
-        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($importFile): void {
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($importFile): void {
             $session->set('translation_import_file', $importFile);
         }, 'opendxp_importconfig');
 
@@ -141,7 +145,7 @@ class TranslationController extends AdminAbstractController
     #[Route('/export', name: 'opendxp_admin_translation_export', methods: ['GET'])]
     public function exportAction(Request $request): Response
     {
-        $domain = $request->get('domain', Translation::DOMAIN_DEFAULT);
+        $domain = $request->query->get('domain', Translation::DOMAIN_DEFAULT);
         $admin = $domain == Translation::DOMAIN_ADMIN;
 
         $this->checkPermission(($admin ? 'admin_' : '') . 'translations');
@@ -266,7 +270,8 @@ class TranslationController extends AdminAbstractController
     #[Route('/add-admin-translation-keys', name: 'opendxp_admin_translation_addadmintranslationkeys', methods: ['POST'])]
     public function addAdminTranslationKeysAction(Request $request): JsonResponse
     {
-        $keys = $request->get('keys');
+        $keys = $request->request->get('keys');
+
         if ($keys) {
             $availableLanguages = Tool\Admin::getLanguages();
             $data = $this->decodeJson($keys);
@@ -307,7 +312,7 @@ class TranslationController extends AdminAbstractController
     #[Route('/translations', name: 'opendxp_admin_translation_translations', methods: ['POST'])]
     public function translationsAction(Request $request, TranslatorInterface $translator): JsonResponse
     {
-        $domain = $request->get('domain', Translation::DOMAIN_DEFAULT);
+        $domain = $request->request->get('domain', Translation::DOMAIN_DEFAULT);
         $admin = $domain === Translation::DOMAIN_ADMIN;
 
         $this->checkPermission(($admin ? 'admin_' : '') . 'translations');
@@ -319,10 +324,10 @@ class TranslationController extends AdminAbstractController
         // clear translation cache
         Translation::clearDependentCache();
 
-        if ($request->get('data')) {
-            $data = $this->decodeJson($request->get('data'));
+        if ($request->request->has('data')) {
+            $data = $this->decodeJson($request->request->get('data'));
 
-            if ($request->get('xaction') === 'destroy') {
+            if ($request->query->get('xaction') === 'destroy') {
                 $t = Translation::getByKey($data['key'], $domain);
                 if ($t instanceof Translation) {
                     $t->delete();
@@ -331,7 +336,7 @@ class TranslationController extends AdminAbstractController
                 return $this->adminJson(['success' => true, 'data' => []]);
             }
 
-            if ($request->get('xaction') === 'update') {
+            if ($request->query->get('xaction') === 'update') {
                 $t = Translation::getByKey($data['key'], $domain);
 
                 foreach ($data as $key => $value) {
@@ -356,7 +361,7 @@ class TranslationController extends AdminAbstractController
                 return $this->adminJson(['data' => $return, 'success' => true]);
             }
 
-            if ($request->get('xaction') === 'create') {
+            if ($request->query->get('xaction') === 'create') {
                 $t = Translation::getByKey($data['key'], $domain);
                 if ($t) {
                     return $this->adminJson([
@@ -413,8 +418,8 @@ class TranslationController extends AdminAbstractController
                 $list->setOrder($sortingSettings['order']);
             }
 
-            $list->setLimit((int) $request->get('limit', 50));
-            $list->setOffset((int) $request->get('start', 0));
+            $list->setLimit((int) $request->request->get('limit', 50));
+            $list->setOffset((int) $request->request->get('start', 0));
 
             $conditions = $this->getGridFilterCondition($request, $tableName, false, $admin);
             $filters = $this->getGridFilterCondition($request, $tableName, true, $admin);
@@ -432,7 +437,7 @@ class TranslationController extends AdminAbstractController
             $list->load();
 
             $translations = [];
-            $searchString = $request->get('searchString');
+            $searchString = $request->request->get('searchString');
             foreach ($list->getTranslations() as $t) {
                 //Reload translation to get complete data,
                 //if translation fetched based on the text not key
@@ -512,7 +517,7 @@ class TranslationController extends AdminAbstractController
         $db = \OpenDxp\Db::get();
         $conditionFilters = [];
 
-        $filterJson = $request->get('filter');
+        $filterJson = $request->request->get('filter');
         if ($filterJson) {
             $propertyField = 'property';
             $operatorField = 'operator';
@@ -540,17 +545,17 @@ class TranslationController extends AdminAbstractController
                 }
 
                 if (!empty($filter['value'])) {
-                    if ($filter['type'] == 'string') {
+                    if ($filter['type'] === 'string') {
                         $operator = 'LIKE';
                         $field = $fieldname;
                         $value = '%' . $filter['value'] . '%';
-                    } elseif ($filter['type'] == 'date' ||
+                    } elseif ($filter['type'] === 'date' ||
                         (in_array($fieldname, ['modificationDate', 'creationDate']))) {
-                        if ($filter[$operatorField] == 'lt') {
+                        if ($filter[$operatorField] === 'lt') {
                             $operator = '<';
-                        } elseif ($filter[$operatorField] == 'gt') {
+                        } elseif ($filter[$operatorField] === 'gt') {
                             $operator = '>';
-                        } elseif ($filter[$operatorField] == 'eq') {
+                        } elseif ($filter[$operatorField] === 'eq') {
                             $operator = '=';
                             $fieldname = "UNIX_TIMESTAMP(DATE(FROM_UNIXTIME({$fieldname})))";
                         }
@@ -581,11 +586,11 @@ class TranslationController extends AdminAbstractController
             }
         }
 
-        if ($request->get('searchString')) {
+        if ($request->request->get('searchString')) {
             $conditionFilters[] = [
                 'condition' => '(lower(' . $tableName . '.key) LIKE :filterTerm OR lower(' . $tableName . '.text) LIKE :filterTerm)',
                 'field' => 'filterTerm',
-                'value' => '%' . mb_strtolower($request->get('searchString')) . '%',
+                'value' => '%' . mb_strtolower($request->request->get('searchString')) . '%',
             ];
         }
 
@@ -616,7 +621,7 @@ class TranslationController extends AdminAbstractController
     #[Route('/cleanup', name: 'opendxp_admin_translation_cleanup', methods: ['DELETE'])]
     public function cleanupAction(Request $request): JsonResponse
     {
-        $domain = $request->get('domain', Translation::DOMAIN_DEFAULT);
+        $domain = $request->request->get('domain', Translation::DOMAIN_DEFAULT);
         $list = new Translation\Listing();
         $list->setDomain($domain);
         $list->cleanup();
@@ -635,14 +640,14 @@ class TranslationController extends AdminAbstractController
     #[Route('/content-export-jobs', name: 'opendxp_admin_translation_contentexportjobs', methods: ['POST'])]
     public function contentExportJobsAction(Request $request): JsonResponse
     {
-        $data = $this->decodeJson($request->get('data'));
+        $data = $this->decodeJson($request->request->get('data'));
         $elements = [];
         $jobs = [];
-        $exportId = uniqid();
-        $source = $request->get('source', '');
-        $target = $request->get('target', '');
-        $type = $request->get('type');
-        $jobUrl = $request->get('job_url', $request->getBaseUrl() . '/admin/translation/' . $type . '-export');
+        $exportId = uniqid('', false);
+        $source = $request->request->get('source', '');
+        $target = $request->request->get('target', '');
+        $type = $request->request->get('type');
+        $jobUrl = $request->request->get('job_url', $request->getBaseUrl() . '/admin/translation/' . $type . '-export');
 
         $source = str_replace('_', '-', $source);
         $target = str_replace('_', '-', $target);
@@ -686,7 +691,7 @@ class TranslationController extends AdminAbstractController
                         if (isset($element['relations']) && $element['relations']) {
                             $childDependencies = $child->getDependencies()->getRequires();
                             foreach ($childDependencies as $cd) {
-                                if ($cd['type'] == 'object' || $cd['type'] == 'document') {
+                                if ($cd['type'] === 'object' || $cd['type'] === 'document') {
                                     $elements[$cd['type'] . '_' . $cd['id']] = $cd;
                                 }
                             }
@@ -701,7 +706,7 @@ class TranslationController extends AdminAbstractController
 
                     $dependencies = $el->getDependencies()->getRequires();
                     foreach ($dependencies as $dependency) {
-                        if ($dependency['type'] == 'object' || $dependency['type'] == 'document') {
+                        if ($dependency['type'] === 'object' || $dependency['type'] === 'document') {
                             $elements[$dependency['type'] . '_' . $dependency['id']] = $dependency;
                         }
                     }
@@ -711,7 +716,7 @@ class TranslationController extends AdminAbstractController
 
         $elements = array_values($elements);
 
-        $elementsPerJob = (int)$request->get('elements_per_job', 10);
+        $elementsPerJob = (int)$request->request->get('elements_per_job', 10);
 
         // make sure elements per job is not 0
         if (!$elementsPerJob) {
@@ -733,21 +738,19 @@ class TranslationController extends AdminAbstractController
             ]];
         }
 
-        return $this->adminJson(
-            [
-                'success' => true,
-                'jobs' => $jobs,
-                'id' => $exportId,
-            ]
-        );
+        return $this->adminJson([
+            'success' => true,
+            'jobs'    => $jobs,
+            'id'      => $exportId,
+        ]);
     }
 
     #[Route('/merge-item', name: 'opendxp_admin_translation_mergeitem', methods: ['PUT'])]
     public function mergeItemAction(Request $request): JsonResponse
     {
-        $domain = $request->get('domain', Translation::DOMAIN_DEFAULT);
+        $domain = $request->request->get('domain', Translation::DOMAIN_DEFAULT);
 
-        $dataList = json_decode($request->get('data'), true);
+        $dataList = json_decode($request->request->get('data'), true);
 
         foreach ($dataList as $data) {
             $t = Translation::getByKey($data['key'], $domain, true);
@@ -757,25 +760,20 @@ class TranslationController extends AdminAbstractController
             $t->save();
         }
 
-        return $this->adminJson(
-            [
-                'success' => true,
-            ]
-        );
+        return $this->adminJson([
+            'success' => true,
+        ]);
     }
 
     #[Route('/get-website-translation-languages', name: 'opendxp_admin_translation_getwebsitetranslationlanguages', methods: ['GET'])]
     public function getWebsiteTranslationLanguagesAction(Request $request): JsonResponse
     {
-        return $this->adminJson(
-            [
-                'view' => $this->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations(),
-
-                //when no view language is defined, all languages are editable. if one view language is defined, it
-                //may be possible that no edit language is set intentionally
-                'edit' => $this->getAdminUser()->getAllowedLanguagesForEditingWebsiteTranslations(),
-            ]
-        );
+        return $this->adminJson([
+            'view' => $this->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations(),
+            //when no view language is defined, all languages are editable. if one view language is defined, it
+            //may be possible that no edit language is set intentionally
+            'edit' => $this->getAdminUser()->getAllowedLanguagesForEditingWebsiteTranslations(),
+        ]);
     }
 
     #[Route('/get-translation-domains', name: 'opendxp_admin_translation_gettranslationdomains', methods: ['GET'])]
@@ -784,7 +782,7 @@ class TranslationController extends AdminAbstractController
         $translation = new Translation();
 
         $domains = array_map(
-            fn ($domain) => ['name' => $domain],
+            static fn ($domain) => ['name' => $domain],
             $translation->getDao()->getAvailableDomains(),
         );
 

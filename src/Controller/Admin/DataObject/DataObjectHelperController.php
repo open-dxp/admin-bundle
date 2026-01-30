@@ -1382,14 +1382,14 @@ class DataObjectHelperController extends AdminAbstractController
         $success = true;
 
         try {
-            if ($request->get('data')) {
-                $params = $this->decodeJson($request->get('data'), true);
+            if ($request->request->has('data')) {
+                $params = $this->decodeJson($request->request->get('data'), true);
                 $object = DataObject\Concrete::getById($params['job']);
 
                 if ($object) {
                     $requestedLanguage = $params['language'];
                     if ($requestedLanguage) {
-                        if ($requestedLanguage != 'default') {
+                        if ($requestedLanguage !== 'default') {
                             $request->setLocale($requestedLanguage);
                         }
                     } else {
@@ -1408,7 +1408,7 @@ class DataObjectHelperController extends AdminAbstractController
                     $className = $object->getClassName();
                     $class = DataObject\ClassDefinition::getByName($className);
                     $value = $params['value'];
-                    if ($params['valueType'] == 'object') {
+                    if ($params['valueType'] === 'object') {
                         $value = $this->decodeJson($value);
                     }
 

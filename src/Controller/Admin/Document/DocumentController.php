@@ -92,7 +92,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
     #[Route('/get-data-by-id', name: 'opendxp_admin_document_document_getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
-        $document = Document::getById((int) $request->get('id'));
+        $document = Document::getById((int) $request->query->get('id'));
 
         if (!$document) {
             throw $this->createNotFoundException('Document not found');
@@ -135,7 +135,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
     {
         $allParams = [...$request->request->all(), ...$request->query->all()];
 
-        $filter = $request->get('filter');
+        $filter = $request->query->get('filter');
         $limit = (int)($allParams['limit'] ?? 100000000);
         $offset = (int)($allParams['start'] ?? 0);
 
@@ -608,11 +608,11 @@ class DocumentController extends ElementControllerBase implements KernelControll
     #[Route('/doc-types', name: 'opendxp_admin_document_document_doctypes', methods: ['PUT', 'POST', 'DELETE'])]
     public function docTypesAction(Request $request): JsonResponse
     {
-        if ($request->get('data')) {
+        if ($request->request->get('data')) {
             $this->checkPermission('document_types');
 
-            $data = $this->decodeJson($request->get('data'));
-            if ($request->get('xaction') === 'destroy') {
+            $data = $this->decodeJson($request->request->get('data'));
+            if ($request->query->get('xaction') === 'destroy') {
                 $type = Document\DocType::getById($data['id']);
                 if (!$type->isWriteable()) {
                     throw new ConfigWriteException();
@@ -621,7 +621,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
 
                 return $this->adminJson(['success' => true, 'data' => []]);
             }
-            if ($request->get('xaction') === 'update') {
+            if ($request->query->get('xaction') === 'update') {
                 // save type
                 $type = Document\DocType::getById($data['id']);
                 if (!$type->isWriteable()) {
@@ -635,7 +635,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
             }
 
-            if ($request->get('xaction') === 'create') {
+            if ($request->query->get('xaction') === 'create') {
                 if (!(new DocType())->isWriteable()) {
                     throw new ConfigWriteException();
                 }

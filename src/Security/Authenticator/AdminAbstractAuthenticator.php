@@ -47,9 +47,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 abstract class AdminAbstractAuthenticator extends AbstractAuthenticator implements LoggerAwareInterface
 {
-    public const OPENDXP_ADMIN_LOGIN = 'opendxp_admin_login';
-
-    public const OPENDXP_ADMIN_LOGIN_CHECK = 'opendxp_admin_login_check';
+    public const string OPENDXP_ADMIN_LOGIN = 'opendxp_admin_login';
+    public const string OPENDXP_ADMIN_LOGIN_CHECK = 'opendxp_admin_login_check';
 
     use LoggerAwareTrait;
 
@@ -99,20 +98,25 @@ abstract class AdminAbstractAuthenticator extends AbstractAuthenticator implemen
 
         // as we authenticate statelessly (short lived sessions) the authentication is called for
         // every request. therefore we only redirect if we're on the login page
-        if (!in_array($request->attributes->get('_route'), [
-            self::OPENDXP_ADMIN_LOGIN,
-            self::OPENDXP_ADMIN_LOGIN_CHECK,
-        ])) {
+        if (!in_array(
+            $request->attributes->get('_route'),
+            [
+                self::OPENDXP_ADMIN_LOGIN,
+                self::OPENDXP_ADMIN_LOGIN_CHECK,
+            ],
+            true
+        )
+        ) {
             return null;
         }
 
-        if ($request->get('deeplink') && $request->get('deeplink') !== 'true') {
+        if ($request->query->has('deeplink') && $request->query->get('deeplink') !== 'true') {
             $url = $this->router->generate('opendxp_admin_login_deeplink');
-            $url .= '?' . $request->get('deeplink');
+            $url .= '?' . $request->query->get('deeplink');
         } else {
             $url = $this->router->generate('opendxp_admin_index', [
                 '_dc' => time(),
-                'perspective' => strip_tags($request->get('perspective', '')),
+                'perspective' => strip_tags($request->query->get('perspective', '')),
             ]);
         }
 
@@ -131,7 +135,7 @@ abstract class AdminAbstractAuthenticator extends AbstractAuthenticator implemen
         if (Authentication::isValidUser($user->getUser())) {
             $openDxpUser = $user->getUser();
 
-            Session::useBag($session, function (AttributeBagInterface $adminSession, SessionInterface $session) use ($openDxpUser): void {
+            Session::useBag($session, static function (AttributeBagInterface $adminSession, SessionInterface $session) use ($openDxpUser): void {
                 $session->migrate();
                 $adminSession->set('user', $openDxpUser);
             });

@@ -57,11 +57,11 @@ class WorkflowController extends AdminAbstractController implements KernelContro
     /**
      * Returns a JSON of the available workflow actions to the admin panel
      */
-    #[Route('/get-workflow-form', name: 'opendxp_admin_workflow_getworkflowform')]
+    #[Route('/get-workflow-form', name: 'opendxp_admin_workflow_getworkflowform', methods: ['POST'])]
     public function getWorkflowFormAction(Request $request, Manager $workflowManager): JsonResponse
     {
         try {
-            $workflow = $workflowManager->getWorkflowIfExists($this->element, (string) $request->get('workflowName'));
+            $workflow = $workflowManager->getWorkflowIfExists($this->element, (string) $request->request->get('workflowName'));
 
             if (empty($workflow)) {
                 $wfConfig = [
@@ -79,13 +79,13 @@ class WorkflowController extends AdminAbstractController implements KernelContro
                 $enabledTransitions = $workflow->getEnabledTransitions($this->element);
                 $transition = null;
                 foreach ($enabledTransitions as $_transition) {
-                    if ($_transition->getName() === $request->get('transitionName')) {
+                    if ($_transition->getName() === $request->request->get('transitionName')) {
                         $transition = $_transition;
                     }
                 }
 
                 if (!$transition instanceof Transition) {
-                    $wfConfig['message'] = sprintf('transition %s currently not allowed', (string) $request->get('transitionName'));
+                    $wfConfig['message'] = sprintf('transition %s currently not allowed', (string) $request->request->get('transitionName'));
                 } else {
                     $wfConfig['notes_required'] = $transition->getNotesCommentRequired();
                     $wfConfig['additional_fields'] = [];
@@ -101,12 +101,12 @@ class WorkflowController extends AdminAbstractController implements KernelContro
     #[Route('/submit-workflow-transition', name: 'opendxp_admin_workflow_submitworkflowtransition', methods: ['POST'])]
     public function submitWorkflowTransitionAction(Request $request, Registry $workflowRegistry, Manager $workflowManager): JsonResponse
     {
-        $workflowOptions = $request->get('workflow', []);
-        $workflow = $workflowRegistry->get($this->element, $request->get('workflowName'));
+        $workflowOptions = $request->request->get('workflow', []);
+        $workflow = $workflowRegistry->get($this->element, $request->request->get('workflowName'));
 
-        if ($workflow->can($this->element, $request->get('transition'))) {
+        if ($workflow->can($this->element, $request->request->get('transition'))) {
             try {
-                $workflowManager->applyWithAdditionalData($workflow, $this->element, $request->get('transition'), $workflowOptions, true);
+                $workflowManager->applyWithAdditionalData($workflow, $this->element, $request->request->get('transition'), $workflowOptions, true);
 
                 $data = [
                     'success' => true,
@@ -115,7 +115,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
             } catch (ValidationException $e) {
                 $reason = '';
                 if (count($e->getSubItems()) > 0) {
-                    $reason = '<ul>' . implode('', array_map(fn ($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
+                    $reason = '<ul>' . implode('', array_map(static fn ($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
                 }
 
                 $data = [
@@ -132,9 +132,9 @@ class WorkflowController extends AdminAbstractController implements KernelContro
                 ];
             }
         } else {
-            $blockTransitionList = $workflow->buildTransitionBlockerList($this->element, $request->get('transition'));
+            $blockTransitionList = $workflow->buildTransitionBlockerList($this->element, $request->request->get('transition'));
 
-            $reasons = array_map(fn ($blockTransitionItem) => $blockTransitionItem->getMessage(), iterator_to_array($blockTransitionList->getIterator(), true));
+            $reasons = array_map(static fn ($blockTransitionItem) => $blockTransitionItem->getMessage(), iterator_to_array($blockTransitionList->getIterator(), true));
 
             $data = [
                 'success' => false,
@@ -152,19 +152,19 @@ class WorkflowController extends AdminAbstractController implements KernelContro
         Registry $workflowRegistry,
         Manager $workflowManager
     ): JsonResponse {
-        $workflowOptions = $request->get('workflow', []);
-        $workflow = $workflowRegistry->get($this->element, $request->get('workflowName'));
+        $workflowOptions = $request->request->get('workflow', []);
+        $workflow = $workflowRegistry->get($this->element, $request->request->get('workflowName'));
 
         $globalAction = $workflowManager->getGlobalAction(
-            $request->get('workflowName'),
-            $request->get('transition')
+            $request->request->get('workflowName'),
+            $request->request->get('transition')
         );
         $saveSubject = !$globalAction || $globalAction->getSaveSubject();
 
         try {
             $workflowManager->applyGlobalAction(
                 $workflow,
-                $this->element, $request->get('transition'),
+                $this->element, $request->request->get('transition'),
                 $workflowOptions, $saveSubject
             );
 
@@ -175,7 +175,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
         } catch (ValidationException $e) {
             $reason = '';
             if (count($e->getSubItems()) > 0) {
-                $reason = '<ul>' . implode('', array_map(fn ($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
+                $reason = '<ul>' . implode('', array_map(static fn ($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
             }
 
             $data = [
@@ -220,8 +220,8 @@ class WorkflowController extends AdminAbstractController implements KernelContro
             $url = $router->generate(
                 'opendxp_admin_workflow_show_graph',
                 [
-                    'cid' => $request->get('cid'),
-                    'ctype' => $request->get('ctype'),
+                    'cid' => $request->query->get('cid'),
+                    'ctype' => $request->query->get('ctype'),
                     'workflow' => $workflow->getName(),
                 ]
             );
@@ -250,10 +250,10 @@ class WorkflowController extends AdminAbstractController implements KernelContro
      *
      * @throws Exception
      */
-    #[Route('/show-graph', name: 'opendxp_admin_workflow_show_graph')]
+    #[Route('/show-graph', name: 'opendxp_admin_workflow_show_graph', methods: ['GET'])]
     public function showGraph(Request $request, Manager $workflowManager): Response
     {
-        $workflow = $workflowManager->getWorkflowByName($request->get('workflow'));
+        $workflow = $workflowManager->getWorkflowByName($request->query->get('workflow'));
 
         $response = new Response($this->getWorkflowSvg($workflow));
         $response->headers->set('Content-Type', 'image/svg+xml');
@@ -269,18 +269,18 @@ class WorkflowController extends AdminAbstractController implements KernelContro
     #[Route('/modal-custom-html', name: 'opendxp_admin_workflow_modal_custom_html', methods: ['POST'])]
     public function getModalCustomHtml(Request $request, Registry $workflowRegistry, Manager $manager): JsonResponse
     {
-        $workflow = $workflowRegistry->get($this->element, $request->get('workflowName'));
+        $workflow = $workflowRegistry->get($this->element, $request->request->get('workflowName'));
 
-        if ($request->get('isGlobalAction') == 'true') {
-            $globalAction = $manager->getGlobalAction($workflow->getName(), $request->get('transition'));
+        if ($request->request->get('isGlobalAction') === 'true') {
+            $globalAction = $manager->getGlobalAction($workflow->getName(), $request->request->get('transition'));
             if ($globalAction) {
                 return $this->customHtmlResponse($globalAction->getCustomHtmlService());
             }
-        } elseif ($workflow->can($this->element, $request->get('transition'))) {
+        } elseif ($workflow->can($this->element, $request->request->get('transition'))) {
             $enabledTransitions = $workflow->getEnabledTransitions($this->element);
             $transition = null;
             foreach ($enabledTransitions as $_transition) {
-                if ($_transition->getName() === $request->get('transition')) {
+                if ($_transition->getName() === $request->request->get('transition')) {
                     $transition = $_transition;
                 }
             }
@@ -400,16 +400,16 @@ class WorkflowController extends AdminAbstractController implements KernelContro
 
         $request = $event->getRequest();
 
-        if ($request->get('ctype') === 'document') {
-            $this->element = Document::getById((int) $request->get('cid', 0));
-        } elseif ($request->get('ctype') === 'asset') {
-            $this->element = Asset::getById((int) $request->get('cid', 0));
-        } elseif ($request->get('ctype') === 'object') {
-            $this->element = ConcreteObject::getById((int) $request->get('cid', 0));
+        if ($request->query->get('ctype') === 'document') {
+            $this->element = Document::getById((int) $request->query->get('cid', 0));
+        } elseif ($request->query->get('ctype') === 'asset') {
+            $this->element = Asset::getById((int) $request->query->get('cid', 0));
+        } elseif ($request->query->get('ctype') === 'object') {
+            $this->element = ConcreteObject::getById((int) $request->query->get('cid', 0));
         }
 
         if (!$this->element) {
-            throw new Exception('Cannot load element' . $request->get('cid') . ' of type \'' . $request->get('ctype') . '\'');
+            throw new Exception('Cannot load element' . $request->query->get('cid') . ' of type \'' . $request->query->get('ctype') . '\'');
         }
 
         //get the latest available version of the element -

@@ -56,7 +56,7 @@ class PageController extends DocumentControllerBase
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(Request $request, StaticPageGenerator $staticPageGenerator): JsonResponse
     {
-        $page = Document\Page::getById((int)$request->get('id'));
+        $page = Document\Page::getById((int)$request->query->get('id'));
 
         if (!$page) {
             throw $this->createNotFoundException('Page not found');
@@ -108,7 +108,7 @@ class PageController extends DocumentControllerBase
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
     public function saveAction(Request $request, StaticPageGenerator $staticPageGenerator): JsonResponse
     {
-        $oldPage = Document\Page::getById((int) $request->get('id'));
+        $oldPage = Document\Page::getById((int) $request->request->get('id'));
         if (!$oldPage) {
             throw $this->createNotFoundException('Page not found');
         }
@@ -118,13 +118,12 @@ class PageController extends DocumentControllerBase
 
         $page = $pageSession ?: $this->getLatestVersion($oldPage);
 
-        if ($request->get('missingRequiredEditable') !== null) {
-            $page->setMissingRequiredEditable($request->get('missingRequiredEditable') == 'true');
+        if ($request->request->has('missingRequiredEditable')) {
+            $page->setMissingRequiredEditable($request->request->get('missingRequiredEditable') === 'true');
         }
 
-        $settings = [];
-        if ($request->get('settings')) {
-            $settings = $this->decodeJson($request->get('settings'));
+        if ($request->request->has('settings')) {
+            $settings = $this->decodeJson($request->request->get('settings'));
             if ($settings['published'] ?? false) {
                 $page->setMissingRequiredEditable(null);
             }
@@ -176,6 +175,7 @@ class PageController extends DocumentControllerBase
         $list = new Document\Listing();
         $list->setCondition('`type` = ?', ['page']);
 
+        // @todo: this seems completely wrong.
         foreach ($list->loadIdList() as $docId) {
             $messengerBusOpendxpCore->dispatch(
                 new GeneratePagePreviewMessage($docId, \OpenDxp\Tool::getHostUrl())
@@ -190,7 +190,7 @@ class PageController extends DocumentControllerBase
     #[Route('/display-preview-image', name: 'display_preview_image', methods: ['GET'])]
     public function displayPreviewImageAction(Request $request): BinaryFileResponse
     {
-        $document = Document\Page::getById((int) $request->get('id'));
+        $document = Document\Page::getById((int) $request->query->get('id'));
         if ($document instanceof Document\Page) {
             return new BinaryFileResponse($document->getPreviewImageFilesystemPath(), 200, [
                 'Content-Type' => 'image/jpg',
@@ -312,7 +312,7 @@ class PageController extends DocumentControllerBase
             ->size($request->query->get('download') ? 4000 : 500)
             ->build();
 
-        $tmpFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/qr-code-' . uniqid() . '.png';
+        $tmpFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/qr-code-' . uniqid('', false) . '.png';
         $result->saveToFile($tmpFile);
 
         $response = new BinaryFileResponse($tmpFile);
@@ -340,10 +340,10 @@ class PageController extends DocumentControllerBase
         DocumentResolver $documentResolver,
         LocaleServiceInterface $localeService
     ): JsonResponse {
-        $blockStateStackData = json_decode($request->get('blockStateStack'), true);
+        $blockStateStackData = json_decode($request->request->get('blockStateStack'), true);
         $blockStateStack->loadArray($blockStateStackData);
 
-        $document = Document\PageSnippet::getById((int) $request->get('documentId'));
+        $document = Document\PageSnippet::getById((int) $request->request->get('documentId'));
         if (!$document) {
             throw $this->createNotFoundException();
         }
@@ -362,14 +362,14 @@ class PageController extends DocumentControllerBase
         // setting locale manually here before rendering, to make sure editables use the right locale from document
         $localeService->setLocale($document->getProperty('language'));
 
-        $areaBlockConfig = json_decode($request->get('areablockConfig'), true);
+        $areaBlockConfig = json_decode($request->request->get('areablockConfig'), true);
         /** @var Document\Editable\Areablock $areablock */
-        $areablock = $editableRenderer->getEditable($document, 'areablock', $request->get('realName'), $areaBlockConfig, true);
-        $areablock->setRealName($request->get('realName'));
+        $areablock = $editableRenderer->getEditable($document, 'areablock', $request->request->get('realName'), $areaBlockConfig, true);
+        $areablock->setRealName($request->request->get('realName'));
         $areablock->setEditmode(true);
-        $areaBrickData = json_decode($request->get('areablockData'), true);
+        $areaBrickData = json_decode($request->request->get('areablockData'), true);
         $areablock->setDataFromEditmode($areaBrickData);
-        $htmlCode = trim($areablock->renderIndex((int) $request->get('index'), true));
+        $htmlCode = trim($areablock->renderIndex((int) $request->request->get('index'), true));
 
         return new JsonResponse([
             'editableDefinitions' => $definitionCollector->getDefinitions(),

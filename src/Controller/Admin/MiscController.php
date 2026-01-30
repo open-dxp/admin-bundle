@@ -77,7 +77,7 @@ class MiscController extends AdminAbstractController
     #[Route('/json-translations-system', name: 'opendxp_admin_misc_jsontranslationssystem', methods: ['GET'])]
     public function jsonTranslationsSystemAction(Request $request, TranslatorInterface $translator): Response
     {
-        $language = $request->get('language');
+        $language = $request->query->get('language');
 
         /** @var Translator $translator */
         $translator->lazyInitialize('admin', $language);
@@ -119,7 +119,7 @@ class MiscController extends AdminAbstractController
     #[Route('/script-proxy', name: 'opendxp_admin_misc_scriptproxy', methods: ['GET'])]
     public function scriptProxyAction(Request $request): Response
     {
-        $storageFile = $request->get('storageFile');
+        $storageFile = $request->query->get('storageFile');
         if (!$storageFile) {
             throw new InvalidArgumentException('The parameter storageFile is required');
         }
@@ -193,7 +193,7 @@ class MiscController extends AdminAbstractController
     public function getValidFilenameAction(Request $request): JsonResponse
     {
         return $this->adminJson([
-            'filename' => \OpenDxp\Model\Element\Service::getValidKey($request->get('value'), $request->get('type')),
+            'filename' => \OpenDxp\Model\Element\Service::getValidKey($request->query->get('value'), $request->query->get('type')),
         ]);
     }
 
@@ -202,11 +202,11 @@ class MiscController extends AdminAbstractController
     {
         $this->checkPermission('maintenance_mode');
 
-        if ($request->get('activate')) {
+        if ($request->query->get('activate')) {
             $maintenanceModeHelper->activate($request->getSession()->getId());
         }
 
-        if ($request->get('deactivate')) {
+        if ($request->query->get('deactivate')) {
             $maintenanceModeHelper->deactivate();
         }
 
@@ -253,7 +253,8 @@ class MiscController extends AdminAbstractController
     #[Route('/get-language-flag', name: 'opendxp_admin_misc_getlanguageflag', methods: ['GET'])]
     public function getLanguageFlagAction(Request $request): BinaryFileResponse
     {
-        $iconPath = AdminTool::getLanguageFlagFile($request->get('language'));
+        $iconPath = AdminTool::getLanguageFlagFile($request->query->get('language'));
+
         $response = new BinaryFileResponse($iconPath);
         $response->headers->set('Content-Type', 'image/svg+xml');
 
@@ -267,7 +268,7 @@ class MiscController extends AdminAbstractController
             $profiler->disable();
         }
 
-        $type = $request->get('type');
+        $type = $request->query->get('type');
         $publicDir = OPENDXP_WEB_ROOT . '/bundles/opendxpadmin';
         $iconDir = $publicDir . '/img';
         $extraInfo = null;

@@ -35,7 +35,7 @@ class HardlinkController extends DocumentControllerBase
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(Request $request): JsonResponse
     {
-        $link = Document\Hardlink::getById((int)$request->get('id'));
+        $link = Document\Hardlink::getById((int)$request->query->get('id'));
 
         if (!$link) {
             throw $this->createNotFoundException('Hardlink not found');
@@ -72,7 +72,7 @@ class HardlinkController extends DocumentControllerBase
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(Request $request): JsonResponse
     {
-        $link = Document\Hardlink::getById((int) $request->get('id'));
+        $link = Document\Hardlink::getById((int) $request->request->get('id'));
         if (!$link) {
             throw $this->createNotFoundException('Hardlink not found');
         }
@@ -97,9 +97,8 @@ class HardlinkController extends DocumentControllerBase
      */
     protected function setValuesToDocument(Request $request, Document $document): void
     {
-        // data
-        if ($request->get('data')) {
-            $data = $this->decodeJson($request->get('data'));
+        if ($request->request->has('data')) {
+            $data = $this->decodeJson($request->request->get('data'));
 
             $sourceId = null;
             if ($sourceDocument = Document::getByPath($data['sourcePath'])) {

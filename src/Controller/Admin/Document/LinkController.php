@@ -39,7 +39,7 @@ class LinkController extends DocumentControllerBase
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(Request $request, SerializerInterface $serializer): JsonResponse
     {
-        $link = Document\Link::getById((int)$request->get('id'));
+        $link = Document\Link::getById((int)$request->query->get('id'));
 
         if (!$link) {
             throw $this->createNotFoundException('Link not found');
@@ -76,7 +76,7 @@ class LinkController extends DocumentControllerBase
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(Request $request): JsonResponse
     {
-        $link = Document\Link::getById((int) $request->get('id'));
+        $link = Document\Link::getById((int) $request->request->get('id'));
         if (!$link) {
             throw $this->createNotFoundException('Link not found');
         }
@@ -101,15 +101,14 @@ class LinkController extends DocumentControllerBase
      */
     protected function setValuesToDocument(Request $request, Document $document): void
     {
-        // data
-        if ($request->get('data')) {
-            $data = $this->decodeJson($request->get('data'));
+        if ($request->request->has('data')) {
+            $data = $this->decodeJson($request->request->get('data'));
 
             $path = $data['path'];
 
             if (!empty($path)) {
                 $target = null;
-                if ($data['linktype'] == 'internal' && $data['internalType']) {
+                if ($data['linktype'] === 'internal' && $data['internalType']) {
                     $target = Element\Service::getElementByPath($data['internalType'], $path);
                     if ($target) {
                         $data['internal'] = $target->getId();

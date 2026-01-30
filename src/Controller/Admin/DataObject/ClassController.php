@@ -1398,7 +1398,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
     #[Route('/bulk-commit', name: 'bulkcommit', methods: ['POST'])]
     public function bulkCommitAction(Request $request): JsonResponse
     {
-        $data = json_decode($request->get('data'), true);
+        $data = json_decode($request->request->get('data'), true);
 
         $session = Session::getSessionBag($request->getSession(), 'opendxp_objects');
         $filename = $session->get('class_bulk_import_file');
@@ -1501,9 +1501,9 @@ class ClassController extends AdminAbstractController implements KernelControlle
     #[Route('/bulk-export-prepare', name: 'bulkexportprepare', methods: ['POST'])]
     public function bulkExportPrepareAction(Request $request): Response
     {
-        $data = $request->get('data');
+        $data = $request->request->get('data');
 
-        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($data): void {
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($data): void {
             $session->set('class_bulk_export_settings', $data);
         }, 'opendxp_objects');
 

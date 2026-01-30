@@ -249,18 +249,18 @@ opendxp.workflowmanagement.actionPanel = Class.create({
         if (this._isLoading) {
             return;
         }
+
         this._isLoading = true;
 
         //send a request to the server with the current form data
         Ext.Ajax.request({
             url : Routing.generate('opendxp_admin_workflow_getworkflowform'),
-            method: 'post',
+            method: 'POST',
             params: this.getWorkflowFormPanel().getValues(),
             success: this.refreshWorkflowFormPanelItems.bind(this),
             failure: this.genericError.bind(this)
         });
     },
-
 
     refreshWorkflowFormPanelItems: function(response)
     {
@@ -292,8 +292,8 @@ opendxp.workflowmanagement.actionPanel = Class.create({
      */
     setAvailableActions: function(actions)
     {
-
         var actionField = this.getWorkflowFormPanel().getComponent('actionFieldset').getComponent('actionField');
+
         actionField.setDisabled(false);
 
         this.actionStore.loadData(actions, false);
@@ -312,8 +312,8 @@ opendxp.workflowmanagement.actionPanel = Class.create({
      */
     setAvailableStates: function(states)
     {
-
         var stateField = this.getWorkflowFormPanel().getComponent('actionFieldset').getComponent('stateField');
+
         stateField.setDisabled(false);
 
         this.stateStore.loadData(states, false);
@@ -338,8 +338,8 @@ opendxp.workflowmanagement.actionPanel = Class.create({
      */
     setAvailableStatuses: function(statuses)
     {
-
         var statusField = this.getWorkflowFormPanel().getComponent('actionFieldset').getComponent('statusField');
+
         statusField.setDisabled(false);
 
         this.statusStore.loadData(statuses, false);
@@ -383,6 +383,7 @@ opendxp.workflowmanagement.actionPanel = Class.create({
     setNotesRequired: function(required)
     {
         var notesField = this.getNotesField();
+
         notesField.allowBlank = !required;
         notesField.setValue(null);
 
@@ -495,8 +496,6 @@ opendxp.workflowmanagement.actionPanel = Class.create({
             success: this.onSubmitWorkflowTransitionResponse.bind(this),
             failure: this.genericError.bind(this)
         });
-
-
     },
 
     onSubmitWorkflowTransitionResponse: function(response)

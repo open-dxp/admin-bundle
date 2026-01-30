@@ -112,7 +112,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
     protected function addPropertiesToDocument(Request $request, Model\Document $document): void
     {
         // properties
-        if ($request->get('properties')) {
+        if ($request->request->has('properties')) {
             $properties = [];
             // assign inherited properties
             foreach ($document->getProperties() as $p) {
@@ -121,7 +121,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
                 }
             }
 
-            $propertiesData = $this->decodeJson($request->get('properties'));
+            $propertiesData = $this->decodeJson($request->request->get('properties'));
 
             if (is_array($propertiesData)) {
                 foreach ($propertiesData as $propertyName => $propertyData) {
@@ -157,8 +157,8 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
     protected function addSettingsToDocument(Request $request, Model\Document $document): void
     {
         // settings
-        if ($request->get('settings') && $document->isAllowed('settings')) {
-            $settings = $this->decodeJson($request->get('settings'));
+        if ($request->request->has('settings') && $document->isAllowed('settings')) {
+            $settings = $this->decodeJson($request->request->get('settings'));
             if (array_key_exists('prettyUrl', $settings)) {
                 $settings['prettyUrl'] = htmlspecialchars($settings['prettyUrl']);
             }
@@ -174,15 +174,15 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
                 && $document instanceof TargetingDocumentInterface
                 && $document->hasTargetGroupSpecificEditables();
 
-            if ($request->get('appendEditables') || $isTargetSpecificEditable) {
+            if ($request->request->get('appendEditables') || $isTargetSpecificEditable) {
                 $document->getEditables();
             } else {
                 // ensure no editables (e.g. from session, version, ...) are still referenced
                 $document->setEditables(null);
             }
 
-            if ($request->get('data')) {
-                $data = $this->decodeJson($request->get('data'));
+            if ($request->request->has('data')) {
+                $data = $this->decodeJson($request->request->get('data'));
                 foreach ($data as $name => $value) {
                     $data = $value['data'] ?? null;
                     $type = $value['type'];
@@ -206,7 +206,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
     #[Route('/save-to-session', name: 'savetosession', methods: ['POST'])]
     public function saveToSessionAction(Request $request): JsonResponse
     {
-        if ($documentId = (int) $request->get('id')) {
+        if ($documentId = (int) $request->request->get('id')) {
             if (!$document = Model\Document\Service::getElementFromSession('document', $documentId, $request->getSession()->getId())) {
                 $document = Model\Document\PageSnippet::getById($documentId);
                 if (!$document) {
@@ -257,7 +257,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
     #[Route('/remove-from-session', name: 'removefromsession', methods: ['DELETE'])]
     public function removeFromSessionAction(Request $request): JsonResponse
     {
-        Model\Document\Service::removeElementFromSession('document', $request->get('id'), $request->getSession()->getId());
+        Model\Document\Service::removeElementFromSession('document', $request->request->get('id'), $request->getSession()->getId());
 
         return $this->adminJson(['success' => true]);
     }
@@ -306,10 +306,10 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
     #[Route('/change-main-document', name: 'changemaindocument', methods: ['PUT'])]
     public function changeMainDocumentAction(Request $request): JsonResponse
     {
-        $doc = Model\Document\PageSnippet::getById((int) $request->get('id'));
+        $doc = Model\Document\PageSnippet::getById((int) $request->request->get('id'));
         if ($doc instanceof Model\Document\PageSnippet) {
             $doc->setEditables([]);
-            $doc->setContentMainDocumentId($request->get('contentMainDocumentPath'), true);
+            $doc->setContentMainDocumentId($request->request->get('contentMainDocumentPath'), true);
             $doc->saveVersion();
         }
 
@@ -365,7 +365,7 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
         $document->setModificationDate(time());
         $document->setUserModification($this->getAdminUser()->getId());
 
-        $task = strtolower($task ?? $request->get('task'));
+        $task = strtolower($task ?? $request->query->get('task'));
         $version = null;
         switch ($task) {
             case $task === self::TASK_PUBLISH && $document->isAllowed($task):

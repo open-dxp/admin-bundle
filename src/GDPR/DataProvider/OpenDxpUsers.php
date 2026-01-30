@@ -93,11 +93,11 @@ class OpenDxpUsers implements DataProviderInterface
         foreach ($userListing->getUsers() as $user) {
             $users[] = [
                 'id' => $user->getId(),
-                'username' => $user->getUsername(),
+                'name' => $user->getName(),
                 'firstname' => $user->getFirstname(),
                 'lastname' => $user->getLastname(),
                 'email' => $user->getEmail(),
-                '__gdprIsDeletable' => $user->getId() != $currentUser->getId(),
+                '__gdprIsDeletable' => $user->getId() !== $currentUser->getId(),
 
             ];
         }

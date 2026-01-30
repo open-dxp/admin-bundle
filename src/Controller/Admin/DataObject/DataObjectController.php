@@ -1309,7 +1309,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(Request $request): JsonResponse
     {
-        $objectFromDatabase = DataObject\Concrete::getById((int) $request->get('id'));
+        $objectFromDatabase = DataObject\Concrete::getById((int) $request->request->get('id'));
 
         if (!$objectFromDatabase instanceof DataObject\Concrete) {
             return $this->adminJson(['success' => false, 'message' => 'Could not find object']);
@@ -1344,35 +1344,35 @@ class DataObjectController extends ElementControllerBase implements KernelContro
             }
         }
 
-        if ($request->get('data')) {
+        if ($request->request->has('data')) {
             try {
-                $this->applyChanges($object, $this->decodeJson($request->get('data')));
+                $this->applyChanges($object, $this->decodeJson($request->request->get('data')));
             } catch (Throwable) {
-                $this->applyChanges($objectFromDatabase, $this->decodeJson($request->get('data')));
+                $this->applyChanges($objectFromDatabase, $this->decodeJson($request->request->get('data')));
             }
         }
 
         $this->assignPropertiesFromEditmode($request, $object);
         $this->applySchedulerDataToElement($request, $object, $this->getAdminUser());
 
-        if (($request->get('task') === 'unpublish' && !$object->isAllowed('unpublish')) || ($request->get('task') === 'publish' && !$object->isAllowed('publish'))) {
+        if (($request->query->get('task') === 'unpublish' && !$object->isAllowed('unpublish')) || ($request->query->get('task') === 'publish' && !$object->isAllowed('publish'))) {
             throw $this->createAccessDeniedHttpException();
         }
 
-        if ($request->get('task') === 'unpublish') {
+        if ($request->query->get('task') === 'unpublish') {
             $object->setPublished(false);
         }
 
-        if ($request->get('task') === 'publish') {
+        if ($request->query->get('task') === 'publish') {
             $object->setPublished(true);
         }
 
         // unpublish and save version is possible without checking mandatory fields
-        if (in_array($request->get('task'), ['unpublish', 'version', 'autoSave'])) {
+        if (in_array($request->query->get('task'), ['unpublish', 'version', 'autoSave'])) {
             $object->setOmitMandatoryCheck(true);
         }
 
-        if (($request->get('task') === 'publish') || ($request->get('task') === 'unpublish')) {
+        if (($request->query->get('task') === 'publish') || ($request->query->get('task') === 'unpublish')) {
             // disabled for now: see different approach [Elements] Show users who are working on the same element #9381
             // https://github.com/pimcore/pimcore/issues/9381
             //            if ($data) {
@@ -1386,7 +1386,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
 
             $newObject = DataObject::getById($object->getId(), ['force' => true]);
 
-            if ($request->get('task') === 'publish') {
+            if ($request->query->get('task') === 'publish') {
                 $object->deleteAutoSaveVersions($this->getAdminUser()->getId());
             }
 
@@ -1400,7 +1400,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
             ]);
         }
 
-        if ($request->get('task') === 'session') {
+        if ($request->query->get('task') === 'session') {
             DataObject\Service::saveElementToSession($object, $request->getSession()->getId(), '');
 
             return $this->adminJson(['success' => true]);
@@ -1480,7 +1480,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     #[Route('/save-folder', name: 'savefolder', methods: ['PUT'])]
     public function saveFolderAction(Request $request): JsonResponse
     {
-        $object = DataObject::getById((int) $request->get('id'));
+        $object = DataObject::getById((int) $request->request->get('id'));
 
         if (!$object) {
             throw $this->createNotFoundException('Object not found');
@@ -1489,7 +1489,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
         if ($object->isAllowed('publish')) {
             try {
                 // general settings
-                $general = $this->decodeJson($request->get('general'));
+                $general = $this->decodeJson($request->request->get('general'));
                 $object->setValues($general);
                 $object->setUserModification($this->getAdminUser()->getId());
 

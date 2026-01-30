@@ -27,8 +27,6 @@ use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Class DataObjectController
- *
  * @internal
  */
 #[Route('/data-object')]
@@ -46,7 +44,7 @@ class DataObjectController extends AdminAbstractController implements KernelCont
     #[Route('/search-data-objects', name: 'opendxp_admin_gdpr_dataobject_searchdataobjects', methods: ['GET'])]
     public function searchDataObjectsAction(Request $request, DataObjects $service): JsonResponse
     {
-        $allParams = [...$request->request->all(), ...$request->query->all()];
+        $allParams = $request->query->all();
 
         $result = $service->searchData(
             (int)$allParams['id'],
@@ -67,10 +65,12 @@ class DataObjectController extends AdminAbstractController implements KernelCont
     #[Route('/export', name: 'opendxp_admin_gdpr_dataobject_exportdataobject', methods: ['GET'])]
     public function exportDataObjectAction(Request $request, DataObjects $service): JsonResponse
     {
-        $object = DataObject::getById((int) $request->get('id'));
+        $object = DataObject::getById((int) $request->query->get('id'));
+
         if (!$object) {
             throw $this->createNotFoundException('Object not found');
         }
+
         if (!$object->isAllowed('view')) {
             throw $this->createAccessDeniedException('Export denied');
         }

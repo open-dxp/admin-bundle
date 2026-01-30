@@ -52,7 +52,7 @@ class UserController extends AdminAbstractController implements KernelController
     public function treeGetChildrenByIdAction(Request $request): JsonResponse
     {
         $list = new User\Listing();
-        $list->setCondition('parentId = ?', (int)$request->get('node'));
+        $list->setCondition('parentId = ?', (int)$request->query->get('node'));
         $list->setOrder('ASC');
         $list->setOrderKey('name');
         $list->load();
@@ -118,8 +118,8 @@ class UserController extends AdminAbstractController implements KernelController
                 'active' => $request->request->getBoolean('active'),
             ]);
 
-            if ($request->get('rid')) {
-                $rid = (int)$request->get('rid');
+            if ($request->request->has('rid')) {
+                $rid = (int)$request->request->get('rid');
                 $rObject = $className::getById($rid);
                 if ($rObject && ($type === 'user' || $type === 'role')) {
                     $user->setParentId($rObject->getParentId());
@@ -217,7 +217,7 @@ class UserController extends AdminAbstractController implements KernelController
     #[Route('/user/delete', name: 'opendxp_admin_user_delete', methods: ['DELETE'])]
     public function deleteAction(Request $request): JsonResponse
     {
-        $user = User\AbstractUser::getById((int)$request->get('id'));
+        $user = User\AbstractUser::getById((int)$request->request->get('id'));
 
         // only admins are allowed to delete admins and folders
         // because a folder might contain an admin user, so it is simply not allowed for users with the "users" permission
@@ -259,8 +259,8 @@ class UserController extends AdminAbstractController implements KernelController
             throw $this->createAccessDeniedHttpException('Only admin users are allowed to modify admin users');
         }
 
-        if ($request->get('data')) {
-            $values = $this->decodeJson($request->get('data'), true);
+        if ($request->request->has('data')) {
+            $values = $this->decodeJson($request->request->get('data'), true);
 
             if (!empty($values['password'])) {
                 if (strlen($values['password']) < 10) {
@@ -301,9 +301,9 @@ class UserController extends AdminAbstractController implements KernelController
             }
 
             // check for workspaces
-            if ($request->get('workspaces')) {
+            if ($request->request->has('workspaces')) {
                 $processedPaths = ['object' => [], 'asset' => [], 'document' => []]; //array to find if there are multiple entries for a path
-                $workspaces = $this->decodeJson($request->get('workspaces'), true);
+                $workspaces = $this->decodeJson($request->request->get('workspaces'), true);
                 foreach ($workspaces as $type => $spaces) {
                     $newWorkspaces = [];
                     foreach ($spaces as $space) {
@@ -330,8 +330,8 @@ class UserController extends AdminAbstractController implements KernelController
             }
         }
 
-        if ($user instanceof User && $request->get('keyBindings')) {
-            $keyBindings = json_decode($request->get('keyBindings'), true);
+        if ($user instanceof User && $request->request->has('keyBindings')) {
+            $keyBindings = json_decode($request->request->get('keyBindings'), true);
             $tmpArray = [];
             foreach ($keyBindings as $item) {
                 $tmpArray[] = json_decode($item, true);
@@ -353,7 +353,7 @@ class UserController extends AdminAbstractController implements KernelController
     #[Route('/user/get', name: 'opendxp_admin_user_get', methods: ['GET'])]
     public function getAction(Request $request): JsonResponse
     {
-        $userId = (int)$request->get('id');
+        $userId = (int)$request->query->get('id');
         if ($userId < 1) {
             throw $this->createNotFoundException();
         }
@@ -452,7 +452,7 @@ class UserController extends AdminAbstractController implements KernelController
     #[Route('/user/get-minimal', name: 'opendxp_admin_user_getminimal', methods: ['GET'])]
     public function getMinimalAction(Request $request): JsonResponse
     {
-        $user = User::getById((int)$request->get('id'));
+        $user = User::getById((int)$request->query->get('id'));
 
         if (!$user) {
             throw $this->createNotFoundException();
@@ -472,10 +472,13 @@ class UserController extends AdminAbstractController implements KernelController
     public function uploadCurrentUserImageAction(Request $request): JsonResponse
     {
         $user = $this->getAdminUser();
-        if ($user != null) {
-            if ($user->getId() == $request->get('id')) {
+
+        if ($user !== null) {
+
+            if ($user->getId() === (int)$request->query->get('id')) {
                 return $this->uploadImageAction($request);
             }
+
             Logger::warn('prevented save current user, because ids do not match. ');
 
             return $this->adminJson(false);
@@ -490,11 +493,11 @@ class UserController extends AdminAbstractController implements KernelController
         //TODO Can be completely validated with Symfony Validator
         $user = $this->getAdminUser();
 
-        $isPasswordReset = Tool\Session::useBag($request->getSession(), fn (AttributeBagInterface $adminSession) => (bool) $adminSession->get('password_reset'));
+        $isPasswordReset = Tool\Session::useBag($request->getSession(), static fn (AttributeBagInterface $adminSession) => (bool) $adminSession->get('password_reset'));
 
-        if ($user != null) {
-            if ($user->getId() == $request->get('id')) {
-                $values = $this->decodeJson($request->get('data'), true);
+        if ($user !== null && $request->request->has('id')) {
+            if ($user->getId() === (int) $request->request->get('id')) {
+                $values = $this->decodeJson($request->request->get('data'), true);
 
                 unset($values['name'], $values['id'], $values['admin'], $values['permissions'], $values['roles'], $values['active']);
 
@@ -534,8 +537,8 @@ class UserController extends AdminAbstractController implements KernelController
 
                 $user->setValues($values);
 
-                if ($request->get('keyBindings')) {
-                    $keyBindings = json_decode($request->get('keyBindings'), true);
+                if ($request->request->has('keyBindings')) {
+                    $keyBindings = json_decode($request->request->get('keyBindings'), true);
                     $tmpArray = [];
                     foreach ($keyBindings as $item) {
                         $tmpArray[] = json_decode($item, true);
@@ -598,7 +601,7 @@ class UserController extends AdminAbstractController implements KernelController
     public function roleTreeGetChildrenByIdAction(Request $request): JsonResponse
     {
         $list = new User\Role\Listing();
-        $list->setCondition('parentId = ?', (int)$request->get('node'));
+        $list->setCondition('parentId = ?', (int)$request->query->get('node'));
         $list->load();
 
         $roles = [];
@@ -644,7 +647,7 @@ class UserController extends AdminAbstractController implements KernelController
     #[Route('/user/role-get', name: 'opendxp_admin_user_roleget', methods: ['GET'])]
     public function roleGetAction(Request $request): JsonResponse
     {
-        $role = User\Role::getById((int)$request->get('id'));
+        $role = User\Role::getById((int)$request->query->get('id'));
 
         if (!$role) {
             throw $this->createNotFoundException();
@@ -694,7 +697,8 @@ class UserController extends AdminAbstractController implements KernelController
     #[Route('/user/upload-image', name: 'opendxp_admin_user_uploadimage', methods: ['POST'])]
     public function uploadImageAction(Request $request): JsonResponse
     {
-        $userObj = User::getById($this->getUserId($request));
+        $requestUserId = $request->query->has('id') ? (int)$request->query->get('id') : null;
+        $userObj = User::getById($this->getUserId($requestUserId));
 
         if (!$userObj) {
             throw $this->createNotFoundException();
@@ -713,7 +717,7 @@ class UserController extends AdminAbstractController implements KernelController
             throw new Exception('Unsupported file format.');
         }
 
-        $userObj->setImage($_FILES['Filedata']['tmp_name']);
+        $userObj->setImage($avatarFile->getPathname());
 
         // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
         // Ext.form.Action.Submit and mark the submission as failed
@@ -730,7 +734,8 @@ class UserController extends AdminAbstractController implements KernelController
     #[Route('/user/delete-image', name: 'opendxp_admin_user_deleteimage', methods: ['DELETE'])]
     public function deleteImageAction(Request $request): JsonResponse
     {
-        $userObj = User::getById($this->getUserId($request));
+        $requestUserId = $request->query->has('id') ? (int)$request->query->get('id') : null;
+        $userObj = User::getById($this->getUserId($requestUserId));
 
         if (!$userObj) {
             throw $this->createNotFoundException();
@@ -774,10 +779,12 @@ class UserController extends AdminAbstractController implements KernelController
     #[Route('/user/reset-2fa-secret', name: 'opendxp_admin_user_reset2fasecret', methods: ['PUT'])]
     public function reset2FaSecretAction(Request $request): JsonResponse
     {
-        $user = User::getById((int)$request->get('id'));
+        $user = User::getById((int)$request->request->get('id'));
+
         if (!$user) {
             throw $this->createNotFoundException();
         }
+
         $user->setTwoFactorAuthentication('enabled', false);
         $user->setTwoFactorAuthentication('secret', '');
         $user->save();
@@ -804,7 +811,9 @@ class UserController extends AdminAbstractController implements KernelController
     #[Route('/user/get-image', name: 'opendxp_admin_user_getimage', methods: ['GET'])]
     public function getImageAction(Request $request): StreamedResponse
     {
-        $userObj = User::getById($this->getUserId($request));
+        $requestUserId = $request->query->has('id') ? (int)$request->query->get('id') : null;
+        $userObj = User::getById($this->getUserId($requestUserId));
+
         if (!$userObj) {
             throw $this->createNotFoundException();
         }
@@ -823,7 +832,7 @@ class UserController extends AdminAbstractController implements KernelController
     #[Route('/user/get-token-login-link', name: 'opendxp_admin_user_gettokenloginlink', methods: ['GET'])]
     public function getTokenLoginLinkAction(Request $request, TranslatorInterface $translator): JsonResponse
     {
-        $user = User::getById((int) $request->get('id'));
+        $user = User::getById((int) $request->query->get('id'));
 
         if (!$user) {
             return $this->adminJson([
@@ -860,13 +869,12 @@ class UserController extends AdminAbstractController implements KernelController
     #[Route('/user/search', name: 'opendxp_admin_user_search', methods: ['GET'])]
     public function searchAction(Request $request): JsonResponse
     {
-        $q = '%' . $request->get('query') . '%';
+        $q = '%' . $request->query->get('query') . '%';
 
         $list = new User\Listing();
-        $list->setCondition('name LIKE ? OR firstname LIKE ? OR lastname LIKE ? OR email LIKE ? OR id = ?', [$q, $q, $q, $q, (int)$request->get('query')]);
+        $list->setCondition('name LIKE ? OR firstname LIKE ? OR lastname LIKE ? OR email LIKE ? OR id = ?', [$q, $q, $q, $q, (int)$request->query->get('query')]);
         $list->setOrder('ASC');
         $list->setOrderKey('name');
-        $list->load();
 
         $users = [];
         foreach ($list->getUsers() as $user) {
@@ -929,7 +937,7 @@ class UserController extends AdminAbstractController implements KernelController
 
         $conditions = [ 'type = "user"' ];
 
-        if (!$request->get('include_current_user')) {
+        if (!$request->query->get('include_current_user')) {
             $conditions[] = 'id != ' . $this->getAdminUser()->getId();
         }
 
@@ -939,7 +947,7 @@ class UserController extends AdminAbstractController implements KernelController
         $userList = $list->getUsers();
 
         foreach ($userList as $user) {
-            if (!$request->get('permission') || $user->isAllowed($request->get('permission'))) {
+            if (!$request->query->get('permission') || $user->isAllowed($request->query->get('permission'))) {
                 $users[] = [
                     'id' => $user->getId(),
                     'label' => $user->getUsername(),
@@ -961,7 +969,7 @@ class UserController extends AdminAbstractController implements KernelController
         $roleList = $list->getRoles();
 
         foreach ($roleList as $role) {
-            if (!$request->get('permission') || in_array($request->get('permission'), $role->getPermissions())) {
+            if (!$request->query->has('permission') || in_array($request->query->get('permission'), $role->getPermissions())) {
                 $roles[] = [
                     'id' => $role->getId(),
                     'label' => $role->getName(),
@@ -987,7 +995,7 @@ class UserController extends AdminAbstractController implements KernelController
         $success = false;
         $message = '';
 
-        if ($username = $request->get('username')) {
+        if ($username = $request->request->get('username')) {
             $user = User::getByName($username);
             if ($user instanceof User) {
                 if (!$user->isActive()) {
@@ -1043,17 +1051,20 @@ class UserController extends AdminAbstractController implements KernelController
         ]);
     }
 
-    protected function getUserId(Request $request): int
+    protected function getUserId(?int $requestedUserId): int
     {
-        if ($request->get('id')) {
-            if ($this->getAdminUser()->getId() != $request->get('id')) {
+        $currentAdminUserId = $this->getAdminUser()->getId();
+
+        if ($requestedUserId !== null) {
+
+            if ($currentAdminUserId !== $requestedUserId) {
                 $this->checkPermission('users');
             }
 
-            return (int) $request->get('id');
+            return $requestedUserId;
         }
 
-        return $this->getAdminUser()->getId();
+        return $currentAdminUserId;
     }
 
     /**

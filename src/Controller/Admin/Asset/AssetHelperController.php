@@ -919,10 +919,10 @@ class AssetHelperController extends AdminAbstractController
     public function batchAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
         try {
-            if ($request->get('data')) {
+            if ($request->request->has('data')) {
                 $loader = OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
 
-                $data = $this->decodeJson($request->get('data'), true);
+                $data = $this->decodeJson($request->request->get('data'), true);
 
                 $updateEvent = new GenericEvent($this, [
                     'data' => $data,
@@ -939,7 +939,7 @@ class AssetHelperController extends AdminAbstractController
 
                 $language = null;
                 if (isset($data['language'])) {
-                    $language = $data['language'] != 'default' ? $data['language'] : null;
+                    $language = $data['language'] !== 'default' ? $data['language'] : null;
                 }
 
                 $asset = Asset::getById((int) $data['job']);
@@ -955,14 +955,14 @@ class AssetHelperController extends AdminAbstractController
                     $name = $data['name'];
                     $value = $data['value'];
 
-                    if ($data['valueType'] == 'object') {
+                    if ($data['valueType'] === 'object') {
                         $value = $this->decodeJson($value);
                     }
 
                     $fieldDef = explode('~', $name);
                     $name = $fieldDef[0];
                     if (count($fieldDef) > 1) {
-                        $language = ($fieldDef[1] == 'none' ? '' : $fieldDef[1]);
+                        $language = ($fieldDef[1] === 'none' ? '' : $fieldDef[1]);
                     }
 
                     foreach ($metadata as &$em) {

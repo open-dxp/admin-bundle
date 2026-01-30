@@ -43,8 +43,11 @@ class CsrfProtectionHandler implements LoggerAwareInterface
     {
         $csrfToken = $this->getCsrfToken($request->getSession());
         $requestCsrfToken = $request->headers->get('x_opendxp_csrf_token');
+
         if (!$requestCsrfToken) {
-            $requestCsrfToken = $request->get('csrfToken');
+            $requestCsrfToken = $request->query->has('csrfToken')
+                ? $request->query->get('csrfToken')
+                : $request->request->get('csrfToken');
         }
 
         if (!$csrfToken || $csrfToken !== $requestCsrfToken) {

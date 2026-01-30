@@ -105,8 +105,10 @@ class LoginController extends AdminAbstractController implements KernelControlle
         CsrfProtectionHandler $csrfProtection,
         Config $config
     ): RedirectResponse|Response {
+
         $queryParams = $request->query->all();
-        if ($request->get('_route') === 'opendxp_admin_login_fallback') {
+
+        if ($request->attributes->get('_route') === 'opendxp_admin_login_fallback') {
             return $this->redirectToRoute('opendxp_admin_login', $queryParams, Response::HTTP_MOVED_PERMANENTLY);
         }
 
@@ -134,16 +136,16 @@ class LoginController extends AdminAbstractController implements KernelControlle
 
         $params['csrfTokenRefreshInterval'] = ((int)$session_gc_maxlifetime - 60) * 1000;
 
-        if ($request->get('too_many_attempts')) {
-            $params['error'] = SecurityHelper::convertHtmlSpecialChars($request->get('too_many_attempts'));
+        if ($request->query->has('too_many_attempts')) {
+            $params['error'] = SecurityHelper::convertHtmlSpecialChars($request->query->get('too_many_attempts'));
         }
-        if ($request->get('auth_failed')) {
+        if ($request->query->has('auth_failed')) {
             $params['error'] = 'error_auth_failed';
         }
-        if ($request->get('session_expired')) {
+        if ($request->query->has('session_expired')) {
             $params['error'] = 'error_session_expired';
         }
-        if ($request->get('deeplink')) {
+        if ($request->query->has('deeplink')) {
             $params['deeplink'] = true;
         }
 
@@ -189,8 +191,13 @@ class LoginController extends AdminAbstractController implements KernelControlle
     #[Route('/login/login', name: 'opendxp_admin_login_check')]
     public function loginCheckAction(Request $request): RedirectResponse
     {
+        $params = [];
+        if ($request->query->has('perspective')) {
+            $params['perspective'] = strip_tags($request->query->get('perspective'));
+        }
+
         // just in case the authenticator didn't redirect
-        return new RedirectResponse($this->generateUrl('opendxp_admin_login', ['perspective' => strip_tags($request->get('perspective', ''))]));
+        return new RedirectResponse($this->generateUrl('opendxp_admin_login', $params));
     }
 
     #[Route('/login/lostpassword', name: 'opendxp_admin_login_lostpassword')]
@@ -204,7 +211,9 @@ class LoginController extends AdminAbstractController implements KernelControlle
         $params = $this->buildLoginPageViewParams($config);
         $error = null;
 
-        if ($request->getMethod() === 'POST' && $username = $request->get('username')) {
+        if ($request->getMethod() === 'POST' && $request->request->has('username')) {
+
+            $username = $request->request->get('username');
             $user = User::getByName($username);
             if (!$user instanceof User) {
                 $error = 'user_unknown';
@@ -282,16 +291,17 @@ class LoginController extends AdminAbstractController implements KernelControlle
     public function deeplinkAction(Request $request): Response
     {
         // check for deeplink
-        $queryString = $_SERVER['QUERY_STRING'];
+        $queryString = $request->server->get('QUERY_STRING');
 
         if (preg_match('/(document|asset|object)_(\d+)_([a-z]+)/', $queryString, $deeplink)) {
             $deeplink = $deeplink[0];
-            $perspective = strip_tags($request->get('perspective', ''));
+            $perspective = strip_tags($request->query->get('perspective', ''));
             if (strpos($queryString, 'token')) {
                 $url = $this->dispatchLoginRedirect([
                     'deeplink' => $deeplink,
                     'perspective' => $perspective,
                 ]);
+
                 $url .= '&' . $queryString;
 
                 return $this->redirect($url);

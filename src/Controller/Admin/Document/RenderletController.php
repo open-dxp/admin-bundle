@@ -40,7 +40,7 @@ class RenderletController extends AdminAbstractController
     /**
      * Handles editmode preview for renderlets
      */
-    #[Route('/document_tag/renderlet', name: 'opendxp_admin_document_renderlet_renderlet')]
+    #[Route('/document_tag/renderlet', name: 'opendxp_admin_document_renderlet_renderlet', methods: ['GET'])]
     public function renderletAction(
         Request $request,
         ActionRenderer $actionRenderer,
@@ -48,6 +48,7 @@ class RenderletController extends AdminAbstractController
         LocaleServiceInterface $localeService,
         EventDispatcherInterface $eventDispatcher
     ): Response {
+
         $query = $request->query->all();
         $attributes = [];
 
@@ -55,15 +56,16 @@ class RenderletController extends AdminAbstractController
         $element = $this->loadElement($request);
 
         $event = new GenericEvent($this, [
-            'requestParams' => [...$request->request->all(), ...$request->query->all()],
+            'requestParams' => $query,
             'element' => $element,
         ]);
+
         $eventDispatcher->dispatch($event, DocumentEvents::EDITABLE_RENDERLET_PRE_RENDER);
 
-        $controller = $request->get('controller');
+        $controller = $request->query->get('controller');
 
         // set document if set in request
-        if ($documentId = $request->get('opendxp_parentDocument')) {
+        if ($documentId = $request->query->get('opendxp_parentDocument')) {
             $document = Document\PageSnippet::getById((int) $documentId);
             if ($document) {
                 $attributes = $actionRenderer->addDocumentAttributes($document, $attributes);
@@ -72,7 +74,7 @@ class RenderletController extends AdminAbstractController
         }
 
         // override template if set
-        if ($template = $request->get('template')) {
+        if ($template = $request->query->get('template')) {
             $attributes[DynamicRouter::CONTENT_TEMPLATE] = $template;
         }
 
@@ -97,8 +99,8 @@ class RenderletController extends AdminAbstractController
     {
         $element = null;
 
-        $id = $request->get('id');
-        $type = $request->get('type');
+        $id = $request->query->get('id');
+        $type = $request->query->get('type');
 
         if ($id && $type) {
             $element = Service::getElementById($type, (int)$id);

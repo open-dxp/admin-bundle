@@ -66,7 +66,7 @@ class UserPerspectiveListener implements EventSubscriberInterface, LoggerAwareIn
     protected function setRequestedPerspective(User $user, Request $request): void
     {
         // update perspective settings
-        $requestedPerspective = $request->get('perspective');
+        $requestedPerspective = $request->query->get('perspective');
 
         if ($requestedPerspective && $requestedPerspective !== $user->getActivePerspective()) {
             $existingPerspectives = array_keys(\OpenDxp\Bundle\AdminBundle\Perspective\Config::get());

@@ -33,24 +33,25 @@ class AdminTokenAuthenticator extends AdminAbstractAuthenticator
 {
     public function supports(Request $request): ?bool
     {
-        return $request->attributes->get('_route') === self::OPENDXP_ADMIN_LOGIN_CHECK
-            && $request->get('token');
+        return
+            $request->attributes->get('_route') === self::OPENDXP_ADMIN_LOGIN_CHECK &&
+            $request->query->has('token');
     }
 
     public function authenticate(Request $request): Passport
     {
-        $openDxpUser = Authentication::authenticateToken($request->get('token'));
+        $openDxpUser = Authentication::authenticateToken($request->query->get('token'));
 
         if ($openDxpUser) {
             $openDxpUser->setTwoFactorAuthentication('required', false);
 
             $userBadge = new UserBadge($openDxpUser->getUsername(), fn () => new User($openDxpUser));
 
-            if ($request->get('reset', false)) {
+            if ($request->query->get('reset', false)) {
                 // save the information to session when the user want's to reset the password
                 // this is because otherwise the old password is required
 
-                Session::useBag($request->getSession(), function (AttributeBagInterface $adminSession): void {
+                Session::useBag($request->getSession(), static function (AttributeBagInterface $adminSession): void {
                     $adminSession->set('password_reset', true);
                 });
             }

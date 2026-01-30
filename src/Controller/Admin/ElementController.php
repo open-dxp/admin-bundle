@@ -52,7 +52,7 @@ class ElementController extends AdminAbstractController
     #[Route('/element/unlock-element', name: 'opendxp_admin_element_unlockelement', methods: ['PUT'])]
     public function unlockElementAction(Request $request): Response
     {
-        Element\Editlock::unlock((int)$request->get('id'), $request->get('type'));
+        Element\Editlock::unlock((int)$request->request->get('id'), $request->request->get('type'));
 
         return $this->adminJson(['success' => true]);
     }
@@ -129,7 +129,7 @@ class ElementController extends AdminAbstractController
     #[Route('/element/note-types', name: 'opendxp_admin_element_notetypes', methods: ['GET'])]
     public function noteTypes(Request $request): JsonResponse
     {
-        return match ($request->get('ctype')) {
+        return match ($request->query->get('ctype')) {
             'document' => $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_DOCUMENTS_NOTES_EVENTS_TYPES),
             'asset' => $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_ASSETS_NOTES_EVENTS_TYPES),
             'object' => $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_DATAOBJECTS_NOTES_EVENTS_TYPES),
@@ -155,14 +155,14 @@ class ElementController extends AdminAbstractController
 
         $list = new Element\Note\Listing();
 
-        $offset = (int) $request->get('start', 0);
-        $limit = $request->get('limit');
+        $offset = (int) $request->request->get('start', 0);
+        $limit = $request->request->get('limit');
         $limit = $limit ? (int) $limit : null;
 
         $list->setLimit($limit);
         $list->setOffset($offset);
 
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings([...$request->request->all(), ...$request->query->all()]);
+        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->request->all());
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $list->setOrderKey($sortingSettings['orderKey']);
             $list->setOrder($sortingSettings['order']);
@@ -172,7 +172,7 @@ class ElementController extends AdminAbstractController
         }
 
         $conditions = [];
-        $filterText = $request->get('filterText');
+        $filterText = $request->request->get('filterText');
 
         if ($filterText) {
             $conditions[] = '('
@@ -184,7 +184,7 @@ class ElementController extends AdminAbstractController
                 . ')';
         }
 
-        $filterJson = $request->get('filter');
+        $filterJson = $request->request->get('filter');
         if ($filterJson) {
             $db = Db::get();
             $filters = $this->decodeJson($filterJson);
@@ -194,28 +194,28 @@ class ElementController extends AdminAbstractController
             foreach ($filters as $filter) {
                 $operator = '=';
 
-                if ($filter['type'] == 'string') {
+                if ($filter['type'] === 'string') {
                     $operator = 'LIKE';
-                } elseif ($filter['type'] == 'numeric') {
-                    if ($filter[$comparisonKey] == 'lt') {
+                } elseif ($filter['type'] === 'numeric') {
+                    if ($filter[$comparisonKey] === 'lt') {
                         $operator = '<';
-                    } elseif ($filter[$comparisonKey] == 'gt') {
+                    } elseif ($filter[$comparisonKey] === 'gt') {
                         $operator = '>';
-                    } elseif ($filter[$comparisonKey] == 'eq') {
+                    } elseif ($filter[$comparisonKey] === 'eq') {
                         $operator = '=';
                     }
-                } elseif ($filter['type'] == 'date') {
-                    if ($filter[$comparisonKey] == 'lt') {
+                } elseif ($filter['type'] === 'date') {
+                    if ($filter[$comparisonKey] === 'lt') {
                         $operator = '<';
-                    } elseif ($filter[$comparisonKey] == 'gt') {
+                    } elseif ($filter[$comparisonKey] === 'gt') {
                         $operator = '>';
-                    } elseif ($filter[$comparisonKey] == 'eq') {
+                    } elseif ($filter[$comparisonKey] === 'eq') {
                         $operator = '=';
                     }
                     $filter['value'] = strtotime($filter['value']);
-                } elseif ($filter[$comparisonKey] == 'list') {
+                } elseif ($filter[$comparisonKey] === 'list') {
                     $operator = '=';
-                } elseif ($filter[$comparisonKey] == 'boolean') {
+                } elseif ($filter[$comparisonKey] === 'boolean') {
                     $operator = '=';
                     $filter['value'] = (int) $filter['value'];
                 }
@@ -225,9 +225,9 @@ class ElementController extends AdminAbstractController
                     $value = '%' . $value . '%';
                 }
 
-                if ($filter[$propertyKey] == 'user') {
+                if ($filter[$propertyKey] === 'user') {
                     $conditions[] = '`user` IN (SELECT `id` FROM `users` WHERE `name` LIKE ' . $list->quote($value) . ')';
-                } elseif ($filter['type'] == 'date' && $filter[$comparisonKey] == 'eq') {
+                } elseif ($filter['type'] === 'date' && $filter[$comparisonKey] === 'eq') {
                     $maxTime = $value + (86400 - 1);
                     //specifies the top point of the range used in the condition
                     $dateCondition = '`' . $filter[$propertyKey] . '` ' . ' BETWEEN ' . $db->quote($value) . ' AND ' . $db->quote($maxTime);
@@ -238,8 +238,8 @@ class ElementController extends AdminAbstractController
             }
         }
 
-        if ($request->get('cid') && $request->get('ctype')) {
-            $conditions[] = '(cid = ' . $list->quote($request->get('cid')) . ' AND ctype = ' . $list->quote($request->get('ctype')) . ')';
+        if ($request->request->has('cid') && $request->request->has('ctype')) {
+            $conditions[] = '(cid = ' . $list->quote($request->request->get('cid')) . ' AND ctype = ' . $list->quote($request->request->get('ctype')) . ')';
         }
 
         if ($conditions !== []) {
@@ -269,12 +269,12 @@ class ElementController extends AdminAbstractController
         $this->checkPermission('notes_events');
 
         $note = new Element\Note();
-        $note->setCid((int) $request->get('cid'));
-        $note->setCtype($request->get('ctype'));
+        $note->setCid((int) $request->request->get('cid'));
+        $note->setCtype($request->request->get('ctype'));
         $note->setDate(time());
-        $note->setTitle($request->get('title'));
-        $note->setDescription($request->get('description'));
-        $note->setType($request->get('type'));
+        $note->setTitle($request->request->get('title'));
+        $note->setDescription($request->request->get('description'));
+        $note->setType($request->request->get('type'));
         $note->setLocked(false);
         $note->save();
 
@@ -297,14 +297,14 @@ class ElementController extends AdminAbstractController
         $success = false;
         $hasHidden = false;
         $total = 0;
-        $limit = (int)$request->get('limit', 50);
-        $offset = (int)$request->get('start', 0);
+        $limit = (int)$request->query->get('limit', 50);
+        $offset = (int)$request->query->get('start', 0);
 
         if ($element instanceof Element\ElementInterface) {
             $total = $element->getDependencies()->getRequiredByTotalCount();
 
-            if ($request->get('sort')) {
-                $sort = json_decode($request->get('sort'))[0];
+            if ($request->query->has('sort')) {
+                $sort = json_decode($request->query->get('sort'))[0];
                 $orderBy = $sort->property;
                 $orderDirection = $sort->direction;
             } else {
@@ -377,12 +377,12 @@ class ElementController extends AdminAbstractController
         $targetEl = Element\Service::getElementById($request->request->get('targetType'), $request->request->getInt('targetId'));
 
         if ($element && $sourceEl && $targetEl
-            && $request->get('sourceType') == $request->get('targetType')
+            && $request->request->get('sourceType') === $request->request->get('targetType')
             && $sourceEl->getType() === $targetEl->getType()
             && $element->isAllowed('save')
         ) {
             $rewriteConfig = [
-                $request->get('sourceType') => [
+                $request->request->get('sourceType') => [
                     $sourceEl->getId() => $targetEl->getId(),
                 ],
             ];
@@ -465,7 +465,7 @@ class ElementController extends AdminAbstractController
     #[Route('/element/version-update', name: 'opendxp_admin_element_versionupdate', methods: ['PUT'])]
     public function versionUpdateAction(Request $request): JsonResponse
     {
-        $data = $this->decodeJson($request->get('data'));
+        $data = $this->decodeJson($request->request->get('data'));
 
         $version = Version::getById($data['id']);
 
@@ -484,35 +484,40 @@ class ElementController extends AdminAbstractController
     #[Route('/element/get-nice-path', name: 'opendxp_admin_element_getnicepath', methods: ['POST'])]
     public function getNicePathAction(Request $request): JsonResponse
     {
-        $source = $this->decodeJson($request->get('source'));
-        if ($source['type'] != 'object') {
+        $source = $this->decodeJson($request->request->get('source'));
+
+        if ($source['type'] !== 'object') {
             throw new Exception('currently only objects as source elements are supported');
         }
+
         $result = [];
         $id = $source['id'];
         $source = DataObject\Concrete::getById($id);
-        $context = $request->get('context') ? $this->decodeJson($request->get('context')) : [];
+        $context = $request->request->has('context') ? $this->decodeJson($request->request->get('context')) : [];
 
         $ownerType = $context['containerType'];
         $fieldname = $context['fieldname'];
 
         $fd = $this->getNicePathFormatterFieldDefinition($source, $context);
 
-        $targets = $this->decodeJson($request->get('targets'));
+        $targets = $this->decodeJson($request->request->get('targets'));
 
         $result = $this->convertResultWithPathFormatter($source, $context, $result, $targets);
 
         if ($request->request->getBoolean('loadEditModeData')) {
-            $idProperty = $request->get('idProperty', 'id');
+            $idProperty = $request->request->get('idProperty', 'id');
             $methodName = 'get' . ucfirst($fieldname);
-            if ($ownerType == 'object' && method_exists($source, $methodName)) {
+            if ($ownerType === 'object' && method_exists($source, $methodName)) {
                 $data = DataObject\Service::useInheritedValues(true, [$source, $methodName]);
                 $editModeData = $fd->getDataForEditmode($data, $source);
                 // Inherited values show as an empty array
                 if (is_array($editModeData) && $editModeData !== []) {
                     foreach ($editModeData as $relationObjectAttribute) {
-                        $relationObjectAttribute['$$nicepath'] =
-                            isset($relationObjectAttribute[$idProperty]) && isset($result[$relationObjectAttribute[$idProperty]]) ? $result[$relationObjectAttribute[$idProperty]] : null;
+
+                        $relationObjectAttribute['$$nicepath'] = isset($relationObjectAttribute[$idProperty], $result[$relationObjectAttribute[$idProperty]])
+                            ? $result[$relationObjectAttribute[$idProperty]]
+                            : null;
+
                         $result[$relationObjectAttribute[$idProperty]] = $relationObjectAttribute;
                     }
                 } else {
@@ -534,8 +539,8 @@ class ElementController extends AdminAbstractController
     #[Route('/element/get-versions', name: 'opendxp_admin_element_getversions', methods: ['GET'])]
     public function getVersionsAction(Request $request): JsonResponse
     {
-        $id = (int)$request->get('id');
-        $type = $request->get('elementType');
+        $id = (int)$request->query->get('id');
+        $type = $request->query->get('elementType');
         $allowedTypes = ['asset', 'document', 'object'];
 
         if ($id && in_array($type, $allowedTypes)) {
@@ -587,7 +592,8 @@ class ElementController extends AdminAbstractController
     #[Route('/element/delete-draft', name: 'opendxp_admin_element_deletedraft', methods: ['DELETE'])]
     public function deleteDraftAction(Request $request): JsonResponse
     {
-        $version = Version::getById((int) $request->get('id'));
+        $version = Version::getById((int) $request->request->get('id'));
+
         if ($version) {
             $version->delete();
         }
@@ -598,7 +604,7 @@ class ElementController extends AdminAbstractController
     #[Route('/element/delete-version', name: 'opendxp_admin_element_deleteversion', methods: ['DELETE'])]
     public function deleteVersionAction(Request $request): JsonResponse
     {
-        $version = Model\Version::getById((int) $request->get('id'));
+        $version = Model\Version::getById((int) $request->request->get('id'));
         $version->delete();
 
         return $this->adminJson(['success' => true]);
@@ -629,9 +635,9 @@ class ElementController extends AdminAbstractController
         $id = $request->query->getInt('id');
         $type = $request->query->get('elementType');
         $allowedTypes = ['asset', 'document', 'object'];
-        $offset = (int) $request->get('start', 0);
-        $limit = (int) $request->get('limit', 25);
-        $filterRequires = $request->get('filter');
+        $offset = (int) $request->query->get('start', 0);
+        $limit = (int) $request->query->get('limit', 25);
+        $filterRequires = $request->query->get('filter');
         $value = null;
         $elements = null;
 
@@ -644,19 +650,13 @@ class ElementController extends AdminAbstractController
 
                 foreach ($filters as $filter) {
 
-                    if ($filter['type'] == 'string') {
+                    if ($filter['type'] === 'string') {
                         $value = ($filter['value']??'');
                     }
 
                     $elements = $element->getDependencies()->getFilterRequiresByPath($offset, $limit, $value);
 
                 }
-
-                $result = [
-                    'start' => $offset,
-                    'limit' => $limit,
-                    'requires' => [],  // Initialize 'requires' as an empty array
-                ];
 
                 if (count($elements) > 0) {
                     $result = Model\Element\Service::getFilterRequiresForFrontend($elements);
@@ -689,9 +689,9 @@ class ElementController extends AdminAbstractController
         $id = $request->query->getInt('id');
         $type = $request->query->get('elementType');
         $allowedTypes = ['asset', 'document', 'object'];
-        $offset = (int) $request->get('start', 0);
-        $limit = (int) $request->get('limit', 25);
-        $filterRequiredBy = $request->get('filter');
+        $offset = (int) $request->query->get('start', 0);
+        $limit = (int) $request->query->get('limit', 25);
+        $filterRequiredBy = $request->query->get('filter');
         $value = null;
         $elements = null;
 
@@ -747,8 +747,8 @@ class ElementController extends AdminAbstractController
     public function getPredefinedPropertiesAction(Request $request, TranslatorInterface $translator): JsonResponse
     {
         $properties = [];
-        $type = $request->get('elementType');
-        $query = $request->get('query');
+        $type = $request->query->get('elementType');
+        $query = $request->query->get('query');
         $allowedTypes = ['asset', 'document', 'object'];
 
         if (in_array($type, $allowedTypes, true)) {

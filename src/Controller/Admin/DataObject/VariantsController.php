@@ -48,7 +48,7 @@ class VariantsController extends AdminAbstractController
     /**
      * @throws Exception
      */
-    #[Route('/get-variants', name: 'getvariants', methods: ['GET', 'POST'])]
+    #[Route('/get-variants', name: 'getvariants', methods: ['POST'])]
     public function getVariantsAction(
         Request $request,
         EventDispatcherInterface $eventDispatcher,
@@ -56,9 +56,11 @@ class VariantsController extends AdminAbstractController
         LocaleServiceInterface $localeService,
         CsrfProtectionHandler $csrfProtection
     ): JsonResponse {
-        $parentObject = DataObject\Concrete::getById((int) $request->get('objectId'));
-        if (empty($parentObject)) {
-            throw new Exception('No Object found with id ' . $request->get('objectId'));
+
+        $parentObject = DataObject\Concrete::getById((int) $request->request->get('objectId'));
+
+        if ($parentObject === null) {
+            throw new Exception('No Object found with id ' . $request->request->get('objectId'));
         }
 
         if (!$parentObject->isAllowed('view')) {
@@ -66,6 +68,7 @@ class VariantsController extends AdminAbstractController
         }
 
         $allParams = [...$request->request->all(), ...$request->query->all()];
+
         $allParams['folderId'] = $parentObject->getId();
         $allParams['classId'] = $parentObject->getClassId();
 

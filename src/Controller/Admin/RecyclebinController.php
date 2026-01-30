@@ -34,8 +34,8 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     #[Route('/recyclebin/list', name: 'opendxp_admin_recyclebin_list', methods: ['POST'])]
     public function listAction(Request $request): JsonResponse
     {
-        if ($request->get('xaction') === 'destroy') {
-            $item = Recyclebin\Item::getById(\OpenDxp\Bundle\AdminBundle\Helper\QueryParams::getRecordIdForGridRequest($request->get('data')));
+        if ($request->query->get('xaction') === 'destroy') {
+            $item = Recyclebin\Item::getById(\OpenDxp\Bundle\AdminBundle\Helper\QueryParams::getRecordIdForGridRequest($request->request->get('data')));
 
             if ($item) {
                 $item->delete();
@@ -47,13 +47,13 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
         $db = \OpenDxp\Db::get();
 
         $list = new Recyclebin\Item\Listing();
-        $list->setLimit((int) $request->get('limit', 50));
-        $list->setOffset((int) $request->get('start', 0));
+        $list->setLimit((int) $request->request->get('limit', 50));
+        $list->setOffset((int) $request->request->get('start', 0));
 
         $list->setOrderKey('date');
         $list->setOrder('DESC');
 
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings([...$request->request->all(), ...$request->query->all()]);
+        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->request->all());
         if ($sortingSettings['orderKey']) {
             $list->setOrderKey($sortingSettings['orderKey']);
             $list->setOrder($sortingSettings['order']);
@@ -61,11 +61,11 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
 
         $conditionFilters = [];
 
-        if ($request->get('filterFullText')) {
-            $conditionFilters[] = '`path` LIKE ' . $list->quote('%'. $list->escapeLike($request->get('filterFullText')) .'%');
+        if ($request->request->get('filterFullText')) {
+            $conditionFilters[] = '`path` LIKE ' . $list->quote('%'. $list->escapeLike($request->request->get('filterFullText')) .'%');
         }
 
-        $filters = $request->get('filter');
+        $filters = $request->request->get('filter');
         if ($filters) {
             $filters = $this->decodeJson($filters);
 
@@ -139,7 +139,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     #[Route('/recyclebin/restore', name: 'opendxp_admin_recyclebin_restore', methods: ['POST'])]
     public function restoreAction(Request $request): JsonResponse
     {
-        $item = Recyclebin\Item::getById((int) $request->get('id'));
+        $item = Recyclebin\Item::getById((int) $request->request->get('id'));
         if (!$item) {
             throw $this->createNotFoundException();
         }
