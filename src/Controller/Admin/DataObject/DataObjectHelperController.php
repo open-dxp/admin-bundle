@@ -57,16 +57,16 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 #[Route('/object-helper', name: 'opendxp_admin_dataobject_dataobjecthelper_')]
 class DataObjectHelperController extends AdminAbstractController
 {
-    const SYSTEM_COLUMNS = ['id', 'fullpath', 'key', 'published', 'creationDate', 'modificationDate', 'filename', 'classname'];
+    public const array SYSTEM_COLUMNS = ['id', 'fullpath', 'key', 'published', 'creationDate', 'modificationDate', 'filename', 'classname'];
 
     #[Route('/load-object-data', name: 'loadobjectdata', methods: ['GET'])]
     public function loadObjectDataAction(Request $request): JsonResponse
     {
-        $object = DataObject::getById((int) $request->get('id'));
+        $object = DataObject::getById((int) $request->query->get('id'));
         $result = [];
         if ($object) {
             $result['success'] = true;
-            $fields = $request->get('fields');
+            $fields = $request->query->get('fields');
             $result['fields'] = GridData\DataObject::getData($object, $fields);
         } else {
             $result['success'] = false;
@@ -138,7 +138,7 @@ class DataObjectHelperController extends AdminAbstractController
     public function getExportConfigsAction(Request $request): JsonResponse
     {
         $result = [];
-        $classId = $request->get('classId');
+        $classId = $request->query->get('classId');
 
         $list = $this->getMyOwnGridColumnConfigs($this->getAdminUser()->getId(), $classId);
         $list = [...$list, ...$this->getSharedGridColumnConfigs($this->getAdminUser(), $classId)];
@@ -613,11 +613,7 @@ class DataObjectHelperController extends AdminAbstractController
     protected function getCalculatedColumnConfig(Request $request, array $config): mixed
     {
         try {
-            return Tool\Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($config) {
-                //otherwise create a new one
-
-                $calculatedColumn = [];
-                // note that we have to generate a new key!
+            return Tool\Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($config) {
 
                 $existingKey = $config['fieldConfig']['key'];
                 $calculatedColumnConfig['key'] = $existingKey;
@@ -634,7 +630,7 @@ class DataObjectHelperController extends AdminAbstractController
                     return $calculatedColumnConfig;
                 }
 
-                $newKey = '#' . uniqid();
+                $newKey = '#' . uniqid('', false);
                 $calculatedColumnConfig['key'] = $newKey;
 
                 // prepare a column config on the fly
@@ -664,7 +660,7 @@ class DataObjectHelperController extends AdminAbstractController
         $data = json_decode($request->get('columns'));
         foreach ($data as $item) {
             if (!empty($item->isOperator)) {
-                $itemKey = '#' . uniqid();
+                $itemKey = '#' . uniqid('', false);
 
                 $item->key = $itemKey;
                 $newData[] = $item;
@@ -674,7 +670,7 @@ class DataObjectHelperController extends AdminAbstractController
             }
         }
 
-        Tool\Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($helperColumns): void {
+        Tool\Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($helperColumns): void {
             $existingColumns = $session->get('helpercolumns', []);
             $helperColumns = [...$helperColumns, ...$existingColumns];
             $session->set('helpercolumns', $helperColumns);
@@ -755,7 +751,7 @@ class DataObjectHelperController extends AdminAbstractController
                 $favourite->delete();
             }
 
-            return $this->adminJson(['success' => true, 'spezializedConfigs' => $specializedConfigs]);
+            return $this->adminJson(['success' => true, 'specializedConfigs' => $specializedConfigs]);
         }
 
         throw $this->createAccessDeniedHttpException();
@@ -1110,7 +1106,7 @@ class DataObjectHelperController extends AdminAbstractController
     {
         $requestedLanguage = $request->get('language');
         if ($requestedLanguage) {
-            if ($requestedLanguage != 'default') {
+            if ($requestedLanguage !== 'default') {
                 $request->setLocale($requestedLanguage);
             }
         } else {
@@ -1330,7 +1326,7 @@ class DataObjectHelperController extends AdminAbstractController
     public function downloadXlsxFileAction(Request $request, GridHelperService $gridHelperService): BinaryFileResponse
     {
         $storage = Storage::get('temp');
-        $fileHandle = File::getValidFilename($request->get('fileHandle'));
+        $fileHandle = File::getValidFilename($request->query->get('fileHandle'));
         $csvFile = $this->getCsvFile($fileHandle);
 
         try {
@@ -1548,7 +1544,7 @@ class DataObjectHelperController extends AdminAbstractController
                             }
 
                             // seems to be a system field, this is actually only possible for the "published" field yet
-                            if ($name == 'published') {
+                            if ($name === 'published') {
                                 if ($value === 'false' || empty($value)) {
                                     $object->setPublished(false);
                                 } else {
@@ -1585,13 +1581,11 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/get-available-visible-vields', name: 'getavailablevisiblefields', methods: ['GET'])]
     public function getAvailableVisibleFieldsAction(Request $request): JsonResponse
     {
-        $class = null;
-
         $classList = [];
         $classNameList = [];
 
-        if ($request->get('classes')) {
-            $classNameList = $request->get('classes');
+        if ($request->query->has('classes')) {
+            $classNameList = $request->query->get('classes');
             $classNameList = explode(',', $classNameList);
             foreach ($classNameList as $className) {
                 $class = DataObject\ClassDefinition::getByName($className);
@@ -1604,6 +1598,7 @@ class DataObjectHelperController extends AdminAbstractController
         if (!$classList) {
             return $this->adminJson(['availableFields' => []]);
         }
+
         $availableFields = [];
         foreach (self::SYSTEM_COLUMNS as $field) {
             $availableFields[] = [

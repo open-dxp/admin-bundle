@@ -1954,7 +1954,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 $db = \OpenDxp\Db::get();
                 $conditionFilters = [];
 
-                $selectedIds = $request->query->get('selectedIds', []);
+                $selectedIds = $request->query->get('selectedIds', null);
 
                 if (!empty($selectedIds)) {
                     $selectedIds = explode(',', $selectedIds);
@@ -2391,7 +2391,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $page = $request->query->get('page');
         $text = null;
         if ($asset instanceof Asset\Document) {
-            $text = $asset->getText($page);
+            $text = $asset->getText(empty($page) ? null : (int)$page);
         }
 
         return $this->adminJson(['success' => 'true', 'text' => $text]);

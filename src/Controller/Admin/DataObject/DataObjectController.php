@@ -88,8 +88,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     #[Route('/tree-get-children-by-id', name: 'treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
-        $allParams = [...$request->request->all(), ...$request->query->all()];
-        $filter = $request->get('filter');
+        $filter = $request->query->get('filter');
         $object = DataObject::getById((int) $request->get('node'));
         $objectTypes = [DataObject::OBJECT_TYPE_OBJECT, DataObject::OBJECT_TYPE_FOLDER];
         $objects = [];
@@ -104,9 +103,9 @@ class DataObjectController extends ElementControllerBase implements KernelContro
         }
 
         if ($object->hasChildren($objectTypes)) {
-            $offset = (int)$request->get('start');
-            $limit = (int)$request->get('limit', 100000000);
-            if ($view = $request->get('view', '')) {
+            $offset = (int)$request->query->get('start');
+            $limit = (int)$request->query->get('limit', 100000000);
+            if ($view = $request->query->get('view', '')) {
                 $cv = $this->elementService->getCustomViewById($view) ?? [];
             }
 
@@ -140,7 +139,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
 
             $beforeListLoadEvent = new GenericEvent($this, [
                 'list' => $childrenList,
-                'context' => $allParams,
+                'context' => $request->query->all(),
             ]);
             $eventDispatcher->dispatch($beforeListLoadEvent, AdminEvents::OBJECT_LIST_BEFORE_LIST_LOAD);
 
@@ -1721,20 +1720,20 @@ class DataObjectController extends ElementControllerBase implements KernelContro
         $transactionId = time();
         $pasteJobs = [];
 
-        Tool\Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($transactionId): void {
+        Tool\Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId): void {
             $session->set((string) $transactionId, ['idMapping' => []]);
         }, 'opendxp_copy');
 
-        if ($request->get('type') == 'recursive' || $request->get('type') == 'recursive-update-references') {
-            $object = DataObject::getById((int) $request->get('sourceId'));
+        if ($request->query->get('type') === 'recursive' || $request->query->get('type') === 'recursive-update-references') {
+            $object = DataObject::getById((int) $request->query->get('sourceId'));
 
             // first of all the new parent
             $pasteJobs[] = [[
                 'url' => $this->generateUrl('opendxp_admin_dataobject_dataobject_copy'),
                 'method' => 'POST',
                 'params' => [
-                    'sourceId' => $request->get('sourceId'),
-                    'targetId' => $request->get('targetId'),
+                    'sourceId' => $request->query->get('sourceId'),
+                    'targetId' => $request->query->get('targetId'),
                     'type' => 'child',
                     'transactionId' => $transactionId,
                     'saveParentId' => true,
@@ -1757,8 +1756,8 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                             'method' => 'POST',
                             'params' => [
                                 'sourceId' => $id,
-                                'targetParentId' => $request->get('targetId'),
-                                'sourceParentId' => $request->get('sourceId'),
+                                'targetParentId' => $request->query->get('targetId'),
+                                'sourceParentId' => $request->query->get('sourceId'),
                                 'type' => 'child',
                                 'transactionId' => $transactionId,
                             ],
@@ -1767,28 +1766,28 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                 }
 
                 // add id-rewrite steps
-                if ($request->get('type') == 'recursive-update-references') {
+                if ($request->query->get('type') === 'recursive-update-references') {
                     for ($i = 0; $i < (count($childIds) + 1); $i++) {
                         $pasteJobs[] = [[
                             'url' => $this->generateUrl('opendxp_admin_dataobject_dataobject_copyrewriteids'),
                             'method' => 'PUT',
                             'params' => [
                                 'transactionId' => $transactionId,
-                                '_dc' => uniqid(),
+                                '_dc' => uniqid('', false),
                             ],
                         ]];
                     }
                 }
             }
-        } elseif ($request->get('type') == 'child' || $request->get('type') == 'replace') {
+        } elseif ($request->query->get('type') === 'child' || $request->query->get('type') === 'replace') {
             // the object itself is the last one
             $pasteJobs[] = [[
                 'url' => $this->generateUrl('opendxp_admin_dataobject_dataobject_copy'),
                 'method' => 'POST',
                 'params' => [
-                    'sourceId' => $request->get('sourceId'),
-                    'targetId' => $request->get('targetId'),
-                    'type' => $request->get('type'),
+                    'sourceId' => $request->query->get('sourceId'),
+                    'targetId' => $request->query->get('targetId'),
+                    'type' => $request->query->get('type'),
                     'transactionId' => $transactionId,
                 ],
             ]];
@@ -1825,7 +1824,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
         $object->save();
 
         // write the store back to the session
-        Tool\Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($transactionId, $idStore): void {
+        Tool\Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId, $idStore): void {
             $session->set($transactionId, $idStore);
         }, 'opendxp_copy');
 

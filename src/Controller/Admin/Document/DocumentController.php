@@ -133,7 +133,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_document_document_treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
-        $allParams = [...$request->request->all(), ...$request->query->all()];
+        $allParams = $request->query->all();
 
         $filter = $request->query->get('filter');
         $limit = (int)($allParams['limit'] ?? 100000000);
@@ -218,6 +218,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
         $event = new GenericEvent($this, [
             'documents' => $documents,
         ]);
+
         $eventDispatcher->dispatch($event, AdminEvents::DOCUMENT_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA);
         $documents = $event->getArgument('documents');
 
@@ -227,8 +228,8 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 'limit' => $limit,
                 'total' => $document->getChildAmount($this->getAdminUser()),
                 'nodes' => $documents,
-                'filter' => $request->get('filter') ?: '',
-                'inSearch' => (int)$request->get('inSearch'),
+                'filter' => $request->query->get('filter') ?: '',
+                'inSearch' => (int)$request->query->get('inSearch'),
             ]);
         }
 
@@ -332,9 +333,9 @@ class DocumentController extends ElementControllerBase implements KernelControll
                             }
 
                             break;
-                        } else {
-                            Logger::debug("Unknown document type, can't add [ " . $request->get('type') . ' ] ');
                         }
+
+                        Logger::debug("Unknown document type, can't add [ " . $request->get('type') . ' ] ');
 
                         break;
                 }
@@ -661,7 +662,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
     public function getDocTypesAction(Request $request): JsonResponse
     {
         $list = new DocType\Listing();
-        if ($type = $request->get('type')) {
+        if ($type = $request->query->get('type')) {
             if (!Document\Service::isValidType($type)) {
                 throw new BadRequestHttpException('Invalid type: ' . $type);
             }
@@ -775,11 +776,11 @@ class DocumentController extends ElementControllerBase implements KernelControll
         $transactionId = time();
         $pasteJobs = [];
 
-        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($transactionId): void {
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId): void {
             $session->set((string) $transactionId, ['idMapping' => []]);
         }, 'opendxp_copy');
 
-        if ($request->get('type') == 'recursive' || $request->get('type') == 'recursive-update-references') {
+        if ($request->query->get('type') === 'recursive' || $request->query->get('type') === 'recursive-update-references') {
             $document = Document::getById((int) $request->get('sourceId'));
 
             // first of all the new parent
@@ -787,11 +788,11 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 'url' => $this->generateUrl('opendxp_admin_document_document_copy'),
                 'method' => 'POST',
                 'params' => [
-                    'sourceId' => $request->get('sourceId'),
-                    'targetId' => $request->get('targetId'),
+                    'sourceId' => $request->query->get('sourceId'),
+                    'targetId' => $request->query->get('targetId'),
                     'type' => 'child',
-                    'language' => $request->get('language'),
-                    'enableInheritance' => $request->get('enableInheritance'),
+                    'language' => $request->query->get('language'),
+                    'enableInheritance' => $request->query->get('enableInheritance'),
                     'transactionId' => $transactionId,
                     'saveParentId' => true,
                     'resetIndex' => true,
@@ -827,32 +828,32 @@ class DocumentController extends ElementControllerBase implements KernelControll
             }
 
             // add id-rewrite steps
-            if ($request->get('type') == 'recursive-update-references') {
+            if ($request->query->get('type') === 'recursive-update-references') {
                 for ($i = 0; $i < (count($childIds) + 1); $i++) {
                     $pasteJobs[] = [[
                         'url' => $this->generateUrl('opendxp_admin_document_document_copyrewriteids'),
                         'method' => 'PUT',
                         'params' => [
                             'transactionId' => $transactionId,
-                            'enableInheritance' => $request->get('enableInheritance'),
-                            '_dc' => uniqid(),
+                            'enableInheritance' => $request->query->get('enableInheritance'),
+                            '_dc' => uniqid('', false),
                         ],
                     ]];
                 }
             }
-        } elseif ($request->get('type') == 'child' || $request->get('type') == 'replace') {
+        } elseif ($request->query->get('type') === 'child' || $request->query->get('type') === 'replace') {
             // the object itself is the last one
             $pasteJobs[] = [[
                 'url' => $this->generateUrl('opendxp_admin_document_document_copy'),
                 'method' => 'POST',
                 'params' => [
-                    'sourceId' => $request->get('sourceId'),
-                    'targetId' => $request->get('targetId'),
-                    'type' => $request->get('type'),
-                    'language' => $request->get('language'),
-                    'enableInheritance' => $request->get('enableInheritance'),
+                    'sourceId' => $request->query->get('sourceId'),
+                    'targetId' => $request->query->get('targetId'),
+                    'type' => $request->query->get('type'),
+                    'language' => $request->query->get('language'),
+                    'enableInheritance' => $request->query->get('enableInheritance'),
                     'transactionId' => $transactionId,
-                    'resetIndex' => ($request->get('type') == 'child'),
+                    'resetIndex' => ($request->query->get('type') === 'child'),
                 ],
             ]];
         }
@@ -867,7 +868,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
     {
         $transactionId = $request->get('transactionId');
 
-        $idStore = Session::useBag($request->getSession(), fn (AttributeBagInterface $session) => $session->get($transactionId), 'opendxp_copy');
+        $idStore = Session::useBag($request->getSession(), static fn (AttributeBagInterface $session) => $session->get($transactionId), 'opendxp_copy');
 
         if (!array_key_exists('rewrite-stack', $idStore)) {
             $idStore['rewrite-stack'] = array_values($idStore['idMapping']);
@@ -881,7 +882,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
             $rewriteConfig = ['document' => $idStore['idMapping']];
 
             $document = Document\Service::rewriteIds($document, $rewriteConfig, [
-                'enableInheritance' => $request->get('enableInheritance') == 'true',
+                'enableInheritance' => $request->get('enableInheritance') === 'true',
             ]);
 
             $document->setUserModification($this->getAdminUser()->getId());
@@ -935,15 +936,15 @@ class DocumentController extends ElementControllerBase implements KernelControll
                         $source->setPublished(false); //as latest version is used which is not published
                     }
 
-                    if ($request->get('type') == 'child') {
-                        $enableInheritance = $request->get('enableInheritance') == 'true';
+                    if ($request->get('type') === 'child') {
+                        $enableInheritance = $request->get('enableInheritance') === 'true';
 
                         $language = (string) $request->request->get('language') ?: null;
                         if ($language && !Tool::isValidLanguage($language)) {
                             throw new BadRequestHttpException('Invalid language: ' . $language);
                         }
 
-                        $resetIndex = $request->get('resetIndex') == 'true';
+                        $resetIndex = $request->get('resetIndex') === 'true';
 
                         $newDocument = $this->_documentService->copyAsChild($target, $source, $enableInheritance, $resetIndex, $language);
 
@@ -954,7 +955,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                             $sessionBag['parentId'] = $newDocument->getId();
                         }
                         $session->set($request->get('transactionId'), $sessionBag);
-                    } elseif ($request->get('type') == 'replace') {
+                    } elseif ($request->get('type') === 'replace') {
                         $this->_documentService->copyContents($target, $source);
                     }
 
@@ -1069,7 +1070,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
     #[Route('/get-id-for-path', name: 'opendxp_admin_document_document_getidforpath', methods: ['GET'])]
     public function getIdForPathAction(Request $request): JsonResponse
     {
-        if ($doc = Document::getByPath($request->get('path'))) {
+        if ($doc = Document::getByPath($request->query->get('path'))) {
             return $this->adminJson([
                 'id' => $doc->getId(),
                 'type' => $doc->getType(),
@@ -1084,7 +1085,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
     {
         $document = Document::getById((int) $request->query->get('node'));
 
-        $languages = explode(',', $request->get('languages'));
+        $languages = explode(',', $request->query->get('languages'));
 
         $result = [];
         foreach ($document->getChildren() as $child) {
@@ -1211,7 +1212,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
                 $new->setValue($name, $value);
             }
 
-            if ($type == 'hardlink' || $type == 'folder') {
+            if ($type === 'hardlink' || $type === 'folder') {
                 // remove navigation settings
                 foreach (['name', 'title', 'target', 'exclude', 'class', 'anchor', 'parameters', 'relation', 'accesskey', 'tabindex'] as $propertyName) {
                     $new->removeProperty('navigation_' . $propertyName);
@@ -1231,22 +1232,22 @@ class DocumentController extends ElementControllerBase implements KernelControll
         $success = false;
         $targetDocument = null;
 
-        $document = Document::getById((int) $request->get('id'));
+        $document = Document::getById((int) $request->query->get('id'));
         if ($document) {
             $service = new Document\Service();
             $document = $document->getId() === 1 ? $document : $document->getParent();
 
             $translations = $service->getTranslations($document);
-            if (isset($translations[$request->get('language')])) {
-                $targetDocument = Document::getById($translations[$request->get('language')]);
+            if (isset($translations[$request->query->get('language')])) {
+                $targetDocument = Document::getById($translations[$request->query->get('language')]);
                 $success = true;
             }
         }
 
         return $this->adminJson([
             'success' => $success,
-            'targetPath' => $targetDocument ? $targetDocument->getRealFullPath() : null,
-            'targetId' => $targetDocument ? $targetDocument->getid() : null,
+            'targetPath' => $targetDocument?->getRealFullPath(),
+            'targetId' => $targetDocument?->getid(),
         ]);
     }
 
@@ -1299,7 +1300,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
         $language = null;
         $translationLinks = null;
 
-        $document = Document::getByPath($request->get('path'));
+        $document = Document::getByPath($request->query->get('path'));
         if ($document) {
             $language = $document->getProperty('language');
             if ($language) {

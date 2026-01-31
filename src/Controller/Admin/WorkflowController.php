@@ -101,7 +101,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
     #[Route('/submit-workflow-transition', name: 'opendxp_admin_workflow_submitworkflowtransition', methods: ['POST'])]
     public function submitWorkflowTransitionAction(Request $request, Registry $workflowRegistry, Manager $workflowManager): JsonResponse
     {
-        $workflowOptions = $request->request->get('workflow', []);
+        $workflowOptions = $request->request->all('workflow');
         $workflow = $workflowRegistry->get($this->element, $request->request->get('workflowName'));
 
         if ($workflow->can($this->element, $request->request->get('transition'))) {
@@ -152,7 +152,7 @@ class WorkflowController extends AdminAbstractController implements KernelContro
         Registry $workflowRegistry,
         Manager $workflowManager
     ): JsonResponse {
-        $workflowOptions = $request->request->get('workflow', []);
+        $workflowOptions = $request->request->all('workflow');
         $workflow = $workflowRegistry->get($this->element, $request->request->get('workflowName'));
 
         $globalAction = $workflowManager->getGlobalAction(

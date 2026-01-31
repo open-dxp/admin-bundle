@@ -524,22 +524,11 @@ class SettingsController extends AdminAbstractController
         EventDispatcherInterface $eventDispatcher,
         CacheClearer $symfonyCacheClearer,
     ): void {
-        // pass one or move env parameters to clear multiple envs
+
         // if no env is passed it will use the current one
-        $environments = $request->request->get('env', $kernel->getEnvironment());
+        $environment = $request->request->get('env', $kernel->getEnvironment());
 
-        if (!is_array($environments)) {
-            $environments = trim((string)$environments);
-            $environments = empty($environments) ? [] : [$environments];
-        }
-
-        if ($environments === []) {
-            $environments = [$kernel->getEnvironment()];
-        }
-
-        $result['environments'] = $environments;
-
-        if (in_array($kernel->getEnvironment(), $environments)) {
+        if ($kernel->getEnvironment() === $environment) {
             // remove terminate and exception event listeners for the current env as they break with a
             // cleared container - see #2434
             foreach ($eventDispatcher->getListeners(KernelEvents::TERMINATE) as $listener) {
@@ -551,16 +540,7 @@ class SettingsController extends AdminAbstractController
             }
         }
 
-        foreach ($environments as $environment) {
-            try {
-                $symfonyCacheClearer->clear($environment);
-            } catch (Throwable $e) {
-                $errors = $result['errors'] ?? [];
-                $errors[] = $e->getMessage();
-
-                $result = [...$result, 'success' => false, 'errors' => $errors];
-            }
-        }
+        $symfonyCacheClearer->clear($environment);
     }
 
     #[Route('/clear-output-cache', name: 'opendxp_admin_settings_clearoutputcache', methods: ['DELETE'])]

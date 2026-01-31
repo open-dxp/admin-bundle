@@ -83,8 +83,8 @@ class ClassificationstoreController extends AdminAbstractController implements K
     {
         $this->checkPermission('classificationstore');
 
-        $keyId = (int) $request->get('keyId');
-        $groupId = (int) $request->get('groupId');
+        $keyId = $request->request->getInt('keyId');
+        $groupId = $request->request->getInt('groupId');
 
         $config = new Classificationstore\KeyGroupRelation();
         $config->setKeyId($keyId);
@@ -116,8 +116,8 @@ class ClassificationstoreController extends AdminAbstractController implements K
     {
         $this->checkPermission('classificationstore');
 
-        $name = SecurityHelper::convertHtmlSpecialChars($request->get('name'));
-        $storeId = (int) $request->get('storeId');
+        $name = SecurityHelper::convertHtmlSpecialChars($request->request->get('name'));
+        $storeId = $request->request->getInt('storeId');
         $config = Classificationstore\GroupConfig::getByName($name, $storeId);
 
         if (!$config) {
@@ -140,7 +140,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
     {
         $this->checkPermission('classificationstore');
 
-        $name = SecurityHelper::convertHtmlSpecialChars($request->get('name'));
+        $name = SecurityHelper::convertHtmlSpecialChars($request->request->get('name'));
 
         $config = Classificationstore\StoreConfig::getByName($name);
 
@@ -163,8 +163,8 @@ class ClassificationstoreController extends AdminAbstractController implements K
     {
         $this->checkPermission('classificationstore');
 
-        $name = SecurityHelper::convertHtmlSpecialChars($request->get('name'));
-        $storeId = (int) $request->get('storeId');
+        $name = SecurityHelper::convertHtmlSpecialChars($request->request->get('name'));
+        $storeId = $request->request->getInt('storeId');
         $config = Classificationstore\CollectionConfig::getByName($name, $storeId);
 
         if (!$config) {
@@ -183,17 +183,17 @@ class ClassificationstoreController extends AdminAbstractController implements K
         $this->checkPermission('objects');
 
         $start = 0;
-        $limit = $request->get('limit') ? (int) $request->get('limit') : 15;
+        $limit = $request->query->get('limit') ? (int) $request->query->get('limit') : 15;
 
         $orderKey = 'name';
         $order = 'ASC';
 
-        if ($request->get('dir')) {
-            $order = $request->get('dir');
+        if ($request->query->has('dir')) {
+            $order = $request->query->get('dir');
         }
 
-        if ($request->get('start')) {
-            $start = (int) $request->get('start');
+        if ($request->query->has('start')) {
+            $start = (int) $request->query->get('start');
         }
 
         $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->query->all());
@@ -209,11 +209,11 @@ class ClassificationstoreController extends AdminAbstractController implements K
 
         $storeIdFromDefinition = 0;
         $allowedCollectionIds = [];
-        if ($oid = $request->get('oid')) {
+        if ($oid = $request->query->get('oid')) {
             $object = DataObject\Concrete::getById((int) $oid);
             $class = $object->getClass();
             /** @var DataObject\ClassDefinition\Data\Classificationstore $fd */
-            $fd = $class->getFieldDefinition($request->get('fieldname'));
+            $fd = $class->getFieldDefinition($request->query->get('fieldname'));
             $allowedGroupIds = $fd->getAllowedGroupIds();
 
             if ($allowedGroupIds) {
@@ -239,7 +239,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
         $conditionParts = [];
         $db = Db::get();
 
-        $searchfilter = $request->get('searchfilter');
+        $searchfilter = $request->query->get('searchfilter');
         if ($searchfilter) {
             $searchFilterConditions = [];
 
@@ -251,13 +251,13 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $conditionParts[] = '('.implode(' OR ', $searchFilterConditions).')';
         }
 
-        $storeId = $request->get('storeId');
+        $storeId = $request->query->get('storeId');
         $storeId = $storeId ? (int) $storeId : $storeIdFromDefinition;
 
         $conditionParts[] = ' (storeId = ' . $db->quote($storeId) . ')';
 
-        if ($request->get('filter')) {
-            $filterString = $request->get('filter');
+        if ($request->query->has('filter')) {
+            $filterString = $request->query->get('filter');
             $filters = json_decode($filterString);
             /** @var stdClass $f */
             foreach ($filters as $f) {
@@ -417,7 +417,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $object = DataObject\Concrete::getById((int) $oid);
             $class = $object->getClass();
             /** @var DataObject\ClassDefinition\Data\Classificationstore $fd */
-            $fd = $class->getFieldDefinition($request->get('fieldname'));
+            $fd = $class->getFieldDefinition($request->query->get('fieldname'));
             $allowedGroupIds = $fd->getAllowedGroupIds();
 
             if ($allowedGroupIds) {
@@ -752,7 +752,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
         $limit = 15;
         $orderKey = 'name';
         $order = 'ASC';
-        $relationIds = $request->get('relationIds');
+        $relationIds = $request->query->get('relationIds');
 
         if ($relationIds) {
             $relationIds = json_decode($relationIds, true);
@@ -762,8 +762,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $order = $request->query->get('dir');
         }
 
-        $allParams = [...$request->request->all(), ...$request->query->all()];
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($allParams);
+        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->query->all());
 
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $mapping[$sortingSettings['orderKey']] ?? $sortingSettings['orderKey'];
@@ -898,7 +897,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
     {
         $this->checkPermission('objects');
 
-        $ids = $this->decodeJson($request->get('collectionIds'));
+        $ids = $this->decodeJson($request->request->get('collectionIds'));
         $data = [];
 
         if ($ids) {
@@ -922,7 +921,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             if ($object) {
                 $class = $object->getClass();
                 /** @var DataObject\ClassDefinition\Data\Classificationstore $fd */
-                $fd = $class->getFieldDefinition($request->get('fieldname'));
+                $fd = $class->getFieldDefinition($request->request->get('fieldname'));
                 $allowedGroupIds = $fd->getAllowedGroupIds();
             }
 
@@ -934,7 +933,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             }
 
             if ($groupIdList) {
-                $fieldname = $request->get('fieldname');
+                $fieldname = $request->request->get('fieldname');
                 $groupList = new Classificationstore\GroupConfig\Listing();
                 $groupCondition = 'id in (' . implode(',', $groupIdList) . ')';
                 $groupList->setCondition($groupCondition);
@@ -955,7 +954,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
                         'id' => $groupData->getId(),
                         'description' => $groupData->getDescription(),
                         'keys' => [],
-                        'sorter' => intval($mappedData[$groupData->getId()]['sorter']),
+                        'sorter' => (int) $mappedData[$groupData->getId()]['sorter'],
                         'collectionId' => $mappedData[$groupId]['colId'],
                     ];
                 }
@@ -1123,8 +1122,8 @@ class ClassificationstoreController extends AdminAbstractController implements K
         $orderKey = 'name';
         $order = 'ASC';
 
-        if ($request->get('dir')) {
-            $order = $request->get('dir');
+        if ($request->query->has('dir')) {
+            $order = $request->query->get('dir');
         }
 
         $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->query->all());
@@ -1154,7 +1153,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
         $list->setOrder($order);
         $list->setOrderKey($orderKey);
 
-        $searchfilter = $request->get('searchfilter');
+        $searchfilter = $request->query->get('searchfilter');
         if ($searchfilter) {
             $conditionParts[] = '(name LIKE ' . $db->quote('%' . $searchfilter . '%') . ' OR description LIKE ' . $db->quote('%'. $searchfilter . '%') . ')';
         }
@@ -1163,8 +1162,8 @@ class ClassificationstoreController extends AdminAbstractController implements K
             $conditionParts[] = '(storeId = '. $db->quote($storeId) . ')';
         }
 
-        if ($request->get('filter')) {
-            $filterString = $request->get('filter');
+        if ($request->query->has('filter')) {
+            $filterString = $request->query->get('filter');
             $filters = json_decode($filterString);
             /** @var stdClass $f */
             foreach ($filters as $f) {
@@ -1178,14 +1177,14 @@ class ClassificationstoreController extends AdminAbstractController implements K
         $condition = implode(' AND ', $conditionParts);
         $list->setCondition($condition);
 
-        if ($request->get('groupIds') || $request->get('keyIds')) {
+        if ($request->query->get('groupIds') || $request->query->get('keyIds')) {
             $db = Db::get();
 
-            if ($request->get('groupIds')) {
-                $ids = $this->decodeJson($request->get('groupIds'));
+            if ($request->query->get('groupIds')) {
+                $ids = $this->decodeJson($request->query->get('groupIds'));
                 $col = 'group';
             } else {
-                $ids = $this->decodeJson($request->get('keyIds'));
+                $ids = $this->decodeJson($request->query->get('keyIds'));
                 $col = 'id';
             }
 
@@ -1290,8 +1289,8 @@ class ClassificationstoreController extends AdminAbstractController implements K
     #[Route('/add-property', name: 'addproperty', methods: ['POST'])]
     public function addPropertyAction(Request $request): JsonResponse
     {
-        $name = $request->get('name');
-        $storeId = (int) $request->get('storeId');
+        $name = $request->request->get('name');
+        $storeId = $request->request->getInt('storeId');
 
         $definition = [
             'fieldtype' => 'input',
@@ -1299,6 +1298,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
             'title' => $name,
             'datatype' => 'data',
         ];
+
         $config = new Classificationstore\KeyConfig();
         $config->setName($name);
         $config->setTitle($name);
@@ -1388,20 +1388,20 @@ class ClassificationstoreController extends AdminAbstractController implements K
     #[Route('/get-page', name: 'getpage', methods: ['GET'])]
     public function getPageAction(Request $request): JsonResponse
     {
-        $tableSuffix = $request->get('table');
+        $tableSuffix = $request->query->get('table');
         if (!ArrayHelper::inArrayCaseInsensitive($tableSuffix, ['keys', 'groups'])) {
             $tableSuffix = 'keys';
         }
 
         $table = 'classificationstore_' . $tableSuffix;
         $db = \OpenDxp\Db::get();
-        $id = (int) $request->get('id');
-        $storeId = (int) $request->get('storeId');
-        $pageSize = (int) $request->get('pageSize');
+        $id = (int) $request->query->get('id');
+        $storeId = (int) $request->query->get('storeId');
+        $pageSize = (int) $request->query->get('pageSize');
 
-        if ($request->get('sortKey')) {
-            $sortKey = $request->get('sortKey');
-            $sortDir = $request->get('sortDir');
+        if ($request->query->get('sortKey')) {
+            $sortKey = $request->query->get('sortKey');
+            $sortDir = $request->query->get('sortDir');
         } else {
             $sortKey = 'name';
             $sortDir = 'ASC';

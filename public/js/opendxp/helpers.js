@@ -2529,7 +2529,7 @@ opendxp.helpers.markColumnConfigAsFavourite = function (objectId, classId, gridC
                     if (rdata && rdata.success) {
                         opendxp.helpers.showNotification(t("success"), t("saved_successfully"), "success");
 
-                        if (rdata.spezializedConfigs) {
+                        if (rdata.specializedConfigs) {
                             opendxp.helpers.removeOtherConfigs(objectId, classId, gridConfigId, searchType);
                         }
                     }
@@ -2998,13 +2998,6 @@ opendxp.helpers.roles = function() {
     }
 };
 
-opendxp.helpers.clearAllCaches = function() {
-    var user = opendxp.globalmanager.get("user");
-    if ((user.isAllowed("clear_cache") || user.isAllowed("clear_temp_files") || user.isAllowed("clear_fullpage_cache"))) {
-        opendxp.layout.toolbar.prototype.clearCache({'env[]': ['dev','prod']});
-    }
-};
-
 opendxp.helpers.clearDataCache = function() {
     var user = opendxp.globalmanager.get("user");
     if ((user.isAllowed("clear_cache") || user.isAllowed("clear_temp_files") || user.isAllowed("clear_fullpage_cache"))) {
@@ -3039,7 +3032,6 @@ opendxp.helpers.keyBindingMapping = {
     "tagConfiguration": opendxp.helpers.tagConfiguration,
     "users": opendxp.helpers.users,
     "roles": opendxp.helpers.roles,
-    "clearAllCaches": opendxp.helpers.clearAllCaches,
     "clearDataCache": opendxp.helpers.clearDataCache
 };
 
