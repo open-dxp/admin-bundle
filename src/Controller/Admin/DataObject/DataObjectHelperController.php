@@ -66,7 +66,7 @@ class DataObjectHelperController extends AdminAbstractController
         $result = [];
         if ($object) {
             $result['success'] = true;
-            $fields = $request->query->get('fields');
+            $fields = $request->query->all('fields');
             $result['fields'] = GridData\DataObject::getData($object, $fields);
         } else {
             $result['success'] = false;
