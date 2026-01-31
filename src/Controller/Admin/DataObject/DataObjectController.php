@@ -104,7 +104,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
 
         if ($object->hasChildren($objectTypes)) {
             $offset = (int)$request->query->get('start');
-            $limit = (int)$request->query->get('limit', 100000000);
+            $limit = (int)$request->query->get('limit', '100000000');
             if ($view = $request->query->get('view', '')) {
                 $cv = $this->elementService->getCustomViewById($view) ?? [];
             }

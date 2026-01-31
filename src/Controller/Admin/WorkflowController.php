@@ -401,11 +401,11 @@ class WorkflowController extends AdminAbstractController implements KernelContro
         $request = $event->getRequest();
 
         if ($request->query->get('ctype') === 'document') {
-            $this->element = Document::getById((int) $request->query->get('cid', 0));
+            $this->element = Document::getById((int) $request->query->get('cid', '0'));
         } elseif ($request->query->get('ctype') === 'asset') {
-            $this->element = Asset::getById((int) $request->query->get('cid', 0));
+            $this->element = Asset::getById((int) $request->query->get('cid', '0'));
         } elseif ($request->query->get('ctype') === 'object') {
-            $this->element = ConcreteObject::getById((int) $request->query->get('cid', 0));
+            $this->element = ConcreteObject::getById((int) $request->query->get('cid', '0'));
         }
 
         if (!$this->element) {

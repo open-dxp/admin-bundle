@@ -297,8 +297,8 @@ class ElementController extends AdminAbstractController
         $success = false;
         $hasHidden = false;
         $total = 0;
-        $limit = (int)$request->query->get('limit', 50);
-        $offset = (int)$request->query->get('start', 0);
+        $limit = (int)$request->query->get('limit', '50');
+        $offset = (int)$request->query->get('start', '0');
 
         if ($element instanceof Element\ElementInterface) {
             $total = $element->getDependencies()->getRequiredByTotalCount();
@@ -635,8 +635,8 @@ class ElementController extends AdminAbstractController
         $id = $request->query->getInt('id');
         $type = $request->query->get('elementType');
         $allowedTypes = ['asset', 'document', 'object'];
-        $offset = (int) $request->query->get('start', 0);
-        $limit = (int) $request->query->get('limit', 25);
+        $offset = (int) $request->query->get('start', '0');
+        $limit = (int) $request->query->get('limit', '25');
         $filterRequires = $request->query->get('filter');
         $value = null;
         $elements = null;
@@ -689,8 +689,8 @@ class ElementController extends AdminAbstractController
         $id = $request->query->getInt('id');
         $type = $request->query->get('elementType');
         $allowedTypes = ['asset', 'document', 'object'];
-        $offset = (int) $request->query->get('start', 0);
-        $limit = (int) $request->query->get('limit', 25);
+        $offset = (int) $request->query->get('start', '0');
+        $limit = (int) $request->query->get('limit', '25');
         $filterRequiredBy = $request->query->get('filter');
         $value = null;
         $elements = null;
@@ -704,7 +704,7 @@ class ElementController extends AdminAbstractController
 
                 foreach ($filters as $filter) {
 
-                    if ($filter['type'] == 'string') {
+                    if ($filter['type'] === 'string') {
                         $value = ($filter['value']??'');
                     }
 

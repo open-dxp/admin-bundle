@@ -47,7 +47,7 @@ class AdminTokenAuthenticator extends AdminAbstractAuthenticator
 
             $userBadge = new UserBadge($openDxpUser->getUsername(), fn () => new User($openDxpUser));
 
-            if ($request->query->get('reset', false)) {
+            if ($request->query->get('reset')) {
                 // save the information to session when the user want's to reset the password
                 // this is because otherwise the old password is required
 

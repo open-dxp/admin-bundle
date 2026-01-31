@@ -2009,7 +2009,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
                 'iconCls' => 'opendxp_icon_select',
             ];
 
-            if ((int)$request->query->get('grouped', 0) === 0 || !$selectOptionConfig->hasGroup()) {
+            if ((int)$request->query->get('grouped', '0') === 0 || !$selectOptionConfig->hasGroup()) {
                 $configurations[] = $configurationData;
 
                 continue;
