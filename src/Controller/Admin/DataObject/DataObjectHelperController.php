@@ -43,6 +43,7 @@ use stdClass;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -162,7 +163,21 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/grid-delete-column-config', name: 'griddeletecolumnconfig', methods: ['DELETE'])]
     public function gridDeleteColumnConfigAction(Request $request, EventDispatcherInterface $eventDispatcher, Config $config): JsonResponse
     {
-        $gridConfigId = (int)$request->get('gridConfigId');
+        $params = [
+            'id'              => $request->request->get('id'),
+            'objectId'        => $request->request->get('objectId'),
+            'name'            => $request->request->get('name'),
+            'type'            => $request->request->get('type'),
+            'types'           => $request->request->get('types'),
+            'gridtype'        => $request->request->get('gridtype'),
+            'gridConfigId'    => $request->request->get('gridConfigId'),
+            'searchType'      => $request->request->get('searchType'),
+            'noSystemColumns' => $request->query->getBoolean('no_system_columns'),
+            'noBrickColumns' => $request->query->getBoolean('no_brick_columns'),
+            'locale' => $request->getLocale(),
+        ];
+
+        $gridConfigId = (int)$request->request->get('gridConfigId');
         $gridConfig = GridConfig::getById($gridConfigId);
         $success = false;
         if ($gridConfig) {
@@ -174,7 +189,7 @@ class DataObjectHelperController extends AdminAbstractController
             $success = true;
         }
 
-        $newGridConfig = $this->doGetGridColumnConfig($request, $config, true);
+        $newGridConfig = $this->doGetGridColumnConfig($request, $params, $config, true);
         $newGridConfig['deleteSuccess'] = $success;
 
         $event = new GenericEvent($this, [
@@ -193,7 +208,20 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/grid-get-column-config', name: 'gridgetcolumnconfig', methods: ['GET'])]
     public function gridGetColumnConfigAction(Request $request, EventDispatcherInterface $eventDispatcher, Config $config): JsonResponse
     {
-        $result = $this->doGetGridColumnConfig($request, $config);
+        $params = [
+            'id'              => $request->query->get('id'),
+            'objectId'        => $request->query->get('objectId'),
+            'name'            => $request->query->get('name'),
+            'type'            => $request->query->get('type'),
+            'types'           => $request->query->get('types'),
+            'gridtype'        => $request->query->get('gridtype'),
+            'gridConfigId'    => $request->query->get('gridConfigId'),
+            'searchType'      => $request->query->get('searchType'),
+            'noSystemColumns' => $request->query->getBoolean('no_system_columns'),
+            'noBrickColumns' => $request->query->getBoolean('no_brick_columns'),
+        ];
+
+        $result = $this->doGetGridColumnConfig($request, $params, $config);
 
         $event = new GenericEvent($this, [
             'data' => $result,
@@ -208,24 +236,24 @@ class DataObjectHelperController extends AdminAbstractController
         return $this->adminJson($result);
     }
 
-    public function doGetGridColumnConfig(Request $request, Config $config, bool $isDelete = false): array
+    private function doGetGridColumnConfig(Request $request, array $params, Config $config, bool $isDelete = false): array
     {
         $class = null;
         $fields = null;
 
-        if ($request->get('id')) {
-            $class = DataObject\ClassDefinition::getById($request->get('id'));
-        } elseif ($request->get('name')) {
-            $class = DataObject\ClassDefinition::getByName($request->get('name'));
+        if ($params['id'] !== null) {
+            $class = DataObject\ClassDefinition::getById($params['id']);
+        } elseif ($params['name'] !== null) {
+            $class = DataObject\ClassDefinition::getByName($params['name']);
         }
 
         $gridConfigId = null;
         $gridType = 'search';
-        if ($request->get('gridtype')) {
-            $gridType = $request->get('gridtype');
+        if ($params['gridtype'] !== null) {
+            $gridType = $params['gridtype'];
         }
 
-        $objectId = (int) $request->get('objectId');
+        $objectId = $params['objectId'] !== null ? (int) $params['objectId'] : 0;
 
         if ($objectId) {
             $fields = DataObject\Service::getCustomGridFieldDefinitions($class->getId(), $objectId);
@@ -246,17 +274,17 @@ class DataObjectHelperController extends AdminAbstractController
         }
 
         $types = [];
-        if ($request->get('types')) {
-            $types = explode(',', $request->get('types'));
+        if ($params['types'] !== null) {
+            $types = explode(',', $params['types']);
         }
 
         $userId = $this->getAdminUser()->getId();
 
-        $requestedGridConfigId = $isDelete ? null : $request->get('gridConfigId');
+        $requestedGridConfigId = $isDelete ? null : $params['gridConfigId'];
 
         // grid config
         $gridConfig = [];
-        $searchType = $request->get('searchType');
+        $searchType = $params['searchType'];
 
         if ((string) ($requestedGridConfigId ?? '') === '' && $class) {
             // check if there is a favourite view
@@ -313,13 +341,10 @@ class DataObjectHelperController extends AdminAbstractController
         }
 
         $localizedFields = [];
-        $objectbrickFields = [];
         if (is_array($fields)) {
             foreach ($fields as $field) {
                 if ($field instanceof DataObject\ClassDefinition\Data\Localizedfields) {
                     $localizedFields[] = $field;
-                } elseif ($field instanceof DataObject\ClassDefinition\Data\Objectbricks) {
-                    $objectbrickFields[] = $field;
                 }
             }
         }
@@ -328,10 +353,10 @@ class DataObjectHelperController extends AdminAbstractController
 
         if (empty($gridConfig)) {
             $availableFields = $this->getDefaultGridFields(
-                $request->query->getBoolean('no_system_columns'),
+                $params['noSystemColumns'],
                 $class,
                 $gridType,
-                $request->query->getBoolean('no_brick_columns'),
+                $params['noBrickColumns'],
                 $fields,
                 $context,
                 $objectId,
@@ -441,7 +466,8 @@ class DataObjectHelperController extends AdminAbstractController
                 }
             }
         }
-        usort($availableFields, fn ($a, $b) => $a['position'] <=> $b['position']);
+
+        usort($availableFields, static fn ($a, $b) => $a['position'] <=> $b['position']);
 
         $frontendLanguages = Tool\Admin::reorderWebsiteLanguages(\OpenDxp\Tool\Admin::getCurrentUser(), $config['general']['valid_languages']);
         $language = $frontendLanguages ? $frontendLanguages[0] : $request->getLocale();
@@ -657,7 +683,7 @@ class DataObjectHelperController extends AdminAbstractController
         $helperColumns = [];
         $newData = [];
         /** @var stdClass[] $data */
-        $data = json_decode($request->get('columns'));
+        $data = json_decode($request->request->get('columns'));
         foreach ($data as $item) {
             if (!empty($item->isOperator)) {
                 $itemKey = '#' . uniqid('', false);
@@ -686,8 +712,8 @@ class DataObjectHelperController extends AdminAbstractController
         $object = DataObject::getById($objectId);
 
         if ($object->isAllowed('list')) {
-            $classId = $request->get('classId');
-            $searchType = $request->get('searchType');
+            $classId = $request->request->get('classId');
+            $searchType = $request->request->get('searchType');
             $user = $this->getAdminUser();
             $db = Db::get();
             $db->executeQuery('delete from gridconfig_favourites where '
@@ -705,16 +731,16 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/grid-mark-favourite-column-config', name: 'gridmarkfavouritecolumnconfig', methods: ['POST'])]
     public function gridMarkFavouriteColumnConfigAction(Request $request): JsonResponse
     {
-        $objectId = (int)$request->get('objectId');
+        $objectId = $request->request->getInt('objectId');
         $object = DataObject::getById($objectId);
 
         if ($object->isAllowed('list')) {
-            $classId = $request->get('classId');
-            $gridConfigId = $request->get('gridConfigId');
-            $searchType = $request->get('searchType');
-            $global = $request->get('global');
+            $classId = $request->request->get('classId');
+            $gridConfigId = $request->request->get('gridConfigId');
+            $searchType = $request->request->get('searchType');
+            $global = $request->request->get('global');
             $user = $this->getAdminUser();
-            $type = $request->get('type');
+            $type = $request->request->get('type');
 
             $favourite = new GridConfigFavourite();
             $favourite->setOwnerId($user->getId());
@@ -790,13 +816,13 @@ class DataObjectHelperController extends AdminAbstractController
 
         if ($object->isAllowed('list')) {
             try {
-                $classId = $request->get('class_id');
-                $context = $request->get('context');
+                $classId = $request->request->get('class_id');
+                $context = $request->request->get('context');
 
-                $searchType = $request->get('searchType');
+                $searchType = $request->request->get('searchType');
 
                 // grid config
-                $gridConfigData = $this->decodeJson($request->get('gridconfig'));
+                $gridConfigData = $this->decodeJson($request->request->get('gridconfig'));
                 $gridConfigData['opendxp_version'] = Version::getVersion();
                 $gridConfigData['opendxp_revision'] = Version::getRevision();
 
@@ -804,7 +830,7 @@ class DataObjectHelperController extends AdminAbstractController
 
                 unset($gridConfigData['settings']['isShared']);
 
-                $metadata = $request->get('settings');
+                $metadata = $request->request->get('settings');
                 $metadata = json_decode($metadata, true);
 
                 $gridConfigId = $metadata['gridConfigId'];
@@ -1080,10 +1106,13 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/import-upload', name: 'importupload', methods: ['POST'])]
     public function importUploadAction(Request $request, Filesystem $filesystem): JsonResponse
     {
-        $data = file_get_contents($_FILES['Filedata']['tmp_name']);
+        /** @var UploadedFile $file */
+        $file = $request->files->get('Filedata');
+
+        $data = file_get_contents($file->getPathname());
         $data = Tool\Text::convertToUTF8($data);
 
-        $importId = $request->get('importId');
+        $importId = $request->request->get('importId');
         $importId = str_replace('..', '', $importId);
         $importFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/import_' . $importId;
         $filesystem->dumpFile($importFile, $data);
@@ -1104,7 +1133,7 @@ class DataObjectHelperController extends AdminAbstractController
 
     protected function extractLanguage(Request $request): string
     {
-        $requestedLanguage = $request->get('language');
+        $requestedLanguage = $request->request->get('language');
         if ($requestedLanguage) {
             if ($requestedLanguage !== 'default') {
                 $request->setLocale($requestedLanguage);
@@ -1166,9 +1195,9 @@ class DataObjectHelperController extends AdminAbstractController
         LocaleServiceInterface $localeService,
         EventDispatcherInterface $eventDispatcher
     ): JsonResponse {
-        $fileHandle = File::getValidFilename($request->get('fileHandle'));
-        $ids = $request->get('ids');
-        $settings = json_decode($request->get('settings'), true);
+        $fileHandle = File::getValidFilename($request->request->get('fileHandle'));
+        $ids = $request->request->all('ids');
+        $settings = json_decode($request->request->get('settings'), true);
         $delimiter = $settings['delimiter'] ?? ';';
         $header = $settings['header'] ?? 'title';
         Tool\UserTimezone::setUserTimezone($request->request->get('userTimezone'));
@@ -1178,7 +1207,7 @@ class DataObjectHelperController extends AdminAbstractController
         $enableInheritance = $settings['enableInheritance'] ?? false;
         DataObject\Concrete::setGetInheritedValues($enableInheritance);
 
-        $class = DataObject\ClassDefinition::getById($request->get('classId'));
+        $class = DataObject\ClassDefinition::getById($request->request->get('classId'));
 
         if (!$class) {
             throw new InvalidArgumentException('No class definition found');
@@ -1207,9 +1236,9 @@ class DataObjectHelperController extends AdminAbstractController
 
         $list = $beforeListExportEvent->getArgument('list');
 
-        $fields = json_decode($request->get('fields')[0], true);
+        $fields = json_decode($request->request->all('fields')[0], true);
 
-        $addTitles = (bool) $request->get('initial');
+        $addTitles = (bool) $request->request->get('initial');
 
         $requestedLanguage = $this->extractLanguage($request);
 
@@ -1217,7 +1246,7 @@ class DataObjectHelperController extends AdminAbstractController
             'source' => 'opendxp-export',
         ];
 
-        $contextFromRequest = $request->get('context');
+        $contextFromRequest = $request->request->get('context');
         if ($contextFromRequest) {
             $contextFromRequest = json_decode($contextFromRequest, true);
             $context = [...$context, ...$contextFromRequest];
@@ -1245,7 +1274,7 @@ class DataObjectHelperController extends AdminAbstractController
 
             $firstLine = true;
 
-            if ($request->get('initial') && $header === 'no_header') {
+            if ($request->request->get('initial') && $header === 'no_header') {
                 array_shift($csv);
                 $firstLine = false;
             }
@@ -1300,7 +1329,7 @@ class DataObjectHelperController extends AdminAbstractController
     public function downloadCsvFileAction(Request $request): Response
     {
         $storage = Storage::get('temp');
-        $fileHandle = File::getValidFilename($request->get('fileHandle'));
+        $fileHandle = File::getValidFilename($request->query->get('fileHandle'));
         $csvFile = $this->getCsvFile($fileHandle);
 
         try {
@@ -1360,8 +1389,8 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/get-batch-jobs', name: 'getbatchjobs', methods: ['POST'])]
     public function getBatchJobsAction(Request $request, GridHelperService $gridHelperService): JsonResponse
     {
-        if ($request->get('language')) {
-            $request->setLocale($request->get('language'));
+        if ($request->request->get('language')) {
+            $request->setLocale($request->request->get('language'));
         }
 
         $allParams = [...$request->request->all(), ...$request->query->all()];
@@ -1534,7 +1563,7 @@ class DataObjectHelperController extends AdminAbstractController
                                             $newData = $field->appendData($existingData, $newData);
                                         }
                                         if ($remove) {
-                                            $existingData = $object->$getter($request->get('language'));
+                                            $existingData = $object->$getter($params['language']);
                                             $newData = $field->removeData($existingData, $newData);
                                         }
 

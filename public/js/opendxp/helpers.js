@@ -2513,7 +2513,7 @@ opendxp.helpers.markColumnConfigAsFavourite = function (objectId, classId, gridC
 
         Ext.Ajax.request({
             url: url,
-            method: "post",
+            method: 'POST',
             params: {
                 objectId: objectId,
                 classId: classId,
@@ -2559,10 +2559,10 @@ opendxp.helpers.removeOtherConfigs = function (objectId, classId, gridConfigId, 
         buttons: Ext.Msg.YESNO,
         icon: Ext.MessageBox.INFO,
         fn: function (btn) {
-            if (btn === "yes") {
+            if (btn === 'yes') {
                 Ext.Ajax.request({
                     url: Routing.generate('opendxp_admin_dataobject_dataobjecthelper_gridconfigapplytoall'),
-                    method: "post",
+                    method: 'POST',
                     params: {
                         objectId: objectId,
                         classId: classId,

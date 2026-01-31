@@ -126,7 +126,7 @@ class AssetHelperController extends AdminAbstractController
     {
         $params = [
             'id'              => $request->request->get('id'),
-            'type'            => $request->query->get('type'),
+            'type'            => $request->request->get('type'),
             'types'           => $request->request->get('types'),
             'gridConfigId'    => $request->request->get('gridConfigId'),
             'searchType'      => $request->request->get('searchType'),

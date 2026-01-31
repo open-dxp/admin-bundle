@@ -2041,7 +2041,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $asset = Asset::getById((int) $request->query->get('parentId'));
 
         $filePath = null;
-        if($request->files->has('Filedata')) {
+        if ($request->files->has('Filedata')) {
             /** @var UploadedFile $file */
             $file = $request->files->get('Filedata');
             $filePath = $file->getPathname();
