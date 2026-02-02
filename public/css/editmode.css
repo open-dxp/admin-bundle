@@ -610,7 +610,7 @@ input.cke_dialog_ui_input_tel {
 .opendxp_drag_drop_active .opendxp_editable_snippet:hover,
 .opendxp_drag_drop_active .opendxp_editable_renderlet:hover,
 .opendxp_drag_drop_active .opendxp_editable_inc:hover {
-    outline:0 auto;
+    outline: 0;
 }
 
 
