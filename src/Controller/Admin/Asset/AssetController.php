@@ -1175,7 +1175,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             if ($request->query->get('config')) {
                 $thumbnailConfig = $image->getThumbnail($this->decodeJson($request->query->get('config')))->getConfig();
             } else {
-                $thumbnailConfig = $image->getThumbnail([...$request->request->all(), ...$request->query->all()])->getConfig();
+                $thumbnailConfig = $image->getThumbnail($request->query->all())->getConfig();
             }
         } else {
             // no high-res images in admin mode (editmode)
@@ -1294,10 +1294,10 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             throw $this->createAccessDeniedException('not allowed to view thumbnail');
         }
 
-        $thumbnail = [...$request->request->all(), ...$request->query->all()];
+        $thumbnailConfig = $request->query->all();
 
         if ($request->query->has('treepreview')) {
-            $thumbnail = Asset\Image\Thumbnail\Config::getPreviewConfig();
+            $thumbnailConfig = Asset\Image\Thumbnail\Config::getPreviewConfig();
         }
 
         $time = null;
@@ -1322,7 +1322,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             $video->save();
         }
 
-        $thumb = $video->getImageThumbnail($thumbnail, $time, $image);
+        $thumb = $video->getImageThumbnail($thumbnailConfig, $time, $image);
 
         if ($request->query->get('origin') === 'treeNode' && !$thumb->exists()) {
             OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
@@ -1643,7 +1643,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         EventDispatcherInterface $eventDispatcher,
         GridHelperService $gridHelperService): JsonResponse
     {
-        $allParams = [...$request->request->all(), ...$request->query->all()];
+        $allParams = $request->query->all();
 
         $filterPrepareEvent = new GenericEvent($this, [
             'requestParams' => $allParams,
