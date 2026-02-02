@@ -124,7 +124,16 @@ class AssetHelperController extends AdminAbstractController
     #[Route('/grid-delete-column-config', name: 'opendxp_admin_asset_assethelper_griddeletecolumnconfig', methods: ['DELETE'])]
     public function gridDeleteColumnConfigAction(Request $request): JsonResponse
     {
-        $gridConfigId = (int) $request->get('gridConfigId');
+        $params = [
+            'id'              => $request->request->get('id'),
+            'type'            => $request->request->get('type'),
+            'types'           => $request->request->get('types'),
+            'gridConfigId'    => $request->request->get('gridConfigId'),
+            'searchType'      => $request->request->get('searchType'),
+            'noSystemColumns' => $request->query->getBoolean('no_system_columns'),
+        ];
+
+        $gridConfigId = (int) $request->request->get('gridConfigId');
         $gridConfig = GridConfig::getById($gridConfigId);
         $success = false;
         if ($gridConfig) {
@@ -136,7 +145,7 @@ class AssetHelperController extends AdminAbstractController
             $success = true;
         }
 
-        $newGridConfig = $this->doGetGridColumnConfig($request, true);
+        $newGridConfig = $this->doGetGridColumnConfig($params, true);
         $newGridConfig['deleteSuccess'] = $success;
 
         return $this->adminJson($newGridConfig);
@@ -145,31 +154,39 @@ class AssetHelperController extends AdminAbstractController
     #[Route('/grid-get-column-config', name: 'opendxp_admin_asset_assethelper_gridgetcolumnconfig', methods: ['GET'])]
     public function gridGetColumnConfigAction(Request $request): JsonResponse
     {
-        $result = $this->doGetGridColumnConfig($request);
+        $params = [
+            'id'              => $request->query->get('id'),
+            'type'            => $request->query->get('type'),
+            'types'           => $request->query->get('types'),
+            'gridConfigId'    => $request->query->get('gridConfigId'),
+            'searchType'      => $request->query->get('searchType'),
+            'noSystemColumns' => $request->query->getBoolean('no_system_columns'),
+        ];
+
+        $result = $this->doGetGridColumnConfig($params);
 
         return $this->adminJson($result);
     }
 
-    public function doGetGridColumnConfig(Request $request, bool $isDelete = false): array
+    private function doGetGridColumnConfig(array $params, bool $isDelete = false): array
     {
         $gridConfigId = null;
 
-        $classId = $request->get('id');
-
+        $classId = $params['id'];
         $context = ['purpose' => 'gridconfig'];
 
         $types = [];
-        if ($request->get('types')) {
-            $types = explode(',', $request->get('types'));
+        if (!empty($params['types'])) {
+            $types = explode(',', $params['types']);
         }
 
         $userId = $this->getAdminUser()->getId();
 
-        $requestedGridConfigId = $isDelete ? '' : $request->get('gridConfigId', '');
+        $requestedGridConfigId = $isDelete ? '' : $params['gridConfigId'] ?? '';
 
         // grid config
         $gridConfig = [];
-        $searchType = $request->get('searchType');
+        $searchType = $params['searchType'];
 
         if ((string) $requestedGridConfigId === '') {
             // check if there is a favourite view
@@ -214,7 +231,7 @@ class AssetHelperController extends AdminAbstractController
 
         if (empty($gridConfig)) {
             $availableFields = $this->getDefaultGridFields(
-                $request->query->getBoolean('no_system_columns'),
+                $params['noSystemColumns'],
                 [], //maybe required for types other than metadata
                 $context,
                 $types
@@ -231,7 +248,7 @@ class AssetHelperController extends AdminAbstractController
                 }
             }
         }
-        usort($availableFields, fn ($a, $b) => $a['position'] <=> $b['position']);
+        usort($availableFields, static fn ($a, $b) => $a['position'] <=> $b['position']);
 
         $availableConfigs = $classId ? $this->getMyOwnGridColumnConfigs($userId, $classId, $searchType) : [];
         $sharedConfigs = $classId ? $this->getSharedGridColumnConfigs($this->getAdminUser(), $classId, $searchType) : [];
@@ -347,11 +364,12 @@ class AssetHelperController extends AdminAbstractController
     {
         $helperColumns = [];
         $newData = [];
-        $data = json_decode($request->get('columns'));
+        $data = json_decode($request->request->get('columns'));
+
         /** @var stdClass $item */
         foreach ($data as $item) {
             if (!empty($item->isOperator)) {
-                $itemKey = '#' . uniqid();
+                $itemKey = '#' . uniqid('', false);
 
                 $item->key = $itemKey;
                 $newData[] = $item;
@@ -361,7 +379,7 @@ class AssetHelperController extends AdminAbstractController
             }
         }
 
-        Session::useBag($request->getSession(), function (AttributeBagInterface $session) use ($helperColumns): void {
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($helperColumns): void {
             $existingColumns = $session->get('helpercolumns', []);
             $helperColumns = [...$helperColumns, ...$existingColumns];
             $session->set('helpercolumns', $helperColumns);
@@ -373,13 +391,13 @@ class AssetHelperController extends AdminAbstractController
     #[Route('/grid-mark-favourite-column-config', name: 'opendxp_admin_asset_assethelper_gridmarkfavouritecolumnconfig', methods: ['POST'])]
     public function gridMarkFavouriteColumnConfigAction(Request $request): JsonResponse
     {
-        $classId = $request->get('classId');
+        $classId = $request->request->get('classId');
         $asset = Asset::getById(is_numeric($classId) ? (int) $classId : 0);
 
         if ($asset->isAllowed('list')) {
-            $gridConfigId = (int) $request->get('gridConfigId');
-            $searchType = $request->get('searchType');
-            $type = $request->get('type');
+            $gridConfigId = (int) $request->request->get('gridConfigId');
+            $searchType = $request->request->get('searchType');
+            $type = $request->request->get('type');
             $user = $this->getAdminUser();
 
             $favourite = new GridConfigFavourite();
@@ -387,7 +405,6 @@ class AssetHelperController extends AdminAbstractController
             $favourite->setClassId($classId);
             $favourite->setSearchType($searchType);
             $favourite->setType($type);
-            $specializedConfigs = false;
 
             try {
                 if ($gridConfigId !== 0) {
@@ -401,7 +418,7 @@ class AssetHelperController extends AdminAbstractController
                 $favourite->delete();
             }
 
-            return $this->adminJson(['success' => true, 'spezializedConfigs' => $specializedConfigs]);
+            return $this->adminJson(['success' => true, 'specializedConfigs' => false]);
         }
 
         throw $this->createAccessDeniedHttpException();
@@ -435,7 +452,7 @@ class AssetHelperController extends AdminAbstractController
     #[Route('/grid-save-column-config', name: 'opendxp_admin_asset_assethelper_gridsavecolumnconfig', methods: ['POST'])]
     public function gridSaveColumnConfigAction(Request $request): JsonResponse
     {
-        $asset = Asset::getById((int) $request->get('id'));
+        $asset = Asset::getById((int) $request->request->get('id'));
 
         if (!$asset) {
             throw $this->createNotFoundException();
@@ -443,20 +460,20 @@ class AssetHelperController extends AdminAbstractController
 
         if ($asset->isAllowed('list')) {
             try {
-                $classId = $request->get('class_id');
-                $context = $request->get('context');
+                $classId = $request->request->get('class_id');
+                $context = $request->request->get('context');
 
-                $searchType = $request->get('searchType');
-                $type = $request->get('type');
+                $searchType = $request->request->get('searchType');
+                $type = $request->request->get('type');
 
                 // grid config
-                $gridConfigData = $this->decodeJson($request->get('gridconfig'));
+                $gridConfigData = $this->decodeJson($request->request->get('gridconfig'));
                 $gridConfigData['opendxp_version'] = Version::getVersion();
                 $gridConfigData['opendxp_revision'] = Version::getRevision();
                 $gridConfigData['context'] = $context;
                 unset($gridConfigData['settings']['isShared']);
 
-                $metadata = $request->get('settings');
+                $metadata = $request->request->get('settings');
                 $metadata = json_decode($metadata, true);
 
                 $gridConfigId = $metadata['gridConfigId'];
@@ -644,7 +661,7 @@ class AssetHelperController extends AdminAbstractController
 
         $jobs = array_chunk($ids, 20);
 
-        $fileHandle = uniqid('asset-export-');
+        $fileHandle = uniqid('asset-export-', false);
         $storage = Storage::get('temp');
         $storage->write($this->getCsvFile($fileHandle), '');
 
@@ -657,11 +674,11 @@ class AssetHelperController extends AdminAbstractController
     #[Route('/do-export', name: 'opendxp_admin_asset_assethelper_doexport', methods: ['POST'])]
     public function doExportAction(Request $request): JsonResponse
     {
-        $fileHandle = File::getValidFilename($request->get('fileHandle'));
-        $ids = $request->get('ids');
-        $settings = json_decode($request->get('settings'), true);
+        $fileHandle = File::getValidFilename($request->request->get('fileHandle'));
+        $ids = $request->request->all('ids');
+        $settings = json_decode($request->request->get('settings'), true);
         $delimiter = $settings['delimiter'] ?? ';';
-        $language = str_replace('default', '', $request->get('language'));
+        $language = str_replace('default', '', $request->request->get('language'));
         $header = $settings['header'] ?? 'title';
 
         $list = new Asset\Listing();
@@ -674,9 +691,9 @@ class AssetHelperController extends AdminAbstractController
         $list->setCondition('id IN (' . implode(',', $quotedIds) . ')');
         $list->setOrderKey(' FIELD(id, ' . implode(',', $quotedIds) . ')', false);
 
-        $fields = json_decode($request->get('fields')[0], true);
+        $fields = json_decode($request->request->all('fields')[0], true);
 
-        $addTitles = (bool) $request->get('initial');
+        $addTitles = (bool) $request->request->get('initial');
 
         $csv = $this->getCsvData($language, $list, $fields, $header, $addTitles);
 
@@ -691,7 +708,7 @@ class AssetHelperController extends AdminAbstractController
             stream_copy_to_stream($fileStream, $temp, null, 0);
 
             $firstLine = true;
-            if ($request->get('initial') && $header === 'no_header') {
+            if ($request->request->get('initial') && $header === 'no_header') {
                 $firstLine = false;
             }
 
@@ -764,7 +781,7 @@ class AssetHelperController extends AdminAbstractController
                     $getter = 'get' . ucfirst($fieldDef[0]);
 
                     if (isset($fieldDef[1])) {
-                        if ($fieldDef[1] == 'system' && method_exists($asset, $getter)) {
+                        if ($fieldDef[1] === 'system' && method_exists($asset, $getter)) {
                             $data = $asset->$getter($language);
                         } else {
                             $fieldDef[1] = str_replace('none', '', $fieldDef[1]);
@@ -787,20 +804,6 @@ class AssetHelperController extends AdminAbstractController
         return $csv;
     }
 
-    protected function extractLanguage(Request $request): string
-    {
-        $requestedLanguage = $request->get('language');
-        if ($requestedLanguage) {
-            if ($requestedLanguage != 'default') {
-                $request->setLocale($requestedLanguage);
-            }
-        } else {
-            $requestedLanguage = $request->getLocale();
-        }
-
-        return $requestedLanguage;
-    }
-
     protected function getCsvFile(string $fileHandle): string
     {
         return $fileHandle . '.csv';
@@ -810,7 +813,7 @@ class AssetHelperController extends AdminAbstractController
     public function downloadCsvFileAction(Request $request): Response
     {
         $storage = Storage::get('temp');
-        $fileHandle = File::getValidFilename($request->get('fileHandle'));
+        $fileHandle = File::getValidFilename($request->query->get('fileHandle'));
         $csvFile = $this->getCsvFile($fileHandle);
 
         try {
@@ -836,7 +839,7 @@ class AssetHelperController extends AdminAbstractController
     public function downloadXlsxFileAction(Request $request, GridHelperService $gridHelperService): BinaryFileResponse
     {
         $storage = Storage::get('temp');
-        $fileHandle = File::getValidFilename($request->get('fileHandle'));
+        $fileHandle = File::getValidFilename($request->query->get('fileHandle'));
         $csvFile = $this->getCsvFile($fileHandle);
 
         try {
@@ -903,8 +906,8 @@ class AssetHelperController extends AdminAbstractController
     #[Route('/get-batch-jobs', name: 'opendxp_admin_asset_assethelper_getbatchjobs', methods: ['POST'])]
     public function getBatchJobsAction(Request $request, GridHelperService $gridHelperService): JsonResponse
     {
-        if ($request->get('language')) {
-            $request->setLocale($request->get('language'));
+        if ($request->request->get('language')) {
+            $request->setLocale($request->request->get('language'));
         }
 
         $allParams = [...$request->request->all(), ...$request->query->all()];
@@ -919,10 +922,10 @@ class AssetHelperController extends AdminAbstractController
     public function batchAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
         try {
-            if ($request->get('data')) {
+            if ($request->request->has('data')) {
                 $loader = OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
 
-                $data = $this->decodeJson($request->get('data'), true);
+                $data = $this->decodeJson($request->request->get('data'), true);
 
                 $updateEvent = new GenericEvent($this, [
                     'data' => $data,
@@ -939,7 +942,7 @@ class AssetHelperController extends AdminAbstractController
 
                 $language = null;
                 if (isset($data['language'])) {
-                    $language = $data['language'] != 'default' ? $data['language'] : null;
+                    $language = $data['language'] !== 'default' ? $data['language'] : null;
                 }
 
                 $asset = Asset::getById((int) $data['job']);
@@ -955,14 +958,14 @@ class AssetHelperController extends AdminAbstractController
                     $name = $data['name'];
                     $value = $data['value'];
 
-                    if ($data['valueType'] == 'object') {
+                    if ($data['valueType'] === 'object') {
                         $value = $this->decodeJson($value);
                     }
 
                     $fieldDef = explode('~', $name);
                     $name = $fieldDef[0];
                     if (count($fieldDef) > 1) {
-                        $language = ($fieldDef[1] == 'none' ? '' : $fieldDef[1]);
+                        $language = ($fieldDef[1] === 'none' ? '' : $fieldDef[1]);
                     }
 
                     foreach ($metadata as &$em) {
@@ -1030,9 +1033,9 @@ class AssetHelperController extends AdminAbstractController
                                 'id' => $asset->getId(),
                                 'metadata' => $metadata,
                             ]);
+
                             $eventDispatcher->dispatch($metadataEvent, AdminEvents::ASSET_METADATA_PRE_SET);
 
-                            // $metadata = Asset\Service::minimizeMetadata($metadata, "grid");
                             $asset->setMetadataRaw($metadata);
                             $asset->save();
 

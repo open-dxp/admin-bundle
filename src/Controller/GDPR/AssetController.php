@@ -28,10 +28,6 @@ use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Class AssetController
- *
- * @package GDPRDataExtractorBundle\Controller
- *
  * @internal
  */
 #[Route('/asset')]
@@ -49,7 +45,7 @@ class AssetController extends AdminAbstractController implements KernelControlle
     #[Route('/search-assets', name: 'opendxp_admin_gdpr_asset_searchasset', methods: ['GET'])]
     public function searchAssetAction(Request $request, Assets $service): JsonResponse
     {
-        $allParams = [...$request->request->all(), ...$request->query->all()];
+        $allParams = $request->query->all();
 
         $result = $service->searchData(
             (int)$allParams['id'],
@@ -70,7 +66,7 @@ class AssetController extends AdminAbstractController implements KernelControlle
     #[Route('/export', name: 'opendxp_admin_gdpr_asset_exportassets', methods: ['GET'])]
     public function exportAssetsAction(Request $request, Assets $service): Response
     {
-        $asset = Asset::getById((int) $request->get('id'));
+        $asset = Asset::getById((int) $request->query->get('id'));
         if (!$asset) {
             throw $this->createNotFoundException('Asset not found');
         }

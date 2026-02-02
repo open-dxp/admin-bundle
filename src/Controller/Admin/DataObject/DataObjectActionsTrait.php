@@ -64,7 +64,7 @@ trait DataObjectActionsTrait
 
         $requestedLanguage = $allParams['language'] ?? null;
         if ($requestedLanguage) {
-            if ($requestedLanguage != 'default') {
+            if ($requestedLanguage !== 'default') {
                 $request->setLocale($requestedLanguage);
             }
         } else {
@@ -124,7 +124,7 @@ trait DataObjectActionsTrait
             $objects = [];
             foreach ($list->getObjects() as $object) {
                 if ($csvMode) {
-                    $o = DataObject\Service::getCsvDataForObject($object, $requestedLanguage, $request->get('fields'), GridData\DataObject::getHelperDefinitions(), $localeService, 'title', false, $allParams['context']);
+                    $o = DataObject\Service::getCsvDataForObject($object, $requestedLanguage, $allParams['fields'], GridData\DataObject::getHelperDefinitions(), $localeService, 'title', false, $allParams['context']);
                     // Like for treeGetChildrenByIdAction, so we respect isAllowed method which can be extended (object DI) for custom permissions, so relying only users_workspaces_object is insufficient and could lead security breach
                     if ($object->isAllowed('list')) {
                         $objects[] = $o;
@@ -149,6 +149,7 @@ trait DataObjectActionsTrait
                     'list' => $result,
                     'context' => $allParams,
                 ]);
+
                 $eventDispatcher->dispatch($afterListLoadEvent, AdminEvents::OBJECT_LIST_AFTER_LIST_LOAD);
                 $result = $afterListLoadEvent->getArgument('list');
             }

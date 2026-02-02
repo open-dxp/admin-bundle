@@ -36,16 +36,6 @@ class PortalController extends AdminAbstractController implements KernelControll
 {
     protected ?Dashboard $dashboardHelper = null;
 
-    protected function getCurrentConfiguration(Request $request): array
-    {
-        return $this->dashboardHelper->getDashboard($request->get('key'));
-    }
-
-    protected function saveConfiguration(Request $request, array $config): void
-    {
-        $this->dashboardHelper->saveDashboard($request->get('key'), $config);
-    }
-
     #[Route('/dashboard-list', name: 'opendxp_admin_portal_dashboardlist', methods: ['GET'])]
     public function dashboardListAction(Request $request): JsonResponse
     {
@@ -53,7 +43,7 @@ class PortalController extends AdminAbstractController implements KernelControll
 
         $data = [];
         foreach (array_keys($dashboards) as $key) {
-            if ($key != 'welcome') {
+            if ($key !== 'welcome') {
                 $data[] = $key;
             }
         }
@@ -82,7 +72,7 @@ class PortalController extends AdminAbstractController implements KernelControll
     #[Route('/delete-dashboard', name: 'opendxp_admin_portal_deletedashboard', methods: ['DELETE'])]
     public function deleteDashboardAction(Request $request): JsonResponse
     {
-        $key = $request->get('key');
+        $key = $request->request->get('key');
         $this->dashboardHelper->deleteDashboard($key);
 
         return $this->adminJson(['success' => true]);
@@ -91,19 +81,25 @@ class PortalController extends AdminAbstractController implements KernelControll
     #[Route('/get-configuration', name: 'opendxp_admin_portal_getconfiguration', methods: ['GET'])]
     public function getConfigurationAction(Request $request): JsonResponse
     {
-        return $this->adminJson($this->getCurrentConfiguration($request));
+        $config = $this->dashboardHelper->getDashboard($request->query->get('key'));
+
+        return $this->adminJson($config);
     }
 
     #[Route('/remove-widget', name: 'opendxp_admin_portal_removewidget', methods: ['DELETE'])]
     public function removeWidgetAction(Request $request): JsonResponse
     {
-        $config = $this->getCurrentConfiguration($request);
+        $dashboardId = $request->request->get('key');
+        $config = $this->dashboardHelper->getDashboard($dashboardId);
+
         $newConfig = [[], []];
         $colCount = 0;
 
+        $currentId = $request->request->has('id') ? (int) $request->request->get('id') : null;
+
         foreach ($config['positions'] as $col) {
             foreach ($col as $row) {
-                if ($row['id'] != $request->get('id')) {
+                if ($row['id'] !== $currentId) {
                     $newConfig[$colCount][] = $row;
                 }
             }
@@ -111,7 +107,8 @@ class PortalController extends AdminAbstractController implements KernelControll
         }
 
         $config['positions'] = $newConfig;
-        $this->saveConfiguration($request, $config);
+
+        $this->dashboardHelper->saveDashboard($dashboardId, $config);
 
         return $this->adminJson(['success' => true]);
     }
@@ -119,7 +116,8 @@ class PortalController extends AdminAbstractController implements KernelControll
     #[Route('/add-widget', name: 'opendxp_admin_portal_addwidget', methods: ['POST'])]
     public function addWidgetAction(Request $request): JsonResponse
     {
-        $config = $this->getCurrentConfiguration($request);
+        $dashboardId = $request->request->get('key');
+        $config = $this->dashboardHelper->getDashboard($dashboardId);
 
         $nextId = 0;
         foreach ($config['positions'] as $col) {
@@ -129,9 +127,13 @@ class PortalController extends AdminAbstractController implements KernelControll
         }
 
         $nextId += 1;
-        $config['positions'][0][] = ['id' => $nextId, 'type' => $request->get('type'), 'config' => null];
+        $config['positions'][0][] = [
+            'id' => $nextId,
+            'type' => $request->request->get('type'),
+            'config' => null
+        ];
 
-        $this->saveConfiguration($request, $config);
+        $this->dashboardHelper->saveDashboard($dashboardId, $config);
 
         return $this->adminJson(['success' => true, 'id' => $nextId]);
     }
@@ -139,14 +141,18 @@ class PortalController extends AdminAbstractController implements KernelControll
     #[Route('/reorder-widget', name: 'opendxp_admin_portal_reorderwidget', methods: ['PUT'])]
     public function reorderWidgetAction(Request $request): JsonResponse
     {
-        $config = $this->getCurrentConfiguration($request);
+        $dashboardId = $request->request->get('key');
+        $config = $this->dashboardHelper->getDashboard($dashboardId);
+
         $newConfig = [[], []];
         $colCount = 0;
         $toMove = null;
 
+        $currentId = $request->request->has('id') ? (int) $request->request->get('id') : null;
+
         foreach ($config['positions'] as $col) {
             foreach ($col as $row) {
-                if ($row['id'] != $request->get('id')) {
+                if ($row['id'] !== $currentId) {
                     $newConfig[$colCount][] = $row;
                 } else {
                     $toMove = $row;
@@ -155,10 +161,11 @@ class PortalController extends AdminAbstractController implements KernelControll
             $colCount++;
         }
 
-        array_splice($newConfig[$request->get('column')], $request->request->getInt('row'), 0, [$toMove]);
+        array_splice($newConfig[$request->request->get('column')], $request->request->getInt('row'), 0, [$toMove]);
 
         $config['positions'] = $newConfig;
-        $this->saveConfiguration($request, $config);
+
+        $this->dashboardHelper->saveDashboard($dashboardId, $config);
 
         return $this->adminJson(['success' => true]);
     }
@@ -166,20 +173,22 @@ class PortalController extends AdminAbstractController implements KernelControll
     #[Route('/update-portlet-config', name: 'opendxp_admin_portal_updateportletconfig', methods: ['PUT'])]
     public function updatePortletConfigAction(Request $request): JsonResponse
     {
-        $key = $request->get('key');
-        $id = $request->get('id');
-        $configuration = $request->get('config');
+        $key = $request->request->get('key');
+
+        $currentId = $request->request->has('id') ? (int) $request->request->get('id') : null;
+        $configuration = $request->request->get('config');
 
         $dashboard = $this->dashboardHelper->getDashboard($key);
         foreach ($dashboard['positions'] as &$col) {
             foreach ($col as &$portlet) {
-                if ($portlet['id'] == $id) {
+                if ($portlet['id'] === $currentId) {
                     $portlet['config'] = $configuration;
 
                     break;
                 }
             }
         }
+
         $this->dashboardHelper->saveDashboard($key, $dashboard);
 
         return $this->adminJson(['success' => true]);

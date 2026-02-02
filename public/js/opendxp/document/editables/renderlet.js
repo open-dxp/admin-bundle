@@ -174,7 +174,7 @@ opendxp.document.editables.renderlet = Class.create(opendxp.document.editable, {
         };
 
         Ext.Ajax.request({
-            method: 'get',
+            method: 'GET',
             url: Routing.generate('opendxp_admin_document_renderlet_renderlet'),
             success: function (response) {
                 setContent(response.responseText);

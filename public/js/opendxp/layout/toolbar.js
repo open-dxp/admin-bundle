@@ -686,7 +686,7 @@ opendxp.layout.toolbar = Class.create({
                              text: t("all_caches") + ' (Symfony + Data)',
                              iconCls: "opendxp_nav_icon_clear_cache",
                              itemId: 'opendxp_menu_settings_cache_all_caches',
-                             handler: this.clearCache.bind(this, {'env[]': opendxp.settings['environment']})
+                             handler: this.clearCache.bind(this, {env: opendxp.settings['environment']})
                          });
                      }
 
@@ -704,7 +704,7 @@ opendxp.layout.toolbar = Class.create({
                              text: t('symfony_cache'),
                              iconCls: "opendxp_nav_icon_clear_cache",
                              itemId: 'opendxp_menu_settings_cache_symfony',
-                             handler: this.clearCache.bind(this, {'only_symfony_cache': true, 'env[]': opendxp.settings['environment']})
+                             handler: this.clearCache.bind(this, {only_symfony_cache: true, env: opendxp.settings['environment']})
                          });
                      }
 
@@ -1243,10 +1243,10 @@ opendxp.layout.toolbar = Class.create({
 
      clearCache: function (params) {
          Ext.Msg.confirm(t('warning'), t('system_performance_stability_warning'), function(btn){
-             if (btn == 'yes'){
+             if (btn === 'yes'){
                  Ext.Ajax.request({
                      url: Routing.generate('opendxp_admin_settings_clearcache'),
-                     method: "DELETE",
+                     method: 'DELETE',
                      params: params
                  });
              }
@@ -1262,10 +1262,10 @@ opendxp.layout.toolbar = Class.create({
 
      clearTemporaryFiles: function () {
          Ext.Msg.confirm(t('warning'), t('system_performance_stability_warning'), function(btn){
-             if (btn == 'yes'){
+             if (btn === 'yes'){
                  Ext.Ajax.request({
                      url: Routing.generate('opendxp_admin_settings_cleartemporaryfiles'),
-                     method: "DELETE"
+                     method: 'DELETE'
                  });
              }
          });

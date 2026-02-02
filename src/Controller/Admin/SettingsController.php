@@ -71,7 +71,7 @@ class SettingsController extends AdminAbstractController
     public function displayCustomLogoAction(Request $request): StreamedResponse
     {
         $mime = 'image/svg+xml';
-        if ($request->get('white')) {
+        if ($request->query->has('white')) {
             $logo = OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/logo-claim-white.svg';
         } else {
             $logo = OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/logo-claim-gray.svg';
@@ -141,9 +141,9 @@ class SettingsController extends AdminAbstractController
     {
         $this->checkPermission('asset_metadata');
 
-        if ($request->get('data')) {
-            if ($request->get('xaction') == 'destroy') {
-                $data = $this->decodeJson($request->get('data'));
+        if ($request->request->has('data')) {
+            if ($request->query->get('xaction') === 'destroy') {
+                $data = $this->decodeJson($request->request->get('data'));
                 $id = $data['id'];
                 $metadata = Metadata\Predefined::getById($id);
                 if (!$metadata->isWriteable()) {
@@ -153,8 +153,9 @@ class SettingsController extends AdminAbstractController
 
                 return $this->adminJson(['success' => true, 'data' => []]);
             }
-            if ($request->get('xaction') == 'update') {
-                $data = $this->decodeJson($request->get('data'));
+
+            if ($request->query->get('xaction') === 'update') {
+                $data = $this->decodeJson($request->request->get('data'));
                 // save type
                 $metadata = Metadata\Predefined::getById($data['id']);
                 if (!$metadata->isWriteable()) {
@@ -173,11 +174,12 @@ class SettingsController extends AdminAbstractController
 
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
             }
-            if ($request->get('xaction') == 'create') {
+
+            if ($request->query->get('xaction') === 'create') {
                 if (!(new Metadata\Predefined())->isWriteable()) {
                     throw new ConfigWriteException();
                 }
-                $data = $this->decodeJson($request->get('data'));
+                $data = $this->decodeJson($request->request->get('data'));
                 unset($data['id']);
                 // save type
                 $metadata = Metadata\Predefined::create();
@@ -196,7 +198,7 @@ class SettingsController extends AdminAbstractController
             // get list of types
             $list = new Metadata\Predefined\Listing();
 
-            if ($filter = $request->get('filter')) {
+            if ($filter = $request->request->get('filter')) {
                 $list->setFilter(function (Metadata\Predefined $predefined) use ($filter) {
                     foreach ($predefined->getObjectVars() as $value) {
                         if (stripos((string)$value, (string) $filter) !== false) {
@@ -225,9 +227,9 @@ class SettingsController extends AdminAbstractController
     #[Route('/get-predefined-metadata', name: 'opendxp_admin_settings_getpredefinedmetadata', methods: ['GET'])]
     public function getPredefinedMetadataAction(Request $request): JsonResponse
     {
-        $type = $request->get('type');
-        $subType = $request->get('subType');
-        $group = $request->get('group');
+        $type = $request->query->get('type');
+        $subType = $request->query->get('subType');
+        $group = $request->query->get('group');
         $list = Metadata\Predefined\Listing::getByTargetType($type, [$subType]);
         $result = [];
         foreach ($list as $item) {
@@ -248,9 +250,9 @@ class SettingsController extends AdminAbstractController
     {
         $this->checkPermission('predefined_properties');
 
-        if ($request->get('data')) {
-            if ($request->get('xaction') == 'destroy') {
-                $data = $this->decodeJson($request->get('data'));
+        if ($request->request->has('data')) {
+            if ($request->query->get('xaction') === 'destroy') {
+                $data = $this->decodeJson($request->request->get('data'));
                 $id = $data['id'];
                 $property = Property\Predefined::getById($id);
                 if (!$property->isWriteable()) {
@@ -260,8 +262,9 @@ class SettingsController extends AdminAbstractController
 
                 return $this->adminJson(['success' => true, 'data' => []]);
             }
-            if ($request->get('xaction') == 'update') {
-                $data = $this->decodeJson($request->get('data'));
+
+            if ($request->query->get('xaction') === 'update') {
+                $data = $this->decodeJson($request->request->get('data'));
                 // save type
                 $property = Property\Predefined::getById($data['id']);
                 if (!$property->isWriteable()) {
@@ -278,11 +281,11 @@ class SettingsController extends AdminAbstractController
                 return $this->adminJson(['data' => $responseData, 'success' => true]);
             }
 
-            if ($request->get('xaction') == 'create') {
+            if ($request->query->get('xaction') === 'create') {
                 if (!(new Property\Predefined())->isWriteable()) {
                     throw new ConfigWriteException();
                 }
-                $data = $this->decodeJson($request->get('data'));
+                $data = $this->decodeJson($request->request->get('data'));
                 unset($data['id']);
                 // save type
                 $property = Property\Predefined::create();
@@ -297,7 +300,7 @@ class SettingsController extends AdminAbstractController
             // get list of types
             $list = new Property\Predefined\Listing();
 
-            if ($filter = $request->get('filter')) {
+            if ($filter = $request->request->get('filter')) {
                 $list->setFilter(function (Property\Predefined $predefined) use ($filter) {
                     foreach ($predefined->getObjectVars() as $value) {
                         if ($value) {
@@ -407,7 +410,7 @@ class SettingsController extends AdminAbstractController
     ): JsonResponse {
         $this->checkPermission('system_appearance_settings');
 
-        $values = $this->decodeJson($request->get('data'));
+        $values = $this->decodeJson($request->request->get('data'));
 
         $config->save($values);
 
@@ -439,7 +442,7 @@ class SettingsController extends AdminAbstractController
     ): JsonResponse {
         $this->checkPermission('system_settings');
 
-        $values = $this->decodeJson($request->get('data'));
+        $values = $this->decodeJson($request->request->get('data'));
 
         $config->save($values);
 
@@ -474,8 +477,8 @@ class SettingsController extends AdminAbstractController
             'success' => true,
         ];
 
-        $clearOpenDxpCache = !(bool)$request->get('only_symfony_cache');
-        $clearSymfonyCache = !(bool)$request->get('only_opendxp_cache');
+        $clearOpenDxpCache = !(bool)$request->request->get('only_symfony_cache');
+        $clearSymfonyCache = !(bool)$request->request->get('only_opendxp_cache');
 
         if ($clearOpenDxpCache) {
             $this->clearOpenDxpCache($cache, $eventDispatcher, $filesystem);
@@ -521,22 +524,11 @@ class SettingsController extends AdminAbstractController
         EventDispatcherInterface $eventDispatcher,
         CacheClearer $symfonyCacheClearer,
     ): void {
-        // pass one or move env parameters to clear multiple envs
+
         // if no env is passed it will use the current one
-        $environments = $request->get('env', $kernel->getEnvironment());
+        $environment = $request->request->get('env', $kernel->getEnvironment());
 
-        if (!is_array($environments)) {
-            $environments = trim((string)$environments);
-            $environments = empty($environments) ? [] : [$environments];
-        }
-
-        if ($environments === []) {
-            $environments = [$kernel->getEnvironment()];
-        }
-
-        $result['environments'] = $environments;
-
-        if (in_array($kernel->getEnvironment(), $environments)) {
+        if ($kernel->getEnvironment() === $environment) {
             // remove terminate and exception event listeners for the current env as they break with a
             // cleared container - see #2434
             foreach ($eventDispatcher->getListeners(KernelEvents::TERMINATE) as $listener) {
@@ -548,16 +540,7 @@ class SettingsController extends AdminAbstractController
             }
         }
 
-        foreach ($environments as $environment) {
-            try {
-                $symfonyCacheClearer->clear($environment);
-            } catch (Throwable $e) {
-                $errors = $result['errors'] ?? [];
-                $errors[] = $e->getMessage();
-
-                $result = [...$result, 'success' => false, 'errors' => $errors];
-            }
-        }
+        $symfonyCacheClearer->clear($environment);
     }
 
     #[Route('/clear-output-cache', name: 'opendxp_admin_settings_clearoutputcache', methods: ['DELETE'])]
@@ -629,7 +612,7 @@ class SettingsController extends AdminAbstractController
             return $this->adminJson([]);
         }
 
-        $excludeMainSite = $request->get('excludeMainSite');
+        $excludeMainSite = $request->query->get('excludeMainSite');
 
         $sitesList = new Model\Site\Listing();
         $sitesObjects = $sitesList->load();
@@ -778,14 +761,14 @@ class SettingsController extends AdminAbstractController
 
         $success = false;
 
-        $pipe = Asset\Image\Thumbnail\Config::getByName($request->get('name'));
+        $pipe = Asset\Image\Thumbnail\Config::getByName($request->request->get('name'));
 
         if (!$pipe) {
             $pipe = new Asset\Image\Thumbnail\Config();
             if (!$pipe->isWriteable()) {
                 throw new ConfigWriteException();
             }
-            $pipe->setName($request->get('name'));
+            $pipe->setName($request->request->get('name'));
             $pipe->save();
             $success = true;
         } elseif (!$pipe->isWriteable()) {
@@ -800,7 +783,7 @@ class SettingsController extends AdminAbstractController
     {
         $this->checkPermission('thumbnails');
 
-        $pipe = Asset\Image\Thumbnail\Config::getByName($request->get('name'));
+        $pipe = Asset\Image\Thumbnail\Config::getByName($request->request->get('name'));
 
         if (!$pipe->isWriteable()) {
             throw new ConfigWriteException();
@@ -816,7 +799,7 @@ class SettingsController extends AdminAbstractController
     {
         $this->checkPermission('thumbnails');
 
-        $pipe = Asset\Image\Thumbnail\Config::getByName($request->get('name'));
+        $pipe = Asset\Image\Thumbnail\Config::getByName($request->query->get('name'));
         $data = $pipe->getObjectVars();
         $data['writeable'] = $pipe->isWriteable();
 
@@ -828,15 +811,15 @@ class SettingsController extends AdminAbstractController
     {
         $this->checkPermission('thumbnails');
 
-        $pipe = Asset\Image\Thumbnail\Config::getByName($request->get('name'));
+        $pipe = Asset\Image\Thumbnail\Config::getByName($request->request->get('name'));
 
         if (!$pipe->isWriteable()) {
             throw new ConfigWriteException();
         }
 
-        $settingsData = $this->decodeJson($request->get('settings'));
-        $mediaData = $this->decodeJson($request->get('medias'));
-        $mediaOrder = $this->decodeJson($request->get('mediaOrder'));
+        $settingsData = $this->decodeJson($request->request->get('settings'));
+        $mediaData = $this->decodeJson($request->request->get('medias'));
+        $mediaOrder = $this->decodeJson($request->request->get('mediaOrder'));
 
         foreach ($settingsData as $key => $value) {
             $setter = 'set' . ucfirst($key);
@@ -847,7 +830,7 @@ class SettingsController extends AdminAbstractController
 
         $pipe->resetItems();
 
-        uksort($mediaData, function ($a, $b) use ($mediaOrder) {
+        uksort($mediaData, static function ($a, $b) use ($mediaOrder) {
             if ($a === 'default') {
                 return -1;
             }
@@ -964,14 +947,14 @@ class SettingsController extends AdminAbstractController
 
         $success = false;
 
-        $pipe = Asset\Video\Thumbnail\Config::getByName($request->get('name'));
+        $pipe = Asset\Video\Thumbnail\Config::getByName($request->request->get('name'));
 
         if (!$pipe) {
             $pipe = new Asset\Video\Thumbnail\Config();
             if (!$pipe->isWriteable()) {
                 throw new ConfigWriteException();
             }
-            $pipe->setName($request->get('name'));
+            $pipe->setName($request->request->get('name'));
             $pipe->save();
             $success = true;
         } elseif (!$pipe->isWriteable()) {
@@ -986,7 +969,7 @@ class SettingsController extends AdminAbstractController
     {
         $this->checkPermission('thumbnails');
 
-        $pipe = Asset\Video\Thumbnail\Config::getByName($request->get('name'));
+        $pipe = Asset\Video\Thumbnail\Config::getByName($request->request->get('name'));
 
         if (!$pipe->isWriteable()) {
             throw new ConfigWriteException();
@@ -1002,7 +985,7 @@ class SettingsController extends AdminAbstractController
     {
         $this->checkPermission('thumbnails');
 
-        $pipe = Asset\Video\Thumbnail\Config::getByName($request->get('name'));
+        $pipe = Asset\Video\Thumbnail\Config::getByName($request->query->get('name'));
 
         $data = $pipe->getObjectVars();
         $data['writeable'] = $pipe->isWriteable();
@@ -1015,15 +998,15 @@ class SettingsController extends AdminAbstractController
     {
         $this->checkPermission('thumbnails');
 
-        $pipe = Asset\Video\Thumbnail\Config::getByName($request->get('name'));
+        $pipe = Asset\Video\Thumbnail\Config::getByName($request->request->get('name'));
 
         if (!$pipe->isWriteable()) {
             throw new ConfigWriteException();
         }
 
-        $settingsData = $this->decodeJson($request->get('settings'));
-        $mediaData = $this->decodeJson($request->get('medias'));
-        $mediaOrder = $this->decodeJson($request->get('mediaOrder'));
+        $settingsData = $this->decodeJson($request->request->get('settings'));
+        $mediaData = $this->decodeJson($request->request->get('medias'));
+        $mediaOrder = $this->decodeJson($request->request->get('mediaOrder'));
 
         foreach ($settingsData as $key => $value) {
             $setter = 'set' . ucfirst($key);
@@ -1034,7 +1017,7 @@ class SettingsController extends AdminAbstractController
 
         $pipe->resetItems();
 
-        uksort($mediaData, function ($a, $b) use ($mediaOrder) {
+        uksort($mediaData, static function ($a, $b) use ($mediaOrder) {
             if ($a === 'default') {
                 return -1;
             }
@@ -1064,8 +1047,8 @@ class SettingsController extends AdminAbstractController
     {
         $this->checkPermission('website_settings');
 
-        if ($request->get('data')) {
-            $data = $this->decodeJson($request->get('data'));
+        if ($request->request->has('data')) {
+            $data = $this->decodeJson($request->request->get('data'));
 
             if (is_array($data)) {
                 foreach ($data as &$value) {
@@ -1075,7 +1058,7 @@ class SettingsController extends AdminAbstractController
                 }
             }
 
-            if ($request->get('xaction') == 'destroy') {
+            if ($request->query->get('xaction') === 'destroy') {
                 $id = $data['id'];
                 $setting = WebsiteSetting::getById($id);
                 if ($setting instanceof WebsiteSetting) {
@@ -1083,7 +1066,7 @@ class SettingsController extends AdminAbstractController
 
                     return $this->adminJson(['success' => true, 'data' => []]);
                 }
-            } elseif ($request->get('xaction') == 'update') {
+            } elseif ($request->query->get('xaction') === 'update') {
                 // save routes
                 $setting = WebsiteSetting::getById($data['id']);
                 if ($setting instanceof WebsiteSetting) {
@@ -1106,7 +1089,7 @@ class SettingsController extends AdminAbstractController
 
                     return $this->adminJson(['data' => $data, 'success' => true]);
                 }
-            } elseif ($request->get('xaction') == 'create') {
+            } elseif ($request->query->get('xaction') === 'create') {
                 unset($data['id']);
 
                 // save route
@@ -1120,8 +1103,8 @@ class SettingsController extends AdminAbstractController
         } else {
             $list = new WebsiteSetting\Listing();
 
-            $list->setLimit((int) $request->get('limit', 50));
-            $list->setOffset((int) $request->get('start', 0));
+            $list->setLimit((int) $request->request->get('limit', 50));
+            $list->setOffset((int) $request->request->get('start', 0));
 
             $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings([...$request->request->all(), ...$request->query->all()]);
             if ($sortingSettings['orderKey']) {
@@ -1132,8 +1115,8 @@ class SettingsController extends AdminAbstractController
                 $list->setOrder('asc');
             }
 
-            if ($request->get('filter')) {
-                $list->setCondition('`name` LIKE ' . $list->quote('%'.$request->get('filter').'%'));
+            if ($request->request->has('filter')) {
+                $list->setCondition('`name` LIKE ' . $list->quote('%'.$request->request->get('filter').'%'));
             }
 
             $totalCount = $list->getTotalCount();

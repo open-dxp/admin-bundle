@@ -86,11 +86,9 @@ opendxp.element.helpers.gridColumnConfig = {
 
         if (this.gridType === 'asset') {
             route = 'opendxp_admin_asset_assethelper_griddeletecolumnconfig';
-        }
-        else if(this.gridType === 'object') {
+        } else if(this.gridType === 'object') {
             route = 'opendxp_admin_dataobject_dataobjecthelper_griddeletecolumnconfig';
-        }
-        else {
+        } else {
             throw new Error('Type unknown');
         }
 
@@ -100,15 +98,15 @@ opendxp.element.helpers.gridColumnConfig = {
                 method: "DELETE",
                 params: {
                     id: this.classId,
-                    objectId:
-                    this.object.id,
+                    objectId: this.object.id,
                     gridtype: "grid",
                     gridConfigId: this.settings.gridConfigId,
                     searchType: this.searchType
                 },
                 success: function (response) {
 
-                    decodedResponse = Ext.decode(response.responseText);
+                    const decodedResponse = Ext.decode(response.responseText);
+
                     if (!decodedResponse.deleteSuccess) {
                         opendxp.helpers.showNotification(t("error"), t("error_deleting_item"), "error");
                     }

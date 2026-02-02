@@ -11,7 +11,7 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-opendxp.registerNS("opendxp.settings.gdpr.dataproviders.openDxpUsers");
+opendxp.registerNS('opendxp.settings.gdpr.dataproviders.openDxpUsers');
 /**
  * @private
  */
@@ -29,9 +29,9 @@ opendxp.settings.gdpr.dataproviders.openDxpUsers = Class.create({
         if(!this.panel) {
 
             this.panel = new Ext.Panel({
-                title: t("users") + " (OpenDXP)",
-                layout: "border",
-                iconCls: "opendxp_icon_user",
+                title: t('users') + ' (OpenDXP)',
+                layout: 'border',
+                iconCls: 'opendxp_icon_user',
                 closable: false
             });
 
@@ -43,7 +43,7 @@ opendxp.settings.gdpr.dataproviders.openDxpUsers = Class.create({
 
     initGrid: function () {
 
-        var user = opendxp.globalmanager.get("user");
+        var user = opendxp.globalmanager.get('user');
 
         this.store = new Ext.data.Store({
             autoDestroy: true,
@@ -59,15 +59,15 @@ opendxp.settings.gdpr.dataproviders.openDxpUsers = Class.create({
                 extraParams: this.searchParams
             },
             autoLoad: true,
-            fields: ["id","username","firstname","lastname","email"]
+            fields: ['id','name','firstname','lastname','email']
         });
 
         var columns = [
             {text: 'ID', width: 60, sortable: true, dataIndex: 'id', hidden: false},
-            {text: t("username"), flex: 100, sortable: true, dataIndex: 'username'},
-            {text: t("firstname"), flex: 200, sortable: true, dataIndex: 'firstname'},
-            {text: t("lastname"), flex: 200, sortable: true, dataIndex: 'lastname'},
-            {text: t("email"), flex: 200, sortable: true, dataIndex: 'email'},
+            {text: t('username'), flex: 100, sortable: true, dataIndex: 'name'},
+            {text: t('firstname'), flex: 200, sortable: true, dataIndex: 'firstname'},
+            {text: t('lastname'), flex: 200, sortable: true, dataIndex: 'lastname'},
+            {text: t('email'), flex: 200, sortable: true, dataIndex: 'email'},
             {
                 xtype: 'actioncolumn',
                 menuText: t('gdpr_dataSource_export'),
@@ -75,10 +75,10 @@ opendxp.settings.gdpr.dataproviders.openDxpUsers = Class.create({
                 items: [
                     {
                         tooltip: t('gdpr_dataSource_export'),
-                        icon: "/bundles/opendxpadmin/img/flat-color-icons/export.svg",
+                        icon: '/bundles/opendxpadmin/img/flat-color-icons/export.svg',
                         handler: function (grid, rowIndex) {
-                            if (!user.isAllowed("users")) {
-                                opendxp.helpers.showPermissionError("users");
+                            if (!user.isAllowed('users')) {
+                                opendxp.helpers.showPermissionError('users');
                                 return;
                             }
 
@@ -87,7 +87,7 @@ opendxp.settings.gdpr.dataproviders.openDxpUsers = Class.create({
                         }.bind(this),
                         getClass: function(v, meta, rec) {
                             if(!user.isAllowed('users')){
-                                return "inactive_actioncolumn";
+                                return 'inactive_actioncolumn';
                             }
                         }
                     }
@@ -100,10 +100,10 @@ opendxp.settings.gdpr.dataproviders.openDxpUsers = Class.create({
                 items: [
                     {
                         tooltip: t('remove'),
-                        icon: "/bundles/opendxpadmin/img/flat-color-icons/delete.svg",
+                        icon: '/bundles/opendxpadmin/img/flat-color-icons/delete.svg',
                         handler: function (grid, rowIndex) {
-                            if (!user.isAllowed("users")) {
-                                opendxp.helpers.showPermissionError("users");
+                            if (!user.isAllowed('users')) {
+                                opendxp.helpers.showPermissionError('users');
                                 return;
                             }
 
@@ -115,7 +115,7 @@ opendxp.settings.gdpr.dataproviders.openDxpUsers = Class.create({
                                 buttons: Ext.Msg.YESNO ,
                                 icon: Ext.MessageBox.QUESTION,
                                 fn: function (button) {
-                                    if (button == "yes") {
+                                    if (button === 'yes') {
                                         Ext.Ajax.request({
                                             url: Routing.generate('opendxp_admin_user_delete'),
                                             method: 'DELETE',
@@ -132,11 +132,11 @@ opendxp.settings.gdpr.dataproviders.openDxpUsers = Class.create({
 
                         }.bind(this),
                         isDisabled: function(view, rowIndex, colIndex, item, record) {
-                            return record.data["__gdprIsDeletable"] == false;
+                            return record.data['__gdprIsDeletable'] == false;
                         },
                         getClass: function(v, meta, rec) {
                             if(!user.isAllowed('users')){
-                                return "inactive_actioncolumn";
+                                return 'inactive_actioncolumn';
                             }
                         }
                     }
@@ -147,7 +147,7 @@ opendxp.settings.gdpr.dataproviders.openDxpUsers = Class.create({
 
         this.pagingtoolbar = opendxp.helpers.grid.buildDefaultPagingToolbar(this.store);
         this.gridPanel = Ext.create('Ext.grid.Panel', {
-            region: "center",
+            region: 'center',
             store: this.store,
             border: false,
             columns: columns,

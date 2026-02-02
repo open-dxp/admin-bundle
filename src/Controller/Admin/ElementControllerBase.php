@@ -57,12 +57,12 @@ abstract class ElementControllerBase extends AdminAbstractController
     #[Route('/tree-get-root', name: 'treegetroot', methods: ['GET'])]
     public function treeGetRootAction(Request $request): JsonResponse
     {
-        $type = $request->get('elementType');
+        $type = $request->query->get('elementType');
         $allowedTypes = ['asset', 'document', 'object'];
 
         $id = 1;
-        if ($request->get('id')) {
-            $id = (int)$request->get('id');
+        if ($request->query->get('id')) {
+            $id = (int)$request->query->get('id');
         }
 
         if (in_array($type, $allowedTypes)) {
@@ -90,9 +90,9 @@ abstract class ElementControllerBase extends AdminAbstractController
 
         $totalChildren = 0;
 
-        $ids = $request->get('id');
+        $ids = $request->query->get('id');
         $ids = explode(',', $ids);
-        $type = $request->get('type');
+        $type = $request->query->get('type');
 
         foreach ($ids as $id) {
             try {

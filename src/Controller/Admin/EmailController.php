@@ -48,15 +48,15 @@ class EmailController extends AdminAbstractController
         }
 
         $list = new Tool\Email\Log\Listing();
-        if ($request->get('documentId')) {
-            $list->setCondition('documentId = ' . (int)$request->get('documentId'));
+        if ($request->request->has('documentId')) {
+            $list->setCondition('documentId = ' . (int)$request->request->get('documentId'));
         }
-        $list->setLimit((int)$request->get('limit', 50));
-        $list->setOffset((int)$request->get('start', 0));
+        $list->setLimit((int)$request->request->get('limit', 50));
+        $list->setOffset((int)$request->request->get('start', 0));
         $list->setOrderKey('sentDate');
 
-        if ($request->get('filter')) {
-            $filterTerm = $request->get('filter');
+        if ($request->request->has('filter')) {
+            $filterTerm = $request->request->get('filter');
             if ($filterTerm === '*') {
                 $filterTerm = '';
             }
@@ -82,8 +82,8 @@ class EmailController extends AdminAbstractController
 
             $condition = '( MATCH (`from`,`to`,`cc`,`bcc`,`subject`,`params`) AGAINST (' . $list->quote($filterTerm) . ' IN BOOLEAN MODE) )';
 
-            if ($request->get('documentId')) {
-                $condition .= 'AND documentId = ' . (int)$request->get('documentId');
+            if ($request->request->has('documentId')) {
+                $condition .= 'AND documentId = ' . (int)$request->request->get('documentId');
             }
 
             $list->setCondition($condition);
@@ -121,8 +121,8 @@ class EmailController extends AdminAbstractController
             throw $this->createAccessDeniedHttpException("Permission denied, user needs 'emails' permission.");
         }
 
-        $type = $request->get('type');
-        $emailLog = Tool\Email\Log::getById((int) $request->get('id'));
+        $type = $request->query->get('type');
+        $emailLog = Tool\Email\Log::getById((int) $request->query->get('id'));
 
         if (!$emailLog) {
             throw $this->createNotFoundException();
@@ -247,7 +247,7 @@ class EmailController extends AdminAbstractController
         }
 
         $success = false;
-        $emailLog = Tool\Email\Log::getById((int) $request->get('id'));
+        $emailLog = Tool\Email\Log::getById((int) $request->request->get('id'));
         if ($emailLog instanceof Tool\Email\Log) {
             $emailLog->delete();
             $success = true;
@@ -269,14 +269,14 @@ class EmailController extends AdminAbstractController
         }
 
         $success = false;
-        $emailLog = Tool\Email\Log::getById((int) $request->get('id'));
+        $emailLog = Tool\Email\Log::getById((int) $request->request->get('id'));
 
         if ($emailLog instanceof Tool\Email\Log) {
             $mail = new Mail();
             $mail->preventDebugInformationAppending();
             $mail->setIgnoreDebugMode(true);
 
-            if (!empty($request->get('to'))) {
+            if (!empty($request->request->get('to'))) {
                 $emailLog->setTo(null);
                 $emailLog->setCc(null);
                 $emailLog->setBcc(null);
@@ -293,7 +293,7 @@ class EmailController extends AdminAbstractController
             }
 
             foreach (['From', 'To', 'Cc', 'Bcc', 'ReplyTo'] as $field) {
-                if (!$values = $request->get(strtolower($field))) {
+                if (!$values = $request->request->get(strtolower($field))) {
                     $getter = 'get' . $field;
                     $values = $emailLog->{$getter}();
                 }
@@ -363,17 +363,17 @@ class EmailController extends AdminAbstractController
 
         $mail = new Mail();
 
-        if ($request->get('emailType') === 'text') {
-            $mail->text(strip_tags($request->get('content')));
-        } elseif ($request->get('emailType') === 'html') {
-            $mail->html($request->get('content'));
-        } elseif ($request->get('emailType') === 'document') {
-            $doc = \OpenDxp\Model\Document::getByPath($request->get('documentPath'));
+        if ($request->request->get('emailType') === 'text') {
+            $mail->text(strip_tags($request->request->get('content')));
+        } elseif ($request->request->get('emailType') === 'html') {
+            $mail->html($request->request->get('content'));
+        } elseif ($request->request->get('emailType') === 'document') {
+            $doc = \OpenDxp\Model\Document::getByPath($request->request->get('documentPath'));
 
             if ($doc instanceof \OpenDxp\Model\Document\Email) {
                 $mail->setDocument($doc);
 
-                if ($request->get('mailParamaters') && $mailParamsArray = json_decode($request->get('mailParamaters'), true)) {
+                if ($request->request->has('mailParamaters') && $mailParamsArray = json_decode($request->request->get('mailParamaters'), true)) {
                     foreach ($mailParamsArray as $mailParam) {
                         if ($mailParam['key']) {
                             $mail->setParam($mailParam['key'], $mailParam['value']);
@@ -385,7 +385,7 @@ class EmailController extends AdminAbstractController
             }
         }
 
-        if ($from = $request->get('from')) {
+        if ($from = $request->request->get('from')) {
             $addressArray = \OpenDxp\Helper\Mail::parseEmailAddressField($from);
             if ($addressArray) {
                 //use the first address only
@@ -394,12 +394,12 @@ class EmailController extends AdminAbstractController
             }
         }
 
-        $toAddresses = \OpenDxp\Helper\Mail::parseEmailAddressField($request->get('to'));
+        $toAddresses = \OpenDxp\Helper\Mail::parseEmailAddressField($request->request->get('to'));
         foreach ($toAddresses as $cleanedToAddress) {
             $mail->addTo($cleanedToAddress['email'], $cleanedToAddress['name']);
         }
 
-        $mail->subject($request->get('subject'));
+        $mail->subject($request->request->get('subject'));
         $mail->setIgnoreDebugMode(true);
 
         $mail->send();
@@ -419,8 +419,8 @@ class EmailController extends AdminAbstractController
             throw new Exception("Permission denied, user needs 'emails' permission.");
         }
 
-        if ($request->get('data')) {
-            $data = $this->decodeJson($request->get('data'));
+        if ($request->request->has('data')) {
+            $data = $this->decodeJson($request->request->get('data'));
 
             if (is_array($data)) {
                 foreach ($data as $key => &$value) {
@@ -434,14 +434,14 @@ class EmailController extends AdminAbstractController
                 }
             }
 
-            if ($request->get('xaction') === 'destroy') {
+            if ($request->query->get('xaction') === 'destroy') {
                 $address = Tool\Email\Blocklist::getByAddress($data['address']);
                 $address->delete();
 
                 return $this->adminJson(['success' => true, 'data' => []]);
             }
 
-            if ($request->get('xaction') === 'update') {
+            if ($request->query->get('xaction') === 'update') {
                 $address = Tool\Email\Blocklist::getByAddress($data['address']);
                 $address->setValues($data);
                 $address->save();
@@ -449,7 +449,7 @@ class EmailController extends AdminAbstractController
                 return $this->adminJson(['data' => $address->getObjectVars(), 'success' => true]);
             }
 
-            if ($request->get('xaction') === 'create') {
+            if ($request->query->get('xaction') === 'create') {
                 unset($data['id']);
 
                 $address = new Tool\Email\Blocklist();
@@ -459,23 +459,21 @@ class EmailController extends AdminAbstractController
                 return $this->adminJson(['data' => $address->getObjectVars(), 'success' => true]);
             }
         } else {
-            // get list of routes
 
             $list = new Tool\Email\Blocklist\Listing();
 
-            $list->setLimit((int) $request->get('limit', 50));
-            $list->setOffset((int) $request->get('start', 0));
+            $list->setLimit((int) $request->request->get('limit', 50));
+            $list->setOffset((int) $request->request->get('start', 0));
 
-            $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->query->all());
+            $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->request->all());
+
             if ($sortingSettings['orderKey']) {
-                $orderKey = $sortingSettings['orderKey'];
-            }
-            if ($sortingSettings['order']) {
-                $order = $sortingSettings['order'];
+                $list->setOrderKey($sortingSettings['orderKey']);
+                $list->setOrder($sortingSettings['order']);
             }
 
-            if ($request->get('filter')) {
-                $list->setCondition('`address` LIKE ' . $list->quote('%'.$request->get('filter').'%'));
+            if ($request->request->has('filter')) {
+                $list->setCondition('`address` LIKE ' . $list->quote('%'.$request->request->get('filter').'%'));
             }
 
             $data = $list->load();

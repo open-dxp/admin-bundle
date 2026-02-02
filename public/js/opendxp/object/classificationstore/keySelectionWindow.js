@@ -11,11 +11,8 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-opendxp.registerNS("opendxp.object.classificationstore.keySelectionWindow");
-/**
- * @private
- * this is for the object editor and the add key window in the classification store definition
- */
+opendxp.registerNS('opendxp.object.classificationstore.keySelectionWindow');
+
 opendxp.object.classificationstore.keySelectionWindow = Class.create({
     acceptEvents: true,
 
@@ -43,8 +40,8 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
 
         this.searchfield = new Ext.form.field.Text({
             width: 300,
-            style: "float: left;",
-            fieldLabel: t("search"),
+            style: 'float: left;',
+            fieldLabel: t('search'),
             enableKeyEvents: true,
             listeners: {
                 keypress: function (searchField, e, eOpts) {
@@ -58,7 +55,7 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
         var resultPanel = this.getResultPanel();
         var title = t('classificationstore_dialog_keygroup_search');
         if (this.config.frameName) {
-            title += " - " + t("frame") + " " + this.config.frameName;
+            title += ' - ' + t('frame') + ' ' + this.config.frameName;
         }
 
         this.searchWindow = new Ext.window.Window({
@@ -66,7 +63,7 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
             width: 850,
             height: 550,
             modal: true,
-            layout: "fit",
+            layout: 'fit',
             items: [resultPanel],
             listeners: {
                 beforeclose: function () {
@@ -74,17 +71,17 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
                 }.bind(this)
             },
             bbar: [
-                "->", {
-                    xtype: "button",
-                    text: t("cancel"),
-                    iconCls: "opendxp_icon_cancel",
+                '->', {
+                    xtype: 'button',
+                    text: t('cancel'),
+                    iconCls: 'opendxp_icon_cancel',
                     handler: function () {
                         this.searchWindow.close();
                     }.bind(this)
                 }, {
-                    xtype: "button",
-                    text: t("apply"),
-                    iconCls: "opendxp_icon_apply",
+                    xtype: 'button',
+                    text: t('apply'),
+                    iconCls: 'opendxp_icon_apply',
                     handler: function () {
                         var selectionModel = this.gridPanel.getSelectionModel();
                         var selected = selectionModel.getSelection();
@@ -98,7 +95,7 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
                         } else if (this.config.isGroupSearch || this.config.isGroupByKeySearch) {
                             var groupIds = [];
                             for (var i = 0; i < selected.length; i++) {
-                                var groupId = this.config.isGroupSearch ? selected[i].id : selected[i].get("groupId");
+                                var groupId = this.config.isGroupSearch ? selected[i].id : selected[i].get('groupId');
                                 groupIds.push(groupId);
                             }
                             this.addGroups(groupIds);
@@ -120,20 +117,31 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
     },
 
     addCollections: function (collectionIds) {
+
+        let params = {};
+
         if (!this.acceptEvents) {
             return;
         }
         this.acceptEvents = false;
         if (collectionIds.length > 0) {
+
+            params.collectionIds = Ext.util.JSON.encode(collectionIds);
+
+            if (this.config.object) {
+                params.oid = this.config.object.id;
+            }
+
+            if (this.config && this.config.fieldname) {
+                params.fieldname = this.config.fieldname;
+            }
+
             this.config.parent.requestPending.call(this.config.parent);
+
             Ext.Ajax.request({
                 url: Routing.generate('opendxp_admin_dataobject_classificationstore_addcollections'),
                 method: 'POST',
-                params: {
-                    collectionIds: Ext.util.JSON.encode(collectionIds),
-                    oid: this.config.object ? this.config.object.id : null,
-                    fieldname: this.config ? this.config.fieldname : null
-                },
+                params: params,
                 success: function (response) {
                     this.config.parent.handleAddGroups.call(this.config.parent, response);
                     this.searchWindow.close();
@@ -148,6 +156,9 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
     },
 
     addGroups: function (groupIds) {
+
+        let params = {};
+
         if (!this.acceptEvents) {
             return;
         }
@@ -168,15 +179,23 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
         this.acceptEvents = false;
 
         if (groupIds.length > 0) {
+
+            params.groupIds = Ext.util.JSON.encode(groupIds);
+
+            if (this.config.object) {
+                params.oid = this.config.object.id;
+            }
+
+            if (this.config && this.config.fieldname) {
+                params.fieldname = this.config.fieldname;
+            }
+
             this.config.parent.requestPending.call(this.config.parent);
+
             Ext.Ajax.request({
                 url: Routing.generate('opendxp_admin_dataobject_classificationstore_addgroups'),
                 method: 'POST',
-                params: {
-                    groupIds: Ext.util.JSON.encode(groupIds),
-                    oid: this.config.object ? this.config.object.id : null,
-                    fieldname: this.config ? this.config.fieldname : null
-                },
+                params: params,
                 success: function (response) {
                     this.config.parent.handleAddGroups.call(this.config.parent, response);
                     this.searchWindow.close();
@@ -223,9 +242,9 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
 
         if (this.config.enableCollections) {
             this.toolbarbuttons.collection = new Ext.Button({
-                text: t("collection"),
+                text: t('collection'),
                 handler: this.searchCollection.bind(this),
-                iconCls: "opendxp_icon_classificationstore_icon_cs_collections",
+                iconCls: 'opendxp_icon_classificationstore_icon_cs_collections',
                 enableToggle: true,
                 pressed: this.config.isCollectionSearch,
 
@@ -235,9 +254,9 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
 
         if (this.config.enableGroups) {
             this.toolbarbuttons.group = new Ext.Button({
-                text: t("classificationstore_group"),
+                text: t('classificationstore_group'),
                 handler: this.searchGroup.bind(this),
-                iconCls: "opendxp_icon_keys",
+                iconCls: 'opendxp_icon_keys',
                 enableToggle: true,
                 pressed: this.config.isGroupSearch,
                 hidden: !this.config.enableGroups
@@ -247,9 +266,9 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
 
         if (this.config.enableGroupByKey) {
             this.toolbarbuttons.groupByKey = new Ext.Button({
-                text: t("classificationstore_group_by_key"),
+                text: t('classificationstore_group_by_key'),
                 handler: this.searchGroupByKey.bind(this),
-                iconCls: "opendxp_icon_key",
+                iconCls: 'opendxp_icon_key',
                 enableToggle: true,
                 pressed: this.config.isGroupByKeySearch,
 
@@ -260,9 +279,9 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
 
         if (this.config.enableKeys) {
             this.toolbarbuttons.key = new Ext.Button({
-                text: t("key"),
+                text: t('key'),
                 handler: this.searchKey.bind(this),
-                iconCls: "opendxp_icon_key",
+                iconCls: 'opendxp_icon_key',
                 enableToggle: true,
                 pressed: !this.config.isGroupSearch && !this.config.isCollectionSearch,
 
@@ -270,13 +289,13 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
             items.push(this.toolbarbuttons.key);
         }
 
-        items.push("->");
+        items.push('->');
         items.push(this.searchfield);
 
         items.push({
-            xtype: "button",
-            text: t("search"),
-            iconCls: "opendxp_icon_search",
+            xtype: 'button',
+            text: t('search'),
+            iconCls: 'opendxp_icon_search',
             handler: this.applySearchFilter.bind(this)
         });
 
@@ -292,7 +311,7 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
     applySearchFilter: function () {
         var formValue = this.searchfield.getValue();
 
-        this.store.getProxy().setExtraParam("searchfilter", formValue);
+        this.store.getProxy().setExtraParam('searchfilter', formValue);
 
 
         var lastOptions = this.store.lastOptions;
@@ -332,27 +351,27 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
     },
 
     searchCollection: function () {
-        this.setupSearch("collection", "isCollectionSearch");
+        this.setupSearch('collection', 'isCollectionSearch');
     },
 
     searchGroup: function () {
-        this.setupSearch("group", "isGroupSearch");
+        this.setupSearch('group', 'isGroupSearch');
     },
 
     searchKey: function () {
-        this.setupSearch("key", "key");
+        this.setupSearch('key', 'key');
     },
 
     searchGroupByKey: function () {
-        this.setupSearch("groupByKey", "isGroupByKeySearch");
+        this.setupSearch('groupByKey', 'isGroupByKeySearch');
     },
 
     getResultPanel: function () {
         this.resultPanel = new Ext.Panel({
             tbar: this.getToolbar(),
-            layout: "fit",
+            layout: 'fit',
             style: {
-                backgroundColor: "#0000FF"
+                backgroundColor: '#0000FF'
             }
         });
 
@@ -369,10 +388,14 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
     },
 
     getGridPanel: function () {
-        var postFix;
-        var route;
-        var nameWidth = 200;
-        var descWidth = 590;
+
+        var postFix,
+            route,
+            url,
+            nameWidth = 200,
+            descWidth = 590,
+            readerFields = [],
+            gridColumns = [];
 
         if (this.config.isCollectionSearch) {
             route = 'opendxp_admin_dataobject_classificationstore_collectionsactionget';
@@ -390,22 +413,20 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
         }
 
         if (this.config.isGroupByKeySearch) {
-            var url = Routing.generate('opendxp_admin_dataobject_classificationstore_searchrelations');
+            url = Routing.generate('opendxp_admin_dataobject_classificationstore_searchrelations');
         } else {
-            var url = Routing.generate(route);
+            url = Routing.generate(route);
         }
 
-        var readerFields = [];
         for (var i = 0; i < this.groupFields.length; i++) {
             readerFields.push({name: this.groupFields[i]});
         }
 
-        var gridColumns = [];
         if (this.config.isGroupByKeySearch) {
-            gridColumns.push({text: "ID", width: 60, sortable: true, dataIndex: 'id'});
+            gridColumns.push({text: 'ID', width: 60, sortable: true, dataIndex: 'id'});
 
             gridColumns.push({
-                text: t("group"),
+                text: t('group'),
                 flex: 1,
                 sortable: true,
                 dataIndex: 'groupName',
@@ -414,7 +435,7 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
             });
 
             gridColumns.push({
-                text: t("name"),
+                text: t('name'),
                 flex: 1,
                 sortable: true,
                 dataIndex: 'keyName',
@@ -423,7 +444,7 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
             });
 
             gridColumns.push({
-                text: t("description"),
+                text: t('description'),
                 flex: 1,
                 sortable: true,
                 dataIndex: 'keyDescription',
@@ -431,19 +452,10 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
                 renderer: opendxp.helpers.grid.getTranslationColumnRenderer.bind(this)
             });
         } else {
-            gridColumns.push({text: "ID", width: 40, sortable: true, dataIndex: 'id'});
-
-            if (postFix == "properties") {
-                gridColumns.push({
-                    text: t("classificationstore_tag_col_group"),
-                    width: 150,
-                    sortable: true,
-                    dataIndex: 'groupName'
-                });
-            }
+            gridColumns.push({text: 'ID', width: 40, sortable: true, dataIndex: 'id'});
 
             gridColumns.push({
-                text: t("name"),
+                text: t('name'),
                 width: nameWidth,
                 sortable: true,
                 dataIndex: 'name',
@@ -451,7 +463,7 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
             });
 
             gridColumns.push({
-                text: t("description"),
+                text: t('description'),
                 width: descWidth,
                 sortable: true,
                 dataIndex: 'description',
@@ -497,7 +509,7 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
             columns: gridColumns,
             loadMask: true,
             columnLines: true,
-            bodyCls: "opendxp_editable_grid",
+            bodyCls: 'opendxp_editable_grid',
             stripeRows: true,
             selModel: Ext.create('Ext.selection.RowModel', {
                 mode: 'MULTI'
@@ -506,7 +518,7 @@ opendxp.object.classificationstore.keySelectionWindow = Class.create({
             listeners: {
                 rowdblclick: function (grid, record, tr, rowIndex, e, eOpts) {
                     if (this.config.isGroupByKeySearch) {
-                        let data = [grid.getStore().getAt(rowIndex).get("groupId")];
+                        let data = [grid.getStore().getAt(rowIndex).get('groupId')];
                         this.addGroups(data);
                     } else {
                         let data = [grid.getStore().getAt(rowIndex).id];

@@ -30,9 +30,9 @@ trait ApplySchedulerDataTrait
     protected function applySchedulerDataToElement(Request $request, ElementInterface $element, UserProxy|User|null $adminUser): void
     {
         // scheduled tasks
-        if ($request->get('scheduler')) {
+        if ($request->request->has('scheduler')) {
             $tasks = [];
-            $tasksData = $this->decodeJson($request->get('scheduler'));
+            $tasksData = $this->decodeJson($request->request->get('scheduler'));
 
             if (!empty($tasksData)) {
                 foreach ($tasksData as $taskData) {
