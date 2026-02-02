@@ -1363,10 +1363,12 @@ class ClassController extends AdminAbstractController implements KernelControlle
     {
         $result = [];
 
-        $tmpName = $_FILES['Filedata']['tmp_name'];
-        $json = file_get_contents($tmpName);
+        /** @var UploadedFile $tmpName */
+        $uploadFile = $request->files->get('Filedata');
 
-        $tmpName = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/bulk-import-' . uniqid() . '.tmp';
+        $json = file_get_contents($uploadFile->getPathname());
+
+        $tmpName = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/bulk-import-' . uniqid('', false) . '.tmp';
         file_put_contents($tmpName, $json);
 
         Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($tmpName): void {

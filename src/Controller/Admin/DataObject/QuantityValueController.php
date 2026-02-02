@@ -23,6 +23,7 @@ use OpenDxp\Model\DataObject\QuantityValue\Service as QuantityValueService;
 use OpenDxp\Model\DataObject\QuantityValue\Unit;
 use OpenDxp\Model\DataObject\QuantityValue\UnitConversionService;
 use OpenDxp\Model\Translation;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,7 +42,10 @@ class QuantityValueController extends AdminAbstractController
     #[Route('/unit-import', name: 'unitimport', methods: ['POST', 'PUT'])]
     public function unitImportAction(Request $request): JsonResponse
     {
-        $json = file_get_contents($_FILES['Filedata']['tmp_name']);
+        /** @var UploadedFile $tmpName */
+        $uploadFile = $request->files->get('Filedata');
+
+        $json = file_get_contents($uploadFile->getPathname());
         $success = $this->service->importDefinitionFromJson($json);
         $response = $this->adminJson(['success' => $success]);
         $response->headers->set('Content-Type', 'text/html');
