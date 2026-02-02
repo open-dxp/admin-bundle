@@ -325,7 +325,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             'success' => true,
             'id' => $customLayout->getId(),
             'name' => $customLayout->getName(),
-            'data' => $data
+            'data' => $data,
         ]);
     }
 

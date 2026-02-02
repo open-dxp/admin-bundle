@@ -130,7 +130,7 @@ class PortalController extends AdminAbstractController implements KernelControll
         $config['positions'][0][] = [
             'id' => $nextId,
             'type' => $request->request->get('type'),
-            'config' => null
+            'config' => null,
         ];
 
         $this->dashboardHelper->saveDashboard($dashboardId, $config);

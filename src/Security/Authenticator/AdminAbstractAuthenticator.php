@@ -48,6 +48,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 abstract class AdminAbstractAuthenticator extends AbstractAuthenticator implements LoggerAwareInterface
 {
     public const string OPENDXP_ADMIN_LOGIN = 'opendxp_admin_login';
+
     public const string OPENDXP_ADMIN_LOGIN_CHECK = 'opendxp_admin_login_check';
 
     use LoggerAwareTrait;

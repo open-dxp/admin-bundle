@@ -382,7 +382,6 @@ class ClassificationstoreController extends AdminAbstractController implements K
         $conditionParts = [];
         $db = Db::get();
 
-
         if ($request->query->has('searchfilter')) {
             $searchfilter = $request->query->get('searchfilter');
             $searchFilterConditions = [];
