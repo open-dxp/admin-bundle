@@ -581,7 +581,7 @@ input.cke_dialog_ui_input_tel {
 
 /* text fields: hover, focus, ... states */
 .opendxp_editable_input, .opendxp_editable_wysiwyg, .opendxp_editable_textarea, .opendxp_editable_textarea:focus .opendxp_wysiwyg:focus{
-    outline:0 auto;
+    outline: 0;
     overflow-y: visible;
 }
 
