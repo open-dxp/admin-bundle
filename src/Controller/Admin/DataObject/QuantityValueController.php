@@ -42,7 +42,7 @@ class QuantityValueController extends AdminAbstractController
     #[Route('/unit-import', name: 'unitimport', methods: ['POST', 'PUT'])]
     public function unitImportAction(Request $request): JsonResponse
     {
-        /** @var UploadedFile $tmpName */
+        /** @var UploadedFile $uploadFile */
         $uploadFile = $request->files->get('Filedata');
 
         $json = file_get_contents($uploadFile->getPathname());

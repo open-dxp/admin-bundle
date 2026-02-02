@@ -1363,7 +1363,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
     {
         $result = [];
 
-        /** @var UploadedFile $tmpName */
+        /** @var UploadedFile $uploadFile */
         $uploadFile = $request->files->get('Filedata');
 
         $json = file_get_contents($uploadFile->getPathname());
