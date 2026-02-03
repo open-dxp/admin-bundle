@@ -9,7 +9,7 @@ services:
     OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Service:
         public: true
 
-    #TODO: BC Layer, remove with OpenDxp 12
+    #TODO: BC Layer, remove with OpenDxp 2.0
     OpenDxp\DataObject\GridColumnConfig\Service: '@OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Service'
 
     #
