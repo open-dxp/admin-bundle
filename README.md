@@ -56,7 +56,7 @@ Any use of the Pimcore® mark in this repository is purely descriptive to identi
 ***
 
 ## Contact
-For inquiries, suggestions, or contributions, feel free to reach us at contact@opendxp.ch.
+For inquiries, suggestions, or contributions, feel free to reach us at contact@opendxp.io.
 
 ## About
 OpenDXP is a community-driven project initiated by [DACHCOM.DIGITAL](https://www.dachcom.com/de-ch) (Rheineck, Switzerland) and maintained by its community and contributors. 

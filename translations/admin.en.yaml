@@ -258,7 +258,7 @@ note: Note
 email_cc: Cc
 email_bcc: Bcc
 email_settings: 'Email Settings'
-email_settings_receiver_description: "Multiple recipients can be specified by separating the email addresses with a semicolon. <br/>Example: contact@opendxp.ch; receiver2@opendxp.ch<br/>For 'From' you can use additionally the syntax <i>My Name &lt;my-name@example.com&gt;</i>"
+email_settings_receiver_description: "Multiple recipients can be specified by separating the email addresses with a semicolon. <br/>Example: contact@opendxp.io; receiver2@opendxp.io<br/>For 'From' you can use additionally the syntax <i>My Name &lt;my-name@example.com&gt;</i>"
 email_logs: 'Sent Emails'
 email_log_sent_Date: 'Date sent'
 predefined_document_type: 'Predefined Document Type'

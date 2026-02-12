@@ -278,7 +278,7 @@ email_cc: Kopia
 email_bcc: Ukryta kopia
 email_settings: Ustawienia poczty
 email_settings_receiver_description: "Oddziel adresy \u015Brednikiem aby wys\u0142a\u0107
-  e-mail do wielu adresat\xF3w:Przyk\u0142ad: odbiorca@opendxp.ch; odbiorca2@opendxp.ch"
+  e-mail do wielu adresat\xF3w:Przyk\u0142ad: odbiorca@opendxp.io; odbiorca2@opendxp.io"
 email_logs: "Wys\u0142ane maile"
 email_log_sent_Date: "Dta wys\u0142ania"
 predefined_document_type: "Preinstalowane typy dokument\xF3w"

@@ -1,6 +1,6 @@
 # License
 - Original Copyright (c) Pimcore GmbH (https://pimcore.com)
-- Modification Copyright (c) OpenDXP (https://www.opendxp.ch)
+- Modification Copyright (c) OpenDXP (https://www.opendxp.io)
 
 This software is a fork of Pimcore Community Edition, originally licensed under the GNU General Public License version 3 (GPLv3).
 
