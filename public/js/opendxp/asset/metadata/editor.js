@@ -28,9 +28,6 @@ opendxp.asset.metadata.editor = Class.create({
             instance: null
         };
 
-        // hook for providing a custom implementation of the asset metadata tab
-        // e.g. https://github.com/pimcore/asset-metadata-class-definitions
-
         const preCreateAssetMetadataEditor = new CustomEvent(opendxp.events.preCreateAssetMetadataEditor, {
             detail: {
                 editor: this,

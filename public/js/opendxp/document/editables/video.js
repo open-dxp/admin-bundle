@@ -41,7 +41,6 @@ opendxp.document.editables.video = Class.create(opendxp.document.editable, {
         var emptyContainer = element.query(".opendxp_editable_video_empty")[0];
         if (emptyContainer) {
             //we have to update container id for video editable inside non-reloadable blocks
-            //https://github.com/pimcore/pimcore/issues/9969
             emptyContainer.id = 'video_' + uniqid();
             emptyContainer = Ext.get(emptyContainer);
             emptyContainer.on("click", this.openEditor.bind(this));

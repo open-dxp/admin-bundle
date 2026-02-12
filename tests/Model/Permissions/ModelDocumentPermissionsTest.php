@@ -75,7 +75,6 @@ class ModelDocumentPermissionsTest extends AbstractPermissionTest
 
     protected function prepareObjectTree(): void
     {
-        //example based on https://github.com/pimcore/pimcore/issues/11540
         $this->permissioncpath = $this->createFolder('permissioncpath', 1);
 
         $this->permissionfoo = $this->createFolder('permissionfoo', 1);
