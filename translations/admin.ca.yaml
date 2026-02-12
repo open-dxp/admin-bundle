@@ -280,7 +280,7 @@ email_cc: Cc
 email_bcc: Bcc
 email_settings: "Configuraci\xF3 de correu"
 email_settings_receiver_description: 'Multiple recipients can be specified by separating
-  the email addresses with a semicolon. <br/>Example: receiver@opendxp.ch; receiver2@opendxp.ch<br/>For
+  the email addresses with a semicolon. <br/>Example: receiver@opendxp.io; receiver2@opendxp.io<br/>For
   ''From'' you can use additionally the syntax <i>My Name &lt;my-name@example.com&gt;</i>'
 email_logs: Correus enviats
 email_log_sent_Date: Data d'enviament

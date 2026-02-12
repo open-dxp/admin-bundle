@@ -281,7 +281,7 @@ email_bcc: "Skryt\xE1 kopie (BCC)"
 email_settings: "Nastaven\xED e-mailu"
 email_settings_receiver_description: "V\xEDce p\u0159ijemc\u016F m\u016F\u017Eete
   specifikovat odd\u011Blen\xEDm e-mailov\xFDch adres st\u0159edn\xEDkem.<br/>P\u0159\xEDklad:
-  prijemce@opendxp.ch; prijemce2@opendxp.ch"
+  prijemce@opendxp.io; prijemce2@opendxp.io"
 email_logs: "Odeslan\xE9 e-maily"
 email_log_sent_Date: "Datum odesl\xE1n\xED"
 predefined_document_type: "P\u0159eddefinovan\xFD typ dokumentu"

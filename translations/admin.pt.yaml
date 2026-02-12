@@ -278,8 +278,8 @@ email_cc: Com conhecimento
 email_bcc: Com Conhecimento a
 email_settings: "Configura\xE7\xF5es do Email"
 email_settings_receiver_description: "Pode enviar para v\xE1rios destinat\xE1rios
-  \ separando os endere\xE7os de e-mail com um ponto e v\xEDrgula. Exemplo: contact@opendxp.ch;
-  receiver2@opendxp.ch"
+  \ separando os endere\xE7os de e-mail com um ponto e v\xEDrgula. Exemplo: contact@opendxp.io;
+  receiver2@opendxp.io"
 email_logs: Emails enviados
 email_log_sent_Date: Data de envio
 predefined_document_type: Tipo Predefenido Documento

@@ -281,7 +281,7 @@ email_bcc: in Blindkopie
 email_settings: E-Mail-Einstellung
 email_settings_receiver_description: "Mehrere Empf\xE4nger k\xF6nnen angegeben werden,
   indem die E-Mail-Adressen mit einem Semikolon getrennt angegeben werden.<br />Beispiel:
-  contact@opendxp.ch; receiver2@opendxp.ch\nF\xFCr 'Von' k\xF6nnen Sie zus\xE4tzlich
+  contact@opendxp.io; receiver2@opendxp.io\nF\xFCr 'Von' k\xF6nnen Sie zus\xE4tzlich
   die Syntax <i>Mein Name & lt; mein-name@example.com&gt;</i> verwenden"
 email_logs: Versendete E-Mails
 email_log_sent_Date: Datum gesendet

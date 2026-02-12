@@ -277,8 +277,8 @@ email_cc: Cc
 email_bcc: Bcc
 email_settings: Impostazioni email
 email_settings_receiver_description: 'Per specificare destinatari multipli separare
-  l''indirizzo email con un puntoevirgola. <br />Ad esempio: contact@opendxp.ch;
-  receiver2@opendxp.ch<br /> Per il campo ''Da'' puoi usare la sintassi <i>My Name
+  l''indirizzo email con un puntoevirgola. <br />Ad esempio: contact@opendxp.io;
+  receiver2@opendxp.io<br /> Per il campo ''Da'' puoi usare la sintassi <i>My Name
   &lt;my-name@example.com&gt;</i>'
 email_logs: Email inviate
 email_log_sent_Date: Data di invio

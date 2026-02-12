@@ -274,8 +274,8 @@ email_cc: CC
 email_bcc: BCC
 email_settings: E-mailinstellingen
 email_settings_receiver_description: 'Meerdere ontvangers kunnen worden opgegeven
-  door de adressen te scheiden met een punt-komma.Bijvoorbeeld: ontvanger@opendxp.ch;
-  ontvanger2@opendxp.ch'
+  door de adressen te scheiden met een punt-komma.Bijvoorbeeld: ontvanger@opendxp.io;
+  ontvanger2@opendxp.io'
 email_logs: Verzonden E-mails
 email_log_sent_Date: Datum verzonden
 predefined_document_type: Globale document types

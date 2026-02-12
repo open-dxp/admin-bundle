@@ -280,8 +280,8 @@ email_cc: "Copie \xE0"
 email_bcc: "Copie cach\xE9e \xE0"
 email_settings: "Param\xE8tres d'e-mail"
 email_settings_receiver_description: "Vous pouvez sp\xE9cifier plusieurs destinataires
-  en s\xE9parant les adresses e-mail avec des points-virgules. <br/>Example: contact@opendxp.ch;
-  receiver2@opendxp.ch<br/>Pour 'De' vous pouvez utiliser de plus la syntaxe <i>Mon
+  en s\xE9parant les adresses e-mail avec des points-virgules. <br/>Example: contact@opendxp.io;
+  receiver2@opendxp.io<br/>Pour 'De' vous pouvez utiliser de plus la syntaxe <i>Mon
   Nom <mon-nom@example.com></i>"
 email_logs: "E-mails envoy\xE9s"
 email_log_sent_Date: Date d'envoi
