@@ -73,8 +73,6 @@ class ModelAssetPermissionsTest extends AbstractPermissionTest
 
     protected function prepareObjectTree(): void
     {
-        //example based on https://github.com/pimcore/pimcore/issues/11540
-
         $this->permissionfoo = $this->createFolder('permissionfoo', 1);
         $this->permissionbar = $this->createFolder('permissionbar', 1);
         $this->foo = $this->createFolder('foo', $this->permissionbar->getId());
