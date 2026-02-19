@@ -75,7 +75,7 @@ class EmailController extends DocumentControllerBase
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
     public function saveAction(Request $request): JsonResponse
     {
-        $page = Document\Email::getById((int) $request->query->get('id'));
+        $page = Document\Email::getById((int) $request->request->get('id'));
         if (!$page) {
             throw $this->createNotFoundException('Email not found');
         }
