@@ -29,7 +29,6 @@ use OpenDxp\Model\Element;
 use OpenDxp\Model\Translation;
 use OpenDxp\Tool;
 use OpenDxp\Tool\Session;
-use OpenDxp\Translation\Translator;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -337,7 +336,7 @@ class TranslationController extends AdminAbstractController
 
                 return $this->adminJson([
                     'success' => true,
-                    'data' => []
+                    'data' => [],
                 ]);
             }
 
@@ -368,7 +367,7 @@ class TranslationController extends AdminAbstractController
                         'creationDate'     => $t->getCreationDate(),
                         'modificationDate' => $t->getModificationDate(),
                         'type'             => $t->getType(),
-                        ...$this->prefixTranslations($t->getTranslations())
+                        ...$this->prefixTranslations($t->getTranslations()),
                     ],
                 ]);
             }
@@ -402,7 +401,7 @@ class TranslationController extends AdminAbstractController
                         'creationDate'     => $t->getCreationDate(),
                         'modificationDate' => $t->getModificationDate(),
                         'type'             => $t->getType(),
-                        ...$this->prefixTranslations($t->getTranslations())
+                        ...$this->prefixTranslations($t->getTranslations()),
                     ],
                 ]);
             }
@@ -474,14 +473,14 @@ class TranslationController extends AdminAbstractController
                 'key' => $t->getKey(),
                 'creationDate' => $t->getCreationDate(),
                 'modificationDate' => $t->getModificationDate(),
-                'type' => $t->getType()
+                'type' => $t->getType(),
             ];
         }
 
         return $this->adminJson([
             'success' => true,
             'data'    => $translations,
-            'total'   => $list->getTotalCount()
+            'total'   => $list->getTotalCount(),
         ]);
     }
 
