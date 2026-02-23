@@ -86,9 +86,9 @@ class TranslationController extends AdminAbstractController
         $result = [
             'success' => true,
         ];
+
         if ($merge) {
             $enrichedDelta = [];
-
             foreach ($delta as $item) {
                 $lg = $item['lg'];
                 $currentLocale = $localeService->findLocale();
@@ -165,12 +165,17 @@ class TranslationController extends AdminAbstractController
         $list->setOrder('asc');
         $list->setOrderKey($tableName . '.key', false);
 
-        $conditions = $this->getGridFilterCondition($request, $tableName, false, $admin);
+        $filterParameters = [
+            'filter'       => $request->query->get('filter'),
+            'searchString' => $request->query->get('searchString'),
+        ];
+
+        $conditions = $this->getGridFilterCondition($filterParameters, $tableName, false, $admin);
         if ($conditions !== []) {
             $list->setCondition($conditions['condition'], $conditions['params']);
         }
 
-        $filters = $this->getGridFilterCondition($request, $tableName, true, $admin);
+        $filters = $this->getGridFilterCondition($filterParameters, $tableName, true, $admin);
 
         if ($filters) {
             $joins = [...$joins, ...$filters['joins']];
@@ -303,12 +308,9 @@ class TranslationController extends AdminAbstractController
             }
         }
 
-        return $this->adminJson(null);
+        return $this->adminJson(['success' => true]);
     }
 
-    /**
-     * @param Translator $translator
-     */
     #[Route('/translations', name: 'opendxp_admin_translation_translations', methods: ['POST'])]
     public function translationsAction(Request $request, TranslatorInterface $translator): JsonResponse
     {
@@ -333,7 +335,10 @@ class TranslationController extends AdminAbstractController
                     $t->delete();
                 }
 
-                return $this->adminJson(['success' => true, 'data' => []]);
+                return $this->adminJson([
+                    'success' => true,
+                    'data' => []
+                ]);
             }
 
             if ($request->query->get('xaction') === 'update') {
@@ -356,9 +361,16 @@ class TranslationController extends AdminAbstractController
                 $t->setModificationDate(time());
                 $t->save();
 
-                $return = ['key' => $t->getKey(), 'creationDate' => $t->getCreationDate(), 'modificationDate' => $t->getModificationDate(), 'type' => $t->getType(), ...$this->prefixTranslations($t->getTranslations())];
-
-                return $this->adminJson(['data' => $return, 'success' => true]);
+                return $this->adminJson([
+                    'success' => true,
+                    'data'    => [
+                        'key'              => $t->getKey(),
+                        'creationDate'     => $t->getCreationDate(),
+                        'modificationDate' => $t->getModificationDate(),
+                        'type'             => $t->getType(),
+                        ...$this->prefixTranslations($t->getTranslations())
+                    ],
+                ]);
             }
 
             if ($request->query->get('xaction') === 'create') {
@@ -380,78 +392,97 @@ class TranslationController extends AdminAbstractController
                 foreach (Tool::getValidLanguages() as $lang) {
                     $t->addTranslation($lang, '');
                 }
+
                 $t->save();
 
-                $return = ['key' => $t->getKey(), 'creationDate' => $t->getCreationDate(), 'modificationDate' => $t->getModificationDate(), 'type' => $t->getType(), ...$this->prefixTranslations($t->getTranslations())];
-
-                return $this->adminJson(['data' => $return, 'success' => true]);
+                return $this->adminJson([
+                    'success' => true,
+                    'data'    => [
+                        'key'              => $t->getKey(),
+                        'creationDate'     => $t->getCreationDate(),
+                        'modificationDate' => $t->getModificationDate(),
+                        'type'             => $t->getType(),
+                        ...$this->prefixTranslations($t->getTranslations())
+                    ],
+                ]);
             }
-        } else {
-            // get list of types
-            $list = new Translation\Listing();
-            $list->setDomain($domain);
-
-            $validLanguages = $admin ? Tool\Admin::getLanguages() : $this->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations();
-
-            $list->setOrder('asc');
-            $list->setOrderKey($tableName . '.key', false);
-            $list->setLanguages($validLanguages);
-
-            $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings(
-                [...$request->request->all(), ...$request->query->all()]
-            );
-
-            $joins = [];
-
-            if ($orderKey = $sortingSettings['orderKey']) {
-                if (in_array(trim($orderKey, '_'), $validLanguages)) {
-                    $orderKey = trim($orderKey, '_');
-                    $joins[] = [
-                        'language' => $orderKey,
-                    ];
-                    $list->setOrderKey($orderKey);
-                } elseif ($list->isValidOrderKey($sortingSettings['orderKey'])) {
-                    $list->setOrderKey($tableName . '.' . $sortingSettings['orderKey'], false);
-                }
-            }
-            if ($sortingSettings['order']) {
-                $list->setOrder($sortingSettings['order']);
-            }
-
-            $list->setLimit((int) $request->request->get('limit', 50));
-            $list->setOffset((int) $request->request->get('start', 0));
-
-            $conditions = $this->getGridFilterCondition($request, $tableName, false, $admin);
-            $filters = $this->getGridFilterCondition($request, $tableName, true, $admin);
-
-            if ($filters) {
-                $joins = [...$joins, ...$filters['joins']];
-            }
-
-            if ($conditions !== []) {
-                $list->setCondition($conditions['condition'], $conditions['params']);
-            }
-
-            $this->extendTranslationQuery($joins, $list, $tableName, $filters);
-
-            $list->load();
-
-            $translations = [];
-            $searchString = $request->request->get('searchString');
-            foreach ($list->getTranslations() as $t) {
-                //Reload translation to get complete data,
-                //if translation fetched based on the text not key
-                if ($searchString && !strpos($searchString, (string) $t->getKey()) && !$t = Translation::getByKey($t->getKey(), $domain)) {
-                    continue;
-                }
-
-                $translations[] = [...$this->prefixTranslations($t->getTranslations()), 'key' => $t->getKey(), 'creationDate' => $t->getCreationDate(), 'modificationDate' => $t->getModificationDate(), 'type' => $t->getType()];
-            }
-
-            return $this->adminJson(['data' => $translations, 'success' => true, 'total' => $list->getTotalCount()]);
         }
 
-        return $this->adminJson(['success' => false]);
+        // get list of types
+        $list = new Translation\Listing();
+        $list->setDomain($domain);
+
+        $validLanguages = $admin ? Tool\Admin::getLanguages() : $this->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations();
+
+        $list->setOrder('asc');
+        $list->setOrderKey($tableName . '.key', false);
+        $list->setLanguages($validLanguages);
+
+        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings(
+            [...$request->request->all(), ...$request->query->all()]
+        );
+
+        $joins = [];
+
+        if ($orderKey = $sortingSettings['orderKey']) {
+            if (in_array(trim($orderKey, '_'), $validLanguages)) {
+                $orderKey = trim($orderKey, '_');
+                $joins[] = [
+                    'language' => $orderKey,
+                ];
+                $list->setOrderKey($orderKey);
+            } elseif ($list->isValidOrderKey($sortingSettings['orderKey'])) {
+                $list->setOrderKey($tableName . '.' . $sortingSettings['orderKey'], false);
+            }
+        }
+        if ($sortingSettings['order']) {
+            $list->setOrder($sortingSettings['order']);
+        }
+
+        $list->setLimit((int) $request->request->get('limit', 50));
+        $list->setOffset((int) $request->request->get('start', 0));
+
+        $filterParameters = [
+            'filter' => $request->request->get('filter'),
+            'searchString' => $request->request->get('searchString'),
+        ];
+
+        $conditions = $this->getGridFilterCondition($filterParameters, $tableName, false, $admin);
+        $filters = $this->getGridFilterCondition($filterParameters, $tableName, true, $admin);
+
+        if ($filters) {
+            $joins = [...$joins, ...$filters['joins']];
+        }
+
+        if ($conditions !== []) {
+            $list->setCondition($conditions['condition'], $conditions['params']);
+        }
+
+        $this->extendTranslationQuery($joins, $list, $tableName, $filters);
+
+        $translations = [];
+        $searchString = $request->request->get('searchString');
+        foreach ($list->getTranslations() as $t) {
+            //Reload translation to get complete data,
+            //if translation fetched based on the text not key
+            if ($searchString && !strpos($searchString, (string) $t->getKey()) && !$t = Translation::getByKey($t->getKey(), $domain)) {
+                continue;
+            }
+
+            $translations[] = [
+                ...$this->prefixTranslations($t->getTranslations()),
+                'key' => $t->getKey(),
+                'creationDate' => $t->getCreationDate(),
+                'modificationDate' => $t->getModificationDate(),
+                'type' => $t->getType()
+            ];
+        }
+
+        return $this->adminJson([
+            'success' => true,
+            'data'    => $translations,
+            'total'   => $list->getTotalCount()
+        ]);
     }
 
     protected function prefixTranslations(array $translations): array
@@ -507,7 +538,7 @@ class TranslationController extends AdminAbstractController
         }
     }
 
-    protected function getGridFilterCondition(Request $request, string $tableName, bool $languageMode = false, bool $admin = false): array
+    protected function getGridFilterCondition(array $filterParameters, string $tableName, bool $languageMode = false, bool $admin = false): array
     {
         $placeHolderCount = 0;
         $joins = [];
@@ -517,7 +548,7 @@ class TranslationController extends AdminAbstractController
         $db = \OpenDxp\Db::get();
         $conditionFilters = [];
 
-        $filterJson = $request->request->get('filter');
+        $filterJson = $filterParameters['filter'];
         if ($filterJson) {
             $propertyField = 'property';
             $operatorField = 'operator';
@@ -586,11 +617,11 @@ class TranslationController extends AdminAbstractController
             }
         }
 
-        if ($request->request->get('searchString')) {
+        if (!empty($filterParameters['searchString'])) {
             $conditionFilters[] = [
                 'condition' => '(lower(' . $tableName . '.key) LIKE :filterTerm OR lower(' . $tableName . '.text) LIKE :filterTerm)',
                 'field' => 'filterTerm',
-                'value' => '%' . mb_strtolower($request->request->get('searchString')) . '%',
+                'value' => '%' . mb_strtolower($filterParameters['searchString']) . '%',
             ];
         }
 
