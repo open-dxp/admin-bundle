@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\EventListener;
 
+use Doctrine\DBAL\ArrayParameterType;
 use OpenDxp\Db;
 use OpenDxp\Event\DataObjectClassDefinitionEvents;
 use OpenDxp\Event\Model\DataObject\ClassDefinitionEvent;
@@ -43,9 +44,13 @@ class ImportConfigListener implements EventSubscriberInterface
 
         // collect gridConfigs for that class id
         $db = Db::get();
-        $importConfigIds = $db->fetchFirstColumn('select id from importconfigs where classId = ?', [$classId]);
+        $importConfigIds = $db->fetchFirstColumn('SELECT id FROM importconfigs WHERE classId = ?', [$classId]);
         if ($importConfigIds) {
-            $db->executeQuery('delete from importconfig_shares where importConfigId in (' . implode('', $importConfigIds) . ')');
+            $db->executeStatement(
+                'DELETE FROM importconfig_shares WHERE importConfigId IN (?)',
+                [$importConfigIds],
+                [ArrayParameterType::INTEGER]
+            );
         }
 
         $this->cleanupImportConfigs('classId = ' . $db->quote($classId));
@@ -58,9 +63,13 @@ class ImportConfigListener implements EventSubscriberInterface
 
         $db = Db::get();
 
-        $importConfigIds = $db->fetchFirstColumn('select id from importconfigs where ownerId = ?', [$userId]);
+        $importConfigIds = $db->fetchFirstColumn('SELECT id FROM importconfigs WHERE ownerId = ?', [$userId]);
         if ($importConfigIds) {
-            $db->executeQuery('delete from importconfig_shares where importConfigId in (' . implode('', $importConfigIds) . ')');
+            $db->executeStatement(
+                'DELETE FROM importconfig_shares WHERE importConfigId IN (?)',
+                [$importConfigIds],
+                [ArrayParameterType::INTEGER]
+            );
         }
 
         $this->cleanupImportConfigs('ownerId = ' . $userId);
@@ -69,6 +78,6 @@ class ImportConfigListener implements EventSubscriberInterface
     protected function cleanupImportConfigs(string $condition): void
     {
         $db = Db::get();
-        $db->executeQuery('DELETE FROM importconfigs where ' . $condition);
+        $db->executeStatement('DELETE FROM importconfigs WHERE ' . $condition);
     }
 }

@@ -123,7 +123,10 @@ class OpenDxpUsers implements DataProviderInterface
     {
         $db = Db::get();
 
-        return $db->fetchAllAssociative("SELECT ctype, cid, note, FROM_UNIXTIME(`date`) AS 'date' FROM versions WHERE userId = ?", [$user->getId()]);
+        return $db->fetchAllAssociative(
+            'SELECT ctype, cid, note, FROM_UNIXTIME(`date`) AS "date" FROM versions WHERE userId = ?',
+            [$user->getId()]
+        );
     }
 
     protected function getUsageLogDataForUser(User\AbstractUser $user): array

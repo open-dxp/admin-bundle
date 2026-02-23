@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Controller\KernelControllerEventInterface;
@@ -218,8 +219,11 @@ class ClassificationstoreController extends AdminAbstractController implements K
 
             if ($allowedGroupIds) {
                 $db = \OpenDxp\Db::get();
-                $query = 'select * from classificationstore_collectionrelations where groupId in (' . implode(',', $allowedGroupIds) .')';
-                $relationList = $db->fetchAllAssociative($query);
+                $relationList = $db->fetchAllAssociative(
+                    'SELECT * FROM classificationstore_collectionrelations WHERE groupId IN (?)',
+                    [$allowedGroupIds],
+                    [ArrayParameterType::INTEGER]
+                );
 
                 foreach ($relationList as $item) {
                     $allowedCollectionIds[] = $item['colId'];
@@ -902,9 +906,12 @@ class ClassificationstoreController extends AdminAbstractController implements K
         if ($ids) {
             $db = \OpenDxp\Db::get();
             $mappedData = [];
-            $groupsData = $db->fetchAllAssociative('select * from classificationstore_groups g, classificationstore_collectionrelations c where colId IN (:ids) and g.id = c.groupId', [
-                'ids' => implode(',', array_filter($ids, is_numeric(...))),
-            ]);
+            $groupsData = $db->fetchAllAssociative(
+                'SELECT * FROM classificationstore_groups g, classificationstore_collectionrelations c
+                    WHERE colId IN (?) AND g.id = c.groupId',
+                [array_values(array_filter($ids, is_numeric(...)))],
+                [ArrayParameterType::INTEGER]
+            );
 
             foreach ($groupsData as $groupData) {
                 $mappedData[$groupData['id']] = $groupData;
@@ -1434,7 +1441,7 @@ class ClassificationstoreController extends AdminAbstractController implements K
                   ) all_rows) item where id = ' .  $id . ';';
         }
 
-        $db->executeQuery('select @rownum := 0;');
+        $db->executeStatement('SET @rownum = 0');
         $result = $db->fetchAllAssociative($query);
 
         $page = (int) $result[0]['page'] ;

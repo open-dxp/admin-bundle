@@ -1838,9 +1838,9 @@ class ClassController extends AdminAbstractController implements KernelControlle
     public function suggestClassIdentifierAction(): Response
     {
         $db = Db::get();
-        $maxId = $db->fetchOne('SELECT MAX(CAST(id AS SIGNED)) FROM classes;');
+        $maxId = $db->fetchOne('SELECT MAX(CAST(id AS SIGNED)) FROM classes');
 
-        $existingIds = $db->fetchFirstColumn('select LOWER(id) from classes');
+        $existingIds = $db->fetchFirstColumn('SELECT LOWER(id) FROM classes');
 
         $result = [
             'suggestedIdentifier' => $maxId ? $maxId + 1 : 1,

@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Exception;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\UnableToReadFile;
@@ -96,13 +98,14 @@ class AssetHelperController extends AdminAbstractController
         $userIds = [$user->getId()];
         // collect all roles
         $userIds = [...$userIds, ...$user->getRoles()];
-        $userIds = implode(',', $userIds);
 
-        $query = 'select distinct c1.id from gridconfigs c1, gridconfig_shares s
-                    where (c1.searchType = ' . $db->quote($searchType) . ' and ((c1.id = s.gridConfigId and s.sharedWithUserId IN (' . $userIds . '))) and c1.classId = ' . $db->quote($classId) . ')
-                            UNION distinct select c2.id from gridconfigs c2 where shareGlobally = 1 and c2.classId = '. $db->quote($classId) . '  and c2.ownerId != ' . $db->quote($user->getId());
-
-        $ids = $db->fetchFirstColumn($query);
+        $ids = $db->fetchFirstColumn(
+            'SELECT DISTINCT c1.id FROM gridconfigs c1, gridconfig_shares s
+                WHERE (c1.searchType = ? AND c1.id = s.gridConfigId AND s.sharedWithUserId IN (?) AND c1.classId = ?)
+            UNION DISTINCT SELECT c2.id FROM gridconfigs c2 WHERE shareGlobally = 1 AND c2.classId = ? AND c2.ownerId != ?',
+            [$searchType, $userIds, $classId, $classId, $user->getId()],
+            [ParameterType::STRING, ArrayParameterType::INTEGER, ParameterType::STRING, ParameterType::STRING, ParameterType::INTEGER]
+        );
 
         if ($ids) {
             $ids = implode(',', $ids);
@@ -207,8 +210,11 @@ class AssetHelperController extends AdminAbstractController
                 try {
                     $userIds = [$this->getAdminUser()->getId()];
                     $userIds = [...$userIds, ...$this->getAdminUser()->getRoles()];
-                    $userIds = implode(',', $userIds);
-                    $shared = ($savedGridConfig->getOwnerId() !== $userId && $savedGridConfig->isShareGlobally()) || $db->fetchOne('select * from gridconfig_shares where sharedWithUserId IN (' . $userIds . ') and gridConfigId = ' . $savedGridConfig->getId());
+                    $shared = ($savedGridConfig->getOwnerId() !== $userId && $savedGridConfig->isShareGlobally()) || $db->fetchOne(
+                        'SELECT * FROM gridconfig_shares WHERE sharedWithUserId IN (?) AND gridConfigId = ?',
+                        [$userIds, $savedGridConfig->getId()],
+                        [ArrayParameterType::INTEGER, ParameterType::INTEGER]
+                    );
                 } catch (Exception) {
                     // fail silently?
                 }
@@ -432,8 +438,11 @@ class AssetHelperController extends AdminAbstractController
         ];
 
         $db = Db::get();
-        $allShares = $db->fetchAllAssociative('select s.sharedWithUserId, u.type from gridconfig_shares s, users u
-                      where s.sharedWithUserId = u.id and s.gridConfigId = ' . $gridConfigId);
+        $allShares = $db->fetchAllAssociative(
+            'SELECT s.sharedWithUserId, u.type FROM gridconfig_shares s, users u
+                WHERE s.sharedWithUserId = u.id AND s.gridConfigId = ?',
+            [$gridConfigId]
+        );
 
         foreach ($allShares as $share) {
             $type = $share['type'];

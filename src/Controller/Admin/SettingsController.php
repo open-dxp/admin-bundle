@@ -565,7 +565,7 @@ class SettingsController extends AdminAbstractController
 
         // public files
         Tool\Storage::get('thumbnail')->deleteDirectory('/');
-        Db::get()->executeQuery('TRUNCATE TABLE assets_image_thumbnail_cache');
+        Db::get()->executeStatement('TRUNCATE TABLE assets_image_thumbnail_cache');
 
         Tool\Storage::get('asset_cache')->deleteDirectory('/');
 
@@ -1199,12 +1199,11 @@ class SettingsController extends AdminAbstractController
     protected function deleteViews(string $language, string $dbName): void
     {
         $db = \OpenDxp\Db::get();
-        $views = $db->fetchAllAssociative('SHOW FULL TABLES IN ' . $db->quoteIdentifier($dbName) . " WHERE TABLE_TYPE LIKE 'VIEW'");
+        $views = $db->fetchAllAssociative(sprintf('SHOW FULL TABLES IN %s WHERE TABLE_TYPE LIKE "VIEW"', $db->quoteIdentifier($dbName)));
 
         foreach ($views as $view) {
             if (preg_match('/^object_localized_[0-9]+_' . $language . '$/', $view['Tables_in_' . $dbName])) {
-                $sql = 'DROP VIEW ' . $db->quoteIdentifier($view['Tables_in_' . $dbName]);
-                $db->executeQuery($sql);
+                $db->executeStatement(sprintf('DROP VIEW %s', $db->quoteIdentifier($view['Tables_in_' . $dbName])));
             }
         }
     }

@@ -293,9 +293,18 @@ class PortalController extends AdminAbstractController implements KernelControll
             $end = $startDate - ($i * 86400);
             $start = $end - 86399;
 
-            $o = $db->fetchOne('SELECT COUNT(*) AS count FROM objects WHERE modificationDate > '.$start . ' AND modificationDate < '.$end);
-            $a = $db->fetchOne('SELECT COUNT(*) AS count FROM assets WHERE modificationDate > '.$start . ' AND modificationDate < '.$end);
-            $d = $db->fetchOne('SELECT COUNT(*) AS count FROM documents WHERE modificationDate > '.$start . ' AND modificationDate < '.$end);
+            $o = $db->fetchOne(
+                'SELECT COUNT(*) AS count FROM objects WHERE modificationDate > ? AND modificationDate < ?',
+                [$start, $end]
+            );
+            $a = $db->fetchOne(
+                'SELECT COUNT(*) AS count FROM assets WHERE modificationDate > ? AND modificationDate < ?',
+                [$start, $end]
+            );
+            $d = $db->fetchOne(
+                'SELECT COUNT(*) AS count FROM documents WHERE modificationDate > ? AND modificationDate < ?',
+                [$start, $end]
+            );
 
             $date = new DateTime();
             $date->setTimestamp($start);
