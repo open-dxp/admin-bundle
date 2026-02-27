@@ -205,30 +205,39 @@ class AssetHelperController extends AdminAbstractController
             $savedGridConfig = GridConfig::getById((int) $requestedGridConfigId);
 
             if ($savedGridConfig) {
-                $shared = null;
-
-                try {
+                $shared = false;
+                if (!$this->getAdminUser()->isAdmin()) {
                     $userIds = [$this->getAdminUser()->getId()];
                     $userIds = [...$userIds, ...$this->getAdminUser()->getRoles()];
-                    $shared = ($savedGridConfig->getOwnerId() !== $userId && $savedGridConfig->isShareGlobally()) || $db->fetchOne(
-                        'SELECT * FROM gridconfig_shares WHERE sharedWithUserId IN (?) AND gridConfigId = ?',
+                    $isSharedGlobally = $savedGridConfig->getOwnerId() !== $userId && $savedGridConfig->isShareGlobally();
+
+                    $isSharedWithUser = (bool) $db->fetchOne(
+                        'SELECT 1 FROM gridconfig_shares WHERE sharedWithUserId IN (?) AND gridConfigId = ?',
                         [$userIds, $savedGridConfig->getId()],
                         [ArrayParameterType::INTEGER, ParameterType::INTEGER]
                     );
-                } catch (Exception) {
-                    // fail silently?
+
+                    $shared = $isSharedGlobally || $isSharedWithUser;
+
+                    if (!$shared && $savedGridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
+                        throw new Exception('You are neither the owner of this config nor it is shared with you');
+                    }
                 }
 
-                if (!$shared && $savedGridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
-                    throw new Exception('You are neither the owner of this config nor it is shared with you');
-                }
                 $gridConfigId = $savedGridConfig->getId();
                 $gridConfig = $savedGridConfig->getConfig();
                 $gridConfig = json_decode($gridConfig, true);
-                $gridConfigName = $savedGridConfig->getName();
-                $gridConfigDescription = $savedGridConfig->getDescription();
+                $gridConfigName = SecurityHelper::convertHtmlSpecialChars($savedGridConfig->getName());
+                $gridConfigDescription = SecurityHelper::convertHtmlSpecialChars($savedGridConfig->getDescription());
                 $sharedGlobally = $savedGridConfig->isShareGlobally();
                 $setAsFavourite = $savedGridConfig->isSetAsFavourite();
+
+                foreach ($gridConfig['columns'] as &$column) {
+                    if (array_key_exists('isOperator', $column) && $column['isOperator']) {
+                        $colAttributes = &$column['fieldConfig']['attributes'];
+                        SecurityHelper::convertHtmlSpecialCharsArrayKeys($colAttributes, ['label', 'attribute', 'param1']);
+                    }
+                }
             }
         }
 

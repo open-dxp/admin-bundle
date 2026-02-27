@@ -310,12 +310,15 @@ class DataObjectHelperController extends AdminAbstractController
                 if (!$this->getAdminUser()->isAdmin()) {
                     $userIds = [$this->getAdminUser()->getId()];
                     $userIds = [...$userIds, ...$this->getAdminUser()->getRoles()];
-                    $shared = ($savedGridConfig->getOwnerId() !== $userId && $savedGridConfig->isShareGlobally()) || $db->fetchOne(
+                    $isSharedGlobally = $savedGridConfig->getOwnerId() !== $userId && $savedGridConfig->isShareGlobally();
+
+                    $isSharedWithUser = (bool) $db->fetchOne(
                         'SELECT 1 FROM gridconfig_shares WHERE sharedWithUserId IN (?) AND gridConfigId = ?',
                         [$userIds, $savedGridConfig->getId()],
                         [ArrayParameterType::INTEGER, ParameterType::INTEGER]
                     );
-                    //                  $shared = $savedGridConfig->isShareGlobally() || GridConfigShare::getByGridConfigAndSharedWithId($savedGridConfig->getId(), $this->getUser()->getId());
+
+                    $shared = $isSharedGlobally || $isSharedWithUser;
 
                     if (!$shared && $savedGridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
                         throw new Exception('You are neither the owner of this config nor it is shared with you');
@@ -387,7 +390,6 @@ class DataObjectHelperController extends AdminAbstractController
                         if (str_starts_with($key, '~')) {
                             // not needed for now
                             $type = $keyParts[1];
-                            //                            $field = $keyParts[2];
                             $groupAndKeyId = explode('-', $keyParts[3]);
                             $keyId = (int) $groupAndKeyId[1];
 
