@@ -70,8 +70,10 @@ class DataObjectController extends ElementControllerBase implements KernelContro
 
     /** On active edit lock answer with editlock response */
     public const string TASK_RESPONSE = 'response';
+
     /** On active edit lock overwrite with new user */
     public const string TASK_OVERWRITE = 'overwrite';
+
     /** On active edit lock keep existing entry */
     public const string TASK_KEEP = 'keep';
 

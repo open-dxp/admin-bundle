@@ -52,11 +52,17 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
     use UserNameTrait;
 
     public const string TASK_PUBLISH = 'publish';
+
     public const string TASK_UNPUBLISH = 'unpublish';
+
     public const string TASK_SAVE = 'save';
+
     public const string TASK_VERSION = 'version';
+
     public const string TASK_SCHEDULER = 'scheduler';
+
     public const string TASK_AUTOSAVE = 'autosave';
+
     public const string TASK_DELETE = 'delete';
 
     public function __construct(protected ElementServiceInterface $elementService)

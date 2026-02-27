@@ -27,10 +27,12 @@ class ElementAdminStyleEvent extends Event
      * Style needed for tree
      */
     public const int CONTEXT_TREE = 1;
+
     /**
      * Style needed for element editor
      */
     public const int CONTEXT_EDITOR = 2;
+
     /**
      * Style needed for quicksearch
      */
