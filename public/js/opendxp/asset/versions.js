@@ -210,7 +210,7 @@ opendxp.asset.versions = Class.create({
 
         if (elememntId > 0) {
             Ext.Msg.confirm(t('clear_all'), t('clear_version_message'), function(btn){
-                if (btn == 'yes'){
+                if (btn === 'yes'){
                     var modificationDate = this.asset.data.modificationDate;
 
                     Ext.Ajax.request({

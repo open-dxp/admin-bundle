@@ -1190,7 +1190,7 @@ Ext.define('Ext.local.grid.filters.filter.TriFilter', {
             }
             if ('in' in value) {
                 v = value.in;
-                if (typeof v === "object" && v[0][0] == '') {
+                if (typeof v === "object" && v[0][0] === '') {
                     remove.push(filters.in);
                 } else if (v || v === 0) {
                     add.push(filters.in);

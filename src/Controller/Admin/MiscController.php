@@ -130,7 +130,7 @@ class MiscController extends AdminAbstractController
 
         if (!empty($scriptsContent)) {
             $contentType = 'text/javascript';
-            if ($fileExtension == 'css') {
+            if ($fileExtension === 'css') {
                 $contentType = 'text/css';
             }
 

@@ -44,7 +44,7 @@ class NotificationController extends AdminAbstractController
 
         foreach ($service->findAll($this->getAdminUser()) as $recipient) {
             $group = $translator->trans('group', [], 'admin');
-            $prefix = $recipient->getType() == 'role' ? $group . ' - ' : '';
+            $prefix = $recipient->getType() === 'role' ? $group . ' - ' : '';
 
             $data[] = [
                 'id' => $recipient->getId(),

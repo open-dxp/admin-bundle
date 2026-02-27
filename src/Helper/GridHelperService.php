@@ -61,28 +61,28 @@ class GridHelperService
                 $filterField = $filter['property'];
                 $filterOperator = $filter['operator'];
 
-                if ($filter['type'] == 'string') {
+                if ($filter['type'] === 'string') {
                     $operator = 'LIKE';
-                } elseif ($filter['type'] == 'numeric' || $filter['type'] == 'quantityValue') {
-                    if ($filterOperator == 'lt') {
+                } elseif ($filter['type'] === 'numeric' || $filter['type'] === 'quantityValue') {
+                    if ($filterOperator === 'lt') {
                         $operator = '<';
-                    } elseif ($filterOperator == 'gt') {
+                    } elseif ($filterOperator === 'gt') {
                         $operator = '>';
-                    } elseif ($filterOperator == 'eq') {
+                    } elseif ($filterOperator === 'eq') {
                         $operator = '=';
                     }
-                } elseif ($filter['type'] == 'date') {
-                    if ($filterOperator == 'lt') {
+                } elseif ($filter['type'] === 'date') {
+                    if ($filterOperator === 'lt') {
                         $operator = '<';
-                    } elseif ($filterOperator == 'gt') {
+                    } elseif ($filterOperator === 'gt') {
                         $operator = '>';
-                    } elseif ($filterOperator == 'eq') {
+                    } elseif ($filterOperator === 'eq') {
                         $operator = '=';
                     }
                     $filter['value'] = strtotime($filter['value']);
-                } elseif ($filter['type'] == 'list') {
+                } elseif ($filter['type'] === 'list') {
                     $operator = '=';
-                } elseif ($filter['type'] == 'boolean') {
+                } elseif ($filter['type'] === 'boolean') {
                     $operator = '=';
                     $filter['value'] = (int)$filter['value'];
                 }
@@ -215,23 +215,23 @@ class GridHelperService
                     $filterField = $filter['property'];
                     $filterOperator = $filter['operator'];
 
-                    if ($filter['type'] == 'string') {
+                    if ($filter['type'] === 'string') {
                         $operator = 'LIKE';
-                    } elseif ($filter['type'] == 'date') {
-                        if ($filterOperator == 'lt') {
+                    } elseif ($filter['type'] === 'date') {
+                        if ($filterOperator === 'lt') {
                             $operator = '<';
-                        } elseif ($filterOperator == 'gt') {
+                        } elseif ($filterOperator === 'gt') {
                             $operator = '>';
-                        } elseif ($filterOperator == 'eq') {
+                        } elseif ($filterOperator === 'eq') {
                             $operator = '=';
                         }
                         $filter['value'] = strtotime($filter['value']);
-                    } elseif ($filter['type'] == 'list') {
+                    } elseif ($filter['type'] === 'list') {
                         $operator = '=';
-                    } elseif ($filter['type'] == 'boolean') {
+                    } elseif ($filter['type'] === 'boolean') {
                         $operator = '=';
                         $filter['value'] = (int)$filter['value'];
-                    } elseif ($filterOperator == 'in' && is_array($filter['value'])) {
+                    } elseif ($filterOperator === 'in' && is_array($filter['value'])) {
                         $operator = 'in';
                         $matches = preg_split('/[^0-9\.]+/', $filter['value'][0][0] ?? [], -1, PREG_SPLIT_NO_EMPTY);
                         if (is_array($matches) && count($matches) > 0) {
@@ -239,7 +239,7 @@ class GridHelperService
                         } else {
                             continue;
                         }
-                    } elseif ($filterOperator == 'in' && !is_array($filter['value'])) {
+                    } elseif ($filterOperator === 'in' && !is_array($filter['value'])) {
                         $operator = 'in';
                         $matches = preg_split('/[^0-9\.]+/', $filter['value'], -1, PREG_SPLIT_NO_EMPTY);
                         if (is_array($matches) && count($matches) > 0) {
@@ -247,11 +247,11 @@ class GridHelperService
                         } else {
                             continue;
                         }
-                    } elseif ($filterOperator == 'lt') {
+                    } elseif ($filterOperator === 'lt') {
                         $operator = '<';
-                    } elseif ($filterOperator == 'gt') {
+                    } elseif ($filterOperator === 'gt') {
                         $operator = '>';
-                    } elseif ($filterOperator == 'eq') {
+                    } elseif ($filterOperator === 'eq') {
                         $operator = '=';
                     }
 
@@ -357,17 +357,17 @@ class GridHelperService
                         // system field
                         $lowerCasedFilterValue = strtolower($filter['value']); // lowercase for case insensitive search
                         $lowerCasedFilterValue = str_replace('*', '%', $lowerCasedFilterValue); // replace wildcard
-                        if ($filterField == 'fullpath') {
+                        if ($filterField === 'fullpath') {
                             $conditionPartsFilters[] = 'concat(lower(`path`), lower(`key`)) ' . $operator . ' ' . $db->quote('%' . $lowerCasedFilterValue . '%');
-                        } elseif ($filterField == 'key') {
+                        } elseif ($filterField === 'key') {
                             $conditionPartsFilters[] = 'lower(`key`) ' . $operator . ' ' . $db->quote('%' . $lowerCasedFilterValue . '%');
-                        } elseif ($filterField == 'id' && $operator !== 'in') {
+                        } elseif ($filterField === 'id' && $operator !== 'in') {
                             $conditionPartsFilters[] = 'oo_id ' . $operator . ' ' . $db->quote($filter['value']);
-                        } elseif ($filterField == 'id' && $operator === 'in') {
+                        } elseif ($filterField === 'id' && $operator === 'in') {
                             $conditionPartsFilters[] = 'oo_id ' . $operator . ' (' . $filter['value'] . ')';
                         } else {
                             $filterField = $db->quoteIdentifier($filterField);
-                            if ($filter['type'] == 'date' && $operator === '=') {
+                            if ($filter['type'] === 'date' && $operator === '=') {
                                 //if the equal operator is chosen with the date type, condition has to be changed
                                 $maxTime = $filter['value'] + (86400 - 1); //specifies the top point of the range used in the condition
                                 $conditionPartsFilters[] = $filterField . ' BETWEEN ' . $db->quote($filter['value']) . ' AND ' . $db->quote($maxTime);
@@ -772,7 +772,7 @@ class GridHelperService
         $list = new Model\Asset\Listing();
 
         $conditionFilters = [];
-        if (isset($allParams['only_direct_children']) && $allParams['only_direct_children'] == 'true') {
+        if (isset($allParams['only_direct_children']) && $allParams['only_direct_children'] === 'true') {
             $conditionFilters[] = 'parentId = ' . $folder->getId();
         } else {
             $conditionFilters[] = 'path LIKE ' . ($folder->getRealFullPath() === '/' ? "'/%'" : $list->quote($list->escapeLike($folder->getRealFullPath()) . '/%'));
@@ -795,16 +795,16 @@ class GridHelperService
                 $filterOperator = $filter['operator'];
                 $filterType = $filter['type'];
 
-                if ($filterType == 'string') {
+                if ($filterType === 'string') {
                     $operator = 'LIKE';
-                } elseif ($filterType == 'numeric') {
-                    if ($filterOperator == 'lt') {
+                } elseif ($filterType === 'numeric') {
+                    if ($filterOperator === 'lt') {
                         $operator = '<';
-                    } elseif ($filterOperator == 'gt') {
+                    } elseif ($filterOperator === 'gt') {
                         $operator = '>';
-                    } elseif ($filterOperator == 'eq') {
+                    } elseif ($filterOperator === 'eq') {
                         $operator = '=';
-                    } elseif ($filterOperator == 'in') {
+                    } elseif ($filterOperator === 'in') {
                         $operator = 'IN';
 
                         $filterValue = $filter['value'] ?? '';
@@ -817,21 +817,21 @@ class GridHelperService
                             }
                         }
                     }
-                } elseif ($filterType == 'date') {
+                } elseif ($filterType === 'date') {
                     $filter['value'] = strtotime($filter['value']);
-                    if ($filterOperator == 'lt') {
+                    if ($filterOperator === 'lt') {
                         $operator = '<';
-                    } elseif ($filterOperator == 'gt') {
+                    } elseif ($filterOperator === 'gt') {
                         $operator = '>';
-                    } elseif ($filterOperator == 'eq') {
+                    } elseif ($filterOperator === 'eq') {
                         $operator = 'BETWEEN';
                         //if the equal operator is chosen with the date type, condition has to be changed
                         $maxTime = $filter['value'] + (86400 - 1); //specifies the top point of the range used in the condition
                         $filter['value'] = $db->quote($filter['value']) . ' AND ' . $db->quote($maxTime);
                     }
-                } elseif ($filterType == 'list') {
+                } elseif ($filterType === 'list') {
                     $operator = 'IN';
-                } elseif ($filterType == 'boolean') {
+                } elseif ($filterType === 'boolean') {
                     $operator = '=';
                     if ((int) $filter['value'] === 0) {
                         $notSubselect = 'NOT';
@@ -853,7 +853,7 @@ class GridHelperService
                     $value = $db->quote($value);
                 }
 
-                if (isset($filterDef[1]) && $filterDef[1] == 'system') {
+                if (isset($filterDef[1]) && $filterDef[1] === 'system') {
                     $filterField = $filterField === 'fullpath' ? 'CONCAT(`path`,filename)' : $db->quoteIdentifier($filterField);
                     $conditionFilters[] = $filterField . ' ' . $operator . ' ' . $value;
                 } else {
