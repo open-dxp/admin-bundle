@@ -1204,8 +1204,7 @@ class DataObjectController extends ElementControllerBase implements KernelContro
 
             $db = Db::get();
             $children = $db->fetchAllAssociative(
-                'SELECT id, modificationDate, versionCount FROM objects'
-                .' WHERE parentId = ? ORDER BY `index` ASC',
+                'SELECT id, modificationDate, versionCount FROM objects WHERE parentId = ? ORDER BY `index` ASC',
                 [$parentObject->getId()]
             );
             $index = 0;
@@ -1279,8 +1278,8 @@ class DataObjectController extends ElementControllerBase implements KernelContro
             );
 
             $siblings = $db->fetchAllAssociative(
-                'SELECT id, modificationDate, versionCount, `key`, `index` FROM objects'
-                ." WHERE parentId = ? AND id != ? AND `type` IN ('object', 'variant','folder') ORDER BY `index` ASC",
+                'SELECT id, modificationDate, versionCount, `key`, `index` FROM objects
+                    WHERE parentId = ? AND id != ? AND `type` IN ("object", "variant", "folder") ORDER BY `index` ASC',
                 [$updatedObject->getParentId(), $updatedObject->getId()]
             );
             $index = 0;

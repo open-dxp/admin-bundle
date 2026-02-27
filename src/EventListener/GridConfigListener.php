@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\EventListener;
 
+use Doctrine\DBAL\ArrayParameterType;
 use OpenDxp\Db;
 use OpenDxp\Event\DataObjectClassDefinitionEvents;
 use OpenDxp\Event\DataObjectEvents;
@@ -54,9 +55,13 @@ class GridConfigListener implements EventSubscriberInterface
 
         // collect gridConfigs for that class id
         $db = Db::get();
-        $gridConfigIds = $db->fetchFirstColumn('select id from gridconfigs where classId = ?', [$classId]);
+        $gridConfigIds = $db->fetchFirstColumn('SELECT id FROM gridconfigs WHERE classId = ?', [$classId]);
         if ($gridConfigIds) {
-            $db->executeQuery('delete from gridconfig_shares where gridConfigId in (' . implode('', $gridConfigIds) . ')');
+            $db->executeStatement(
+                'DELETE FROM gridconfig_shares WHERE gridConfigId IN (?)',
+                [$gridConfigIds],
+                [ArrayParameterType::INTEGER]
+            );
         }
 
         $this->cleanupGridConfigs('classId = ' . $db->quote($classId));
@@ -70,9 +75,13 @@ class GridConfigListener implements EventSubscriberInterface
 
         $db = Db::get();
 
-        $gridConfigIds = $db->fetchFirstColumn('select id from gridconfigs where ownerId = ' . $userId);
+        $gridConfigIds = $db->fetchFirstColumn('SELECT id FROM gridconfigs WHERE ownerId = ?', [$userId]);
         if ($gridConfigIds) {
-            $db->executeQuery('delete from gridconfig_shares where gridConfigId in (' . implode('', $gridConfigIds) . ')');
+            $db->executeStatement(
+                'DELETE FROM gridconfig_shares WHERE gridConfigId IN (?)',
+                [$gridConfigIds],
+                [ArrayParameterType::INTEGER]
+            );
         }
 
         $this->cleanupGridConfigs('ownerId = ' . $userId);
@@ -82,12 +91,12 @@ class GridConfigListener implements EventSubscriberInterface
     protected function cleanupGridConfigs(string $condition): void
     {
         $db = Db::get();
-        $db->executeQuery('DELETE FROM gridconfigs where ' . $condition);
+        $db->executeStatement('DELETE FROM gridconfigs WHERE ' . $condition);
     }
 
     protected function cleanupGridConfigFavourites(string $condition): void
     {
         $db = Db::get();
-        $db->executeQuery('DELETE FROM gridconfig_favourites where ' . $condition);
+        $db->executeStatement('DELETE FROM gridconfig_favourites WHERE ' . $condition);
     }
 }

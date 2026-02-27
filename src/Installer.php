@@ -62,7 +62,7 @@ class Installer extends SettingsStoreAwareInstaller
     {
         $db = \OpenDxp\Db::get();
 
-        $existingKeys = $db->fetchFirstColumn('SELECT ' . $db->quoteIdentifier('key') . ' FROM users_permission_definitions');
+        $existingKeys = $db->fetchFirstColumn(sprintf('SELECT %s FROM users_permission_definitions', $db->quoteIdentifier('key')));
 
         foreach (self::USER_PERMISSIONS as $permission) {
             if (in_array($permission, $existingKeys)) {
@@ -107,7 +107,7 @@ class Installer extends SettingsStoreAwareInstaller
                 continue;
             }
 
-            $this->db->executeQuery($statement);
+            $this->db->executeStatement($statement);
         }
     }
 
@@ -123,7 +123,7 @@ class Installer extends SettingsStoreAwareInstaller
                 continue;
             }
 
-            $this->db->executeQuery("DROP TABLE IF EXISTS $table");
+            $this->db->executeStatement(sprintf('DROP TABLE IF EXISTS %s', $this->db->quoteIdentifier($table)));
         }
     }
 

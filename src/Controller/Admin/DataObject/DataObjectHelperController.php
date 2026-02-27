@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Exception;
 use InvalidArgumentException;
 use League\Flysystem\FilesystemException;
@@ -109,14 +111,15 @@ class DataObjectHelperController extends AdminAbstractController
         $userIds = [$user->getId()];
         // collect all roles
         $userIds = [...$userIds, ...$user->getRoles()];
-        $userIds = implode(',', $userIds);
         $db = Db::get();
 
-        $query = 'select distinct c1.id from gridconfigs c1, gridconfig_shares s
-                    where (c1.searchType = ' . $db->quote($searchType) . ' and ((c1.id = s.gridConfigId and s.sharedWithUserId IN (' . $userIds . '))) and c1.classId = ' . $db->quote($classId) . ')
-                            UNION distinct select c2.id from gridconfigs c2 where shareGlobally = 1 and c2.classId = '. $db->quote($classId) . '  and c2.ownerId != ' . $db->quote($user->getId());
-
-        $ids = $db->fetchFirstColumn($query);
+        $ids = $db->fetchFirstColumn(
+            'SELECT DISTINCT c1.id FROM gridconfigs c1, gridconfig_shares s
+                WHERE (c1.searchType = ? AND c1.id = s.gridConfigId AND s.sharedWithUserId IN (?) AND c1.classId = ?)
+            UNION DISTINCT SELECT c2.id FROM gridconfigs c2 WHERE shareGlobally = 1 AND c2.classId = ? AND c2.ownerId != ?',
+            [$searchType, $userIds, $classId, $classId, $user->getId()],
+            [ParameterType::STRING, ArrayParameterType::INTEGER, ParameterType::STRING, ParameterType::STRING, ParameterType::INTEGER]
+        );
 
         if ($ids) {
             $ids = implode(',', $ids);
@@ -307,9 +310,15 @@ class DataObjectHelperController extends AdminAbstractController
                 if (!$this->getAdminUser()->isAdmin()) {
                     $userIds = [$this->getAdminUser()->getId()];
                     $userIds = [...$userIds, ...$this->getAdminUser()->getRoles()];
-                    $userIds = implode(',', $userIds);
-                    $shared = ($savedGridConfig->getOwnerId() !== $userId && $savedGridConfig->isShareGlobally()) || $db->fetchOne('select 1 from gridconfig_shares where sharedWithUserId IN ('.$userIds.') and gridConfigId = '.$savedGridConfig->getId());
-                    //                  $shared = $savedGridConfig->isShareGlobally() || GridConfigShare::getByGridConfigAndSharedWithId($savedGridConfig->getId(), $this->getUser()->getId());
+                    $isSharedGlobally = $savedGridConfig->getOwnerId() !== $userId && $savedGridConfig->isShareGlobally();
+
+                    $isSharedWithUser = (bool) $db->fetchOne(
+                        'SELECT 1 FROM gridconfig_shares WHERE sharedWithUserId IN (?) AND gridConfigId = ?',
+                        [$userIds, $savedGridConfig->getId()],
+                        [ArrayParameterType::INTEGER, ParameterType::INTEGER]
+                    );
+
+                    $shared = $isSharedGlobally || $isSharedWithUser;
 
                     if (!$shared && $savedGridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
                         throw new Exception('You are neither the owner of this config nor it is shared with you');
@@ -381,7 +390,6 @@ class DataObjectHelperController extends AdminAbstractController
                         if (str_starts_with($key, '~')) {
                             // not needed for now
                             $type = $keyParts[1];
-                            //                            $field = $keyParts[2];
                             $groupAndKeyId = explode('-', $keyParts[3]);
                             $keyId = (int) $groupAndKeyId[1];
 
@@ -716,11 +724,10 @@ class DataObjectHelperController extends AdminAbstractController
             $searchType = $request->request->get('searchType');
             $user = $this->getAdminUser();
             $db = Db::get();
-            $db->executeQuery('delete from gridconfig_favourites where '
-                . 'ownerId = ' . $user->getId()
-                . ' and classId = ' . $db->quote($classId) .
-                ' and searchType = ' . $db->quote($searchType)
-                . ' and objectId != ' . $objectId . ' and objectId != 0');
+            $db->executeStatement(
+                'DELETE FROM gridconfig_favourites WHERE ownerId = ? AND classId = ? AND searchType = ? AND objectId != ? AND objectId != 0',
+                [$user->getId(), $classId, $searchType, $objectId]
+            );
 
             return $this->adminJson(['success' => true]);
         }
@@ -766,12 +773,10 @@ class DataObjectHelperController extends AdminAbstractController
                     $favourite->save();
                 }
                 $db = Db::get();
-                $count = $db->fetchOne('select * from gridconfig_favourites where '
-                    . 'ownerId = ' . $user->getId()
-                    . ' and classId = ' . $db->quote($classId).
-                    ' and searchType = ' . $db->quote($searchType)
-                    . ' and objectId != ' . $objectId . ' and objectId != 0'
-                    . ' and `type` != ' . $db->quote($type));
+                $count = $db->fetchOne(
+                    'SELECT * FROM gridconfig_favourites WHERE ownerId = ? AND classId = ? AND searchType = ? AND objectId != ? AND objectId != 0 AND `type` != ?',
+                    [$user->getId(), $classId, $searchType, $objectId, $type]
+                );
                 $specializedConfigs = $count > 0;
             } catch (Exception) {
                 $favourite->delete();
@@ -791,8 +796,11 @@ class DataObjectHelperController extends AdminAbstractController
         ];
 
         $db = Db::get();
-        $allShares = $db->fetchAllAssociative('select s.sharedWithUserId, u.type from gridconfig_shares s, users u
-                      where s.sharedWithUserId = u.id and s.gridConfigId = ' . $gridConfigId);
+        $allShares = $db->fetchAllAssociative(
+            'SELECT s.sharedWithUserId, u.type FROM gridconfig_shares s, users u
+                WHERE s.sharedWithUserId = u.id AND s.gridConfigId = ?',
+            [$gridConfigId]
+        );
 
         foreach ($allShares as $share) {
             $type = $share['type'];
