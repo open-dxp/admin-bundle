@@ -315,6 +315,7 @@ class TranslationController extends AdminAbstractController
     {
         $domain = $request->request->get('domain', Translation::DOMAIN_DEFAULT);
         $admin = $domain === Translation::DOMAIN_ADMIN;
+        $validLanguages = $admin ? Tool\Admin::getLanguages() : $this->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations();
 
         $this->checkPermission(($admin ? 'admin_' : '') . 'translations');
 
@@ -388,7 +389,7 @@ class TranslationController extends AdminAbstractController
                 $t->setModificationDate(time());
                 $t->setType($data['type'] ?? null);
 
-                foreach (Tool::getValidLanguages() as $lang) {
+                foreach ($validLanguages as $lang) {
                     $t->addTranslation($lang, '');
                 }
 
@@ -410,9 +411,6 @@ class TranslationController extends AdminAbstractController
         // get list of types
         $list = new Translation\Listing();
         $list->setDomain($domain);
-
-        $validLanguages = $admin ? Tool\Admin::getLanguages() : $this->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations();
-
         $list->setOrder('asc');
         $list->setOrderKey($tableName . '.key', false);
         $list->setLanguages($validLanguages);
