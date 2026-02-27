@@ -142,7 +142,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             if (\OpenDxp\Video::isAvailable()) {
                 $config = Asset\Video\Thumbnail\Config::getPreviewConfig();
                 $thumbnail = $asset->getThumbnail($config, ['mp4']);
-                if ($thumbnail && $thumbnail['status'] == 'finished') {
+                if ($thumbnail && $thumbnail['status'] === 'finished') {
                     $videoInfo['previewUrl'] = $thumbnail['formats']['mp4'];
                     $videoInfo['width'] = $asset->getWidth();
                     $videoInfo['height'] = $asset->getHeight();

@@ -83,23 +83,23 @@ class QueryParams
         $filters = json_decode($filterString);
         $db = \OpenDxp\Db::get();
         foreach ($filters as $f) {
-            if ($f->type == 'string') {
+            if ($f->type === 'string') {
                 if (in_array($f->property, $matchExact)) {
                     $conditions[$f->property][] = ' ' . $db->quoteIdentifier($f->property) . ' = ' . $db->quote($f->value) . ' ';
                 } else {
                     $conditions[$f->property][] = ' ' . $db->quoteIdentifier($f->property) . ' LIKE ' . $db->quote('%' . $f->value . '%') . ' ';
                 }
-            } elseif ($f->type == 'numeric') {
+            } elseif ($f->type === 'numeric') {
                 $symbol = null;
-                if ($f->operator == 'eq') {
+                if ($f->operator === 'eq') {
                     $symbol = ' = ';
-                } elseif ($f->operator == 'lt') {
+                } elseif ($f->operator === 'lt') {
                     $symbol = ' < ';
-                } elseif ($f->operator == 'gt') {
+                } elseif ($f->operator === 'gt') {
                     $symbol = ' > ';
                 }
                 $conditions[$f->property][] = ' ' . $db->quoteIdentifier($f->property)  . ' ' . $symbol . $db->quote($f->value) . ' ';
-            } elseif ($f->type == 'date') {
+            } elseif ($f->type === 'date') {
                 /**
                  * make sure you pass the date as timestamp
                  *
@@ -107,12 +107,12 @@ class QueryParams
                  */
                 $date = Carbon::createFromTimestamp($f->value)->setTime(0, 0, 0);
 
-                if ($f->operator == 'eq') {
+                if ($f->operator === 'eq') {
                     $conditions[$f->property][] = ' ' . $f->property . ' >= ' . $db->quote($date->getTimestamp());
                     $conditions[$f->property][] = ' ' . $f->property . ' <= ' . $db->quote($date->addDay()->subSecond()->getTimestamp());
-                } elseif ($f->operator == 'lt') {
+                } elseif ($f->operator === 'lt') {
                     $conditions[$f->property][] = ' ' . $f->property . ' < ' . $db->quote($date->getTimestamp());
-                } elseif ($f->operator == 'gt') {
+                } elseif ($f->operator === 'gt') {
                     $conditions[$f->property][] = ' ' . $f->property . ' > ' . $db->quote($date->addDay()->subSecond()->getTimestamp());
                 }
             } else {

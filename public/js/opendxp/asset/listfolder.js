@@ -278,8 +278,8 @@ opendxp.asset.listfolder = Class.create(opendxp.asset.helpers.gridTabAbstract, {
                 }.bind(this),
                 celldblclick: function(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
                     var columns = grid.grid.getColumnManager().getColumns();
-                    if(columns[cellIndex].dataIndex == 'id~system' || columns[cellIndex].dataIndex == 'fullpath~system'
-                        || columns[cellIndex].dataIndex == 'preview~system') {
+                    if(columns[cellIndex].dataIndex === 'id~system' || columns[cellIndex].dataIndex === 'fullpath~system'
+                        || columns[cellIndex].dataIndex === 'preview~system') {
                         var data = this.store.getAt(rowIndex);
                         opendxp.helpers.openAsset(data.id, data.get("type~system"));
                     }

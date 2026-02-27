@@ -1683,13 +1683,13 @@ opendxp.helpers.sendTestEmail = function (from, to, subject, emailType, document
         fieldLabel: t('type'),
         listeners: {
             select: function(t) {
-                if(t.value == 'text' || t.value == 'html') {
+                if(t.value === 'text' || t.value === 'html') {
                     emailContentTextField.show();
                 } else {
                     emailContentTextField.hide();
                 }
 
-                if(t.value == 'document') {
+                if(t.value === 'document') {
                     documentComponent.show();
                     paramGrid.show();
                 } else {
@@ -1843,11 +1843,11 @@ opendxp.helpers.sendTestEmail = function (from, to, subject, emailType, document
 
     if(emailType) {
         emailTypeDropdown.setValue(emailType);
-        if(emailType == 'document') {
+        if(emailType === 'document') {
             documentComponent.show();
             paramGrid.show();
         }
-        if(emailType == 'html' || emailType == 'text') {
+        if(emailType === 'html' || emailType === 'text') {
             emailContentTextField.show();
         }
     }
@@ -3213,7 +3213,7 @@ opendxp.helpers.treeToolTipShow = function (el, record, item) {
         var offsetTreeNode = Ext.get(item).getXY();
         var parentTree = el.ownerCt.ownerCt;
 
-        if(parentTree.region == 'west') {
+        if(parentTree.region === 'west') {
             opendxp_tooltip.applyStyles({
                 top: (offsetTreeNode[1] + 8) + "px",
                 left: offsetTabPanel[0] + "px",
@@ -3221,7 +3221,7 @@ opendxp.helpers.treeToolTipShow = function (el, record, item) {
             });
         }
 
-        if(parentTree.region == 'east') {
+        if(parentTree.region === 'east') {
             opendxp_tooltip.addCls('right');
             opendxp_tooltip.applyStyles({
                 top: (offsetTreeNode[1] + 8) + "px",
@@ -3324,7 +3324,7 @@ opendxp.helpers.deleteConfirm = function (title, name, deleteCallback) {
     Ext.Msg.confirm(t('delete'), sprintf(t('delete_message_advanced'),
             title, name),
         function (btn) {
-            if (btn == 'yes') {
+            if (btn === 'yes') {
                 if (typeof deleteCallback == "function") {
                     deleteCallback();
                 }

@@ -313,7 +313,7 @@ function uniqid(prefix, more_entropy) {
     // *     returns 2: 'fooa30285b1cd361'
     // *     example 3: uniqid('bar', true);
     // *     returns 3: 'bara20285b23dfd1.31879087'
-    if (typeof prefix == 'undefined') {
+    if (typeof prefix === 'undefined') {
         prefix = "";
     }
 
@@ -379,7 +379,7 @@ function empty (mixed_var) {
         return true;
     }
 
-    if (typeof mixed_var == 'object') {
+    if (typeof mixed_var === 'object') {
         for (key in mixed_var) {
             return false;
         }
@@ -507,7 +507,7 @@ function base64_encode(data) {
 
     // mozilla has this native
     // - but breaks in 2.0.0.12!
-    //if (typeof this.window['atob'] == 'function') {
+    //if (typeof this.window['atob'] === 'function') {
     //    return atob(data);
     //}
 
@@ -569,7 +569,7 @@ function base64_decode(data) {
     // *     returns 1: 'Kevin van Zonneveld'
     // mozilla has this native
     // - but breaks in 2.0.0.12!
-    //if (typeof this.window['btoa'] == 'function') {
+    //if (typeof this.window['btoa'] === 'function') {
     //    return btoa(data);
     //}
 
@@ -1500,7 +1500,7 @@ function implode (glue, pieces) {
 function insertTextToFormElementAtCursor(txtarea, text) {
     var scrollPos = txtarea.scrollTop;
     var strPos = 0;
-    var br = ((txtarea.selectionStart || txtarea.selectionStart == '0') ?
+    var br = ((txtarea.selectionStart || txtarea.selectionStart === '0') ?
         "ff" : (document.selection ? "ie" : false ) );
     if (br == "ie") {
         txtarea.focus();
@@ -1592,7 +1592,7 @@ sprintf = function ()
         var pPrecision = a[5], pType = a[6], rightPart = a[7];
 
         numMatches++;
-        if (pType == '%')
+        if (pType === '%')
         {
             subst = '%';
         }
@@ -1612,17 +1612,17 @@ sprintf = function ()
             var minLength = -1;
             if (pMinLength) minLength = parseInt(pMinLength);
             var precision = -1;
-            if (pPrecision && pType == 'f') precision = parseInt(pPrecision.substring(1));
+            if (pPrecision && pType === 'f') precision = parseInt(pPrecision.substring(1));
             var subst = param;
-            if (pType == 'b') subst = parseInt(param).toString(2);
-            else if (pType == 'c') subst = String.fromCharCode(parseInt(param));
-            else if (pType == 'd') subst = parseInt(param) ? parseInt(param) : 0;
-            else if (pType == 'u') subst = Math.abs(param);
-            else if (pType == 'f') subst = (precision > -1) ? Math.round(parseFloat(param) * Math.pow(10, precision)) / Math.pow(10, precision): parseFloat(param);
-            else if (pType == 'o') subst = parseInt(param).toString(8);
-            else if (pType == 's') subst = param;
-            else if (pType == 'x') subst = ('' + parseInt(param).toString(16)).toLowerCase();
-            else if (pType == 'X') subst = ('' + parseInt(param).toString(16)).toUpperCase();
+            if (pType === 'b') subst = parseInt(param).toString(2);
+            else if (pType === 'c') subst = String.fromCharCode(parseInt(param));
+            else if (pType === 'd') subst = parseInt(param) ? parseInt(param) : 0;
+            else if (pType === 'u') subst = Math.abs(param);
+            else if (pType === 'f') subst = (precision > -1) ? Math.round(parseFloat(param) * Math.pow(10, precision)) / Math.pow(10, precision): parseFloat(param);
+            else if (pType === 'o') subst = parseInt(param).toString(8);
+            else if (pType === 's') subst = param;
+            else if (pType === 'x') subst = ('' + parseInt(param).toString(16)).toLowerCase();
+            else if (pType === 'X') subst = ('' + parseInt(param).toString(16)).toUpperCase();
         }
         arguments[numSubstitutions] = subst;
         str = leftpart + '${'+numSubstitutions+'}' + rightPart;
@@ -1706,7 +1706,7 @@ function array_merge_recursive (arr1, arr2){
     } else if ((arr1 && (arr1 instanceof Object)) && (arr2 && (arr2 instanceof Object))) {
         for (idx in arr2) {
             if (idx in arr1) {
-                if (typeof arr1[idx] == 'object' && typeof arr2 == 'object') {
+                if (typeof arr1[idx] === 'object' && typeof arr2 === 'object') {
                     arr1[idx] = this.array_merge(arr1[idx], arr2[idx]);
                 } else {
                     arr1[idx] = arr2[idx];

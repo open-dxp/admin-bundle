@@ -808,7 +808,7 @@ class ElementController extends AdminAbstractController
         $fieldname = $context['fieldname'];
         $fd = null;
 
-        if ($ownerType == 'object') {
+        if ($ownerType === 'object') {
             $subContainerType = $context['subContainerType'] ?? null;
             if ($subContainerType) {
                 $subContainerKey = $context['subContainerKey'];
@@ -819,15 +819,15 @@ class ElementController extends AdminAbstractController
             } else {
                 $fd = $source->getClass()->getFieldDefinition($fieldname);
             }
-        } elseif ($ownerType == 'localizedfield') {
+        } elseif ($ownerType === 'localizedfield') {
             $localizedfields = $source->getClass()->getFieldDefinition('localizedfields');
             if ($localizedfields instanceof DataObject\ClassDefinition\Data\Localizedfields) {
                 $fd = $localizedfields->getFieldDefinition($fieldname);
             }
-        } elseif ($ownerType == 'objectbrick') {
+        } elseif ($ownerType === 'objectbrick') {
             $fdBrick = DataObject\Objectbrick\Definition::getByKey($context['containerKey']);
             $fd = $fdBrick->getFieldDefinition($fieldname);
-        } elseif ($ownerType == 'fieldcollection') {
+        } elseif ($ownerType === 'fieldcollection') {
             $containerKey = $context['containerKey'];
             $fdCollection = DataObject\Fieldcollection\Definition::getByKey($containerKey);
             if (($context['subContainerType'] ?? null) === 'localizedfield') {
