@@ -69,13 +69,11 @@ class DataObjectController extends ElementControllerBase implements KernelContro
     use UserNameTrait;
 
     /** On active edit lock answer with editlock response */
-    const TASK_RESPONSE = 'response';
-
+    public const string TASK_RESPONSE = 'response';
     /** On active edit lock overwrite with new user */
-    const TASK_OVERWRITE = 'overwrite';
-
+    public const string TASK_OVERWRITE = 'overwrite';
     /** On active edit lock keep existing entry */
-    const TASK_KEEP = 'keep';
+    public const string TASK_KEEP = 'keep';
 
     protected DataObject\Service $_objectService;
 

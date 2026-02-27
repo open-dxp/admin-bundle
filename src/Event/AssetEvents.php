@@ -19,8 +19,6 @@ class AssetEvents
 {
     /**
      * @Event("OpenDxp\Bundle\AdminBundle\Event\Model\AssetDeleteInfoEvent")
-     *
-     * @var string
      */
-    const DELETE_INFO = 'opendxp.asset.deleteInfo';
+    public const string DELETE_INFO = 'opendxp.asset.deleteInfo';
 }

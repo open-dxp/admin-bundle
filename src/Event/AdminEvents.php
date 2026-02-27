@@ -26,7 +26,7 @@ class AdminEvents
      *
      * @var string
      */
-    const LOGIN_REDIRECT = 'opendxp.admin.login.redirect';
+    public const string LOGIN_REDIRECT = 'opendxp.admin.login.redirect';
 
     /**
      * The LOGIN_LOSTPASSWORD event is triggered before the lost password email
@@ -40,7 +40,7 @@ class AdminEvents
      *
      * @var string
      */
-    const LOGIN_LOSTPASSWORD = 'opendxp.admin.login.lostpassword';
+    public const string LOGIN_LOSTPASSWORD = 'opendxp.admin.login.lostpassword';
 
     /**
      * The LOGIN_LOGOUT event is triggered before the user is logged out.
@@ -52,7 +52,7 @@ class AdminEvents
      *
      * @var string
      */
-    const LOGIN_LOGOUT = 'opendxp.admin.login.logout';
+    public const string LOGIN_LOGOUT = 'opendxp.admin.login.logout';
 
     /**
      * The LOGIN_BEFORE_RENDER event is triggered before the login view is rendered.
@@ -71,7 +71,7 @@ class AdminEvents
      *
      * @var string
      */
-    const LOGIN_BEFORE_RENDER = 'opendxp.admin.login.beforeRender';
+    public const string LOGIN_BEFORE_RENDER = 'opendxp.admin.login.beforeRender';
 
     /**
      * The INDEX_SETTINGS event is triggered when the settings object is built for the index page.
@@ -80,7 +80,7 @@ class AdminEvents
      *
      * @var string
      */
-    const INDEX_ACTION_SETTINGS = 'opendxp.admin.indexAction.settings';
+    public const string INDEX_ACTION_SETTINGS = 'opendxp.admin.indexAction.settings';
 
     /**
      * Fired before the request params are parsed. This event apply to the grid list.
@@ -93,7 +93,7 @@ class AdminEvents
      *
      * @var string
      */
-    const OBJECT_LIST_BEFORE_FILTER_PREPARE = 'opendxp.admin.object.list.beforeFilterPrepare';
+    public const string OBJECT_LIST_BEFORE_FILTER_PREPARE = 'opendxp.admin.object.list.beforeFilterPrepare';
 
     /**
      * Allows you to modify the object list before it is loaded. This is a global event (search list, grid list, tree list, ...).
@@ -107,7 +107,7 @@ class AdminEvents
      *
      * @var string
      */
-    const OBJECT_LIST_BEFORE_LIST_LOAD = 'opendxp.admin.object.list.beforeListLoad';
+    public const string OBJECT_LIST_BEFORE_LIST_LOAD = 'opendxp.admin.object.list.beforeListLoad';
 
     /**
      * Allows you to modify the object list before it is prepared for export.
@@ -121,7 +121,7 @@ class AdminEvents
      *
      * @var string
      */
-    const OBJECT_LIST_BEFORE_EXPORT_PREPARE = 'opendxp.admin.object.list.beforeExportPrepare';
+    public const string OBJECT_LIST_BEFORE_EXPORT_PREPARE = 'opendxp.admin.object.list.beforeExportPrepare';
 
     /**
      * Allows you to modify the object list before it is exported.
@@ -135,7 +135,7 @@ class AdminEvents
      *
      * @var string
      */
-    const OBJECT_LIST_BEFORE_EXPORT = 'opendxp.admin.object.list.beforeExport';
+    public const string OBJECT_LIST_BEFORE_EXPORT = 'opendxp.admin.object.list.beforeExport';
 
     /**
      * Allows you to modify the result after the list was loaded. This event apply to the grid list.
@@ -149,7 +149,7 @@ class AdminEvents
      *
      * @var string
      */
-    const OBJECT_LIST_AFTER_LIST_LOAD = 'opendxp.admin.object.list.afterListLoad';
+    public const string OBJECT_LIST_AFTER_LIST_LOAD = 'opendxp.admin.object.list.afterListLoad';
 
     /**
      * Allows to implement an additional condition for the object list when the search field within the grid is used.
@@ -164,7 +164,7 @@ class AdminEvents
      *
      * @var string
      */
-    const OBJECT_LIST_HANDLE_FULLTEXT_QUERY = 'opendxp.admin.object.list.handleFulltextQuery';
+    public const string OBJECT_LIST_HANDLE_FULLTEXT_QUERY = 'opendxp.admin.object.list.handleFulltextQuery';
 
     /**
      * Fired before the request params are parsed. This event apply to both the folder content preview list and the grid list.
@@ -177,7 +177,7 @@ class AdminEvents
      *
      * @var string
      */
-    const ASSET_LIST_BEFORE_FILTER_PREPARE = 'opendxp.admin.asset.list.beforeFilterPrepare';
+    public const string ASSET_LIST_BEFORE_FILTER_PREPARE = 'opendxp.admin.asset.list.beforeFilterPrepare';
 
     /**
      * Allows you to modify the asset list before it is loaded. This is a global event (folder content preview list, grid list, tree list, ...).
@@ -191,7 +191,7 @@ class AdminEvents
      *
      * @var string
      */
-    const ASSET_LIST_BEFORE_LIST_LOAD = 'opendxp.admin.asset.list.beforeListLoad';
+    public const string ASSET_LIST_BEFORE_LIST_LOAD = 'opendxp.admin.asset.list.beforeListLoad';
 
     /**
      * Arguments:
@@ -202,7 +202,7 @@ class AdminEvents
      *
      * @var string
      */
-    const ASSET_GET_FIELD_GRID_CONFIG = 'opendxp.admin.asset.getFieldGridConfig';
+    public const string ASSET_GET_FIELD_GRID_CONFIG = 'opendxp.admin.asset.getFieldGridConfig';
 
     /**
      * Allows you to modify the result after the list was loaded. This event apply to both the folder content preview list and the grid list.
@@ -216,7 +216,7 @@ class AdminEvents
      *
      * @var string
      */
-    const ASSET_LIST_AFTER_LIST_LOAD = 'opendxp.admin.asset.list.afterListLoad';
+    public const string ASSET_LIST_AFTER_LIST_LOAD = 'opendxp.admin.asset.list.afterListLoad';
 
     /**
      * Allows you to modify the data from the listfolder grid before it gets processed
@@ -230,7 +230,7 @@ class AdminEvents
      *
      * @var string
      */
-    const ASSET_LIST_BEFORE_UPDATE = 'opendxp.admin.asset.list.beforeUpdate';
+    public const string ASSET_LIST_BEFORE_UPDATE = 'opendxp.admin.asset.list.beforeUpdate';
 
     /**
      * Allows you to modify the batch update data from the listfolder grid before it gets processed
@@ -244,7 +244,7 @@ class AdminEvents
      *
      * @var string
      */
-    const ASSET_LIST_BEFORE_BATCH_UPDATE = 'opendxp.admin.asset.list.beforeBatchUpdate';
+    public const string ASSET_LIST_BEFORE_BATCH_UPDATE = 'opendxp.admin.asset.list.beforeBatchUpdate';
 
     /**
      * Fired before the request params are parsed. This event apply to the seo panel tree.
@@ -257,7 +257,7 @@ class AdminEvents
      *
      * @var string
      */
-    const DOCUMENT_LIST_BEFORE_FILTER_PREPARE = 'opendxp.admin.document.list.beforeFilterPrepare';
+    public const string DOCUMENT_LIST_BEFORE_FILTER_PREPARE = 'opendxp.admin.document.list.beforeFilterPrepare';
 
     /**
      * Allows you to modify the document list before it is loaded. This is a global event (seo panel tree, tree list, ...).
@@ -271,7 +271,7 @@ class AdminEvents
      *
      * @var string
      */
-    const DOCUMENT_LIST_BEFORE_LIST_LOAD = 'opendxp.admin.document.list.beforeListLoad';
+    public const string DOCUMENT_LIST_BEFORE_LIST_LOAD = 'opendxp.admin.document.list.beforeListLoad';
 
     /**
      * Allows you to modify the result after the list was loaded. This event apply to the seo panel tree.
@@ -285,7 +285,7 @@ class AdminEvents
      *
      * @var string
      */
-    const DOCUMENT_LIST_AFTER_LIST_LOAD = 'opendxp.admin.document.list.afterListLoad';
+    public const string DOCUMENT_LIST_AFTER_LIST_LOAD = 'opendxp.admin.document.list.afterListLoad';
 
     /**
      * Fired before the request params are parsed.
@@ -299,7 +299,7 @@ class AdminEvents
      *
      * @var string
      */
-    const ASSET_GET_PRE_SEND_DATA = 'opendxp.admin.asset.get.preSendData';
+    public const string ASSET_GET_PRE_SEND_DATA = 'opendxp.admin.asset.get.preSendData';
 
     /**
      * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset\AssetController
@@ -310,7 +310,7 @@ class AdminEvents
      *
      * @var string
      */
-    const ASSET_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA = 'opendxp.admin.asset.treeGetChildrenById.preSendData';
+    public const string ASSET_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA = 'opendxp.admin.asset.treeGetChildrenById.preSendData';
 
     /**
      * Fired before the request params are parsed.
@@ -324,7 +324,7 @@ class AdminEvents
      *
      * @var string
      */
-    const DOCUMENT_GET_PRE_SEND_DATA = 'opendxp.admin.document.get.preSendData';
+    public const string DOCUMENT_GET_PRE_SEND_DATA = 'opendxp.admin.document.get.preSendData';
 
     /**
      * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\DocumentController
@@ -335,7 +335,7 @@ class AdminEvents
      *
      * @var string
      */
-    const DOCUMENT_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA = 'opendxp.admin.document.treeGetChildrenById.preSendData';
+    public const string DOCUMENT_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA = 'opendxp.admin.document.treeGetChildrenById.preSendData';
 
     /**
      * Fired before the edit lock is handled.
@@ -349,7 +349,7 @@ class AdminEvents
      *
      * @var string
      */
-    const OBJECT_GET_IS_LOCKED = 'opendxp.admin.dataobject.get.isLocked';
+    public const string OBJECT_GET_IS_LOCKED = 'opendxp.admin.dataobject.get.isLocked';
 
     /**
      * Fired before the request params are parsed.
@@ -363,7 +363,7 @@ class AdminEvents
      *
      * @var string
      */
-    const OBJECT_GET_PRE_SEND_DATA = 'opendxp.admin.dataobject.get.preSendData';
+    public const string OBJECT_GET_PRE_SEND_DATA = 'opendxp.admin.dataobject.get.preSendData';
 
     /**
      * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject\DataObjectHelperController
@@ -377,7 +377,7 @@ class AdminEvents
      *
      * @var string
      */
-    const OBJECT_GRID_GET_COLUMN_CONFIG_PRE_SEND_DATA = 'opendxp.admin.dataobject.gridGetColumnConfig.preSendData';
+    public const string OBJECT_GRID_GET_COLUMN_CONFIG_PRE_SEND_DATA = 'opendxp.admin.dataobject.gridGetColumnConfig.preSendData';
 
     /**
      * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObjectController
@@ -388,7 +388,7 @@ class AdminEvents
      *
      * @var string
      */
-    const OBJECT_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA = 'opendxp.admin.dataobject.treeGetChildrenById.preSendData';
+    public const string OBJECT_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA = 'opendxp.admin.dataobject.treeGetChildrenById.preSendData';
 
     /**
      * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
@@ -400,7 +400,7 @@ class AdminEvents
      *
      * @var string
      */
-    const CLASS_FIELDCOLLECTION_LIST_PRE_SEND_DATA = 'opendxp.admin.class.fieldcollectionList.preSendData';
+    public const string CLASS_FIELDCOLLECTION_LIST_PRE_SEND_DATA = 'opendxp.admin.class.fieldcollectionList.preSendData';
 
     /**
      * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
@@ -412,7 +412,7 @@ class AdminEvents
      *
      * @var string
      */
-    const CLASS_OBJECT_ICONS_PRE_SEND_DATA = 'opendxp.admin.class.dataobject.preSendData';
+    public const string CLASS_OBJECT_ICONS_PRE_SEND_DATA = 'opendxp.admin.class.dataobject.preSendData';
 
     /**
      * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
@@ -424,7 +424,7 @@ class AdminEvents
      *
      * @var string
      */
-    const CLASS_OBJECTBRICK_LIST_PRE_SEND_DATA = 'opendxp.admin.class.objectbrickList.preSendData';
+    public const string CLASS_OBJECTBRICK_LIST_PRE_SEND_DATA = 'opendxp.admin.class.objectbrickList.preSendData';
 
     /**
      * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
@@ -435,7 +435,7 @@ class AdminEvents
      *
      * @var string
      */
-    const CLASS_OBJECTBRICK_UPDATE_DEFINITION = 'opendxp.admin.class.objectbrick.updateDefinition';
+    public const string CLASS_OBJECTBRICK_UPDATE_DEFINITION = 'opendxp.admin.class.objectbrick.updateDefinition';
 
     /**
      * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
@@ -446,7 +446,7 @@ class AdminEvents
      *
      * @var string
      */
-    const CLASS_SELECTOPTIONS_LIST_PRE_SEND_DATA = 'opendxp.admin.class.selectoptionsList.preSendData';
+    public const string CLASS_SELECTOPTIONS_LIST_PRE_SEND_DATA = 'opendxp.admin.class.selectoptionsList.preSendData';
 
     /**
      * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
@@ -457,7 +457,7 @@ class AdminEvents
      *
      * @var string
      */
-    const CLASS_SELECTOPTIONS_UPDATE_CONFIGURATION = 'opendxp.admin.class.selectoptions.updateDefinition';
+    public const string CLASS_SELECTOPTIONS_UPDATE_CONFIGURATION = 'opendxp.admin.class.selectoptions.updateDefinition';
 
     /**
      * Fired before an element is opened
@@ -471,7 +471,7 @@ class AdminEvents
      *
      * @var string
      */
-    const RESOLVE_ELEMENT = 'opendxp.admin.resolve.element';
+    public const string RESOLVE_ELEMENT = 'opendxp.admin.resolve.element';
 
     /**
      * Fired before an element is opened
@@ -484,7 +484,7 @@ class AdminEvents
      *
      * @var string
      */
-    const RESOLVE_ELEMENT_ADMIN_STYLE = 'opendxp.admin.resolve.elementAdminStyle';
+    public const string RESOLVE_ELEMENT_ADMIN_STYLE = 'opendxp.admin.resolve.elementAdminStyle';
 
     /**
      * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset\AssetController
@@ -496,7 +496,7 @@ class AdminEvents
      *
      * @var string
      */
-    const ASSET_METADATA_PRE_SET = 'opendxp.admin.asset.metadata.preSave';
+    public const string ASSET_METADATA_PRE_SET = 'opendxp.admin.asset.metadata.preSave';
 
     /**
      * This event is fired after OpenDXP generates the runtime Perspective
@@ -509,5 +509,5 @@ class AdminEvents
      *
      * @var string
      */
-    public const PERSPECTIVE_POST_GET_RUNTIME = 'opendxp.admin.perspective.postGetRuntime';
+    public const string PERSPECTIVE_POST_GET_RUNTIME = 'opendxp.admin.perspective.postGetRuntime';
 }
