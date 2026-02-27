@@ -51,19 +51,13 @@ abstract class DocumentControllerBase extends AdminAbstractController implements
     use ElementEditLockHelperTrait;
     use UserNameTrait;
 
-    const TASK_PUBLISH = 'publish';
-
-    const TASK_UNPUBLISH = 'unpublish';
-
-    const TASK_SAVE = 'save';
-
-    const TASK_VERSION = 'version';
-
-    const TASK_SCHEDULER = 'scheduler';
-
-    const TASK_AUTOSAVE = 'autosave';
-
-    const TASK_DELETE = 'delete';
+    public const string TASK_PUBLISH = 'publish';
+    public const string TASK_UNPUBLISH = 'unpublish';
+    public const string TASK_SAVE = 'save';
+    public const string TASK_VERSION = 'version';
+    public const string TASK_SCHEDULER = 'scheduler';
+    public const string TASK_AUTOSAVE = 'autosave';
+    public const string TASK_DELETE = 'delete';
 
     public function __construct(protected ElementServiceInterface $elementService)
     {

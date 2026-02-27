@@ -25,9 +25,9 @@ use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 
 class Installer extends SettingsStoreAwareInstaller
 {
-    protected const USER_PERMISSIONS_CATEGORY = 'OpenDxp Admin Bundle';
+    protected const string USER_PERMISSIONS_CATEGORY = 'OpenDxp Admin Bundle';
 
-    const USER_PERMISSIONS = [
+    public const array USER_PERMISSIONS = [
         'admin_translations',
         'gdpr_data_extractor',
         'system_appearance_settings',

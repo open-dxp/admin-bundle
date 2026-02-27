@@ -26,21 +26,16 @@ class ElementAdminStyleEvent extends Event
     /**
      * Style needed for tree
      */
-    const CONTEXT_TREE = 1;
-
+    public const int CONTEXT_TREE = 1;
     /**
      * Style needed for element editor
      */
-    const CONTEXT_EDITOR = 2;
-
+    public const int CONTEXT_EDITOR = 2;
     /**
      * Style needed for quicksearch
      */
-    const CONTEXT_SEARCH = 3;
+    public const int CONTEXT_SEARCH = 3;
 
-    /**
-     * ElementAdminStyleEvent constructor.
-     */
     public function __construct(
         protected ElementInterface $element,
         protected AdminStyle $adminStyle,
