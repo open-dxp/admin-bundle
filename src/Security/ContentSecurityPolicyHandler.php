@@ -100,6 +100,9 @@ class ContentSecurityPolicyHandler implements LoggerAwareInterface
         return isset($this->allowedUrls[$key]) && is_array($this->allowedUrls[$key]) ? implode(' ', $this->allowedUrls[$key]) : '';
     }
 
+    /**
+     * @return $this
+     */
     public function addAllowedUrls(string $key, array $value): static
     {
         if (!isset($this->allowedUrls[$key])) {
@@ -113,6 +116,9 @@ class ContentSecurityPolicyHandler implements LoggerAwareInterface
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function setCspHeader(string $key, string $value): static
     {
         $this->cspHeaderOptions[$key] = $value;
