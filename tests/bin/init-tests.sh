@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#
+# ATTENTION!
+# This file is deprecated and will be removed with admin-bundle 2.0
+#
+
 docker-compose down -v --remove-orphans
 docker-compose up -d
 
