@@ -16,6 +16,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Tests\Unit\Event;
 
+use OpenDxp\Bundle\AdminBundle\Dto\SiteCustomSettings\CheckboxNodeConfig;
+use OpenDxp\Bundle\AdminBundle\Dto\SiteCustomSettings\DropdownNodeConfig;
+use OpenDxp\Bundle\AdminBundle\Dto\SiteCustomSettings\InputNodeConfig;
+use OpenDxp\Bundle\AdminBundle\Dto\SiteCustomSettings\TextNodeConfig;
 use OpenDxp\Bundle\AdminBundle\Enum\SiteCustomConfigNodeType;
 use OpenDxp\Bundle\AdminBundle\Event\SiteCustomSettingsEvent;
 use OpenDxp\Bundle\AdminBundle\Tests\Support\Test\UnitTestCase;
@@ -41,10 +45,10 @@ class SiteCustomSettingsEventTest extends UnitTestCase
     {
         $event = new SiteCustomSettingsEvent($this->createSite());
 
-        $event->addConfigNode(SiteCustomConfigNodeType::INPUT,    'seo',  'title',       'SEO Title',   []);
-        $event->addConfigNode(SiteCustomConfigNodeType::CHECKBOX, 'seo',  'noindex',     'No Index',    []);
-        $event->addConfigNode(SiteCustomConfigNodeType::DROPDOWN, 'i18n', 'zone',        'Zone',        ['store' => []]);
-        $event->addConfigNode(SiteCustomConfigNodeType::TEXT,     'app',  'description', 'Description', []);
+        $event->addConfigNode(new InputNodeConfig(),    'seo',  'title',       'SEO Title');
+        $event->addConfigNode(new CheckboxNodeConfig(), 'seo',  'noindex',     'No Index');
+        $event->addConfigNode(new DropdownNodeConfig(), 'i18n', 'zone',        'Zone');
+        $event->addConfigNode(new TextNodeConfig(),     'app',  'description', 'Description');
 
         $nodes = $event->getConfigNodes();
 
@@ -58,11 +62,13 @@ class SiteCustomSettingsEventTest extends UnitTestCase
         $event = new SiteCustomSettingsEvent($this->createSite());
 
         $event->addConfigNode(
-            SiteCustomConfigNodeType::DROPDOWN,
+            new DropdownNodeConfig(
+                store: [['label' => 'A', 'value' => 'a']],
+                required: true,
+            ),
             'app',
             'my_field',
             'My Field',
-            ['required' => true, 'store' => [['label' => 'A', 'value' => 'a']]]
         );
 
         $node = $event->getConfigNodes()['app'][0];
@@ -70,28 +76,31 @@ class SiteCustomSettingsEventTest extends UnitTestCase
         self::assertSame(SiteCustomConfigNodeType::DROPDOWN->value, $node['type']);
         self::assertSame('my_field', $node['name']);
         self::assertSame('My Field', $node['label']);
-        self::assertSame(['required' => true, 'store' => [['label' => 'A', 'value' => 'a']]], $node['config']);
+        self::assertTrue($node['config']['required']);
+        self::assertSame([['label' => 'A', 'value' => 'a']], $node['config']['store']);
     }
 
     public function testMultipleNodesInSameScopeAreAppended(): void
     {
         $event = new SiteCustomSettingsEvent($this->createSite());
 
-        $event->addConfigNode(SiteCustomConfigNodeType::INPUT, 'app', 'first',  'First',  []);
-        $event->addConfigNode(SiteCustomConfigNodeType::INPUT, 'app', 'second', 'Second', []);
-        $event->addConfigNode(SiteCustomConfigNodeType::INPUT, 'app', 'third',  'Third',  []);
+        $event->addConfigNode(new InputNodeConfig(), 'app', 'first',  'First');
+        $event->addConfigNode(new InputNodeConfig(), 'app', 'second', 'Second');
+        $event->addConfigNode(new InputNodeConfig(), 'app', 'third',  'Third');
 
-        self::assertCount(3, $event->getConfigNodes()['app']);
-        self::assertSame('first',  $event->getConfigNodes()['app'][0]['name']);
-        self::assertSame('second', $event->getConfigNodes()['app'][1]['name']);
-        self::assertSame('third',  $event->getConfigNodes()['app'][2]['name']);
+        $nodes = $event->getConfigNodes()['app'];
+
+        self::assertCount(3, $nodes);
+        self::assertSame('first',  $nodes[0]['name']);
+        self::assertSame('second', $nodes[1]['name']);
+        self::assertSame('third',  $nodes[2]['name']);
     }
 
-    public function testNodeTypeValuesMatchExpectedExtJsTypes(): void
+    public function testEachDtoReturnsCorrectType(): void
     {
-        self::assertSame('input',    SiteCustomConfigNodeType::INPUT->value);
-        self::assertSame('text',     SiteCustomConfigNodeType::TEXT->value);
-        self::assertSame('checkbox', SiteCustomConfigNodeType::CHECKBOX->value);
-        self::assertSame('combobox', SiteCustomConfigNodeType::DROPDOWN->value);
+        self::assertSame(SiteCustomConfigNodeType::INPUT,    (new InputNodeConfig())->getType());
+        self::assertSame(SiteCustomConfigNodeType::TEXT,     (new TextNodeConfig())->getType());
+        self::assertSame(SiteCustomConfigNodeType::CHECKBOX, (new CheckboxNodeConfig())->getType());
+        self::assertSame(SiteCustomConfigNodeType::DROPDOWN, (new DropdownNodeConfig())->getType());
     }
 }

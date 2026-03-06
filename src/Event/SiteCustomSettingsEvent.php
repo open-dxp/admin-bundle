@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Event;
 
-use OpenDxp\Bundle\AdminBundle\Enum\SiteCustomConfigNodeType;
+use OpenDxp\Bundle\AdminBundle\Dto\SiteCustomSettings\NodeConfigInterface;
 use OpenDxp\Model\Site;
 use Symfony\Contracts\EventDispatcher\Event;
 
@@ -29,17 +29,17 @@ class SiteCustomSettingsEvent extends Event
     {
     }
 
-    public function addConfigNode(SiteCustomConfigNodeType $type, string $scope, string $name, string $label, array $config): void
+    public function addConfigNode(NodeConfigInterface $config, string $scope, string $name, string $label): void
     {
         if (!array_key_exists($scope, $this->configNodes)) {
             $this->configNodes[$scope] = [];
         }
 
         $this->configNodes[$scope][] = [
-            'type'   => $type->value,
+            'type'   => $config->getType()->value,
             'name'   => $name,
             'label'  => $label,
-            'config' => $config,
+            'config' => $config->toArray(),
         ];
     }
 

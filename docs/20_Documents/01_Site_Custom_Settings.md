@@ -4,7 +4,7 @@ The site configuration panel in the admin UI can be extended with custom fields
 by subscribing to the `AdminEvents::SITE_CUSTOM_SETTINGS` event.
 
 This allows other bundles to add their own configuration fields (inputs, dropdowns, checkboxes)
-that are stored per-site in `Site::getCustomSettings()` / `Site::setCustomSettings()`.
+that are stored per-site in `Site::getCustomSettings()`.
 
 ## When the Event Fires
 
@@ -24,30 +24,31 @@ AdminEvents::SITE_CUSTOM_SETTINGS // 'opendxp.admin.site.customSettings'
 
 ### `SiteCustomSettingsEvent`
 
-| Method                                                  | Description                             |
-|---------------------------------------------------------|-----------------------------------------|
-| `getSite(): Site`                                       | The site being configured               |
-| `addConfigNode(type, scope, name, label, config): void` | Register a custom field                 |
-| `getConfigNodes(): array`                               | All registered fields, grouped by scope |
-
-### `SiteCustomConfigNodeType` (enum)
-
-| Case       | ExtJS field type | Use for                       |
-|------------|------------------|-------------------------------|
-| `INPUT`    | `textfield`      | Single-line text              |
-| `TEXT`     | `textarea`       | Multi-line text               |
-| `CHECKBOX` | `checkbox`       | Boolean toggle                |
-| `DROPDOWN` | `combobox`       | Select from a list of options |
+| Method                                            | Description                             |
+|---------------------------------------------------|-----------------------------------------|
+| `getSite(): Site`                                 | The site being configured               |
+| `addConfigNode(config, scope, name, label): void` | Register a custom field                 |
+| `getConfigNodes(): array`                         | All registered fields, grouped by scope |
 
 ### `addConfigNode()` Parameters
 
-| Parameter | Type                       | Description                                                                                           |
-|-----------|----------------------------|-------------------------------------------------------------------------------------------------------|
-| `$type`   | `SiteCustomConfigNodeType` | The field type                                                                                        |
-| `$scope`  | `string`                   | Groups fields in the panel (e.g. `'app'`, `'seo'`); also used as key prefix when reading back values |
-| `$name`   | `string`                   | Field identifier within the scope                                                                     |
-| `$label`  | `string`                   | Display label in the UI                                                                               |
-| `$config` | `array`                    | Additional ExtJS field config (e.g. `store` for dropdowns, `required`)                                |
+| Parameter | Type                  | Description                                                                              |
+|-----------|-----------------------|------------------------------------------------------------------------------------------|
+| `$config` | `NodeConfigInterface` | Typed DTO — determines field type and available options                                  |
+| `$scope`  | `string`              | Groups fields in the panel (e.g. `'app'`, `'seo'`); used as key when reading back values |
+| `$name`   | `string`              | Field identifier within the scope                                                        |
+| `$label`  | `string`              | Display label in the UI                                                                  |
+
+### Config DTOs (`src/Dto/SiteCustomSettings/`)
+
+Each DTO corresponds to one ExtJS field type and exposes only the options that are valid for it:
+
+| DTO                  | ExtJS type  | Options                                           |
+|----------------------|-------------|---------------------------------------------------|
+| `InputNodeConfig`    | `textfield` | `required`                                        |
+| `TextNodeConfig`     | `textarea`  | `required`                                        |
+| `CheckboxNodeConfig` | `checkbox`  | `checkedValue`, `uncheckedValue`                  |
+| `DropdownNodeConfig` | `combobox`  | `store`, `required`, `displayField`, `valueField` |
 
 ## Stored Data
 
@@ -71,14 +72,12 @@ $all = $site->getCustomSettings();
 
 ## Example: Adding a Zone Dropdown
 
-This example adds a required dropdown:
-
 ```php
 <?php
 
 namespace MyBundle\EventListener\Admin;
 
-use OpenDxp\Bundle\AdminBundle\Enum\SiteCustomConfigNodeType;
+use OpenDxp\Bundle\AdminBundle\Dto\SiteCustomSettings\DropdownNodeConfig;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\SiteCustomSettingsEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -88,36 +87,26 @@ class SiteCustomConfigListener implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            AdminEvents::SITE_CUSTOM_SETTINGS => 'addPropertyToCustomSettings',
+            AdminEvents::SITE_CUSTOM_SETTINGS => 'addZoneConfig',
         ];
     }
 
-    public function addPropertyToCustomSettings(SiteCustomSettingsEvent $event): void
+    public function addZoneConfig(SiteCustomSettingsEvent $event): void
     {
         $event->addConfigNode(
-            type: SiteCustomConfigNodeType::DROPDOWN,
-            scope: 'app',
-            name: 'my_property',
-            label: 'My Property',
-            config: [
-                'required' => true,
-                'store'    => [
-                    ['label' => 'Property 1', 'value' => 'property_1'],
-                    ['label' => 'Property 2', 'value' => 'property_2'],
+            config: new DropdownNodeConfig(
+                store: [
+                    ['label' => 'Zone 1', 'value' => 'zone_1'],
+                    ['label' => 'Zone 2', 'value' => 'zone_2'],
                 ],
-            ]
+                required: true,
+            ),
+            scope: 'app',
+            name: 'zone',
+            label: 'Zone',
         );
     }
 }
-```
-
-Register in `services.yaml` (autoconfiguration handles `EventSubscriberInterface`):
-
-```yaml
-services:
-    MyBundle\EventListener\Admin\SiteCustomConfigListener:
-        tags:
-            - { name: kernel.event_subscriber }
 ```
 
 ## Multiple Scopes
@@ -126,10 +115,10 @@ Multiple bundles can each add their own scoped fields independently:
 
 ```php
 // Bundle A
-$event->addConfigNode(SiteCustomConfigNodeType::INPUT, 'seo', 'tracking_id', 'GA Tracking ID', []);
+$event->addConfigNode(new InputNodeConfig(), 'seo', 'tracking_id', 'GA Tracking ID');
 
 // Bundle B
-$event->addConfigNode(SiteCustomConfigNodeType::CHECKBOX, 'myapp', 'feature_enabled', 'Enable Feature', []);
+$event->addConfigNode(new CheckboxNodeConfig(), 'myapp', 'feature_enabled', 'Enable Feature');
 ```
 
 Results in:
@@ -144,5 +133,5 @@ $site->getCustomSettings() === [
 
 - [`AdminEvents::SITE_CUSTOM_SETTINGS` source](https://github.com/open-dxp/admin-bundle/blob/1.x/src/Event/AdminEvents.php)
 - [`SiteCustomSettingsEvent` source](https://github.com/open-dxp/admin-bundle/blob/1.x/src/Event/SiteCustomSettingsEvent.php)
-- [`SiteCustomConfigNodeType` source](https://github.com/open-dxp/admin-bundle/blob/1.x/src/Enum/SiteCustomConfigNodeType.php)
+- [Config DTOs source](https://github.com/open-dxp/admin-bundle/blob/1.x/src/Dto/SiteCustomSettings/)
 - [Admin Events overview](../10_Extension_Points/01_Events.md)
