@@ -23,6 +23,7 @@ use OpenDxp\Bundle\AdminBundle\Controller\Traits\AdminStyleTrait;
 use OpenDxp\Bundle\AdminBundle\Controller\Traits\UserNameTrait;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\ElementAdminStyleEvent;
+use OpenDxp\Bundle\AdminBundle\Event\SiteCustomSettingsEvent;
 use OpenDxp\Cache\RuntimeCache;
 use OpenDxp\Config;
 use OpenDxp\Controller\KernelControllerEventInterface;
@@ -725,8 +726,23 @@ class DocumentController extends ElementControllerBase implements KernelControll
         return $this->adminJson(['success' => true, 'treeData' => $treeData]);
     }
 
+    #[Route('/get-site-custom-settings', name: 'opendxp_admin_document_document_get_site_custom_settings', methods: ['POST'])]
+    public function getSiteCustomSettingsAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
+    {
+        $site = Site::getById($request->request->getInt('id'));
+
+        $event = new SiteCustomSettingsEvent($site);
+        $eventDispatcher->dispatch($event, AdminEvents::SITE_CUSTOM_SETTINGS);
+
+        $customSettings = $event->getConfigNodes();
+
+        return $this->adminJson([
+            'data' => $customSettings
+        ]);
+    }
+
     #[Route('/update-site', name: 'opendxp_admin_document_document_updatesite', methods: ['PUT'])]
-    public function updateSiteAction(Request $request): JsonResponse
+    public function updateSiteAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
     {
         $domains = $request->request->getString('domains');
         $domains = str_replace(' ', '', $domains);
@@ -743,10 +759,23 @@ class DocumentController extends ElementControllerBase implements KernelControll
 
         foreach ($validLanguages as $language) {
             // localized error pages
-            $requestValue = $request->request->get('errorDocument_localized_' . $language);
+            $requestValue = $request->request->get(sprintf('errorDocument_localized_%s', $language));
 
             if (isset($requestValue)) {
                 $localizedErrorDocuments[$language] = $requestValue;
+            }
+        }
+
+        $event = new SiteCustomSettingsEvent($site);
+        $eventDispatcher->dispatch($event, AdminEvents::SITE_CUSTOM_SETTINGS);
+
+        $customSettings = [];
+        foreach ($event->getConfigNodes() as $scope => $nodes) {
+            foreach ($nodes as $node) {
+                $requestValueName = sprintf('customSettings_%s_%s', $scope, $node['name']);
+                if ($request->request->has($requestValueName)) {
+                    $customSettings[$scope][$node['name']] = $request->request->get($requestValueName);
+                }
             }
         }
 
@@ -755,6 +784,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
         $site->setErrorDocument($request->request->getString('errorDocument'));
         $site->setLocalizedErrorDocuments($localizedErrorDocuments);
         $site->setRedirectToMainDomain($request->request->getBoolean('redirectToMainDomain'));
+        $site->setCustomSettings(count($customSettings) === 0 ? null : $customSettings);
         $site->save();
 
         $site->setRootDocument(null); // do not send the document to the frontend

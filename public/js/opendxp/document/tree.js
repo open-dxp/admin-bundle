@@ -11,7 +11,7 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
- Ext.define('documentreemodel', {
+Ext.define('documentreemodel', {
     extend: 'Ext.data.TreeModel',
     idProperty: 'id',
     fields: [{
@@ -31,7 +31,7 @@ opendxp.document.tree = Class.create({
 
     treeDataUrl: null,
 
-    initialize: function(config, perspectiveCfg) {
+    initialize: function (config, perspectiveCfg) {
         this.treeDataUrl = Routing.generate('opendxp_admin_document_document_treegetchildrenbyid');
         this.perspectiveCfg = perspectiveCfg;
         if (!perspectiveCfg) {
@@ -53,8 +53,7 @@ opendxp.document.tree = Class.create({
                 treeTitle: t('documents'),
                 parentPanel: Ext.getCmp("opendxp_panel_tree_" + this.position)
             };
-        }
-        else {
+        } else {
             this.config = config;
         }
 
@@ -70,8 +69,9 @@ opendxp.document.tree = Class.create({
             },
             success: function (response) {
                 var res = Ext.decode(response.responseText);
-                var callback = function () {};
-                if(res["id"]) {
+                var callback = function () {
+                };
+                if (res["id"]) {
                     callback = this.init.bind(this, res);
                 }
                 opendxp.layout.treepanelmanager.initPanel(this.config.treeId, callback);
@@ -80,14 +80,14 @@ opendxp.document.tree = Class.create({
 
     },
 
-    init: function(rootNodeConfig) {
+    init: function (rootNodeConfig) {
 
         var itemsPerPage = opendxp.settings['document_tree_paging_limit'];
 
 
         let rootNodeConfigText = t('home');
         let rootNodeConfigIconCls = "opendxp_icon_home";
-        if(this.config.customViewId !== undefined && rootNodeConfig.id !== 1) {
+        if (this.config.customViewId !== undefined && rootNodeConfig.id !== 1) {
             rootNodeConfigText = rootNodeConfig.key;
             rootNodeConfigIconCls = rootNodeConfig.iconCls;
         }
@@ -107,7 +107,7 @@ opendxp.document.tree = Class.create({
                 url: this.treeDataUrl,
                 reader: {
                     type: 'json',
-                    totalProperty : 'total',
+                    totalProperty: 'total',
                     rootProperty: 'nodes'
 
                 },
@@ -123,15 +123,15 @@ opendxp.document.tree = Class.create({
 
         // documents
         this.tree = Ext.create('opendxp.tree.Panel', {
-            selModel : {
-                mode : 'MULTI'
+            selModel: {
+                mode: 'MULTI'
             },
             region: "center",
             id: this.config.treeId,
             title: this.config.treeTitle,
             iconCls: this.config.treeIconCls,
             cls: this.config['rootVisible'] ? '' : 'opendxp_tree_no_root_node',
-            autoScroll:true,
+            autoScroll: true,
             autoLoad: false,
             animate: false,
             containerScroll: true,
@@ -153,7 +153,7 @@ opendxp.document.tree = Class.create({
                 type: "right",
                 handler: opendxp.layout.treepanelmanager.toRight.bind(this),
                 hidden: this.position == "right"
-            },{
+            }, {
                 type: "left",
                 handler: opendxp.layout.treepanelmanager.toLeft.bind(this),
                 hidden: this.position == "left"
@@ -208,7 +208,7 @@ opendxp.document.tree = Class.create({
         return treeNodeListeners;
     },
 
-    onTreeNodeClick: function (tree, record, item, index, event, eOpts ) {
+    onTreeNodeClick: function (tree, record, item, index, event, eOpts) {
         if (event.ctrlKey === false && event.shiftKey === false && event.altKey === false) {
             if (record.data.permissions && record.data.permissions.view) {
                 opendxp.helpers.treeNodeThumbnailPreviewHide();
@@ -217,15 +217,14 @@ opendxp.document.tree = Class.create({
         }
     },
 
-    onTreeNodeOver: function (targetNode, position, dragData, e, eOpts ) {
+    onTreeNodeOver: function (targetNode, position, dragData, e, eOpts) {
         var node = dragData.records[0];
         // check for permission
         try {
             if (node.data.permissions.settings) {
                 return true;
             }
-        }
-        catch (e) {
+        } catch (e) {
             console.log(e);
         }
 
@@ -233,7 +232,7 @@ opendxp.document.tree = Class.create({
     },
 
 
-    onTreeNodeMove: function (node, oldParent, newParent, index, eOpts ) {
+    onTreeNodeMove: function (node, oldParent, newParent, index, eOpts) {
         var tree = node.getOwnerTree();
 
         if (newParent.pagingData) {
@@ -241,7 +240,7 @@ opendxp.document.tree = Class.create({
         }
 
         var moveCallback = function (newParent, oldParent, tree, response) {
-            try{
+            try {
                 var rdata = Ext.decode(response.responseText);
                 if (rdata && rdata.success) {
                     // set new paths
@@ -265,11 +264,10 @@ opendxp.document.tree = Class.create({
                     }
                     this.updateOpenDocumentPaths(node);
 
-                }
-                else {
+                } else {
                     tree.loadMask.hide();
                     opendxp.helpers.showNotification(t("error"), t("cant_move_node_to_target"),
-                        "error",t(rdata.message));
+                        "error", t(rdata.message));
                     // we have to delay refresh between two nodes,
                     // as there could be parent child relationship leading to race condition
                     window.setTimeout(function () {
@@ -277,7 +275,7 @@ opendxp.document.tree = Class.create({
                     }, 500);
                     opendxp.elementservice.refreshNode(newParent);
                 }
-            } catch(e){
+            } catch (e) {
                 tree.loadMask.hide();
                 opendxp.helpers.showNotification(t("error"), t("cant_move_node_to_target"), "error");
                 // we have to delay refresh between two nodes,
@@ -300,7 +298,7 @@ opendxp.document.tree = Class.create({
     },
 
 
-    onTreeNodeBeforeMove: function (node, oldParent, newParent, index, eOpts ) {
+    onTreeNodeBeforeMove: function (node, oldParent, newParent, index, eOpts) {
         var tree = node.getOwnerTree();
 
         if (oldParent.getOwnerTree().getId() != newParent.getOwnerTree().getId()) {
@@ -316,12 +314,12 @@ opendxp.document.tree = Class.create({
         }
 
         // check new parent's permission
-        if(!newParent.data.permissions.create){
+        if (!newParent.data.permissions.create) {
             Ext.MessageBox.alert(' ', t('element_cannot_be_moved'));
             return false;
         }
 
-        if(opendxp.elementservice.isDisallowedDocumentKey(newParent.id, node.data.text)) {
+        if (opendxp.elementservice.isDisallowedDocumentKey(newParent.id, node.data.text)) {
             return false;
         }
 
@@ -333,17 +331,17 @@ opendxp.document.tree = Class.create({
         return false;
     },
 
-    onTreeNodeContextmenu: function (tree, record, item, index, e, eOpts ) {
+    onTreeNodeContextmenu: function (tree, record, item, index, e, eOpts) {
         e.stopEvent();
 
-        if(opendxp.helpers.hasTreeNodeLoadingIndicator("document", record.data.id)) {
+        if (opendxp.helpers.hasTreeNodeLoadingIndicator("document", record.data.id)) {
             return;
         }
 
         var menu = new Ext.menu.Menu();
         var perspectiveCfg = this.perspectiveCfg;
 
-        if(tree.getSelectionModel().getSelected().length > 1) {
+        if (tree.getSelectionModel().getSelected().length > 1) {
             var selectedIds = [];
             tree.getSelectionModel().getSelected().each(function (item) {
                 selectedIds.push(item.id);
@@ -359,7 +357,7 @@ opendxp.document.tree = Class.create({
         } else {
             var pasteMenu = [];
             var pasteInheritanceMenu = [];
-            var childSupportedDocument = (record.data.type)?opendxp.helpers.documentTypeHasSpecificRole(record.data.type, "children_supported"):false;
+            var childSupportedDocument = (record.data.type) ? opendxp.helpers.documentTypeHasSpecificRole(record.data.type, "children_supported") : false;
             if (childSupportedDocument && record.data.permissions && record.data.permissions.create) {
 
 
@@ -652,7 +650,7 @@ opendxp.document.tree = Class.create({
             if (record.data.id != 1 && record.data.permissions && record.data.permissions.publish && !record.data.locked && perspectiveCfg.inTreeContextMenu("document.convert")) {
 
                 let conversionTargets = [];
-                if(addDocuments) {
+                if (addDocuments) {
                     conversionTargets.push({
                         text: t("page"),
                         iconCls: "opendxp_icon_page",
@@ -660,7 +658,7 @@ opendxp.document.tree = Class.create({
                         hidden: record.data.type == "page"
                     });
                 }
-                if(addSnippet) {
+                if (addSnippet) {
                     conversionTargets.push({
                         text: t("snippet"),
                         iconCls: "opendxp_icon_snippet",
@@ -668,7 +666,7 @@ opendxp.document.tree = Class.create({
                         hidden: record.data.type == "snippet" || !addSnippet
                     });
                 }
-                if(addEmail) {
+                if (addEmail) {
                     conversionTargets.push({
                         text: t("email"),
                         iconCls: "opendxp_icon_email",
@@ -676,7 +674,7 @@ opendxp.document.tree = Class.create({
                         hidden: record.data.type == "email" || !addEmail
                     });
                 }
-                if(addLink) {
+                if (addLink) {
                     conversionTargets.push({
                         text: t("link"),
                         iconCls: "opendxp_icon_link",
@@ -684,7 +682,7 @@ opendxp.document.tree = Class.create({
                         hidden: record.data.type == "link" || !addLink
                     });
                 }
-                if(addHardlink) {
+                if (addHardlink) {
                     conversionTargets.push({
                         text: t("hardlink"),
                         iconCls: "opendxp_icon_hardlink",
@@ -693,7 +691,7 @@ opendxp.document.tree = Class.create({
                     });
                 }
 
-                if(conversionTargets.length > 0) {
+                if (conversionTargets.length > 0) {
                     advancedMenuItems.push(new Ext.menu.Item({
                         text: t('convert_to'),
                         iconCls: "opendxp_icon_convert",
@@ -869,7 +867,7 @@ opendxp.document.tree = Class.create({
 
         document.dispatchEvent(prepareDocumentTreeContextMenu);
 
-        menu.showAt(e.pageX+1, e.pageY+1);
+        menu.showAt(e.pageX + 1, e.pageY + 1);
     },
 
     pasteLanguageDocument: function (tree, record, type, enableInheritance) {
@@ -890,8 +888,8 @@ opendxp.document.tree = Class.create({
                 var websiteLanguages = opendxp.settings.websiteLanguages;
                 var selectContent = "";
 
-                for (var i=0; i<websiteLanguages.length; i++) {
-                    if(data.language != websiteLanguages[i] && !in_array(websiteLanguages[i], data.translationLinks)) {
+                for (var i = 0; i < websiteLanguages.length; i++) {
+                    if (data.language != websiteLanguages[i] && !in_array(websiteLanguages[i], data.translationLinks)) {
                         selectContent = opendxp.available_languages[websiteLanguages[i]] + " [" + websiteLanguages[i] + "]";
                         languagestore.push([websiteLanguages[i], selectContent]);
                     }
@@ -950,7 +948,7 @@ opendxp.document.tree = Class.create({
 
     },
 
-    populatePredefinedDocumentTypes: function(documentMenu, tree, record) {
+    populatePredefinedDocumentTypes: function (documentMenu, tree, record) {
         var document_types = opendxp.globalmanager.get("document_types_store");
 
         var groups = {
@@ -975,8 +973,7 @@ opendxp.document.tree = Class.create({
                     handler: this.addDocument.bind(this, tree, record, "page", typeRecord.get("id"))
                 };
                 menuOption = "page";
-            }
-            else if (typeRecord.get("type") == "snippet") {
+            } else if (typeRecord.get("type") == "snippet") {
                 docTypeMenu = {
                     text: text,
                     iconCls: "opendxp_icon_snippet opendxp_icon_overlay_add",
@@ -992,7 +989,7 @@ opendxp.document.tree = Class.create({
                 menuOption = "email";
             }
 
-            if(menuOption === undefined) {
+            if (menuOption === undefined) {
                 return;
             }
 
@@ -1030,7 +1027,7 @@ opendxp.document.tree = Class.create({
         opendxp.cutDocumentParentNode = record.parentNode;
     },
 
-    pasteCutDocument: function(document, oldParent, newParent, tree) {
+    pasteCutDocument: function (document, oldParent, newParent, tree) {
         opendxp.elementservice.updateDocument(document.id, {
             parentId: newParent.id
         }, function (document, newParent, oldParent, tree, response) {
@@ -1044,13 +1041,12 @@ opendxp.document.tree = Class.create({
                     }
                     document.data.basePath = newBasePath;
                     document.data.path = document.data.basePath + "/" + document.data.text;
-                }
-                else {
+                } else {
                     tree.loadMask.hide();
                     opendxp.helpers.showNotification(t("error"), t("cant_move_node_to_target"), "error", t(rdata.message));
 
                 }
-            } catch(e) {
+            } catch (e) {
                 opendxp.helpers.showNotification(t("error"), t("cant_move_node_to_target"), "error");
             }
 
@@ -1101,10 +1097,10 @@ opendxp.document.tree = Class.create({
 
                 record.pasteWindow = new Ext.Window({
                     title: t("paste"),
-                    layout:'fit',
-                    width:200,
+                    layout: 'fit',
+                    width: 200,
                     bodyStyle: "padding: 10px;",
-                    closable:false,
+                    closable: false,
                     plain: true,
                     items: [record.pasteProgressBar],
                     listeners: opendxp.helpers.getProgressWindowListeners()
@@ -1118,14 +1114,14 @@ opendxp.document.tree = Class.create({
 
                         try {
                             this.pasteComplete(record);
-                        } catch(e) {
+                        } catch (e) {
                             console.log(e);
                             opendxp.helpers.showNotification(t("error"), t("error_pasting_item"), "error");
                             opendxp.elementservice.refreshNodeAllTrees("document", record.id);
                         }
                     }.bind(this),
                     update: function (currentStep, steps, percent) {
-                        if(record.pasteProgressBar) {
+                        if (record.pasteProgressBar) {
                             var status = currentStep / steps;
                             record.pasteProgressBar.updateProgress(status, percent + "%");
                         }
@@ -1149,7 +1145,7 @@ opendxp.document.tree = Class.create({
     },
 
     pasteComplete: function (node) {
-        if(node.pasteWindow) {
+        if (node.pasteWindow) {
             node.pasteWindow.close();
         }
 
@@ -1179,119 +1175,158 @@ opendxp.document.tree = Class.create({
 
     addUpdateSite: function (tree, record) {
 
-        var data = {
-            "domains": [],
-            "mainDomain": "",
-            "errorDocument": "",
-            "localizedErrorDocuments": [],
-            "redirectToMainDomain": false
-        };
+        var win,
+            windowCfg,
+            siteItems,
+            title = '',
+            data = {
+                domains: [],
+                mainDomain: '',
+                errorDocument: '',
+                localizedErrorDocuments: [],
+                redirectToMainDomain: false,
+                customSettings: []
+            };
 
-        var title = "";
-
-        if(record.data["site"]) {
-            data = record.data["site"];
-            title = t("site_id") + ": " + data["id"];
+        if (record.get('site')) {
+            data = record.get('site');
+            title = t('site_id') + ': ' + data['id'];
         }
 
-        var windowCfg = {
+        siteItems = [
+            {
+                xtype: 'textfield',
+                name: 'mainDomain',
+                fieldLabel: t('main_domain'),
+                value: data['mainDomain']
+            },
+            {
+                xtype: 'textarea',
+                name: 'domains',
+                height: 150,
+                style: 'word-wrap: normal;',
+                fieldLabel: t('additional_domains') + '<br /><br />' + t('wildcards_are_supported') + ' (*example.com)',
+                value: data.domains.join("\n")
+            },
+            {
+                xtype: 'textfield',
+                name: 'errorDocument',
+                fieldCls: 'input_drop_target',
+                fieldLabel: t('error_page') + ' (' + t('default') + ')',
+                value: data['errorDocument'],
+                listeners: {
+                    render: function (el) {
+                        new Ext.dd.DropZone(el.getEl(), {
+                            reference: this,
+                            ddGroup: 'element',
+                            getTargetFromEvent: function (e) {
+                                return this.getEl();
+                            }.bind(el),
+
+                            onNodeOver: function (target, dd, e, data) {
+                                if (
+                                    data.records.length === 1 &&
+                                    data.records[0].data.elementType === 'document' &&
+                                    in_array(data.records[0].data.type, ['page', 'link', 'hardlink'])
+                                ) {
+                                    return Ext.dd.DropZone.prototype.dropAllowed;
+                                }
+                            },
+
+                            onNodeDrop: function (target, dd, e, data) {
+
+                                if (!opendxp.helpers.dragAndDropValidateSingleItem(data)) {
+                                    return false;
+                                }
+
+                                data = data.records[0].data;
+
+                                if (
+                                    data.elementType === 'document' &&
+                                    in_array(data.type, ['page', 'link', 'hardlink'])
+                                ) {
+                                    this.setValue(data.path);
+                                    return true;
+                                }
+
+                                return false;
+                            }.bind(el)
+                        });
+                    }
+                }
+            },
+            {
+                xtype: 'container',
+                style: 'margin-top: 20px;',
+                items: this.renderErrorDocuments(data['localizedErrorDocuments']),
+            },
+            {
+                xtype: 'checkbox',
+                name: 'redirectToMainDomain',
+                fieldLabel: t('redirect_to_main_domain'),
+                checked: data['redirectToMainDomain']
+            },
+            {
+                xtype: 'form',
+                style: 'margin-top: 20px;',
+                title: t('site_custom_settings'),
+                hidden: true,
+                border: false,
+                items: [],
+                listeners: {
+                    render: function (el) {
+                        this.renderSiteCustomSettings(el, data)
+                    }.bind(this)
+                }
+            }
+        ];
+
+        windowCfg = {
             width: 600,
             height: 600,
-            layout: "fit",
-            closeAction: "close",
+            layout: 'fit',
+            closeAction: 'close',
             items: [{
                 autoScroll: true,
-                xtype: "form",
-                bodyStyle: "padding: 10px;",
+                xtype: 'form',
+                bodyStyle: 'padding: 10px;',
                 defaults: {
                     labelWidth: 250,
-                    width: 550
+                    width: 560
                 },
-                itemId: "form",
-                items: [{
-                    xtype: "textfield",
-                    name: "mainDomain",
-                    fieldLabel: t("main_domain"),
-                    value: data["mainDomain"]
-                }, {
-                    xtype: "textarea",
-                    name: "domains",
-                    height: 150,
-                    style: "word-wrap: normal;",
-                    fieldLabel: t("additional_domains") + "<br /><br />" + t("wildcards_are_supported") + " (*example.com)",
-                    value: data.domains.join("\n")
-                }, {
-                    xtype: "textfield",
-                    name: "errorDocument",
-                    fieldCls: "input_drop_target",
-                    fieldLabel: t("error_page") + " (" + t("default") + ")",
-                    value: data["errorDocument"],
-                    listeners: {
-                        "render": function (el) {
-                            new Ext.dd.DropZone(el.getEl(), {
-                                reference: this,
-                                ddGroup: "element",
-                                getTargetFromEvent: function(e) {
-                                    return this.getEl();
-                                }.bind(el),
-
-                                onNodeOver : function(target, dd, e, data) {
-                                    if (data.records.length === 1 && data.records[0].data.elementType === "document" && in_array(data.records[0].data.type, ["page", "link", "hardlink"])) {
-                                        return Ext.dd.DropZone.prototype.dropAllowed;
-                                    }
-                                },
-
-                                onNodeDrop : function (target, dd, e, data) {
-
-                                    if(!opendxp.helpers.dragAndDropValidateSingleItem(data)) {
-                                        return false;
-                                    }
-
-                                    data = data.records[0].data;
-                                    if (data.elementType === "document" && in_array(data.type, ["page", "link", "hardlink"])) {
-                                        this.setValue(data.path);
-                                        return true;
-                                    }
-                                    return false;
-                                }.bind(el)
-                            });
-                        }
-                    }
-                }, {
-                    xtype: "fieldset",
-                    style: "margin-top: 20px;",
-                    items: this.renderErrorDocuments(data["localizedErrorDocuments"]),
-                },{
-                    xtype: "checkbox",
-                    name: "redirectToMainDomain",
-                    fieldLabel: t("redirect_to_main_domain"),
-                    checked: data["redirectToMainDomain"]
-                }]
+                itemId: 'form',
+                items: siteItems
             }],
             buttons: [{
-                text: t("cancel"),
-                iconCls: "opendxp_icon_cancel",
+                text: t('cancel'),
+                iconCls: 'opendxp_icon_cancel',
                 handler: function () {
                     win.close();
                 }
             }, {
-                text: t("apply"),
-                iconCls: "opendxp_icon_apply",
+                text: t('apply'),
+                iconCls: 'opendxp_icon_apply',
                 handler: function () {
-                    var data = win.getComponent("form").getForm().getFieldValues();
-                    data["id"] = record.id;
+
+                    const form = win.getComponent('form').getForm();
+                    const data = form.getFieldValues();
+
+                    if (!form.isValid()) {
+                        return;
+                    }
+
+                    data['id'] = record.id;
 
                     Ext.Ajax.request({
                         url: Routing.generate('opendxp_admin_document_document_updatesite'),
                         method: 'PUT',
                         params: data,
                         success: function (tree, record, response) {
-                            var site = Ext.decode(response.responseText);
-                            record.data.site = site;
+                            record.data.site = Ext.decode(response.responseText);
                             tree.getStore().load({
                                 node: record.parentNode
                             });
-                            opendxp.globalmanager.get("sites").reload();
+                            opendxp.globalmanager.get('sites').reload();
                         }.bind(this, tree, record)
                     });
 
@@ -1304,16 +1339,16 @@ opendxp.document.tree = Class.create({
             windowCfg.title = title;
         }
 
-        var win = new Ext.Window(windowCfg);
+        win = new Ext.Window(windowCfg);
 
         win.show();
     },
 
-    addDocument : function (tree, record, type, docTypeId) {
+    addDocument: function (tree, record, type, docTypeId) {
         var textKeyTitle;
         var textKeyMessage;
 
-        if(type == "page") {
+        if (type == "page") {
 
             textKeyTitle = t("add_page");
             textKeyMessage = t("enter_the_name_of_the_new_item");
@@ -1341,13 +1376,13 @@ opendxp.document.tree = Class.create({
                             pageForm.getComponent("key").setValue(el.getValue());
                         }.bind(this)
                     }
-                },{
+                }, {
                     xtype: "textfield",
                     itemId: "name",
                     fieldLabel: t('navigation'),
                     name: 'name',
                     width: "100%"
-                },{
+                }, {
                     xtype: "textfield",
                     width: "100%",
                     fieldLabel: t('key'),
@@ -1356,10 +1391,10 @@ opendxp.document.tree = Class.create({
                 }]
             });
 
-            var submitFunction = function() {
+            var submitFunction = function () {
                 var params = pageForm.getForm().getFieldValues();
                 messageBox.close();
-                if(params["key"].length >= 1) {
+                if (params["key"].length >= 1) {
                     params["type"] = type;
                     params["docTypeId"] = docTypeId;
                     this.addDocumentCreate(tree, record, params);
@@ -1377,9 +1412,9 @@ opendxp.document.tree = Class.create({
                 buttons: [{
                     text: t('OK'),
                     handler: submitFunction.bind(this, tree, record)
-                },{
+                }, {
                     text: t('cancel'),
-                    handler: function() {
+                    handler: function () {
                         messageBox.close();
                     }
                 }]
@@ -1389,7 +1424,7 @@ opendxp.document.tree = Class.create({
 
             var map = new Ext.util.KeyMap({
                 target: messageBox.getEl(),
-                key:  Ext.event.Event.ENTER,
+                key: Ext.event.Event.ENTER,
                 fn: submitFunction.bind(this)
             });
 
@@ -1453,8 +1488,7 @@ opendxp.document.tree = Class.create({
 
                             opendxp.helpers.showNotification(t("success"), t("successful_" + task + "_document"),
                                 "success");
-                        }
-                        else {
+                        } else {
                             opendxp.helpers.showNotification(t("error"), t("error_" + task + "_document"),
                                 "error", t(rdata.message));
                         }
@@ -1467,15 +1501,15 @@ opendxp.document.tree = Class.create({
         }
     },
 
-    addDocumentCreate : function (tree, record, params) {
+    addDocumentCreate: function (tree, record, params) {
 
-        if(params["key"]) {
+        if (params["key"]) {
             // check for ident filename in current level
-            if(opendxp.elementservice.isKeyExistingInLevel(record, params["key"])) {
+            if (opendxp.elementservice.isKeyExistingInLevel(record, params["key"])) {
                 return;
             }
 
-            if(opendxp.elementservice.isDisallowedDocumentKey(record.id, params["key"])) {
+            if (opendxp.elementservice.isDisallowedDocumentKey(record.id, params["key"])) {
                 return;
             }
 
@@ -1500,9 +1534,9 @@ opendxp.document.tree = Class.create({
         opendxp.elementservice.editElementKey(options);
     },
 
-    deleteDocument : function (ids) {
+    deleteDocument: function (ids) {
         var options = {
-            "elementType" : "document",
+            "elementType": "document",
             "id": ids
         };
         opendxp.elementservice.deleteElement(options);
@@ -1510,10 +1544,10 @@ opendxp.document.tree = Class.create({
 
     convert: function (tree, record, type) {
         Ext.MessageBox.show({
-            title:t('are_you_sure'),
+            title: t('are_you_sure'),
             msg: t("all_content_will_be_lost"),
-            buttons: Ext.Msg.OKCANCEL ,
-            icon: Ext.MessageBox.INFO ,
+            buttons: Ext.Msg.OKCANCEL,
+            icon: Ext.MessageBox.INFO,
             fn: function (type, button) {
                 if (button == "ok") {
 
@@ -1538,13 +1572,12 @@ opendxp.document.tree = Class.create({
         });
     },
 
-    searchAndMove: function(tree, record) {
+    searchAndMove: function (tree, record) {
         var parentId = record.data.id;
-        opendxp.helpers.searchAndMove(parentId, function() {
+        opendxp.helpers.searchAndMove(parentId, function () {
             opendxp.elementservice.refreshNode(record);
         }.bind(this), "document");
     },
-
 
     isKeyValid: function (key) {
 
@@ -1554,13 +1587,13 @@ opendxp.document.tree = Class.create({
         }
     },
 
-    updateOpenDocumentPaths: function(node) {
+    updateOpenDocumentPaths: function (node) {
         try {
             var openTabs = opendxp.helpers.getOpenTab();
             for (var i = 0; i < openTabs.length; i++) {
-                if(openTabs[i].indexOf("document_") == 0 && (openTabs[i].indexOf("_page") || openTabs[i].indexOf("_snippet") || openTabs[i].indexOf("_email"))) {
-                    var documentElement = opendxp.globalmanager.get(openTabs[i].replace(/_page|_snippet|_email/gi,''));
-                    if(typeof documentElement.data != 'undefined' && documentElement.data.idPath.indexOf("/" + node.data.id) > 0) {
+                if (openTabs[i].indexOf("document_") == 0 && (openTabs[i].indexOf("_page") || openTabs[i].indexOf("_snippet") || openTabs[i].indexOf("_email"))) {
+                    var documentElement = opendxp.globalmanager.get(openTabs[i].replace(/_page|_snippet|_email/gi, ''));
+                    if (typeof documentElement.data != 'undefined' && documentElement.data.idPath.indexOf("/" + node.data.id) > 0) {
                         documentElement.resetPath();
                     }
                 }
@@ -1570,11 +1603,12 @@ opendxp.document.tree = Class.create({
         }
     },
 
-    renderErrorDocuments: function(localizedErrorDocumentsData) {
-        var localizedErrorDocumentFields = []
-        var availableLanguages = opendxp.available_languages
+    renderErrorDocuments: function (localizedErrorDocumentsData) {
 
-        var websiteLanguages = opendxp.settings.websiteLanguages;
+        var localizedErrorDocumentFields = [],
+            availableLanguages = opendxp.available_languages,
+            websiteLanguages = opendxp.settings.websiteLanguages;
+
         if (websiteLanguages && websiteLanguages.length > 0) {
             Ext.each(websiteLanguages, function (language) {
                 if (empty(language)) {
@@ -1582,35 +1616,31 @@ opendxp.document.tree = Class.create({
                 }
 
                 localizedErrorDocumentFields.push({
-                    fieldLabel: t("error_page") + " (" + availableLanguages[language] + ")",
-                    name: "errorDocument.localized." + language,
-                    fieldCls: "input_drop_target",
+                    fieldLabel: t('error_page') + ' - ' + availableLanguages[language],
+                    name: 'errorDocument.localized.' + language,
+                    fieldCls: 'input_drop_target',
                     value: (localizedErrorDocumentsData && localizedErrorDocumentsData[language]) ? localizedErrorDocumentsData[language] : '',
-                    labelWidth: 200,
-                    width: 500,
-                    xtype: "textfield",
+                    labelWidth: 250,
+                    width: 560,
+                    xtype: 'textfield',
                     listeners: {
-                        "render": function (el) {
+                        render: function (el) {
                             new Ext.dd.DropZone(el.getEl(), {
                                 reference: this,
-                                ddGroup: "element",
+                                ddGroup: 'element',
                                 getTargetFromEvent: function (e) {
                                     return this.getEl();
                                 }.bind(el),
-
                                 onNodeOver: function (target, dd, e, data) {
-                                    if (data.records.length == 1 && data.records[0].data.elementType == "document") {
+                                    if (data.records.length === 1 && data.records[0].data.elementType === 'document') {
                                         return Ext.dd.DropZone.prototype.dropAllowed;
                                     }
                                 },
-
                                 onNodeDrop: function (target, dd, e, data) {
                                     if (opendxp.helpers.dragAndDropValidateSingleItem(data)) {
                                         var record = data.records[0];
-                                        var data = record.data;
-
-                                        if (data.elementType == "document") {
-                                            this.setValue(data.path);
+                                        if (record.data.elementType === 'document') {
+                                            this.setValue(record.data.path);
                                             return true;
                                         }
                                     }
@@ -1624,5 +1654,89 @@ opendxp.document.tree = Class.create({
         }
 
         return localizedErrorDocumentFields;
+    },
+
+    renderSiteCustomSettings: function (container, site) {
+
+        const additionalConfigFactory = {
+            input: (node, nodeValue) => ({
+                value: nodeValue,
+                allowBlank: (node.config.required ?? false) !== true,
+            }),
+            text: (node, nodeValue) => ({
+                xtype: 'textarea',
+                grow: true,
+                value: nodeValue,
+                allowBlank: (node.config.required ?? false) !== true,
+            }),
+            checkbox: (node, nodeValue) => ({
+                checked: nodeValue ?? false,
+                inputValue: node.config.checkedValue ?? true,
+                uncheckedValue: node.config.uncheckedValue ?? false,
+            }),
+            combobox: (node, nodeValue) => ({
+                store: node.config.store ?? [],
+                queryMode: 'local',
+                displayField: node.config.displayField ?? 'label',
+                valueField: node.config.valueField ?? 'value',
+                allowBlank: (node.config.required ?? false) !== true,
+                editable: false,
+                forceSelection: true,
+                value: nodeValue,
+            })
+        };
+
+        Ext.Ajax.request({
+            url: Routing.generate('opendxp_admin_document_document_get_site_custom_settings'),
+            method: 'POST',
+            params: {
+                id: site.id,
+            },
+            success: function (response) {
+
+                const r = Ext.decode(response.responseText);
+
+                if (!Ext.isObject(r.data)) {
+                    return;
+                }
+
+                Ext.Object.each(r.data, function (scope, settingsBlock) {
+
+                    const fieldset = {
+                        xtype: 'fieldset',
+                        title: scope,
+                        items: []
+                    };
+
+                    Ext.Array.each(settingsBlock, function (configNode) {
+
+                        const nodeValue = site.customSettings?.[scope]?.[configNode.name] ?? null;;
+
+                        const baseConfig = {
+                            xtype: configNode.type,
+                            fieldLabel: configNode.label,
+                            name: 'customSettings.' + scope + '.' + configNode.name,
+                            labelWidth: 100,
+                            anchor: '100%',
+                        };
+
+                        const additionalConfig =
+                            additionalConfigFactory[configNode.type]
+                                ? additionalConfigFactory[configNode.type](configNode, nodeValue)
+                                : {};
+
+                        const nodeConfig = Ext.apply({}, baseConfig, additionalConfig);
+
+                        fieldset.items.push(nodeConfig);
+                    });
+
+                    container.add(fieldset)
+                });
+
+                container.setHidden(false);
+
+            }.bind(this)
+        });
+
     }
 });

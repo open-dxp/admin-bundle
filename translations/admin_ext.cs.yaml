@@ -551,6 +551,7 @@ error_page: "Chybov\xE1 str\xE1nka"
 additional_domains: "Dal\u0161\xED dom\xE9ny (jedna na \u0159\xE1dek)"
 redirect_to_main_domain: "P\u0159esm\u011Brovat dal\u0161\xED dom\xE9ny na hlavn\xED
   dom\xE9nu"
+site_custom_settings: Additional Settings
 debug_mode_on: "DEBUG m\xF3d"
 duration: "Trv\xE1n\xED"
 scope: Kontext (Scope)
