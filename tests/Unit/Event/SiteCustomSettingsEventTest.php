@@ -10,7 +10,8 @@ declare(strict_types=1);
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @copyright  Copyright (c) Pimcore GmbH (https://pimcore.com)
+ * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
@@ -45,10 +46,10 @@ class SiteCustomSettingsEventTest extends UnitTestCase
     {
         $event = new SiteCustomSettingsEvent($this->createSite());
 
-        $event->addConfigNode(new InputNodeConfig(),    'seo',  'title',       'SEO Title');
-        $event->addConfigNode(new CheckboxNodeConfig(), 'seo',  'noindex',     'No Index');
-        $event->addConfigNode(new DropdownNodeConfig(), 'i18n', 'zone',        'Zone');
-        $event->addConfigNode(new TextNodeConfig(),     'app',  'description', 'Description');
+        $event->addConfigNode(new InputNodeConfig(), 'seo', 'title', 'SEO Title');
+        $event->addConfigNode(new CheckboxNodeConfig(), 'seo', 'noindex', 'No Index');
+        $event->addConfigNode(new DropdownNodeConfig(), 'i18n', 'zone', 'Zone');
+        $event->addConfigNode(new TextNodeConfig(), 'app', 'description', 'Description');
 
         $nodes = $event->getConfigNodes();
 
@@ -84,22 +85,22 @@ class SiteCustomSettingsEventTest extends UnitTestCase
     {
         $event = new SiteCustomSettingsEvent($this->createSite());
 
-        $event->addConfigNode(new InputNodeConfig(), 'app', 'first',  'First');
+        $event->addConfigNode(new InputNodeConfig(), 'app', 'first', 'First');
         $event->addConfigNode(new InputNodeConfig(), 'app', 'second', 'Second');
-        $event->addConfigNode(new InputNodeConfig(), 'app', 'third',  'Third');
+        $event->addConfigNode(new InputNodeConfig(), 'app', 'third', 'Third');
 
         $nodes = $event->getConfigNodes()['app'];
 
         self::assertCount(3, $nodes);
-        self::assertSame('first',  $nodes[0]['name']);
+        self::assertSame('first', $nodes[0]['name']);
         self::assertSame('second', $nodes[1]['name']);
-        self::assertSame('third',  $nodes[2]['name']);
+        self::assertSame('third', $nodes[2]['name']);
     }
 
     public function testEachDtoReturnsCorrectType(): void
     {
-        self::assertSame(SiteCustomConfigNodeType::INPUT,    (new InputNodeConfig())->getType());
-        self::assertSame(SiteCustomConfigNodeType::TEXT,     (new TextNodeConfig())->getType());
+        self::assertSame(SiteCustomConfigNodeType::INPUT, (new InputNodeConfig())->getType());
+        self::assertSame(SiteCustomConfigNodeType::TEXT, (new TextNodeConfig())->getType());
         self::assertSame(SiteCustomConfigNodeType::CHECKBOX, (new CheckboxNodeConfig())->getType());
         self::assertSame(SiteCustomConfigNodeType::DROPDOWN, (new DropdownNodeConfig())->getType());
     }

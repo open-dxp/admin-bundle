@@ -737,7 +737,7 @@ class DocumentController extends ElementControllerBase implements KernelControll
         $customSettings = $event->getConfigNodes();
 
         return $this->adminJson([
-            'data' => $customSettings
+            'data' => $customSettings,
         ]);
     }
 
