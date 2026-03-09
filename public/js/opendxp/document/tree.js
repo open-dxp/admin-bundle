@@ -1699,8 +1699,6 @@ opendxp.document.tree = Class.create({
 
                         const nodeValue = site.customSettings?.[scope]?.[configNode.name] ?? null;
 
-                        console.warn(nodeValue);
-
                         const baseConfig = {
                             xtype: configNode.type,
                             fieldLabel: configNode.label,
