@@ -541,6 +541,7 @@ main_domain: Dominio principale
 error_page: Pagina di errore
 additional_domains: Domini aggiuntivi (un dominio per linea)
 redirect_to_main_domain: Redireziona domini aggiuntivi verso il dominio principale
+site_custom_settings: Additional Settings
 debug_mode_on: "MODALIT\xC0 DEBUG"
 duration: Durata
 scope: Scopo

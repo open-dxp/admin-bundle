@@ -1,3 +1,7 @@
+#
+# ATTENTION!
+# This file is deprecated and will be removed with admin-bundle 2.0
+#
 version: '3.0'
 services:
     db:

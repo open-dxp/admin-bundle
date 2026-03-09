@@ -536,6 +536,7 @@ main_domain: Hoofddomein
 error_page: Error-pagina
 additional_domains: "Extra domeinen (\xE9\xE9n domein per regel)"
 redirect_to_main_domain: Verwijs extra domeinen naar het hoofddomein
+site_custom_settings: Additional Settings
 debug_mode_on: DEBUG-MODUS
 duration: Tijdsduur
 scope: Bereik

@@ -546,6 +546,7 @@ main_domain: "Domena g\u0142\xF3wna"
 error_page: "Strona b\u0142\u0119du"
 additional_domains: "Dodatkowe domeny (jedna na lini\u0119)"
 redirect_to_main_domain: "Przekieruj dodatkowe domeny na domen\u0119 g\u0142\xF3wn\u0105"
+site_custom_settings: Additional Settings
 debug_mode_on: TRYB DEBUGOWANIA
 duration: "Czas dzia\u0142ania"
 scope: Obszar

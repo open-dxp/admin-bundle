@@ -510,4 +510,11 @@ class AdminEvents
      * @var string
      */
     public const string PERSPECTIVE_POST_GET_RUNTIME = 'opendxp.admin.perspective.postGetRuntime';
+
+    /**
+     * This event is fired after a site configuration panel gets rendered
+     *
+     * @Event("OpenDxp\Bundle\AdminBundle\Event\SiteCustomSettingsEvent")
+     */
+    public const string SITE_CUSTOM_SETTINGS = 'opendxp.admin.site.customSettings';
 }

@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * OpenDXP
@@ -14,11 +13,12 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-namespace OpenDxp\Bundle\AdminBundle\Event;
+namespace OpenDxp\Bundle\AdminBundle\Enum;
 
-/**
- * @TODO this class is only here for BC reasons and should be removed in Admin Bundle 2.0
- */
-final class BundleManagerEvents extends \OpenDxp\Event\BundleManagerEvents
+enum SiteCustomConfigNodeType: string
 {
+    case INPUT = 'input';
+    case TEXT = 'text';
+    case CHECKBOX = 'checkbox';
+    case DROPDOWN = 'combobox';
 }

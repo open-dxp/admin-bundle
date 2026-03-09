@@ -550,6 +550,7 @@ main_domain: "Hlavn\xE1 dom\xE9na"
 error_page: "Chybov\xE1 str\xE1nka"
 additional_domains: "\u010Eal\u0161ie dom\xE9ny (jedna dom\xE9na na riadok)"
 redirect_to_main_domain: "\u010Eal\u0161ie dom\xE9ny presmerova\u0165 na hlavn\xFA
+site_custom_settings: Additional Settings
   dom\xE9nu"
 debug_mode_on: "DEBUG m\xF3d"
 duration: Trvanie

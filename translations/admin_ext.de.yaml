@@ -555,6 +555,7 @@ main_domain: Hauptdomain
 error_page: Fehlerseite
 additional_domains: "Zus\xE4tzliche Domains (eine Domain pro Zeile)"
 redirect_to_main_domain: "Leite zus\xE4tzliche Domains auf die Haupt-Domain um."
+site_custom_settings: "Zusätzliche Einstellungen"
 debug_mode_on: DEBUGMODUS
 duration: Dauer
 scope: Umfang

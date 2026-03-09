@@ -557,6 +557,7 @@ error_page: Hiba oldal
 additional_domains: "Tov\xE1bbi domainek (soronk\xE9nt egy)"
 redirect_to_main_domain: "A tov\xE1bbi domainek \xE1tir\xE1ny\xEDt\xE1sa a f\u0151
   domainre"
+site_custom_settings: Additional Settings
 debug_mode_on: "DEBUG M\xD3D"
 duration: "Hossz (id\u0151)"
 scope: Scope

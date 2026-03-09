@@ -560,6 +560,7 @@ error_page: Page d'erreur
 additional_domains: "Domaines suppl\xE9mentaires (un domaine par ligne)"
 redirect_to_main_domain: "Rediriger les domains suppl\xE9mentaires vers le domaine
   principal"
+site_custom_settings: Additional Settings
 debug_mode_on: MODE DEBUG
 duration: "Dur\xE9e"
 scope: "Port\xE9e"

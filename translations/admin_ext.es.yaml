@@ -528,6 +528,7 @@ main_domain: Dominio principal
 error_page: "P\xE1gina de error"
 additional_domains: "Dominios adicionales (un dominio por l\xEDnea)"
 redirect_to_main_domain: Redirije dominios adicionales hacia el dominio principal
+site_custom_settings: Additional Settings
 debug_mode_on: MODO DE DEPURACION
 duration: "Duraci\xF3n"
 scope: alcance

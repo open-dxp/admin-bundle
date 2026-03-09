@@ -1,0 +1,4 @@
+actor: UnitTester
+modules:
+    enabled:
+        - \OpenDxp\Bundle\AdminBundle\Tests\Support\Helper\Unit
