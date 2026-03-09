@@ -1648,13 +1648,11 @@ opendxp.document.tree = Class.create({
     renderSiteCustomSettings: function (container, site) {
 
         const additionalConfigFactory = {
-            input: (node, nodeValue) => ({
+            textfield: (node, nodeValue) => ({
                 value: nodeValue,
                 allowBlank: (node.config.required ?? false) !== true,
             }),
-            text: (node, nodeValue) => ({
-                xtype: 'textarea',
-                grow: true,
+            textarea: (node, nodeValue) => ({
                 value: nodeValue,
                 allowBlank: (node.config.required ?? false) !== true,
             }),
@@ -1699,7 +1697,9 @@ opendxp.document.tree = Class.create({
 
                     Ext.Array.each(settingsBlock, function (configNode) {
 
-                        const nodeValue = site.customSettings?.[scope]?.[configNode.name] ?? null;;
+                        const nodeValue = site.customSettings?.[scope]?.[configNode.name] ?? null;
+
+                        console.warn(nodeValue);
 
                         const baseConfig = {
                             xtype: configNode.type,
