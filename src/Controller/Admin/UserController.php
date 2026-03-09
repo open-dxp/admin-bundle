@@ -21,13 +21,13 @@ use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Helper\User as UserHelper;
 use OpenDxp\Bundle\AdminBundle\Perspective\Config;
 use OpenDxp\Controller\KernelControllerEventInterface;
+use OpenDxp\Http\Request\Host\GeneralHostResolver;
 use OpenDxp\Logger;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\User;
 use OpenDxp\Model\User\Workspace;
-use OpenDxp\SystemSettingsConfig;
 use OpenDxp\Tool;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -990,8 +990,13 @@ class UserController extends AdminAbstractController implements KernelController
      * @throws Exception
      */
     #[Route('/user/invitationlink', name: 'opendxp_admin_user_invitationlink', methods: ['POST'])]
-    public function invitationLinkAction(Request $request, TranslatorInterface $translator, RouterInterface $router): JsonResponse
-    {
+    public function invitationLinkAction(
+        Request $request,
+        TranslatorInterface $translator,
+        RouterInterface $router,
+        GeneralHostResolver $generalHostResolver
+    ): JsonResponse {
+
         $success = false;
         $message = '';
 
@@ -1018,7 +1023,7 @@ class UserController extends AdminAbstractController implements KernelController
 
                 $token = Tool\Authentication::generateTokenByUser($user);
 
-                $domain = SystemSettingsConfig::get()['general']['domain'];
+                $domain = $generalHostResolver->resolve(['source' => $request]);
                 if (!$domain) {
                     throw new Exception('No main domain set in system settings, unable to generate login invitation link');
                 }

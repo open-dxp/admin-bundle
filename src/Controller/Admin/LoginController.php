@@ -32,11 +32,11 @@ use OpenDxp\Config;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use OpenDxp\Controller\KernelResponseEventInterface;
 use OpenDxp\Extension\Bundle\OpenDxpBundleManager;
+use OpenDxp\Http\Request\Host\GeneralHostResolver;
 use OpenDxp\Http\ResponseHelper;
 use OpenDxp\Logger;
 use OpenDxp\Model\User;
 use OpenDxp\Security\SecurityHelper;
-use OpenDxp\SystemSettingsConfig;
 use OpenDxp\Tool;
 use OpenDxp\Tool\Authentication;
 use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Google\GoogleAuthenticatorInterface;
@@ -206,7 +206,8 @@ class LoginController extends AdminAbstractController implements KernelControlle
         CsrfProtectionHandler $csrfProtection,
         Config $config,
         RateLimiterFactory $resetPasswordLimiter,
-        RouterInterface $router
+        RouterInterface $router,
+        GeneralHostResolver $generalHostResolver
     ): Response {
         $params = $this->buildLoginPageViewParams($config);
         $error = null;
@@ -241,7 +242,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
                 $token = Authentication::generateTokenByUser($user);
 
                 try {
-                    $domain = SystemSettingsConfig::get()['general']['domain'];
+                    $domain = $generalHostResolver->resolve(['source' => $request]);
                     if (!$domain) {
                         throw new Exception('No main domain set in system settings, unable to generate reset password link');
                     }
