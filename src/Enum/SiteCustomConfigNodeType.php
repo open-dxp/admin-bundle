@@ -17,8 +17,8 @@ namespace OpenDxp\Bundle\AdminBundle\Enum;
 
 enum SiteCustomConfigNodeType: string
 {
-    case INPUT = 'input';
-    case TEXT = 'text';
+    case INPUT = 'textfield';
+    case TEXT = 'textarea';
     case CHECKBOX = 'checkbox';
     case DROPDOWN = 'combobox';
 }

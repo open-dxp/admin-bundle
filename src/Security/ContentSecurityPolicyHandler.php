@@ -95,17 +95,17 @@ class ContentSecurityPolicyHandler implements LoggerAwareInterface
 
     public function getCspHeader(): string
     {
-        $cspHeaderOptions = array_map(fn ($k, $v) => "$k $v " . $this->getAllowedUrls($k), array_keys($this->cspHeaderOptions), array_values($this->cspHeaderOptions));
+        $cspHeaderOptions = array_map(
+            fn ($k, $v) => sprintf('%s %s %s', $k, $v, $this->getAllowedUrls($k)),
+            array_keys($this->cspHeaderOptions),
+            array_values($this->cspHeaderOptions)
+        );
 
         return implode(';', $cspHeaderOptions);
     }
 
-    private function getAllowedUrls(string $key, bool $flatten = true): array|string
+    private function getAllowedUrls(string $key): string
     {
-        if (!$flatten) {
-            return $this->allowedUrls[$key] ?? [];
-        }
-
         return isset($this->allowedUrls[$key]) && is_array($this->allowedUrls[$key]) ? implode(' ', $this->allowedUrls[$key]) : '';
     }
 
