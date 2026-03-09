@@ -1705,7 +1705,7 @@ opendxp.document.tree = Class.create({
                             xtype: configNode.type,
                             fieldLabel: configNode.label,
                             name: 'customSettings.' + scope + '.' + configNode.name,
-                            labelWidth: 100,
+                            labelWidth: 200,
                             anchor: '100%',
                         };
 

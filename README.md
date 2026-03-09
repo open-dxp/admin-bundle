@@ -31,12 +31,18 @@ And much more ...
 
 Following topics are short-cuts into the documentation for admin interface:
 
+### Starting with OpenDXP Core 
 - [Getting Started](https://github.com/open-dxp/opendxp/blob/1.x/doc/01_Getting_Started/06_Create_a_First_Project.md)
 - [User & Roles](https://github.com/open-dxp/opendxp/blob/1.x/doc/22_Administration_of_OpenDxp/07_Users_and_Roles.md)
-- [Deeplinks](https://github.com/open-dxp/opendxp/blob/1.x/doc/20_Extending_OpenDxp/23_Deeplinks_into_Admin_Interface.md)
 - [Admin Translations](https://github.com/open-dxp/opendxp/blob/1.x/doc/06_Multi_Language_i18n/07_Admin_Translations.md)
-- [Extending Admin UI](https://github.com/open-dxp/opendxp/blob/1.x/doc/20_Extending_OpenDxp/13_Bundle_Developers_Guide/06_Event_Listener_UI.md)
+
+### Admin Documentation
+- [Architecture](docs/00_Architecture/README.md)
+- [Extension_Points](docs/10_Extension_Points)
+- [Deeplinks](docs/10_Extension_Points/06_Deeplinks.md)
 - 🤖 [Testing with AI (Claude)](https://github.com/open-dxp/opendxp/doc/19_Development_Tools_and_Details/50_Testing_with_AI.md) - Write, run and fix tests with Claude Code
+
+=> [Full Documentation](docs/README.md)
 
 ***
 

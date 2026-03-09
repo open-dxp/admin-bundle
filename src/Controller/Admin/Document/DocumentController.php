@@ -774,7 +774,12 @@ class DocumentController extends ElementControllerBase implements KernelControll
             foreach ($nodes as $node) {
                 $requestValueName = sprintf('customSettings_%s_%s', $scope, $node['name']);
                 if ($request->request->has($requestValueName)) {
-                    $customSettings[$scope][$node['name']] = $request->request->get($requestValueName);
+                    $value = $request->request->get($requestValueName);
+                    if ($node['type'] === OpenDxp\Bundle\AdminBundle\Enum\SiteCustomConfigNodeType::CHECKBOX->value) {
+                        $value = $value === 'true';
+                    }
+
+                    $customSettings[$scope][$node['name']] = $value;
                 }
             }
         }
