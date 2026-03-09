@@ -1,5 +1,9 @@
 # Changelog / Upgrade Notes
 
+## 1.3.0
+* New Feature: Site custom settings by @solverat in https://github.com/open-dxp/admin-bundle/pull/61
+* Improvement: Replace SystemSettingsConfig usage with GeneralHostResolver in LoginController and UserController by @solverat in https://github.com/open-dxp/admin-bundle/pull/62
+
 ## 1.2.3
 * Translations: Fix data request - streamline filtering and improve readability by @solverat in https://github.com/open-dxp/admin-bundle/pull/50
 * correct languages when creating admin translation (#53) by @benwalch in https://github.com/open-dxp/admin-bundle/pull/54
