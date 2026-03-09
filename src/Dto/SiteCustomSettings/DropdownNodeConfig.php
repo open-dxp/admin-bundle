@@ -18,7 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\Dto\SiteCustomSettings;
 
 use OpenDxp\Bundle\AdminBundle\Enum\SiteCustomConfigNodeType;
 
-readonly class DropdownNodeConfig implements NodeConfigInterface
+final readonly class DropdownNodeConfig implements NodeConfigInterface
 {
     public function __construct(
         public array  $store        = [],

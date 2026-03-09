@@ -18,7 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\Dto\SiteCustomSettings;
 
 use OpenDxp\Bundle\AdminBundle\Enum\SiteCustomConfigNodeType;
 
-readonly class CheckboxNodeConfig implements NodeConfigInterface
+final readonly class CheckboxNodeConfig implements NodeConfigInterface
 {
     public function __construct(
         public bool|string $checkedValue = true,

@@ -18,7 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\Dto\SiteCustomSettings;
 
 use OpenDxp\Bundle\AdminBundle\Enum\SiteCustomConfigNodeType;
 
-readonly class TextNodeConfig implements NodeConfigInterface
+final readonly class TextNodeConfig implements NodeConfigInterface
 {
     public function __construct(
         public bool $required = false,

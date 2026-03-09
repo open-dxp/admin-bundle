@@ -18,7 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\Dto\SiteCustomSettings;
 
 use OpenDxp\Bundle\AdminBundle\Enum\SiteCustomConfigNodeType;
 
-readonly class InputNodeConfig implements NodeConfigInterface
+final readonly class InputNodeConfig implements NodeConfigInterface
 {
     public function __construct(
         public bool $required = false,
