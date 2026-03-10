@@ -1647,6 +1647,10 @@ opendxp.document.tree = Class.create({
 
     renderSiteCustomSettings: function (container, site) {
 
+        if (!site.id) {
+            return;
+        }
+
         const additionalConfigFactory = {
             textfield: (node, nodeValue) => ({
                 value: nodeValue,
