@@ -1,5 +1,8 @@
 # Changelog / Upgrade Notes
 
+## 1.3.1
+* Bugfix: Add guard clause to prevent rendering site settings without a valid site
+
 ## 1.3.0
 * New Feature: Site custom settings by @solverat in https://github.com/open-dxp/admin-bundle/pull/61
 * Improvement: Replace SystemSettingsConfig usage with GeneralHostResolver in LoginController and UserController by @solverat in https://github.com/open-dxp/admin-bundle/pull/62
