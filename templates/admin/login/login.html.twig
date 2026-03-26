@@ -2,7 +2,7 @@
 
 {% block content %}
 <div id="loginform" {% if not browserSupported %}style="display:none;"{% endif %}>
-    <form id="form-element" method="post" action="{{ path('opendxp_admin_login_check', {'perspective' : app.request.get('perspective')|striptags}) }}">
+    <form id="form-element" method="post" action="{{ path('opendxp_admin_login_check', {'perspective' : app.request.query.get('perspective')|striptags}) }}">
 
         {% if error is defined %}
         <div class="text error">
