@@ -1,5 +1,8 @@
 # Changelog / Upgrade Notes
 
+## 1.3.2
+* Bugfix: Remove redundant translation cache clearing from TranslationController
+
 ## 1.3.1
 * Bugfix: Add guard clause to prevent rendering site settings without a valid site
 
