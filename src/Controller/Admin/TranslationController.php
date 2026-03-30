@@ -153,9 +153,6 @@ class TranslationController extends AdminAbstractController
         $translation->setDomain($domain);
         $tableName = $translation->getDao()->getDatabaseTableName();
 
-        // clear translation cache
-        Translation::clearDependentCache();
-
         $list = new Translation\Listing();
         $list->setDomain($domain);
 
@@ -322,9 +319,6 @@ class TranslationController extends AdminAbstractController
         $translation = new Translation();
         $translation->setDomain($domain);
         $tableName = $translation->getDao()->getDatabaseTableName();
-
-        // clear translation cache
-        Translation::clearDependentCache();
 
         if ($request->request->has('data')) {
             $data = $this->decodeJson($request->request->get('data'));
