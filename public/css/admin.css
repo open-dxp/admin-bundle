@@ -152,9 +152,9 @@
 
 #opendxp_avatar img {
     position: absolute;
-    left: 12px;
-    bottom: 50px;
-    width:36px;
+    left: 14px;
+    bottom: 54px;
+    width: 32px;
     border-radius: 18px;
     cursor: pointer;
 }
@@ -2328,27 +2328,34 @@ ul.leaflet-draw-actions.leaflet-draw-actions-top.leaflet-draw-actions-bottom li:
     display: none;
 }
 
-#opendxp_notification > img {
+#opendxp_notification > span.notification-icon {
     position: absolute;
-    width: 24px;
-    height: 24px;
-    top: 11px;
-    left: 18px;
+    width: 60px;
+    height: 48px;
+    top: 0;
+    left: 0;
+    background-color: var(--color-neutral-a);
+    mask: url(/bundles/opendxpadmin/img/material-icons/outline-sms-24px.svg) no-repeat center / 24px 24px;
+    -webkit-mask: url(/bundles/opendxpadmin/img/material-icons/outline-sms-24px.svg) no-repeat center / 24px 24px;
 }
 
 #notification_value {
     background-color: var(--color-neutral-a);
-    border-radius: 9px;
+    border-radius: 100px;
     color: var(--color-white);
     font-size: 10px;
-    line-height: 1.3;
-    min-height: 12px;
-    padding: 4px 4px;
+    font-weight: 600;
+    line-height: 1;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 4px 5px;
     background-clip: padding-box;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
-    right: 12px;
-    top: 12px;
+    right: 9px;
+    top: 6px;
 }
 
 /** END notifications **/
