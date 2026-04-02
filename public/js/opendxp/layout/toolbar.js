@@ -229,13 +229,6 @@ opendxp.layout.toolbar = Class.create({
              }
 
              if (perspectiveCfg.inToolbar("file.help")) {
-                 // link to docs as major.minor.x
-                 var docsVersion = opendxp.settings.version.match(/^(\d+\.\d+)/);
-                 if (docsVersion) {
-                     docsVersion = docsVersion[0] + '.x';
-                 } else {
-                     docsVersion = 'latest';
-                 }
 
                  fileItems.push({
                      text: t('help'),
@@ -251,7 +244,7 @@ opendxp.layout.toolbar = Class.create({
                              iconCls: "opendxp_nav_icon_documentation",
                              itemId: 'opendxp_menu_file_help_documentation',
                              handler: function () {
-                                 window.open("https://opendxp.ch/docs/" + docsVersion);
+                                 window.open("https://docs.opendxp.io/docs/core-framework");
                              }
                          },
                              {
@@ -880,7 +873,7 @@ opendxp.layout.toolbar = Class.create({
                      iconCls: "opendxp_nav_icon_maintenance",
                      itemId: 'opendxp_menu_notifications_maintenance',
                      handler: function () {
-                         window.open('docs/Getting_Started/Installation/Webserver_Installation#5-maintenance-cron-job');
+                         window.open('https://docs.opendxp.io/docs/core-framework/Getting_Started/Installation/Webserver_Installation#5-maintenance-cron-job');
                      }
                  });
 
@@ -894,7 +887,7 @@ opendxp.layout.toolbar = Class.create({
                      iconCls: "opendxp_nav_icon_email",
                      itemId: 'opendxp_menu_notifications_email',
                      handler: function () {
-                         window.open('docs/Development_Documentation/Development_Tools_and_Details/Email_Framework');
+                         window.open('https://docs.opendxp.io/docs/core-framework/Development_Tools_and_Details/Email_Framework');
                      }
                  });
 
