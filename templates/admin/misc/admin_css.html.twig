@@ -42,15 +42,30 @@
     {% endfor %}
 {% endif %}
 
-{# CUSTOM BRANDING #}
+{# custom branding #}
 {% if adminSettings is defined and adminSettings['branding']['color_admin_interface'] is defined %}
-    {% set interfaceColor = adminSettings['branding']['color_admin_interface'] %}
+{% set interfaceColor = adminSettings['branding']['color_admin_interface'] %}
+{% if interfaceColor is not empty %}
 #opendxp_avatar {
     background-color: {{ interfaceColor }} !important;
+}
+
+#opendxp_notification {
+    background-color: {{ interfaceColor }} !important;
+}
+
+#opendxp_notification > span.notification-icon {
+    background: var(--color-white) !important;
+}
+
+#opendxp_signet {
+    background-color: {{ interfaceColor }} !important;
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDMwIDMwIj4KICA8cG9seWdvbiBzdHlsZT0iZmlsbDogbm9uZTsgc3Ryb2tlOiAjZmZmOyBzdHJva2Utd2lkdGg6IDJweDsgc3Ryb2tlLW1pdGVybGltaXQ6IDEwOyIgcG9pbnRzPSIyNS42IDIxLjEyIDI1LjYgOC44OCAxNSAyLjc2IDQuNCA4Ljg4IDQuNCAyMS4xMiAxNSAyNy4yNCAyNS42IDIxLjEyIi8+CiAgPHBvbHlnb24gc3R5bGU9InN0cm9rZS1saW5lam9pbjogcm91bmQ7IGZpbGw6IG5vbmU7IHN0cm9rZTogI2ZmZjsgc3Ryb2tlLXdpZHRoOiAycHg7IiBwb2ludHM9IjE1IDI3LjI0IDQuNCA4Ljg4IDI1LjYgOC44OCAxNSAyNy4yNCIvPgo8L3N2Zz4=) !important;
 }
 
 #opendxp_navigation li:hover:after {
     background-color: {{ interfaceColor }} !important;
 }
+{% endif %}
 {% endif %}
 

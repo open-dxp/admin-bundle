@@ -152,9 +152,9 @@
 
 #opendxp_avatar img {
     position: absolute;
-    left: 12px;
-    bottom: 50px;
-    width:36px;
+    left: 14px;
+    bottom: 54px;
+    width: 32px;
     border-radius: 18px;
     cursor: pointer;
 }
@@ -192,10 +192,10 @@
     font-size: 0;
     cursor: pointer;
     background-color: var(--color-primary-a);
-    background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSIjRTZGRjJBIi8+CjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMTI1IiBmaWxsPSIjMTAxMDExIi8+Cjwvc3ZnPg==);
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDMwIDMwIj4KICA8cG9seWdvbiBzdHlsZT0iZmlsbDogbm9uZTsgc3Ryb2tlOiAjMDAwOyBzdHJva2Utd2lkdGg6IDJweDsgc3Ryb2tlLW1pdGVybGltaXQ6IDEwOyIgcG9pbnRzPSIyNS42IDIxLjEyIDI1LjYgOC44OCAxNSAyLjc2IDQuNCA4Ljg4IDQuNCAyMS4xMiAxNSAyNy4yNCAyNS42IDIxLjEyIi8+CiAgPHBvbHlnb24gc3R5bGU9InN0cm9rZS1saW5lam9pbjogcm91bmQ7IGZpbGw6IG5vbmU7IHN0cm9rZTogIzAwMDsgc3Ryb2tlLXdpZHRoOiAycHg7IiBwb2ludHM9IjE1IDI3LjI0IDQuNCA4Ljg4IDI1LjYgOC44OCAxNSAyNy4yNCIvPgo8L3N2Zz4=);
     background-repeat: no-repeat;
-    background-size: 40px 40px;
-    background-position: 10px 4px;
+    background-size: 30px 30px;
+    background-position: 15px 10px;
 }
 
 #opendxp_tooltip {
@@ -2328,27 +2328,34 @@ ul.leaflet-draw-actions.leaflet-draw-actions-top.leaflet-draw-actions-bottom li:
     display: none;
 }
 
-#opendxp_notification > img {
+#opendxp_notification > span.notification-icon {
     position: absolute;
-    width: 24px;
-    height: 24px;
-    top: 11px;
-    left: 18px;
+    width: 60px;
+    height: 48px;
+    top: 0;
+    left: 0;
+    background-color: var(--color-neutral-a);
+    mask: url(/bundles/opendxpadmin/img/material-icons/outline-sms-24px.svg) no-repeat center / 24px 24px;
+    -webkit-mask: url(/bundles/opendxpadmin/img/material-icons/outline-sms-24px.svg) no-repeat center / 24px 24px;
 }
 
 #notification_value {
     background-color: var(--color-neutral-a);
-    border-radius: 9px;
+    border-radius: 100px;
     color: var(--color-white);
     font-size: 10px;
-    line-height: 1.3;
-    min-height: 12px;
-    padding: 4px 4px;
+    font-weight: 600;
+    line-height: 1;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 4px 5px;
     background-clip: padding-box;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
-    right: 12px;
-    top: 12px;
+    right: 9px;
+    top: 6px;
 }
 
 /** END notifications **/
