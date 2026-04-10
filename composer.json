@@ -17,7 +17,7 @@
         "forum": "https://github.com/open-dxp/admin-bundle/discussions"
     },
     "require": {
-        "php": "~8.3.0 || ~8.4.0",
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "cbschuld/browser.php": "^1.9.6",
         "endroid/qr-code": "^4 || ^5.1",
         "phpoffice/phpspreadsheet": "^2.2 || ^3.3",
