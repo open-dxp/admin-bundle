@@ -458,47 +458,51 @@ opendxp.document.link = Class.create(opendxp.document.document, {
 
                     onNodeOver: function (target, dd, e, data) {
 
-                        if (data.records[0].data.elementType === 'document' && data.records[0].data.id === currentId) {
+                        const record = data.records[0];
+
+                        if (data.records.length !== 1) {
+                            return false;
+                        }
+
+                        if (record.data.elementType === 'document' && record.data.id === currentId) {
                             return false;
                         }
 
                         if (
-                            data.records.length === 1 && (
-                                data.records[0].data.elementType === 'document' ||
-                                data.records[0].data.elementType === 'asset' ||
-                                data.records[0].data.elementType === 'object'
-                            )
-                            && data.records[0].data.type !== 'folder'
+                            record.data.type !== 'folder' &&
+                            ['document', 'asset', 'object'].includes(record.data.elementType)
                         ) {
                             return Ext.dd.DropZone.prototype.dropAllowed;
                         }
+
+                        return Ext.dd.DropZone.prototype.dropNotAllowed;
                     },
 
                     onNodeDrop: function (target, dd, e, data) {
 
-                        if (data.records[0].data.elementType === 'document' && data.records[0].data.id === currentId) {
+                        const record = data.records[0];
+
+                        if (record.data.elementType === 'document' && record.data.id === currentId) {
                             return false;
                         }
 
-                        if(!opendxp.helpers.dragAndDropValidateSingleItem(data) || !isChangeAllowed) {
+                        if (!opendxp.helpers.dragAndDropValidateSingleItem(data) || !isChangeAllowed) {
                             return false;
                         }
-
-                        data = data.records[0].data;
 
                         if (
-                            data.type !== 'folder' && (
-                                data.elementType === 'document' ||
-                                data.elementType === 'asset' ||
-                                data.elementType === 'object'
-                            )
+                            record.data.type !== 'folder' &&
+                            ['document', 'asset', 'object'].includes(record.data.elementType)
                         ) {
-                            internalTypeField.setValue(data.elementType);
+                            internalTypeField.setValue(record.data.elementType);
                             linkTypeField.setValue('internal');
-                            pathField.setValue(data.path);
+                            pathField.setValue(record.data.path);
 
                             return true;
                         }
+
+                        return false;
+
                     }.bind(this)
                 });
 
