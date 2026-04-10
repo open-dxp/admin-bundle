@@ -48,7 +48,7 @@ Following topics are short-cuts into the documentation for admin interface:
 
 ## Contributing
 
-**Bug fixes:** open a pull request including a step-by-step description to reproduce the problem.
+**Bug fixes:** open a pull request including a step-by-step description to reproduce the problem.  
 **Security vulnerabilities:** see the [security policy](https://github.com/open-dxp/opendxp/security/policy).
 
 ### Translations
