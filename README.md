@@ -46,6 +46,21 @@ Following topics are short-cuts into the documentation for admin interface:
 
 ***
 
+## Contributing
+
+**Bug fixes:** open a pull request including a step-by-step description to reproduce the problem.  
+**Security vulnerabilities:** see the [security policy](https://github.com/open-dxp/opendxp/security/policy).
+
+### Translations
+Admin UI translations live in the [`translations/`](translations/) directory as YAML files.
+
+- The English source file is `translations/admin.en.yaml`
+- Each language has its own file, e.g. `admin.de.yaml`, `admin.fr.yaml`
+- To improve an existing translation: edit the relevant file and open a pull request
+- To add a new language: copy `admin.en.yaml`, rename it to `admin.<locale>.yaml`, translate the values, and open a pull request
+
+---
+
 ## Upstream Origin & Version Transparency 
 This project is a fork of the [Pimcore admin-ui-classic-bundle (95b1838 / v1.7.15)](https://github.com/pimcore/admin-ui-classic-bundle/tree/95b18389ad0678361d64fbbb5a1ba8db0bb4b54e), which is © Pimcore GmbH and licensed under GPLv3. 
 
