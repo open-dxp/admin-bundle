@@ -1,7 +1,12 @@
 # Changelog / Upgrade Notes
 
 ## 1.3.2
-* Bugfix: Remove redundant translation cache clearing from TranslationController
+* Bugfix: Remove redundant translation cache clearing from TranslationController [#67](https://github.com/open-dxp/admin-bundle/pull/67)
+* Bugfix: Ue new documentation URLs in toolbar links [#70](https://github.com/open-dxp/admin-bundle/pull/70)
+* Bugfix: Fix invalid infinite loop detection when linking to another type of element in document link [#74](https://github.com/open-dxp/admin-bundle/pull/74)
+* Improvement: PHP 8.5 support added [#76](https://github.com/open-dxp/admin-bundle/pull/76)
+* Improvement: Remove POEditor support and and normalize translation files [#75](https://github.com/open-dxp/admin-bundle/pull/75)
+* Improvement: Update admin UI styles, adjust notification and avatar elements for improved alignment [#72](https://github.com/open-dxp/admin-bundle/pull/72)
 
 ## 1.3.1
 * Bugfix: Add guard clause to prevent rendering site settings without a valid site
