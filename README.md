@@ -69,7 +69,7 @@ Licensed under the GNU General Public License v3.0 (GPLv3). For details, please 
 
 ## Copyright 
 © Pimcore GmbH  
-© 2025 OpenDXP Contributors — GPLv3 
+© 2026 OpenDXP Contributors — GPLv3 
 
 ## Trademarks 
 Pimcore® is a registered [trademark](https://www.trademarkelite.com/europe/trademark/trademark-detail/009309841/PIMCORE) of Pimcore GmbH. 

@@ -8,7 +8,6 @@ Instead, all security issues must be reported via a private vulnerability report
 
 Please follow the [instructions](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability#privately-reporting-a-security-vulnerability) to submit a private report.
 
-
 ## Resolving Process
 Every submitted security issue is handled with top priority by following these steps:
 
