@@ -1168,8 +1168,8 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         $thumbnailConfig = null;
 
-        if ($request->query->get('thumbnail')) {
-            $thumbnailConfig = $image->getThumbnail($request->query->get('thumbnail'))->getConfig();
+        if ($thumbnailParam = $request->query->all()['thumbnail'] ?? null) {
+            $thumbnailConfig = $image->getThumbnail($thumbnailParam)->getConfig();
         }
         if (!$thumbnailConfig) {
             if ($request->query->get('config')) {
