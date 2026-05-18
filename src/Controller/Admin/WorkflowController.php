@@ -400,16 +400,18 @@ class WorkflowController extends AdminAbstractController implements KernelContro
 
         $request = $event->getRequest();
 
-        if ($request->query->get('ctype') === 'document') {
-            $this->element = Document::getById((int) $request->query->get('cid', '0'));
-        } elseif ($request->query->get('ctype') === 'asset') {
-            $this->element = Asset::getById((int) $request->query->get('cid', '0'));
-        } elseif ($request->query->get('ctype') === 'object') {
-            $this->element = ConcreteObject::getById((int) $request->query->get('cid', '0'));
-        }
+        $ctype = $request->request->get('ctype') ?? $request->query->get('ctype');
+        $cid = $request->request->get('cid') ?? $request->query->get('cid');
 
-        if (!$this->element) {
-            throw new Exception('Cannot load element' . $request->query->get('cid') . ' of type \'' . $request->query->get('ctype') . '\'');
+        $this->element = match ($ctype) {
+            'document' => Document::getById((int) $cid),
+            'asset' => Asset::getById((int) $cid),
+            'object' => ConcreteObject::getById((int) $cid),
+            default => null,
+        };
+
+        if ($this->element === null) {
+            throw new Exception('Cannot load element' . $cid . ' of type \'' . $ctype . '\'');
         }
 
         //get the latest available version of the element -
