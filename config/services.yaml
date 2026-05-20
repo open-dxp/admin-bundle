@@ -84,8 +84,6 @@ services:
     # Twig Extensions
     #
 
-    OpenDxp\Twig\Extension\AdminExtension: ~
-    
     OpenDxp\Bundle\AdminBundle\Twig\Extension\AdminExtension: ~
 
     #
