@@ -425,6 +425,11 @@ opendxp.settings.videothumbnail.items = {
                 width: 250,
                 value: data.height
             }, {
+                xtype: 'checkbox',
+                name: 'forceResize',
+                checked: (data['forceResize'] !== false),
+                fieldLabel: t('force_resize')
+            }, {
                 xtype: "hidden",
                 name: "type",
                 value: "scaleByHeight"
@@ -458,6 +463,11 @@ opendxp.settings.videothumbnail.items = {
                 fieldLabel: t("width"),
                 width: 250,
                 value: data.width
+            }, {
+                xtype: 'checkbox',
+                name: 'forceResize',
+                checked: (data['forceResize'] !== false),
+                fieldLabel: t('force_resize')
             }, {
                 xtype: "hidden",
                 name: "type",
