@@ -20,7 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Enum\SiteCustomConfigNodeType;
 
 final readonly class TextNodeConfig implements NodeConfigInterface
 {
-    public function __construct(public bool $required = false,)
+    public function __construct(public bool $required = false)
     {
     }
 

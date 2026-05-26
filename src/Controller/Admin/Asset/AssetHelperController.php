@@ -58,7 +58,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 #[Route('/asset-helper')]
 class AssetHelperController extends AdminAbstractController
 {
-    public function __construct(protected EventDispatcherInterface $eventDispatcher,)
+    public function __construct(protected EventDispatcherInterface $eventDispatcher)
     {
     }
 
