@@ -69,8 +69,10 @@ class ContentSecurityPolicyHandler implements LoggerAwareInterface
         ],
     ];
 
-    public function __construct(protected Config $config, protected array $cspHeaderOptions = [])
-    {
+    public function __construct(
+        protected Config $config,
+        protected array $cspHeaderOptions = []
+    ) {
         $resolver = new OptionsResolver();
         $this->configureOptions($resolver);
 

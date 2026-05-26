@@ -26,8 +26,10 @@ use OpenDxp\Security\User\TokenStorageUserResolver;
  */
 class OpenDxpUsers implements DataProviderInterface
 {
-    public function __construct(protected TokenStorageUserResolver $userResolver, private readonly string $logsDir)
-    {
+    public function __construct(
+        protected TokenStorageUserResolver $userResolver,
+        private readonly string $logsDir
+    ) {
     }
 
     public function getName(): string

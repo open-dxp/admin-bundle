@@ -19,8 +19,10 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 class LoginRedirectEvent extends Event
 {
-    public function __construct(protected string $routeName, protected array $routeParams = [])
-    {
+    public function __construct(
+        protected string $routeName,
+        protected array $routeParams = []
+    ) {
     }
 
     public function getRouteName(): string

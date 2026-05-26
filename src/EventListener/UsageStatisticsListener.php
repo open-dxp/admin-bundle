@@ -35,8 +35,10 @@ class UsageStatisticsListener implements EventSubscriberInterface
     use LoggerAwareTrait;
     use OpenDxpContextAwareTrait;
 
-    public function __construct(protected TokenStorageUserResolver $userResolver, protected Config $config)
-    {
+    public function __construct(
+        protected TokenStorageUserResolver $userResolver,
+        protected Config $config
+    ) {
     }
 
     public static function getSubscribedEvents(): array

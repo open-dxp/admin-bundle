@@ -29,8 +29,10 @@ abstract class AbstractOperator implements OperatorInterface
      */
     protected array $children;
 
-    public function __construct(stdClass $config, protected array $context = [])
-    {
+    public function __construct(
+        stdClass $config,
+        protected array $context = []
+    ) {
         $this->label = $config->label;
         $this->children = $config->children;
     }

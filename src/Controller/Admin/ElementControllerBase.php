@@ -41,9 +41,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 abstract class ElementControllerBase extends AdminAbstractController
 {
-    public function __construct(
-        protected ElementServiceInterface $elementService
-    ) {
+    public function __construct(protected ElementServiceInterface $elementService)
+    {
     }
 
     /**

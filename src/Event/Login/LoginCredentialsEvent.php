@@ -23,8 +23,10 @@ class LoginCredentialsEvent extends Event
 {
     use RequestAwareTrait;
 
-    public function __construct(Request $request, protected array $credentials)
-    {
+    public function __construct(
+        Request $request,
+        protected array $credentials
+    ) {
         $this->request = $request;
     }
 

@@ -40,9 +40,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 class GridHelperService
 {
-    public function __construct(
-        private readonly EventDispatcherInterface $eventDispatcher
-    ) {
+    public function __construct(private readonly EventDispatcherInterface $eventDispatcher)
+    {
 
     }
 

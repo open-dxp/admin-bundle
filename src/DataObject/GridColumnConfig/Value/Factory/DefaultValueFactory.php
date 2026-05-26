@@ -23,8 +23,10 @@ use stdClass;
 
 final readonly class DefaultValueFactory implements ValueFactoryInterface
 {
-    public function __construct(private string $className, private LocaleServiceInterface $localeService)
-    {
+    public function __construct(
+        private string $className,
+        private LocaleServiceInterface $localeService
+    ) {
     }
 
     public function build(stdClass $configElement, mixed $context = null): ValueInterface

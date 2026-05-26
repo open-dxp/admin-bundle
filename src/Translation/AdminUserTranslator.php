@@ -26,8 +26,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class AdminUserTranslator implements TranslatorInterface, LocaleAwareInterface
 {
-    public function __construct(private readonly TranslatorInterface $translator, private readonly UserLoader $userLoader)
-    {
+    public function __construct(
+        private readonly TranslatorInterface $translator,
+        private readonly UserLoader $userLoader
+    ) {
     }
 
     private function getUserLocale(): ?string

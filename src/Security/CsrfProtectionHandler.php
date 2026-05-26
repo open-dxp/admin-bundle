@@ -35,8 +35,10 @@ class CsrfProtectionHandler implements LoggerAwareInterface
 
     protected ?string $csrfToken = null;
 
-    public function __construct(protected array $excludedRoutes, protected Environment $twig)
-    {
+    public function __construct(
+        protected array $excludedRoutes,
+        protected Environment $twig
+    ) {
     }
 
     public function checkCsrfToken(Request $request): void

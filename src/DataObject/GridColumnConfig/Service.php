@@ -30,8 +30,10 @@ use stdClass;
  */
 final readonly class Service
 {
-    public function __construct(private ContainerInterface $operatorFactories, private ContainerInterface $valueFactories)
-    {
+    public function __construct(
+        private ContainerInterface $operatorFactories,
+        private ContainerInterface $valueFactories
+    ) {
     }
 
     /**

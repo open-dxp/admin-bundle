@@ -25,8 +25,10 @@ abstract class AbstractValue implements ValueInterface
 
     protected string $label;
 
-    public function __construct(stdClass $config, protected mixed $context = null)
-    {
+    public function __construct(
+        stdClass $config,
+        protected mixed $context = null
+    ) {
         $this->attribute = $config->attribute;
         $this->label = $config->label;
     }

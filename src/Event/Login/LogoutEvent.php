@@ -26,8 +26,10 @@ class LogoutEvent extends Event
     use RequestAwareTrait;
     use ResponseAwareTrait;
 
-    public function __construct(Request $request, protected User $user)
-    {
+    public function __construct(
+        Request $request,
+        protected User $user
+    ) {
         $this->request = $request;
     }
 
