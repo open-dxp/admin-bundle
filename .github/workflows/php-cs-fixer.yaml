@@ -17,7 +17,9 @@ jobs:
         secrets:
             PHP_CS_FIXER_GITHUB_TOKEN: ${{ secrets.PHP_CS_FIXER_GITHUB_TOKEN }}
         with:
-            head_ref: ${{ github.event.pull_request.head.ref }}
-            repository: ${{ github.event.pull_request.head.repo.full_name }}
+            head_ref: ${{ github.ref }}
+            repository: ${{ github.repository }}
             use_global_config: true
+            cs_fixer_mode: core
             finder_file: .php-cs-fixer-finder.dist.php
+            fork_point: "v1.2.2"
