@@ -1,5 +1,11 @@
 # Changelog / Upgrade Notes
 
+## 1.3.3
+* Improvement: add forceResize checkbox to video thumbnail settings [#82](https://github.com/open-dxp/admin-bundle/pull/82)
+* Bugfix: executing workflow transitions [#80](https://github.com/open-dxp/admin-bundle/pull/80)
+* Bugfix: array thumbnail parameter in getImageThumbnailAction [#78](https://github.com/open-dxp/admin-bundle/pull/78)
+* Bugfix: remove duplicate AdminExtension service definition from services.yaml [#84](https://github.com/open-dxp/admin-bundle/pull/84)
+
 ## 1.3.2
 * Bugfix: Remove redundant translation cache clearing from TranslationController [#67](https://github.com/open-dxp/admin-bundle/pull/67)
 * Bugfix: Ue new documentation URLs in toolbar links [#70](https://github.com/open-dxp/admin-bundle/pull/70)
