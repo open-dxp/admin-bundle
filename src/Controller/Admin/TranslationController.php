@@ -500,21 +500,21 @@ class TranslationController extends AdminAbstractController
                     $alreadyJoined = [];
 
                     foreach ($joins as $join) {
-                        $fieldname = $join['language'];
+                        $fieldName = $join['language'];
 
-                        if (isset($alreadyJoined[$fieldname])) {
+                        if (isset($alreadyJoined[$fieldName])) {
                             continue;
                         }
-                        $alreadyJoined[$fieldname] = 1;
+                        $alreadyJoined[$fieldName] = 1;
 
-                        $select->addSelect($fieldname . '.text AS ' . $fieldname);
+                        $select->addSelect($fieldName . '.text AS ' . $fieldName);
                         $select->leftJoin(
                             $tableName,
                             $tableName,
-                            $fieldname,
+                            $fieldName,
                             '('
-                            . $fieldname . '.key = ' . $tableName . '.key'
-                            . ' and ' . $fieldname . '.language = ' . $db->quote($fieldname)
+                            . $fieldName . '.key = ' . $tableName . '.key'
+                            . ' and ' . $fieldName . '.language = ' . $db->quote($fieldName)
                             . ')'
                         );
                     }
@@ -550,39 +550,46 @@ class TranslationController extends AdminAbstractController
                 $field = null;
                 $value = null;
 
-                $fieldname = $filter[$propertyField];
-                if (in_array(ltrim($fieldname, '_'), $validLanguages)) {
-                    $fieldname = ltrim($fieldname, '_');
+                $fieldName = $filter[$propertyField];
+                if (in_array(ltrim($fieldName, '_'), $validLanguages)) {
+                    $fieldName = ltrim($fieldName, '_');
                 }
-                $fieldname = str_replace('--', '', $fieldname);
-                if (!$languageMode && in_array($fieldname, $validLanguages)) {
+
+                $fieldName = str_replace('--', '', $fieldName);
+                if (!$languageMode && in_array($fieldName, $validLanguages)) {
                     continue;
                 }
-                if ($languageMode && !in_array($fieldname, $validLanguages)) {
+
+                if ($languageMode && !in_array($fieldName, $validLanguages)) {
+                    continue;
+                }
+
+                $allowedNonLanguageFields = ['key', 'type', 'creationDate', 'modificationDate'];
+                if (!$languageMode && !in_array($fieldName, $allowedNonLanguageFields)) {
                     continue;
                 }
 
                 if (!$languageMode) {
-                    $fieldname = $tableName . '.' . $fieldname;
+                    $fieldName = $tableName . '.' . $fieldName;
                 }
 
                 if (!empty($filter['value'])) {
                     if ($filter['type'] === 'string') {
                         $operator = 'LIKE';
-                        $field = $fieldname;
+                        $field = $fieldName;
                         $value = '%' . $filter['value'] . '%';
                     } elseif ($filter['type'] === 'date' ||
-                        (in_array($fieldname, ['modificationDate', 'creationDate']))) {
+                        (in_array($fieldName, ['modificationDate', 'creationDate']))) {
                         if ($filter[$operatorField] === 'lt') {
                             $operator = '<';
                         } elseif ($filter[$operatorField] === 'gt') {
                             $operator = '>';
                         } elseif ($filter[$operatorField] === 'eq') {
                             $operator = '=';
-                            $fieldname = "UNIX_TIMESTAMP(DATE(FROM_UNIXTIME({$fieldname})))";
+                            $fieldName = "UNIX_TIMESTAMP(DATE(FROM_UNIXTIME({$fieldName})))";
                         }
                         $filter['value'] = strtotime($filter['value']);
-                        $field = $fieldname;
+                        $field = $fieldName;
                         $value = $filter['value'];
                     }
                 }
@@ -591,9 +598,9 @@ class TranslationController extends AdminAbstractController
                     $condition = $db->quoteIdentifier($field) . ' ' . $operator . ' ' . $db->quote($value);
 
                     if ($languageMode) {
-                        $conditions[$fieldname] = $condition;
+                        $conditions[$fieldName] = $condition;
                         $joins[] = [
-                            'language' => $fieldname,
+                            'language' => $fieldName,
                         ];
                     } else {
                         $placeHolderName = self::PLACEHOLDER_NAME . $placeHolderCount;
