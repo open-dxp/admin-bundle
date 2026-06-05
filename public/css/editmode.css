@@ -117,8 +117,8 @@ input.cke_dialog_ui_input_tel {
 .opendxp_area_buttons_inner{
     height: 34px;
     display: flex;
-    background: var(--color-neutral-d);
-    border-left: 1px solid var(--color-black);
+    background: var(--color-opendxp-neutral-d);
+    border-left: 1px solid var(--color-opendxp-black);
 }
 
 .opendxp_area_buttons.right .opendxp_area_buttons_inner,
@@ -134,13 +134,13 @@ input.cke_dialog_ui_input_tel {
     right: 100%;
     width: 0;
     height: 0;
-    border-right: 8px solid var(--color-black);
+    border-right: 8px solid var(--color-opendxp-black);
     border-top: 0px solid transparent;
     border-bottom: 8px solid transparent;
 
     left: 100%;
-    border-left: 5px solid var(--color-black);
-    border-right: 0px solid var(--color-black);
+    border-left: 5px solid var(--color-opendxp-black);
+    border-right: 0px solid var(--color-opendxp-black);
 }
 
 .opendxp_area_buttons.left:after {
@@ -149,8 +149,8 @@ input.cke_dialog_ui_input_tel {
 
 .opendxp_area_buttons.right:after {
     left: -5px;
-    border-left: 0px solid var(--color-black);
-    border-right: 5px solid var(--color-black);
+    border-left: 0px solid var(--color-opendxp-black);
+    border-right: 5px solid var(--color-opendxp-black);
 }
 
 .opendxp_area_buttons.top:after {
@@ -159,8 +159,8 @@ input.cke_dialog_ui_input_tel {
     border-left: 0px solid transparent;
     border-right: 8px solid transparent;
 
-    border-bottom: 0px solid var(--color-black);
-    border-top: 5px solid var(--color-black);
+    border-bottom: 0px solid var(--color-opendxp-black);
+    border-top: 5px solid var(--color-opendxp-black);
 }
 
 .opendxp_block_buttons .x-form-trigger-default,
@@ -176,8 +176,8 @@ input.cke_dialog_ui_input_tel {
 }
 
 .opendxp_block_buttons .x-btn {
-    background: var(--color-neutral-i);
-    border-color: var(--color-neutral-h);
+    background: var(--color-opendxp-neutral-i);
+    border-color: var(--color-opendxp-neutral-h);
     border-left: 0;
 }
 
@@ -185,8 +185,8 @@ input.cke_dialog_ui_input_tel {
 .opendxp_block_buttons .x-btn-focus.x-btn-default-small,
 .opendxp_block_buttons .x-btn-pressed.x-btn-default-small
 {
-    background-color: var(--color-neutral-h);
-    border-color: var(--color-neutral-h);
+    background-color: var(--color-opendxp-neutral-h);
+    border-color: var(--color-opendxp-neutral-h);
     border-left: 0;
 }
 
@@ -241,7 +241,7 @@ input.cke_dialog_ui_input_tel {
 .opendxp_area_buttons.top .opendxp_block_label {
     display: inline-block;
     float: left;
-    color: var(--color-neutral-g);
+    color: var(--color-opendxp-neutral-g);
     line-height: 38px;
     font-size: 10px;
     padding-left: 10px;
@@ -296,21 +296,21 @@ input.cke_dialog_ui_input_tel {
 
 .opendxp_area_dropzone {
     height: 20px;
-    background: var(--color-white);
-    border:2px dashed var(--color-black);
+    background: var(--color-opendxp-white);
+    border:2px dashed var(--color-opendxp-black);
     clear:both;
     visibility: hidden;
     margin: 5px 0;
 }
 
 .opendxp_area_dropzone_hover {
-    background: var(--color-neutral-g);
+    background: var(--color-opendxp-neutral-g);
 }
 
 .opendxp_wysiwyg_mask {
 	position: absolute;
 	z-index: 9997;
-	background: var(--color-red-a);
+	background: var(--color-opendxp-red-a);
 	/* beacause of IE */
 	-moz-opacity: 0;
     -webkit-opacity: 0;
@@ -351,25 +351,25 @@ input.cke_dialog_ui_input_tel {
 }
 
 .opendxp_editable_snippet_empty {
-	border: 1px solid var(--color-neutral-g) !important;
-	background:url(/bundles/opendxpadmin/img/flat-color-icons/target.svg) center center/45px no-repeat var(--color-neutral-i) !important;
+	border: 1px solid var(--color-opendxp-neutral-g) !important;
+	background:url(/bundles/opendxpadmin/img/flat-color-icons/target.svg) center center/45px no-repeat var(--color-opendxp-neutral-i) !important;
 }
 
 .opendxp_editable_image_empty {
-	border: 1px solid var(--color-neutral-g) !important;
-	background:url(/bundles/opendxpadmin/img/flat-color-icons/drop-target-upload.svg) center center/80px no-repeat var(--color-neutral-i) !important;
+	border: 1px solid var(--color-opendxp-neutral-g) !important;
+	background:url(/bundles/opendxpadmin/img/flat-color-icons/drop-target-upload.svg) center center/80px no-repeat var(--color-opendxp-neutral-i) !important;
     min-height: 50px;
 }
 
 .opendxp_editable_image_no_upload_empty {
-    border: 1px solid var(--color-neutral-g) !important;
-    background:url(/bundles/opendxpadmin/img/flat-color-icons/target.svg) center center/45px no-repeat var(--color-neutral-i) !important;
+    border: 1px solid var(--color-opendxp-neutral-g) !important;
+    background:url(/bundles/opendxpadmin/img/flat-color-icons/target.svg) center center/45px no-repeat var(--color-opendxp-neutral-i) !important;
     min-height: 50px;
 }
 
 .opendxp_editable_video_empty {
-	border: 1px solid var(--color-neutral-g) !important;
-    background:url(/bundles/opendxpadmin/img/flat-color-icons/film_reel.svg) center center/50px no-repeat var(--color-neutral-i) !important;
+	border: 1px solid var(--color-opendxp-neutral-g) !important;
+    background:url(/bundles/opendxpadmin/img/flat-color-icons/film_reel.svg) center center/50px no-repeat var(--color-opendxp-neutral-i) !important;
     cursor: pointer;
     min-height: 80px;
 }
@@ -379,14 +379,14 @@ input.cke_dialog_ui_input_tel {
 }
 
 .opendxp_editable_embed_empty {
-    border: 1px solid var(--color-neutral-g) !important;
-    background:url(/bundles/opendxpadmin/img/flat-color-icons/bricks.svg) center center/50px no-repeat var(--color-neutral-i) !important;
+    border: 1px solid var(--color-opendxp-neutral-g) !important;
+    background:url(/bundles/opendxpadmin/img/flat-color-icons/bricks.svg) center center/50px no-repeat var(--color-opendxp-neutral-i) !important;
     cursor: pointer;
     min-height:100px;
 }
 
 .opendxp_editable_relation input{
-	background: url(/bundles/opendxpadmin/img/flat-color-icons/target.svg) right 3px center/24px no-repeat var(--color-white);
+	background: url(/bundles/opendxpadmin/img/flat-color-icons/target.svg) right 3px center/24px no-repeat var(--color-opendxp-white);
 	cursor: default;
 }
 
@@ -439,7 +439,7 @@ input.cke_dialog_ui_input_tel {
 }
 
 .opendxp_droptarget_input  {
-	background: url(/bundles/opendxpadmin/img/flat-color-icons/target.svg) right 2px/20px no-repeat var(--color-white) !important;
+	background: url(/bundles/opendxpadmin/img/flat-color-icons/target.svg) right 2px/20px no-repeat var(--color-opendxp-white) !important;
 	cursor: default;
 }
 
@@ -479,7 +479,7 @@ input.cke_dialog_ui_input_tel {
 
 .opendxp_areablock_toolbar {
     opacity: .9;
-    border-color: var(--color-black);
+    border-color: var(--color-opendxp-black);
     overflow-y: auto;
     max-height: calc(100vh - 15px);
     color-scheme: dark;
@@ -493,8 +493,8 @@ input.cke_dialog_ui_input_tel {
 .opendxp_areablock_toolbar .x-btn-default-small {
     padding-top: 3px;
     padding-bottom: 3px;
-    background: var(--color-black);
-    border-bottom: 1px solid var(--color-neutral-g);
+    background: var(--color-opendxp-black);
+    border-bottom: 1px solid var(--color-opendxp-neutral-g);
 }
 
 .opendxp_areablock_toolbar .x-btn-default-small:last-child {
@@ -512,7 +512,7 @@ input.cke_dialog_ui_input_tel {
     content: '\f0da';
 }
 .opendxp_areablock_menu_limit {
-    color: var(--color-green-a);
+    color: var(--color-opendxp-green-a);
     font-style: normal;
     font-weight: normal;
 }
@@ -542,19 +542,19 @@ input.cke_dialog_ui_input_tel {
 .opendxp_image_hotspot {
     cursor: pointer;
     position: absolute;
-    background: var(--color-green-b);
+    background: var(--color-opendxp-green-b);
 }
 
 .opendxp_pdf_hotspot {
-    background: var(--color-green-b);
+    background: var(--color-opendxp-green-b);
 }
 
 .hasMetadata {
-    color: var(--color-red-a);
+    color: var(--color-opendxp-red-a);
 }
 
 .opendxp_editable_multihref .x5-panel, .opendxp_editable_table .x5-panel {
-    border:1px solid var(--color-black);
+    border:1px solid var(--color-opendxp-black);
 }
 
 .opendxp_editable_select, .opendxp_editable_checkbox {
@@ -572,7 +572,7 @@ input.cke_dialog_ui_input_tel {
     cursor: text; /* For chrome */
     content: attr(data-placeholder);
     display: block; /* For firefox */
-    color:var(--color-neutral-f);
+    color:var(--color-opendxp-neutral-f);
 }
 
 .opendxp_wysiwyg.empty[contenteditable=true]:before {
@@ -586,11 +586,11 @@ input.cke_dialog_ui_input_tel {
 }
 
 .opendxp_editable_input.empty, .opendxp_wysiwyg.empty, .opendxp_editable_textarea.empty{
-    outline: 1px dashed var(--color-neutral-f);
+    outline: 1px dashed var(--color-opendxp-neutral-f);
 }
 
 .editable-error {
-    outline: 2px dashed var(--color-red-a) !important;
+    outline: 2px dashed var(--color-opendxp-red-a) !important;
     outline-offset: 5px;
 }
 
@@ -600,7 +600,7 @@ input.cke_dialog_ui_input_tel {
 }
 
 .opendxp_editable_input:hover, .opendxp_wysiwyg:hover, .opendxp_editable_textarea:hover, .opendxp_editable_snippet:hover, .opendxp_editable_renderlet:hover, .opendxp_editable_inc:hover {
-    outline: 2px dashed var(--color-neutral-f);
+    outline: 2px dashed var(--color-opendxp-neutral-f);
     outline-offset: 5px;
 }
 
@@ -617,7 +617,7 @@ input.cke_dialog_ui_input_tel {
 .opendxp_areablock_dialogBox .opendxp_editable_input,
 .opendxp_areablock_dialogBox .opendxp_editable_wysiwyg,
 .opendxp_areablock_dialogBox .opendxp_editable_textarea {
-    background-color: var(--color-white);
+    background-color: var(--color-opendxp-white);
 }
 
 .opendxp_areablock_dialogBox .opendxp_editable_input:hover,

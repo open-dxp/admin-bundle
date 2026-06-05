@@ -2,7 +2,7 @@
   "AdminBundle/build/admin.css": "/bundles/opendxpadmin/build/admin/admin.css",
   "AdminBundle/build/admin.js": "/bundles/opendxpadmin/build/admin/admin.js",
   "AdminBundle/build/runtime.js": "/bundles/opendxpadmin/build/admin/runtime.js",
-  "AdminBundle/build/694.js": "/bundles/opendxpadmin/build/admin/694.js",
+  "AdminBundle/build/498.js": "/bundles/opendxpadmin/build/admin/498.js",
   "AdminBundle/build/213.js": "/bundles/opendxpadmin/build/admin/213.js",
   "AdminBundle/build/ace-builds/src-min-noconflict/worker-xquery.js": "/bundles/opendxpadmin/build/admin/ace-builds/src-min-noconflict/worker-xquery.js",
   "AdminBundle/build/ace-builds/src-min-noconflict/mode-php_laravel_blade.js": "/bundles/opendxpadmin/build/admin/ace-builds/src-min-noconflict/mode-php_laravel_blade.js",
