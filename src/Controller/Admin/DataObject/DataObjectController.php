@@ -789,23 +789,6 @@ class DataObjectController extends ElementControllerBase implements KernelContro
             $objectData['general']['userModificationUsername'] = $userModificationName['userName'];
             $objectData['general']['userModificationFullname'] = $userModificationName['fullName'];
 
-            // grid-config
-            $configFile = OPENDXP_CONFIGURATION_DIRECTORY . '/object/grid/' . $object->getId() . '-user_' . $this->getAdminUser()->getId() . '.psf';
-            if (is_file($configFile)) {
-                $gridConfig = Tool\Serialize::unserialize(file_get_contents($configFile));
-                if ($gridConfig) {
-                    $selectedClassId = $gridConfig['classId'];
-
-                    foreach ($objectData['classes'] as $class) {
-                        if ($class['id'] == $selectedClassId) {
-                            $objectData['selectedClass'] = $selectedClassId;
-
-                            break;
-                        }
-                    }
-                }
-            }
-
             //Hook for modifying return value - e.g. for changing permissions based on object data
             //data need to wrapped into a container in order to pass parameter to event listeners by reference so that they can change the values
             $event = new GenericEvent($this, [
