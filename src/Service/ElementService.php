@@ -121,6 +121,12 @@ class ElementService implements ElementServiceInterface
             '_dc' => $asset->getModificationDate(),
         ];
 
+        if ($asset instanceof Asset\Image && ($params['origin'] ?? null) === 'folderPreview') {
+            if (!$asset->getThumbnail(Asset\Image\Thumbnail\Config::getPreviewConfig())->exists()) {
+                $defaults['_dc'] = time();
+            }
+        }
+
         $params = [...$defaults, ...$params];
 
         switch ($asset) {
