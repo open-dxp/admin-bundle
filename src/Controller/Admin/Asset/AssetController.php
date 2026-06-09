@@ -1192,19 +1192,21 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         if ($request->query->get('treepreview')) {
             $thumbnailConfig = Asset\Image\Thumbnail\Config::getPreviewConfig();
-            $exists = $image->getThumbnail($thumbnailConfig)->exists();
-            if (!$exists) {
-                if ($request->query->get('origin') === 'treeNode') {
-                    OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
-                        new AssetPreviewImageMessage($image->getId())
-                    );
+            if (!$image->getThumbnail($thumbnailConfig)->exists()) {
 
-                    throw $this->createNotFoundException(sprintf('Tree preview thumbnail not available for asset %s', $image->getId()));
-                }
+                OpenDxp::getContainer()->get('messenger.bus.opendxp-core')->dispatch(
+                    new AssetPreviewImageMessage($image->getId())
+                );
 
                 if ($request->query->get('origin') === 'folderPreview') {
-                    return new BinaryFileResponse(OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/video-loading.gif');
+
+                    $response = new BinaryFileResponse(OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/video-loading.gif');
+                    $response->headers->set('Cache-Control', 'no-store');
+
+                    return $response;
                 }
+
+                throw $this->createNotFoundException(sprintf('Tree preview thumbnail not available for asset %s', $image->getId()));
             }
         }
 
@@ -1699,15 +1701,17 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 $filenameDisplay = substr($filenameDisplay, 0, 25) . '...' . pathinfo($filenameDisplay, PATHINFO_EXTENSION);
             }
 
-            // Like for treeGetChildrenByIdAction, so we respect isAllowed method which can be extended (object DI) for custom permissions, so relying only users_workspaces_asset is insufficient and could lead security breach
+            // Like for treeGetChildrenByIdAction, so we respect isAllowed method which can be extended (object DI) for custom permissions,
+            // so relying only users_workspaces_asset is insufficient and could lead security breach
             if ($asset->isAllowed('list')) {
+
                 $assets[] = [
                     'id' => $asset->getId(),
                     'type' => $asset->getType(),
                     'filename' => $asset->getFilename(),
                     'filenameDisplay' => htmlspecialchars($filenameDisplay ?? ''),
                     'url' => $this->elementService->getThumbnailUrl($asset, ['origin' => 'folderPreview']),
-                    'idPath' => $data['idPath'] = Element\Service::getIdPath($asset),
+                    'idPath' => Element\Service::getIdPath($asset),
                 ];
             }
         }
