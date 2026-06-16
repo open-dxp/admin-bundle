@@ -3,6 +3,10 @@ services:
         autowire: true
         autoconfigure: true
 
+    _instanceof:
+        OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizerInterface:
+            tags: ['opendxp.admin.normalizer.element_response']
+
     OpenDxp\Bundle\AdminBundle\Installer:
         public: true
         arguments:
@@ -18,11 +22,12 @@ services:
         public: true
         tags: ['controller.service_arguments']
 
-    OpenDxp\Bundle\AdminBundle\Controller\Admin\IndexController:
-        public: true
+    OpenDxp\Maintenance\ExecutorInterface:
+        alias: OpenDxp\Maintenance\Executor
+
+    OpenDxp\Bundle\AdminBundle\Handler\Admin\StatisticsActionHandler:
         arguments:
             $httpClient: '@opendxp.http_client'
-        tags: [ 'controller.service_arguments' ]
 
     #
     # COMMANDS
@@ -102,3 +107,77 @@ services:
     #
     OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface:
         class: OpenDxp\Bundle\AdminBundle\Service\ElementService
+
+    OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface:
+        class: OpenDxp\Bundle\AdminBundle\Service\AdminUserContext
+
+    OpenDxp\Bundle\AdminBundle\Service\Element\SessionService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper: ~
+
+    OpenDxp\Bundle\AdminBundle\Normalizer\:
+        resource: '../src/Normalizer'
+
+    OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizer:
+        arguments:
+            $normalizers: !tagged_iterator opendxp.admin.normalizer.element_response
+
+    OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPayloadMapper: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPersistenceCoordinator: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetPayloadMapper: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetPersistenceCoordinator: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Grid\AssetGridColumnConfigResolver: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Grid\DataObjectGridColumnConfigResolver: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Grid\GridBatchService: ~
+
+    #
+    # Factories
+    #
+    OpenDxp\Bundle\AdminBundle\Factory\:
+        resource: '../src/Factory'
+
+    #
+    # Builder
+    #
+    OpenDxp\Bundle\AdminBundle\Builder\:
+        resource: '../src/Builder'
+        bind:
+            $customAdminRouteName: '%opendxp_admin.custom_admin_route_name%'
+            $secret: '%secret%'
+
+    #
+    # Handlers
+    #
+    OpenDxp\Bundle\AdminBundle\Handler\:
+        resource: '../src/Handler'
+
+    OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocumentHandler:
+        arguments:
+            $documentClassResolver: '@opendxp.class.resolver.document'
+            $defaultDocumentController: '%opendxp.documents.default_controller%'
+
+    #
+    # Security Voters
+    #
+    OpenDxp\Bundle\AdminBundle\Security\Voter\:
+        resource: '../src/Security/Voter'

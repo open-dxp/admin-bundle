@@ -15,6 +15,7 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller;
 
+use JsonSerializable;
 use OpenDxp\Controller\Traits\JsonHelperTrait;
 use OpenDxp\Controller\UserAwareController;
 use OpenDxp\Model\User;
@@ -33,6 +34,10 @@ abstract class AdminAbstractController extends UserAwareController
      */
     protected function adminJson(mixed $data, int $status = 200, array $headers = [], array $context = [], bool $useAdminSerializer = true): JsonResponse
     {
+        if ($data instanceof JsonSerializable) {
+            $data = $data->jsonSerialize();
+        }
+
         return $this->jsonResponse($data, $status, $headers, $context, $useAdminSerializer);
     }
 

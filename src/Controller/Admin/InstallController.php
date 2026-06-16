@@ -23,6 +23,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 
 /**
  * @internal
@@ -31,14 +32,19 @@ use Symfony\Component\Routing\Attribute\Route;
 class InstallController extends AdminAbstractController
 {
     #[Route('/check', name: 'opendxp_admin_install_check', methods: ['GET', 'POST'])]
-    public function checkAction(Request $request, Connection $db, ?Profiler $profiler): Response
+    public function checkAction(
+        Request $request,
+        Connection $db,
+        ?Profiler $profiler,
+        #[MapQueryParameter] bool $headless = false,
+    ): Response
     {
         if ($profiler) {
             $profiler->disable();
         }
 
         $viewParams = Requirements::checkAll($db);
-        $viewParams['headless'] = $request->query->getBoolean('headless') || $request->request->getBoolean('headless');
+        $viewParams['headless'] = $headless || $request->request->getBoolean('headless');
 
         return $this->render('@OpenDxpAdmin/admin/install/check.html.twig', $viewParams);
     }

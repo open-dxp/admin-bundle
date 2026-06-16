@@ -16,491 +16,143 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
-use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Controller\KernelControllerEventInterface;
-use OpenDxp\Db;
-use OpenDxp\Helper\FileSystemHelper;
+use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\AddClassHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkCommitHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkExportPrepareHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkImportHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DeleteClassHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DeleteSelectOptionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DoBulkExportHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ExportClassHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetAssetTypesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassBulkExportListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassDefinitionForColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassIconsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetDocumentTypesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsTreeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsUsagesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetTextLayoutPreviewHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassTreeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetVideoAllowedTypesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ImportClassHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveClassDefinitionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SuggestClassIdentifierHandler;
 use OpenDxp\Logger;
-use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject;
-use OpenDxp\Model\Document;
-use OpenDxp\Model\Exception\ConfigWriteException;
-use OpenDxp\Model\Translation;
-use OpenDxp\Tool\Session;
-use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
  */
 #[Route('/class', name: 'opendxp_admin_dataobject_class_')]
-class ClassController extends AdminAbstractController implements KernelControllerEventInterface
+class ClassController extends AdminAbstractController
 {
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/get-document-types', name: 'getdocumenttypes', methods: ['GET'])]
-    public function getDocumentTypesAction(Request $request): JsonResponse
+    public function getDocumentTypesAction(GetDocumentTypesHandler $handler): JsonResponse
     {
-        $documentTypes = Document::getTypes();
-        $typeItems = [];
-        foreach ($documentTypes as $documentType) {
-            $typeItems[] = [
-                'text' => $documentType,
-            ];
-        }
-
-        return $this->adminJson($typeItems);
+        return $this->adminJson($handler()->types);
     }
 
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/get-asset-types', name: 'getassettypes', methods: ['GET'])]
-    public function getAssetTypesAction(Request $request): JsonResponse
+    public function getAssetTypesAction(GetAssetTypesHandler $handler): JsonResponse
     {
-        $assetTypes = Asset::getTypes();
-        $typeItems = [];
-        foreach ($assetTypes as $assetType) {
-            $typeItems[] = [
-                'text' => $assetType,
-            ];
-        }
-
-        return $this->adminJson($typeItems);
+        return $this->adminJson($handler()->types);
     }
 
     #[Route('/get-tree', name: 'gettree', methods: ['GET', 'POST'])]
-    public function getTreeAction(Request $request): JsonResponse
-    {
+    public function getTreeAction(
+        GetClassTreeHandler $handler,
+        #[MapQueryParameter] ?string $createAllowed = null,
+        #[MapQueryParameter] ?string $withId = null,
+        #[MapQueryParameter] ?string $useTitle = null,
+        #[MapQueryParameter] ?string $grouped = null,
+    ): JsonResponse {
         try {
-            // we need to check objects permission for listing in opendxp.model.objecttypes ext model
             $this->checkPermission('objects');
         } catch (AccessDeniedHttpException) {
             Logger::log('[Startup] Object types are not loaded as "objects" permission is missing');
 
-            //return empty string to avoid error on startup
             return $this->adminJson([]);
         }
 
-        $defaultIcon = '/bundles/opendxpadmin/img/flat-color-icons/class.svg';
-
-        $classesList = new DataObject\ClassDefinition\Listing();
-        $classesList->setOrderKey('name');
-        $classesList->setOrder('asc');
-        $classes = $classesList->load();
-
-        // filter classes
-        if ($request->query->get('createAllowed')) {
-            $tmpClasses = [];
-            foreach ($classes as $class) {
-                if ($this->getAdminUser()->isAllowed($class->getId(), 'class')) {
-                    $tmpClasses[] = $class;
-                }
-            }
-            $classes = $tmpClasses;
-        }
-
-        $withId = $request->query->get('withId');
-        $useTitle = $request->query->get('useTitle');
-        $getClassConfig = static function ($class) use ($defaultIcon, $withId, $useTitle) {
-            $text = $class->getName();
-            if ($useTitle) {
-                $text = $class->getTitle() ?: $class->getName();
-            }
-            if ($withId) {
-                $text .= ' (' . $class->getId() . ')';
-            }
-
-            $hasBrickField = false;
-            foreach ($class->getFieldDefinitions() as $fieldDefinition) {
-                if ($fieldDefinition instanceof DataObject\ClassDefinition\Data\Objectbricks) {
-                    $hasBrickField = true;
-
-                    break;
-                }
-            }
-
-            return [
-                'id' => $class->getId(),
-                'text' => $text,
-                'leaf' => true,
-                'icon' => $class->getIcon() ? htmlspecialchars($class->getIcon()) : $defaultIcon,
-                'cls' => 'opendxp_class_icon',
-                'propertyVisibility' => $class->getPropertyVisibility(),
-                'enableGridLocking' => $class->isEnableGridLocking(),
-                'hasBrickField' => $hasBrickField,
-            ];
-        };
-
-        // build groups
-        $groups = [];
-        foreach ($classes as $class) {
-            $groupName = null;
-
-            if ($class->getGroup()) {
-                $type = 'manual';
-                $groupName = $class->getGroup();
-            } else {
-                $type = 'auto';
-                if (preg_match('@^([A-Za-z])([^A-Z]+)@', $class->getName(), $matches)) {
-                    $groupName = $matches[0];
-                }
-
-                if (!$groupName) {
-                    // this is eg. the case when class name uses only capital letters
-                    $groupName = $class->getName();
-                }
-            }
-
-            $groupName = Translation::getByKeyLocalized($groupName, Translation::DOMAIN_ADMIN, true, true);
-
-            if (!isset($groups[$groupName])) {
-                $groups[$groupName] = [
-                    'classes' => [],
-                    'type' => $type,
-                ];
-            }
-            $groups[$groupName]['classes'][] = $class;
-        }
-
-        $treeNodes = [];
-        if ($groups !== []) {
-            $types = array_column($groups, 'type');
-            array_multisort($types, SORT_ASC, array_keys($groups), SORT_ASC, $groups);
-        }
-
-        if (!$request->query->get('grouped')) {
-            // list output
-            foreach ($groups as $groupName => $groupData) {
-                foreach ($groupData['classes'] as $class) {
-                    $node = $getClassConfig($class);
-                    if (count($groupData['classes']) > 1 || $groupData['type'] === 'manual') {
-                        $node['group'] = $groupName;
-                    }
-                    $treeNodes[] = $node;
-                }
-            }
-        } else {
-            // create json output
-            foreach ($groups as $groupName => $groupData) {
-                if (count($groupData['classes']) === 1 && $groupData['type'] === 'auto') {
-                    // no group, only one child
-                    $node = $getClassConfig($groupData['classes'][0]);
-                } else {
-                    // group classes
-                    $node = [
-                        'id' => 'folder_' . $groupName,
-                        'text' => $groupName,
-                        'leaf' => false,
-                        'expandable' => true,
-                        'allowChildren' => true,
-                        'iconCls' => 'opendxp_icon_folder',
-                        'children' => [],
-                    ];
-
-                    foreach ($groupData['classes'] as $class) {
-                        $node['children'][] = $getClassConfig($class);
-                    }
-                }
-
-                $treeNodes[] = $node;
-            }
-        }
-
-        return $this->adminJson($treeNodes);
+        return $this->adminJson($handler(
+            createAllowed: (bool) $createAllowed,
+            withId: (bool) $withId,
+            useTitle: (bool) $useTitle,
+            grouped: (bool) $grouped,
+        )->nodes);
     }
 
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/get', name: 'get', methods: ['GET'])]
-    public function getAction(Request $request): JsonResponse
-    {
-        $class = DataObject\ClassDefinition::getById($request->query->get('id'));
-        if (!$class) {
-            throw $this->createNotFoundException();
-        }
-        $class->setFieldDefinitions([]);
-        $isWriteable = $class->isWritable();
-        $class = $class->getObjectVars();
-        $class['isWriteable'] = $isWriteable;
-
-        return $this->adminJson($class);
+    public function getAction(
+        GetClassHandler $handler,
+        #[MapQueryParameter] ?string $id = null,
+    ): JsonResponse {
+        return $this->adminJson($handler($id)->classData);
     }
 
-    #[Route('/get-custom-layout', name: 'getcustomlayout', methods: ['GET'])]
-    public function getCustomLayoutAction(Request $request): JsonResponse
-    {
-        $customLayout = DataObject\ClassDefinition\CustomLayout::getById($request->query->get('id'));
-        if (!$customLayout) {
-            $brickLayoutSeparator = strpos($request->query->get('id'), '.brick.');
-            if ($brickLayoutSeparator !== false) {
-                $customLayout = DataObject\ClassDefinition\CustomLayout::getById(substr($request->query->get('id'), 0, $brickLayoutSeparator));
-                if ($customLayout instanceof DataObject\ClassDefinition\CustomLayout) {
-                    $customLayout = DataObject\ClassDefinition\CustomLayout::create(
-                        [
-                            'name' => $customLayout->getName().' '.substr($request->query->get('id'), $brickLayoutSeparator+strlen('.brick.')),
-                            'userOwner' => $this->getAdminUser()->getId(),
-                            'classId' => $customLayout->getClassId(),
-                        ]
-                    );
-
-                    $customLayout->setId($request->query->get('id'));
-                    if (!$customLayout->isWriteable()) {
-                        throw new ConfigWriteException();
-                    }
-                    $customLayout->save();
-                }
-            }
-
-            if (!$customLayout) {
-                throw $this->createNotFoundException();
-            }
-        }
-        $isWriteable = $customLayout->isWriteable();
-        $customLayout = $customLayout->getObjectVars();
-        $customLayout['isWriteable'] = $isWriteable;
-
-        return $this->adminJson(['success' => true, 'data' => $customLayout]);
-    }
-
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/add', name: 'add', methods: ['POST'])]
-    public function addAction(Request $request): JsonResponse
+    public function addAction(Request $request, AddClassHandler $handler): JsonResponse
     {
-        $className = $request->request->get('className');
-        $className = $this->correctClassname($className);
-
-        $classId = $request->request->get('classIdentifier');
-        $existingClass = DataObject\ClassDefinition::getById($classId);
-        if ($existingClass) {
-            throw new Exception('Class identifier already exists');
-        }
-
-        $class = DataObject\ClassDefinition::create(
-            ['name' => $className,
-                'userOwner' => $this->getAdminUser()->getId(), ]
+        $result = $handler(
+            className: $request->request->get('className'),
+            classId: $request->request->get('classIdentifier'),
         );
 
-        $class->setId($classId);
-
-        $class->save(true);
-
-        return $this->adminJson(['success' => true, 'id' => $class->getId()]);
+        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
 
-    #[Route('/add-custom-layout', name: 'addcustomlayout', methods: ['POST'])]
-    public function addCustomLayoutAction(Request $request): JsonResponse
-    {
-        $layoutId = $request->request->get('layoutIdentifier');
-        $existingLayout = DataObject\ClassDefinition\CustomLayout::getById($layoutId);
-
-        if ($existingLayout) {
-            throw new Exception('Custom Layout identifier already exists');
-        }
-
-        $customLayout = DataObject\ClassDefinition\CustomLayout::create(
-            [
-                'name' => $request->request->get('layoutName'),
-                'userOwner' => $this->getAdminUser()->getId(),
-                'classId' => $request->request->get('classId'),
-            ]
-        );
-
-        $customLayout->setId($layoutId);
-        if (!$customLayout->isWriteable()) {
-            throw new ConfigWriteException();
-        }
-
-        $customLayout->save();
-
-        $isWriteable = $customLayout->isWriteable();
-        $data = $customLayout->getObjectVars();
-        $data['isWriteable'] = $isWriteable;
-
-        return $this->adminJson([
-            'success' => true,
-            'id' => $customLayout->getId(),
-            'name' => $customLayout->getName(),
-            'data' => $data,
-        ]);
-    }
-
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/delete', name: 'delete', methods: ['DELETE'])]
-    public function deleteAction(Request $request): Response
+    public function deleteAction(Request $request, DeleteClassHandler $handler): Response
     {
-        $class = DataObject\ClassDefinition::getById($request->request->get('id'));
-        if ($class) {
-            $class->delete();
-        }
+        $handler($request->request->get('id'));
 
         return new Response();
     }
 
-    #[Route('/delete-custom-layout', name: 'deletecustomlayout', methods: ['DELETE'])]
-    public function deleteCustomLayoutAction(Request $request): JsonResponse
-    {
-        $customLayouts = new DataObject\ClassDefinition\CustomLayout\Listing();
-        $id = $request->request->get('id');
-        $customLayouts->setFilter(function (DataObject\ClassDefinition\CustomLayout $layout) use ($id) {
-            $currentLayoutId = $layout->getId();
-
-            return $currentLayoutId === $id || str_starts_with($currentLayoutId, $id . '.brick.');
-        });
-
-        foreach ($customLayouts->getLayoutDefinitions() as $customLayout) {
-            $customLayout->delete();
-        }
-
-        return $this->adminJson(['success' => true]);
-    }
-
-    #[Route('/save-custom-layout', name: 'savecustomlayout', methods: ['PUT'])]
-    public function saveCustomLayoutAction(Request $request): JsonResponse
-    {
-        $customLayout = DataObject\ClassDefinition\CustomLayout::getById($request->request->get('id'));
-        if (!$customLayout) {
-            throw $this->createNotFoundException();
-        }
-
-        $configuration = $this->decodeJson($request->request->get('configuration'));
-        $values = $this->decodeJson($request->request->get('values'));
-
-        $modificationDate = (int)$values['modificationDate'];
-        if ($modificationDate < $customLayout->getModificationDate()) {
-            return $this->adminJson(['success' => false, 'msg' => 'custom_layout_changed']);
-        }
-
-        $configuration['datatype'] = 'layout';
-        $configuration['fieldtype'] = 'panel';
-        $configuration['name'] = 'opendxp_root';
-
-        try {
-            $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($configuration, true);
-            $customLayout->setLayoutDefinitions($layout);
-            $customLayout->setName($values['name']);
-            $customLayout->setDescription($values['description']);
-            $customLayout->setDefault($values['default']);
-            if (!$customLayout->isWriteable()) {
-                throw new ConfigWriteException();
-            }
-            $customLayout->save();
-
-            return $this->adminJson(['success' => true, 'id' => $customLayout->getId(), 'data' => $customLayout->getObjectVars()]);
-        } catch (Exception $e) {
-            Logger::error($e->getMessage());
-
-            return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/save', name: 'save', methods: ['PUT'])]
-    public function saveAction(Request $request): JsonResponse
+    public function saveAction(Request $request, SaveClassDefinitionHandler $handler): JsonResponse
     {
-        $class = DataObject\ClassDefinition::getById($request->request->get('id'));
-        if (!$class) {
-            throw $this->createNotFoundException();
-        }
+        $result = $handler(
+            id: $request->request->get('id'),
+            configuration: $this->decodeJson($request->request->get('configuration')),
+            values: $this->decodeJson($request->request->get('values')),
+        );
 
-        $configuration = $this->decodeJson($request->request->get('configuration'));
-        $values = $this->decodeJson($request->request->get('values'));
-
-        // check if the class was changed during editing in the frontend
-        if ($class->getModificationDate() != $values['modificationDate']) {
-            throw new Exception('The class was modified during editing, please reload the class and make your changes again');
-        }
-
-        if ($values['name'] != $class->getName()) {
-            $classByName = DataObject\ClassDefinition::getByName($values['name']);
-            if ($classByName && $classByName->getId() !== $class->getId()) {
-                throw new Exception('Class name already exists');
-            }
-
-            $values['name'] = $this->correctClassname($values['name']);
-            $class->rename($values['name']);
-        }
-
-        if ($values['compositeIndices']) {
-            foreach ($values['compositeIndices'] as $index => $compositeIndex) {
-                if ($compositeIndex['index_key'] !== ($sanitizedKey = preg_replace('/[^a-za-z0-9_\-+]/', '', $compositeIndex['index_key']))) {
-                    $values['compositeIndices'][$index]['index_key'] = $sanitizedKey;
-                }
-            }
-        }
-
-        unset($values['creationDate'], $values['userOwner'], $values['layoutDefinitions'], $values['fieldDefinitions']);
-
-        $configuration['datatype'] = 'layout';
-        $configuration['fieldtype'] = 'panel';
-        $configuration['name'] = 'opendxp_root';
-
-        $class->setValues($values);
-
-        try {
-            $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($configuration, true);
-
-            $class->setLayoutDefinitions($layout);
-
-            $class->setUserModification($this->getAdminUser()->getId());
-            $class->setModificationDate(time());
-
-            $propertyVisibility = [];
-            foreach ($values as $key => $value) {
-                if (false !== stripos($key, 'propertyVisibility')) {
-                    if (preg_match("/\.grid\./i", $key)) {
-                        $propertyVisibility['grid'][preg_replace("/propertyVisibility\.grid\./i", '', $key)] = (bool) $value;
-                    } elseif (preg_match("/\.search\./i", $key)) {
-                        $propertyVisibility['search'][preg_replace("/propertyVisibility\.search\./i", '', $key)] = (bool) $value;
-                    }
-                }
-            }
-            if (!empty($propertyVisibility)) {
-                $class->setPropertyVisibility($propertyVisibility);
-            }
-
-            $class->save();
-
-            // set the fielddefinitions to [] because we don't need them in the response
-            $class->setFieldDefinitions([]);
-
-            return $this->adminJson(['success' => true, 'class' => $class]);
-        } catch (Exception $e) {
-            Logger::error($e->getMessage());
-
-            return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-        }
+        return $this->adminJson(ApiResponse::ok(['class' => $result->class]));
     }
 
-    protected function correctClassname(string $name): string
-    {
-        $name = preg_replace('/[^a-zA-Z0-9_]+/', '', $name);
-
-        return preg_replace('/^\d+/', '', $name);
-    }
-
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/import-class', name: 'importclass', methods: ['POST', 'PUT'])]
-    public function importClassAction(Request $request): Response
-    {
-        $class = DataObject\ClassDefinition::getById($request->query->get('id'));
-        if (!$class) {
-            throw $this->createNotFoundException();
-        }
-
+    public function importClassAction(
+        Request $request,
+        ImportClassHandler $handler,
+        #[MapQueryParameter] ?string $id = null,
+    ): Response {
         /** @var UploadedFile $file */
         $file = $request->files->get('Filedata');
-        $json = file_get_contents($file->getPathname());
+        $handler($id, file_get_contents($file->getPathname()));
 
-        $success = DataObject\ClassDefinition\Service::importClassDefinitionFromJson($class, $json, false, true);
-
-        $response = $this->adminJson([
-            'success' => $success,
-        ]);
+        $response = $this->adminJson(ApiResponse::ok());
 
         // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
         // Ext.form.Action.Submit and mark the submission as failed
@@ -509,906 +161,42 @@ class ClassController extends AdminAbstractController implements KernelControlle
         return $response;
     }
 
-    #[Route('/import-custom-layout-definition', name: 'importcustomlayoutdefinition', methods: ['POST', 'PUT'])]
-    public function importCustomLayoutDefinitionAction(Request $request): Response
-    {
-        $success = false;
-        $responseContent = [];
-
-        /** @var UploadedFile $file */
-        $file = $request->files->get('Filedata');
-        $json = file_get_contents($file->getPathname());
-
-        $importData = $this->decodeJson($json);
-
-        $existingLayout = null;
-        if (isset($importData['name'])) {
-            $existingLayout = DataObject\ClassDefinition\CustomLayout::getByName($importData['name']);
-
-            if ($existingLayout instanceof DataObject\ClassDefinition\CustomLayout) {
-                $responseContent['nameAlreadyInUse'] = true;
-            }
-        }
-
-        if (!$existingLayout instanceof DataObject\ClassDefinition\CustomLayout) {
-            $customLayoutId = $request->query->get('id');
-            $customLayout = DataObject\ClassDefinition\CustomLayout::getById($customLayoutId);
-            if ($customLayout) {
-                try {
-                    $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($importData['layoutDefinitions'], true);
-                    $customLayout->setLayoutDefinitions($layout);
-                    if (isset($importData['name'])) {
-                        $customLayout->setName($importData['name']);
-                    }
-                    $customLayout->setDescription($importData['description']);
-                    if (!$customLayout->isWriteable()) {
-                        throw new ConfigWriteException();
-                    }
-                    $customLayout->save();
-                    $success = true;
-                } catch (Exception $e) {
-                    Logger::error($e->getMessage());
-                }
-            }
-
-            $responseContent['success'] = $success;
-        }
-
-        $response = $this->adminJson($responseContent);
-
-        // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
-        // Ext.form.Action.Submit and mark the submission as failed
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
-    }
-
-    #[Route('/get-custom-layout-definitions', name: 'getcustomlayoutdefinitions', methods: ['GET'])]
-    public function getCustomLayoutDefinitionsAction(Request $request): JsonResponse
-    {
-        $classIds = explode(',', $request->query->get('classId'));
-        $list = new DataObject\ClassDefinition\CustomLayout\Listing();
-
-        $list->setFilter(fn (DataObject\ClassDefinition\CustomLayout $layout) => in_array($layout->getClassId(), $classIds) && !str_contains($layout->getId(), '.brick.'));
-        $list = $list->load();
-        $result = [];
-        foreach ($list as $item) {
-            $result[] = [
-                'id' => $item->getId(),
-                'name' => $item->getName(),
-                'default' => $item->getDefault(),
-            ];
-        }
-
-        return $this->adminJson(['success' => true, 'data' => $result]);
-    }
-
-    #[Route('/get-all-layouts', name: 'getalllayouts', methods: ['GET'])]
-    public function getAllLayoutsAction(Request $request): JsonResponse
-    {
-        // get all classes
-        $resultList = [];
-        $mapping = [];
-
-        $customLayouts = new DataObject\ClassDefinition\CustomLayout\Listing();
-        $customLayouts->setFilter(fn (DataObject\ClassDefinition\CustomLayout $layout) => !str_contains($layout->getId(), '.brick.'));
-        $customLayouts->setOrder(fn (DataObject\ClassDefinition\CustomLayout $a, DataObject\ClassDefinition\CustomLayout $b) => strcmp($a->getName(), $b->getName()));
-
-        $customLayouts = $customLayouts->load();
-        foreach ($customLayouts as $layout) {
-            $mapping[$layout->getClassId()][] = $layout;
-        }
-
-        $classList = new DataObject\ClassDefinition\Listing();
-        $classList->setOrder('ASC');
-        $classList->setOrderKey('name');
-        $classList = $classList->load();
-
-        foreach ($classList as $class) {
-            if (isset($mapping[$class->getId()])) {
-                $classMapping = $mapping[$class->getId()];
-                $resultList[] = [
-                    'type' => 'main',
-                    'id' => $class->getId() . '_' . 0,
-                    'name' => $class->getName(),
-                ];
-
-                foreach ($classMapping as $layout) {
-                    $resultList[] = [
-                        'type' => 'custom',
-                        'id' => $class->getId() . '_' . $layout->getId(),
-                        'name' => $class->getName() . ' - ' . $layout->getName(),
-                    ];
-                }
-            }
-        }
-
-        return $this->adminJson(['data' => $resultList]);
-    }
-
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/export-class', name: 'exportclass', methods: ['GET'])]
-    public function exportClassAction(Request $request): Response
-    {
-        $id = $request->query->get('id');
-        $class = DataObject\ClassDefinition::getById($id);
+    public function exportClassAction(
+        ExportClassHandler $handler,
+        #[MapQueryParameter] ?string $id = null,
+    ): Response {
+        $result = $handler($id);
 
-        if (!$class instanceof DataObject\ClassDefinition) {
-            $errorMessage = ': Class with id [ ' . $id . ' not found. ]';
-            Logger::error($errorMessage);
-
-            throw $this->createNotFoundException($errorMessage);
-        }
-
-        $json = DataObject\ClassDefinition\Service::generateClassDefinitionJson($class);
-
-        $response = new Response($json);
+        $response = new Response($result->json);
         $response->headers->set('Content-type', 'application/json');
-        $response->headers->set('Content-Disposition', 'attachment; filename: "class_' . $class->getName() . '_export.json"');
+        $response->headers->set('Content-Disposition', 'attachment; filename: "class_' . $result->className . '_export.json"');
 
         return $response;
-    }
-
-    #[Route('/export-custom-layout-definition', name: 'exportcustomlayoutdefinition', methods: ['GET'])]
-    public function exportCustomLayoutDefinitionAction(Request $request): Response
-    {
-        $id = $request->query->get('id');
-
-        if ($id) {
-            $customLayout = DataObject\ClassDefinition\CustomLayout::getById($id);
-            if ($customLayout) {
-                $name = $customLayout->getName();
-                $json = DataObject\ClassDefinition\Service::generateCustomLayoutJson($customLayout);
-
-                $response = new Response($json);
-                $response->headers->set('Content-type', 'application/json');
-                $response->headers->set('Content-Disposition', 'attachment; filename: "custom_definition_' . $name . '_export.json"');
-
-                return $response;
-            }
-        }
-
-        $errorMessage = ': Custom Layout with id [ ' . $id . ' not found. ]';
-        Logger::error($errorMessage);
-
-        throw $this->createNotFoundException($errorMessage);
-    }
-
-    /**
-     * FIELDCOLLECTIONS
-     */
-    #[Route('/fieldcollection-get', name: 'fieldcollectionget', methods: ['GET'])]
-    public function fieldcollectionGetAction(Request $request): JsonResponse
-    {
-        $fc = DataObject\Fieldcollection\Definition::getByKey($request->query->get('id'));
-
-        $isWriteable = $fc->isWritable();
-        $fc = $fc->getObjectVars();
-        $fc['isWriteable'] = $isWriteable;
-
-        return $this->adminJson($fc);
-    }
-
-    #[Route('/fieldcollection-update', name: 'fieldcollectionupdate', methods: ['PUT', 'POST'])]
-    public function fieldcollectionUpdateAction(Request $request): JsonResponse
-    {
-        try {
-            $key = $request->request->get('key');
-            $title = $request->request->get('title');
-            $group = $request->request->get('group');
-
-            if ($request->request->get('task') === 'add') {
-                // check for existing fieldcollection with same name with different lower/upper cases
-                $list = new DataObject\Fieldcollection\Definition\Listing();
-                $list = $list->loadNames();
-
-                foreach ($list as $fcName) {
-                    if (strtolower($key) === strtolower($fcName)) {
-                        throw new Exception('FieldCollection with the same name already exists (lower/upper cases may be different)');
-                    }
-                }
-            }
-
-            $fcDef = new DataObject\Fieldcollection\Definition();
-            $fcDef->setKey($key);
-            $fcDef->setTitle($title);
-            $fcDef->setGroup($group);
-
-            if ($request->request->has('values')) {
-                $values = $this->decodeJson($request->request->get('values'));
-                $fcDef->setParentClass($values['parentClass']);
-                $fcDef->setImplementsInterfaces($values['implementsInterfaces']);
-            }
-
-            if ($request->request->has('configuration')) {
-                $configuration = $this->decodeJson($request->request->get('configuration'));
-
-                $configuration['datatype'] = 'layout';
-                $configuration['fieldtype'] = 'panel';
-
-                $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($configuration, true);
-                $fcDef->setLayoutDefinitions($layout);
-            }
-
-            $fcDef->save();
-
-            return $this->adminJson(['success' => true, 'id' => $fcDef->getKey()]);
-        } catch (Exception $e) {
-            Logger::error($e->getMessage());
-
-            return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-        }
-    }
-
-    #[Route('/import-fieldcollection', name: 'importfieldcollection', methods: ['POST'])]
-    public function importFieldcollectionAction(Request $request): Response
-    {
-        $this->checkPermission('fieldcollections');
-
-        $fieldCollection = DataObject\Fieldcollection\Definition::getByKey($request->query->get('id'));
-
-        /** @var UploadedFile $file */
-        $file = $request->files->get('Filedata');
-        $data = file_get_contents($file->getPathname());
-
-        $success = DataObject\ClassDefinition\Service::importFieldCollectionFromJson($fieldCollection, $data);
-
-        $response = $this->adminJson([
-            'success' => $success,
-        ]);
-
-        // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
-        // Ext.form.Action.Submit and mark the submission as failed
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
-    }
-
-    #[Route('/export-fieldcollection', name: 'exportfieldcollection', methods: ['GET'])]
-    public function exportFieldcollectionAction(Request $request): Response
-    {
-        $this->checkPermission('fieldcollections');
-
-        $fieldCollection = DataObject\Fieldcollection\Definition::getByKey($request->query->get('id'));
-
-        if (!$fieldCollection instanceof DataObject\Fieldcollection\Definition) {
-            $errorMessage = ': Field-Collection with id [ ' . $request->query->get('id') . ' not found. ]';
-            Logger::error($errorMessage);
-
-            throw $this->createNotFoundException($errorMessage);
-        }
-
-        $json = DataObject\ClassDefinition\Service::generateFieldCollectionJson($fieldCollection);
-        $response = new Response($json);
-        $response->headers->set('Content-type', 'application/json');
-        $response->headers->set('Content-Disposition', 'attachment; filename="fieldcollection_' . $fieldCollection->getKey() . '_export.json"');
-
-        return $response;
-    }
-
-    #[Route('/fieldcollection-delete', name: 'fieldcollectiondelete', methods: ['DELETE'])]
-    public function fieldcollectionDeleteAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('fieldcollections');
-
-        $fc = DataObject\Fieldcollection\Definition::getByKey($request->request->get('id'));
-        $fc->delete();
-
-        return $this->adminJson(['success' => true]);
-    }
-
-    #[Route('/fieldcollection-tree', name: 'fieldcollectiontree', methods: ['GET', 'POST'])]
-    public function fieldcollectionTreeAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
-    {
-        $list = new DataObject\Fieldcollection\Definition\Listing();
-        $list = $list->load();
-
-        $forObjectEditor = $request->query->get('forObjectEditor');
-
-        $layoutDefinitions = [];
-
-        $definitions = [];
-
-        $allowedTypes = null;
-        if ($request->query->has('allowedTypes')) {
-            $allowedTypes = explode(',', $request->query->get('allowedTypes'));
-        }
-
-        $object = $request->query->has('object_id')
-            ? DataObject\Concrete::getById((int) $request->query->get('object_id'))
-            : null;
-
-        $currentLayoutId = $request->query->get('layoutId');
-        $user = \OpenDxp\Tool\Admin::getCurrentUser();
-
-        $groups = [];
-        foreach ($list as $item) {
-            if ($allowedTypes && !in_array($item->getKey(), $allowedTypes)) {
-                continue;
-            }
-
-            if ($item->getGroup()) {
-                if (!isset($groups[$item->getGroup()])) {
-                    $groups[$item->getGroup()] = [
-                        'id' => 'group_' . $item->getKey(),
-                        'text' => htmlspecialchars($item->getGroup()),
-                        'expandable' => true,
-                        'leaf' => false,
-                        'allowChildren' => true,
-                        'iconCls' => 'opendxp_icon_folder',
-                        'group' => $item->getGroup(),
-                        'children' => [],
-                    ];
-                }
-                if ($forObjectEditor) {
-                    $itemLayoutDefinitions = $item->getLayoutDefinitions();
-                    DataObject\Service::enrichLayoutDefinition($itemLayoutDefinitions, $object);
-
-                    if ($currentLayoutId == -1 && $user->isAdmin()) {
-                        DataObject\Service::createSuperLayout($itemLayoutDefinitions);
-                    }
-                    $layoutDefinitions[$item->getKey()] = $itemLayoutDefinitions;
-                }
-                $groups[$item->getGroup()]['children'][] =
-                    [
-                        'id' => $item->getKey(),
-                        'text' => $item->getKey(),
-                        'title' => $item->getTitle(),
-                        'key' => $item->getKey(),
-                        'leaf' => true,
-                        'iconCls' => 'opendxp_icon_fieldcollection',
-                    ];
-            } else {
-                if ($forObjectEditor) {
-                    $itemLayoutDefinitions = $item->getLayoutDefinitions();
-                    DataObject\Service::enrichLayoutDefinition($itemLayoutDefinitions, $object);
-
-                    if ($currentLayoutId == -1 && $user->isAdmin()) {
-                        DataObject\Service::createSuperLayout($itemLayoutDefinitions);
-                    }
-
-                    $layoutDefinitions[$item->getKey()] = $itemLayoutDefinitions;
-                }
-                $definitions[] = [
-                    'id' => $item->getKey(),
-                    'text' => $item->getKey(),
-                    'title' => $item->getTitle(),
-                    'key' => $item->getKey(),
-                    'leaf' => true,
-                    'iconCls' => 'opendxp_icon_fieldcollection',
-                ];
-            }
-        }
-
-        foreach ($groups as $group) {
-            $definitions[] = $group;
-        }
-
-        $event = new GenericEvent($this, [
-            'list' => $definitions,
-            'objectId' => $request->query->get('object_id'),
-            'layoutDefinitions' => $layoutDefinitions,
-        ]);
-        $eventDispatcher->dispatch($event, AdminEvents::CLASS_FIELDCOLLECTION_LIST_PRE_SEND_DATA);
-        $definitions = $event->getArgument('list');
-        $layoutDefinitions = $event->getArgument('layoutDefinitions');
-
-        if ($forObjectEditor) {
-            return $this->adminJson(['fieldcollections' => $definitions, 'layoutDefinitions' => $layoutDefinitions]);
-        }
-
-        return $this->adminJson($definitions);
-    }
-
-    #[Route('/fieldcollection-list', name: 'fieldcollectionlist', methods: ['GET'])]
-    public function fieldcollectionListAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
-    {
-        $user = \OpenDxp\Tool\Admin::getCurrentUser();
-        $currentLayoutId = $request->query->get('layoutId');
-
-        $list = new DataObject\Fieldcollection\Definition\Listing();
-        $list = $list->load();
-
-        if ($request->query->has('allowedTypes')) {
-            $filteredList = [];
-            $allowedTypes = explode(',', $request->query->get('allowedTypes'));
-            foreach ($list as $type) {
-                if (in_array($type->getKey(), $allowedTypes)) {
-                    $filteredList[] = $type;
-
-                    // mainly for objects-meta data-type
-                    $layoutDefinitions = $type->getLayoutDefinitions();
-                    $context = [
-                        'containerType' => 'fieldcollection',
-                        'containerKey' => $type->getKey(),
-                        'outerFieldname' => $request->query->get('field_name'),
-                    ];
-
-                    $object = DataObject\Concrete::getById((int) $request->query->get('object_id'));
-
-                    DataObject\Service::enrichLayoutDefinition($layoutDefinitions, $object, $context);
-
-                    if ($currentLayoutId == -1 && $user->isAdmin()) {
-                        DataObject\Service::createSuperLayout($layoutDefinitions);
-                    }
-                }
-            }
-
-            $list = $filteredList;
-        }
-
-        $event = new GenericEvent($this, [
-            'list' => $list,
-            'objectId' => $request->query->get('object_id'),
-        ]);
-        $eventDispatcher->dispatch($event, AdminEvents::CLASS_FIELDCOLLECTION_LIST_PRE_SEND_DATA);
-        $list = $event->getArgument('list');
-
-        return $this->adminJson(['fieldcollections' => $list]);
     }
 
     #[Route('/get-class-definition-for-column-config', name: 'getclassdefinitionforcolumnconfig', methods: ['GET'])]
-    public function getClassDefinitionForColumnConfigAction(Request $request): JsonResponse
-    {
-        $class = DataObject\ClassDefinition::getById($request->query->get('id'));
-        if (!$class) {
-            throw $this->createNotFoundException();
-        }
-        $objectId = (int)$request->query->get('oid');
-
-        $filteredDefinitions = DataObject\Service::getCustomLayoutDefinitionForGridColumnConfig($class, $objectId);
-
-        /** @var DataObject\ClassDefinition\Layout $layoutDefinitions */
-        $layoutDefinitions = $filteredDefinitions['layoutDefinition'] ?? false;
-        $filteredFieldDefinition = $filteredDefinitions['fieldDefinition'] ?? false;
-
-        $class->setFieldDefinitions([]);
-
-        $result = [];
-
-        DataObject\Service::enrichLayoutDefinition($layoutDefinitions);
-
-        $result['objectColumns']['children'] = $layoutDefinitions->getChildren();
-        $result['objectColumns']['nodeLabel'] = 'object_columns';
-        $result['objectColumns']['nodeType'] = 'object';
-
-        // array("id", "fullpath", "published", "creationDate", "modificationDate", "filename", "classname");
-        $systemColumnNames = DataObject\Concrete::SYSTEM_COLUMN_NAMES;
-        $systemColumns = [];
-        foreach ($systemColumnNames as $systemColumn) {
-            $systemColumns[] = ['title' => $systemColumn, 'name' => $systemColumn, 'datatype' => 'data', 'fieldtype' => 'system'];
-        }
-        $result['systemColumns']['nodeLabel'] = 'system_columns';
-        $result['systemColumns']['nodeType'] = 'system';
-        $result['systemColumns']['children'] = $systemColumns;
-
-        $list = new DataObject\Objectbrick\Definition\Listing();
-        $list = $list->load();
-
-        foreach ($list as $brickDefinition) {
-            $classDefs = $brickDefinition->getClassDefinitions();
-            if (!empty($classDefs)) {
-                foreach ($classDefs as $classDef) {
-                    if ($classDef['classname'] == $class->getName()) {
-                        $fieldName = $classDef['fieldname'];
-                        if (isset($filteredFieldDefinition[$fieldName]) && !$filteredFieldDefinition[$fieldName]) {
-                            continue;
-                        }
-
-                        $key = $brickDefinition->getKey();
-
-                        $brickLayoutDefinitions = $brickDefinition->getLayoutDefinitions();
-                        $context = [
-                            'containerType' => 'objectbrick',
-                            'containerKey' => $key,
-                            'outerFieldname' => $fieldName,
-                        ];
-                        DataObject\Service::enrichLayoutDefinition($brickLayoutDefinitions, null, $context);
-
-                        $result[$key]['nodeLabel'] = $key;
-                        $result[$key]['brickField'] = $fieldName;
-                        $result[$key]['nodeType'] = 'objectbricks';
-                        $result[$key]['children'] = $brickLayoutDefinitions->getChildren();
-
-                        break;
-                    }
-                }
-            }
-        }
-
-        return $this->adminJson($result);
-    }
-
-    /**
-     * OBJECT BRICKS
-     */
-    #[Route('/objectbrick-get', name: 'objectbrickget', methods: ['GET'])]
-    public function objectbrickGetAction(Request $request): JsonResponse
-    {
-        $fc = DataObject\Objectbrick\Definition::getByKey($request->query->get('id'));
-
-        $isWriteable = $fc->isWritable();
-        $fc = $fc->getObjectVars();
-        $fc['isWriteable'] = $isWriteable;
-
-        return $this->adminJson($fc);
-    }
-
-    #[Route('/objectbrick-update', name: 'objectbrickupdate', methods: ['PUT', 'POST'])]
-    public function objectbrickUpdateAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
-    {
-        try {
-            $key = $request->request->get('key');
-            $title = $request->request->get('title');
-            $group = $request->request->get('group');
-
-            if ($request->request->get('task') === 'add') {
-                // check for existing brick with same name with different lower/upper cases
-                $list = new DataObject\Objectbrick\Definition\Listing();
-                $list = $list->loadNames();
-
-                foreach ($list as $brickName) {
-                    if (strtolower($key) === strtolower($brickName)) {
-                        throw new Exception('Brick with the same name already exists (lower/upper cases may be different)');
-                    }
-                }
-            }
-
-            // now we create a new definition
-            $brickDef = new DataObject\Objectbrick\Definition();
-            $brickDef->setKey($key);
-            $brickDef->setTitle($title);
-            $brickDef->setGroup($group);
-
-            if ($request->request->has('values')) {
-                $values = $this->decodeJson($request->request->get('values'));
-
-                $brickDef->setParentClass($values['parentClass']);
-                $brickDef->setImplementsInterfaces($values['implementsInterfaces']);
-                $brickDef->setClassDefinitions($values['classDefinitions']);
-            }
-
-            if ($request->request->has('configuration')) {
-                $configuration = $this->decodeJson($request->request->get('configuration'));
-
-                $configuration['datatype'] = 'layout';
-                $configuration['fieldtype'] = 'panel';
-
-                $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($configuration, true);
-                $brickDef->setLayoutDefinitions($layout);
-            }
-
-            $event = new GenericEvent($this, [
-                'brickDefinition' => $brickDef,
-            ]);
-
-            $eventDispatcher->dispatch($event, AdminEvents::CLASS_OBJECTBRICK_UPDATE_DEFINITION);
-            $brickDef = $event->getArgument('brickDefinition');
-
-            $brickDef->save();
-
-            return $this->adminJson(['success' => true, 'id' => $brickDef->getKey()]);
-        } catch (Exception $e) {
-            Logger::error($e->getMessage());
-
-            return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-        }
-    }
-
-    #[Route('/import-objectbrick', name: 'importobjectbrick', methods: ['POST'])]
-    public function importObjectbrickAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('objectbricks');
-
-        $objectBrick = DataObject\Objectbrick\Definition::getByKey($request->query->get('id'));
-
-        /** @var UploadedFile $file */
-        $file = $request->files->get('Filedata');
-        $data = file_get_contents($file->getPathname());
-        $success = DataObject\ClassDefinition\Service::importObjectBrickFromJson($objectBrick, $data);
-
-        $response = $this->adminJson([
-            'success' => $success,
-        ]);
-
-        // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
-        // Ext.form.Action.Submit and mark the submission as failed
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
-    }
-
-    #[Route('/export-objectbrick', name: 'exportobjectbrick', methods: ['GET'])]
-    public function exportObjectbrickAction(Request $request): Response
-    {
-        $this->checkPermission('objectbricks');
-
-        $objectBrick = DataObject\Objectbrick\Definition::getByKey($request->query->get('id'));
-
-        if (!$objectBrick instanceof DataObject\Objectbrick\Definition) {
-            $errorMessage = ': Object-Brick with id [ ' . $request->query->get('id') . ' not found. ]';
-            Logger::error($errorMessage);
-
-            throw $this->createNotFoundException($errorMessage);
-        }
-
-        $xml = DataObject\ClassDefinition\Service::generateObjectBrickJson($objectBrick);
-        $response = new Response($xml);
-        $response->headers->set('Content-type', 'application/json');
-        $response->headers->set('Content-Disposition', 'attachment; filename="objectbrick_' . $objectBrick->getKey() . '_export.json"');
-
-        return $response;
-    }
-
-    #[Route('/objectbrick-delete', name: 'objectbrickdelete', methods: ['DELETE'])]
-    public function objectbrickDeleteAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('objectbricks');
-
-        $fc = DataObject\Objectbrick\Definition::getByKey($request->request->get('id'));
-        $fc->delete();
-
-        return $this->adminJson(['success' => true]);
-    }
-
-    #[Route('/objectbrick-tree', name: 'objectbricktree', methods: ['GET', 'POST'])]
-    public function objectbrickTreeAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
-    {
-        $list = new DataObject\Objectbrick\Definition\Listing();
-        $list = $list->load();
-
-        $forObjectEditor = $request->query->get('forObjectEditor');
-
-        $context = [];
-        $layoutDefinitions = [];
-        $groups = [];
-        $definitions = [];
-        $fieldname = null;
-        $className = null;
-
-        $object = $request->query->has('object_id')
-            ? DataObject\Concrete::getById((int) $request->query->get('object_id'))
-            : null;
-
-        if ($request->query->has('class_id') && $request->query->has('field_name')) {
-            $classId = $request->query->get('class_id');
-            $fieldname = $request->query->get('field_name');
-            $classDefinition = DataObject\ClassDefinition::getById($classId);
-            $className = $classDefinition->getName();
-        }
-
-        foreach ($list as $item) {
-            if ($forObjectEditor) {
-                $context = [
-                    'containerType' => 'objectbrick',
-                    'containerKey' => $item->getKey(),
-                    'outerFieldname' => $fieldname,
-                ];
-            }
-            if ($request->query->has('class_id') && $request->query->has('field_name')) {
-                $keep = false;
-                $clsDefs = $item->getClassDefinitions();
-                if (!empty($clsDefs)) {
-                    foreach ($clsDefs as $cd) {
-                        if ($cd['classname'] == $className && $cd['fieldname'] == $fieldname) {
-                            $keep = true;
-
-                            continue;
-                        }
-                    }
-                }
-                if (!$keep) {
-                    continue;
-                }
-            }
-
-            if ($item->getGroup()) {
-                if (!isset($groups[$item->getGroup()])) {
-                    $groups[$item->getGroup()] = [
-                        'id' => 'group_' . $item->getKey(),
-                        'text' => htmlspecialchars($item->getGroup()),
-                        'expandable' => true,
-                        'leaf' => false,
-                        'allowChildren' => true,
-                        'iconCls' => 'opendxp_icon_folder',
-                        'group' => $item->getGroup(),
-                        'children' => [],
-                    ];
-                }
-                if ($forObjectEditor) {
-                    $layoutId = $request->query->get('layoutId');
-                    $itemLayoutDefinitions = null;
-                    if ($layoutId) {
-                        $layout = DataObject\ClassDefinition\CustomLayout::getById($layoutId.'.brick.'.$item->getKey());
-                        if ($layout instanceof DataObject\ClassDefinition\CustomLayout) {
-                            $itemLayoutDefinitions = $layout->getLayoutDefinitions();
-                        }
-                    }
-
-                    if (!$itemLayoutDefinitions instanceof \OpenDxp\Model\DataObject\ClassDefinition\Layout) {
-                        $itemLayoutDefinitions = $item->getLayoutDefinitions();
-                    }
-
-                    DataObject\Service::enrichLayoutDefinition($itemLayoutDefinitions, $object, $context);
-
-                    $layoutDefinitions[$item->getKey()] = $itemLayoutDefinitions;
-                }
-                $groups[$item->getGroup()]['children'][] =
-                    [
-                        'id' => $item->getKey(),
-                        'text' => $item->getKey(),
-                        'title' => $item->getTitle(),
-                        'key' => $item->getKey(),
-                        'leaf' => true,
-                        'iconCls' => 'opendxp_icon_objectbricks',
-                    ];
-            } else {
-                if ($forObjectEditor) {
-                    $layout = $item->getLayoutDefinitions();
-
-                    $currentLayoutId = $request->query->get('layoutId');
-
-                    $user = $this->getAdminUser();
-                    if ($currentLayoutId == -1 && $user->isAdmin()) {
-                        DataObject\Service::createSuperLayout($layout);
-                    } elseif ($currentLayoutId) {
-                        $customLayout = DataObject\ClassDefinition\CustomLayout::getById($currentLayoutId.'.brick.'.$item->getKey());
-                        if ($customLayout instanceof DataObject\ClassDefinition\CustomLayout) {
-                            $layout = $customLayout->getLayoutDefinitions();
-                        }
-                    }
-
-                    DataObject\Service::enrichLayoutDefinition($layout, $object, $context);
-
-                    $layoutDefinitions[$item->getKey()] = $layout;
-                }
-                $definitions[] = [
-                    'id' => $item->getKey(),
-                    'text' => $item->getKey(),
-                    'title' => $item->getTitle(),
-                    'key' => $item->getKey(),
-                    'leaf' => true,
-                    'iconCls' => 'opendxp_icon_objectbricks',
-                ];
-            }
-        }
-
-        foreach ($groups as $group) {
-            $definitions[] = $group;
-        }
-
-        $event = new GenericEvent($this, [
-            'list' => $definitions,
-            'objectId' => $request->query->get('object_id'),
-            'forObjectEditor' => $forObjectEditor,
-            'layoutDefinitions' => $layoutDefinitions,
-            'fieldName' => $request->query->get('field_name'),
-            'object' => $object,
-        ]);
-        $eventDispatcher->dispatch($event, AdminEvents::CLASS_OBJECTBRICK_LIST_PRE_SEND_DATA);
-        $definitions = $event->getArgument('list');
-        $layoutDefinitions = $event->getArgument('layoutDefinitions');
-
-        if ($forObjectEditor) {
-            return $this->adminJson(['objectbricks' => $definitions, 'layoutDefinitions' => $layoutDefinitions]);
-        }
-
-        return $this->adminJson($definitions);
-    }
-
-    #[Route('/objectbrick-list', name: 'objectbricklist', methods: ['GET'])]
-    public function objectbrickListAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
-    {
-        $list = new DataObject\Objectbrick\Definition\Listing();
-        $list = $list->load();
-
-        if ($request->query->has('class_id') && $request->query->has('field_name')) {
-            $filteredList = [];
-            $classId = $request->query->get('class_id');
-            $fieldname = $request->query->get('field_name');
-            $classDefinition = DataObject\ClassDefinition::getById($classId);
-            $className = $classDefinition->getName();
-
-            foreach ($list as $type) {
-                $clsDefs = $type->getClassDefinitions();
-                if (!empty($clsDefs)) {
-                    foreach ($clsDefs as $cd) {
-                        if ($cd['classname'] == $className && $cd['fieldname'] == $fieldname) {
-                            $filteredList[] = $type;
-
-                            continue;
-                        }
-                    }
-                }
-
-                $layout = $type->getLayoutDefinitions();
-
-                $currentLayoutId = $request->query->get('layoutId');
-
-                $user = $this->getAdminUser();
-                if ($currentLayoutId == -1 && $user->isAdmin()) {
-                    DataObject\Service::createSuperLayout($layout);
-                    $objectData['layout'] = $layout;
-                }
-
-                $context = [
-                    'containerType' => 'objectbrick',
-                    'containerKey' => $type->getKey(),
-                    'outerFieldname' => $request->query->get('field_name'),
-                ];
-
-                $object = DataObject\Concrete::getById((int) $request->query->get('object_id'));
-
-                DataObject\Service::enrichLayoutDefinition($layout, $object, $context);
-                $type->setLayoutDefinitions($layout);
-            }
-
-            $list = $filteredList;
-        }
-
-        $event = new GenericEvent($this, [
-            'list' => $list,
-            'objectId' => $request->query->get('object_id'),
-        ]);
-        $eventDispatcher->dispatch($event, AdminEvents::CLASS_OBJECTBRICK_LIST_PRE_SEND_DATA);
-        $list = $event->getArgument('list');
-
-        return $this->adminJson(['objectbricks' => $list]);
+    public function getClassDefinitionForColumnConfigAction(
+        GetClassDefinitionForColumnConfigHandler $handler,
+        #[MapQueryParameter] ?string $id = null,
+        #[MapQueryParameter] int $oid = 0,
+    ): JsonResponse {
+        return $this->adminJson($handler($id, $oid)->config);
     }
 
     /**
      * Add option to export/import all class definitions/brick definitions etc. at once
      */
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/bulk-import', name: 'bulkimport', methods: ['POST'])]
-    public function bulkImportAction(Request $request): JsonResponse
+    public function bulkImportAction(Request $request, BulkImportHandler $handler): JsonResponse
     {
-        $result = [];
-
         /** @var UploadedFile $uploadFile */
         $uploadFile = $request->files->get('Filedata');
+        $result = $handler(file_get_contents($uploadFile->getPathname()));
 
-        $json = file_get_contents($uploadFile->getPathname());
-
-        $tmpName = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/bulk-import-' . uniqid('', false) . '.tmp';
-        file_put_contents($tmpName, $json);
-
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($tmpName): void {
-            $session->set('class_bulk_import_file', $tmpName);
-        }, 'opendxp_objects');
-
-        $json = json_decode($json, true);
-
-        foreach ($json as $groupName => $group) {
-            foreach ($group as $groupItem) {
-                $displayName = null;
-                $icon = null;
-
-                if ($groupName === 'class') {
-                    $name = $groupItem['name'];
-                    $icon = 'class';
-                } elseif ($groupName === 'customlayout') {
-                    $className = $groupItem['className'];
-
-                    $layoutData = ['className' => $className, 'name' => $groupItem['name']];
-                    $name = base64_encode(json_encode($layoutData));
-                    $displayName = $className . ' / ' . $groupItem['name'];
-                    $icon = 'custom_views';
-                } else {
-                    if ($groupName === 'objectbrick') {
-                        $icon = 'objectbricks';
-                    } elseif ($groupName === 'fieldcollection') {
-                        $icon = 'fieldcollection';
-                    }
-                    $name = $groupItem['key'];
-                }
-
-                if (!$displayName) {
-                    $displayName = $name;
-                }
-                $result[] = ['icon' => $icon, 'checked' => true, 'type' => $groupName, 'name' => $name, 'displayName' => $displayName];
-            }
-        }
-
-        $response = $this->adminJson(['success' => true, 'data' => $result]);
+        $response = $this->adminJson(ApiResponse::ok(['data' => $result->items]));
         $response->headers->set('Content-Type', 'text/html');
 
         return $response;
@@ -1416,657 +204,148 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
     /**
      * Add option to export/import all class definitions/brick definitions etc. at once
-     *
-     * @throws Exception
      */
     #[Route('/bulk-commit', name: 'bulkcommit', methods: ['POST'])]
-    public function bulkCommitAction(Request $request): JsonResponse
+    public function bulkCommitAction(Request $request, BulkCommitHandler $handler): JsonResponse
     {
-        $data = json_decode($request->request->get('data'), true);
+        $handler(json_decode($request->request->get('data'), true));
 
-        $session = Session::getSessionBag($request->getSession(), 'opendxp_objects');
-        $filename = $session->get('class_bulk_import_file');
-        $json = @file_get_contents($filename);
-        $json = json_decode($json, true);
-
-        $type = $data['type'];
-        $name = $data['name'];
-        $list = $json[$type];
-
-        foreach ($list as $item) {
-
-            unset($item['creationDate'], $item['modificationDate'], $item['userOwner'], $item['userModification']);
-
-            if ($type === 'class' && $item['name'] == $name) {
-                $this->checkPermission('classes');
-                $class = DataObject\ClassDefinition::getByName($name);
-                if (!$class) {
-                    $class = new DataObject\ClassDefinition();
-                    $class->setName($name);
-                }
-                $success = DataObject\ClassDefinition\Service::importClassDefinitionFromJson($class, json_encode($item), true);
-
-                return $this->adminJson(['success' => $success]);
-            }
-
-            if ($type === 'objectbrick' && $item['key'] == $name) {
-                $this->checkPermission('objectbricks');
-                if (!$brick = DataObject\Objectbrick\Definition::getByKey($name)) {
-                    $brick = new DataObject\Objectbrick\Definition();
-                    $brick->setKey($name);
-                }
-
-                $success = DataObject\ClassDefinition\Service::importObjectBrickFromJson($brick, json_encode($item), true);
-
-                return $this->adminJson(['success' => $success]);
-            }
-
-            if ($type === 'fieldcollection' && $item['key'] == $name) {
-                $this->checkPermission('fieldcollections');
-                if (!$fieldCollection = DataObject\Fieldcollection\Definition::getByKey($name)) {
-                    $fieldCollection = new DataObject\Fieldcollection\Definition();
-                    $fieldCollection->setKey($name);
-                }
-
-                $success = DataObject\ClassDefinition\Service::importFieldCollectionFromJson($fieldCollection, json_encode($item), true);
-
-                return $this->adminJson(['success' => $success]);
-            }
-
-            if ($type === 'customlayout') {
-                $this->checkPermission('classes');
-                $layoutData = json_decode(base64_decode($data['name']), true);
-                $className = $layoutData['className'];
-                $layoutName = $layoutData['name'];
-
-                if ($item['name'] == $layoutName && $item['className'] == $className) {
-                    $class = DataObject\ClassDefinition::getByName($className);
-                    if (!$class) {
-                        throw new Exception('Class does not exist');
-                    }
-
-                    $classId = $class->getId();
-
-                    $layoutList = new DataObject\ClassDefinition\CustomLayout\Listing();
-                    $layoutList->setFilter(fn (DataObject\ClassDefinition\CustomLayout $layout) => $layout->getName() === $layoutName && $layout->getClassId() === $classId);
-                    $layoutList = $layoutList->load();
-
-                    $layoutDefinition = null;
-                    if ($layoutList) {
-                        $layoutDefinition = array_values($layoutList)[0];
-                    }
-
-                    if (!$layoutDefinition) {
-                        $layoutDefinition = new DataObject\ClassDefinition\CustomLayout();
-                        $layoutDefinition->setName($layoutName);
-                        $layoutDefinition->setClassId($classId);
-                    }
-
-                    try {
-                        $layoutDefinition->setDescription($item['description']);
-                        $layoutDef = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($item['layoutDefinitions'], true);
-                        $layoutDefinition->setLayoutDefinitions($layoutDef);
-                        $layoutDefinition->save();
-                    } catch (Exception $e) {
-                        Logger::error($e->getMessage());
-
-                        return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-                    }
-                }
-            }
-        }
-
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
     /**
      * Add option to export/import all class definitions/brick definitions etc. at once
      */
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/bulk-export-prepare', name: 'bulkexportprepare', methods: ['POST'])]
-    public function bulkExportPrepareAction(Request $request): Response
+    public function bulkExportPrepareAction(Request $request, BulkExportPrepareHandler $handler): Response
     {
-        $data = $request->request->get('data');
+        $handler($request->request->get('data'));
 
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($data): void {
-            $session->set('class_bulk_export_settings', $data);
-        }, 'opendxp_objects');
-
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/bulk-export', name: 'bulkexport', methods: ['GET'])]
-    public function bulkExportAction(Request $request): JsonResponse
+    public function bulkExportAction(GetClassBulkExportListHandler $handler): JsonResponse
     {
-        $result = [];
-
-        if ($this->getAdminUser()->isAllowed('fieldcollections')) {
-            $fieldCollections = new DataObject\Fieldcollection\Definition\Listing();
-            $fieldCollections = $fieldCollections->load();
-
-            foreach ($fieldCollections as $fieldCollection) {
-                $result[] = [
-                    'icon' => 'fieldcollection',
-                    'checked' => true,
-                    'type' => 'fieldcollection',
-                    'name' => $fieldCollection->getKey(),
-                    'displayName' => $fieldCollection->getKey(),
-                ];
-            }
-        }
-
-        if ($this->getAdminUser()->isAllowed('classes')) {
-            $classes = new DataObject\ClassDefinition\Listing();
-            $classes->setOrder('ASC');
-            $classes->setOrderKey('id');
-            $classes = $classes->load();
-
-            foreach ($classes as $class) {
-                $result[] = [
-                    'icon' => 'class',
-                    'checked' => true,
-                    'type' => 'class',
-                    'name' => $class->getName(),
-                    'displayName' => $class->getName(),
-                ];
-            }
-        }
-
-        if ($this->getAdminUser()->isAllowed('objectbricks')) {
-            $objectBricks = new DataObject\Objectbrick\Definition\Listing();
-            $objectBricks = $objectBricks->loadNames();
-
-            foreach ($objectBricks as $brickName) {
-                $result[] = [
-                    'icon' => 'objectbricks',
-                    'checked' => true,
-                    'type' => 'objectbrick',
-                    'name' => $brickName,
-                    'displayName' => $brickName,
-                ];
-            }
-        }
-
-        if ($this->getAdminUser()->isAllowed('classes')) {
-            $customLayouts = new DataObject\ClassDefinition\CustomLayout\Listing();
-            $customLayouts = $customLayouts->load();
-            foreach ($customLayouts as $customLayout) {
-                $class = DataObject\ClassDefinition::getById($customLayout->getClassId());
-                $displayName = $class->getName().' / '.$customLayout->getName();
-
-                $result[] = [
-                    'icon' => 'custom_views',
-                    'checked' => true,
-                    'type' => 'customlayout',
-                    'name' => $customLayout->getId(),
-                    'displayName' => $displayName,
-                ];
-            }
-        }
-
-        return new JsonResponse(['success' => true, 'data' => $result]);
+        return $this->adminJson(ApiResponse::ok(['data' => $handler()->data]));
     }
 
     #[Route('/do-bulk-export', name: 'dobulkexport', methods: ['GET'])]
-    public function doBulkExportAction(Request $request): Response
+    public function doBulkExportAction(DoBulkExportHandler $handler): Response
     {
-        $session = Session::getSessionBag($request->getSession(), 'opendxp_objects');
-        $list = $session->get('class_bulk_export_settings');
-        $list = json_decode($list, true);
-        $result = [];
+        $result = $handler();
 
-        foreach ($list as $item) {
-            if ($item['type'] === 'fieldcollection' && $this->getAdminUser()->isAllowed('fieldcollections')) {
-                if ($fieldCollection = DataObject\Fieldcollection\Definition::getByKey($item['name'])) {
-                    $fieldCollectionJson = json_decode(DataObject\ClassDefinition\Service::generateFieldCollectionJson($fieldCollection));
-                    $fieldCollectionJson->key = $item['name'];
-                    $result['fieldcollection'][] = $fieldCollectionJson;
-                }
-            } elseif ($item['type'] === 'class' && $this->getAdminUser()->isAllowed('classes')) {
-                if ($class = DataObject\ClassDefinition::getByName($item['name'])) {
-                    $data = json_decode(DataObject\ClassDefinition\Service::generateClassDefinitionJson($class));
-                    $data->name = $item['name'];
-                    $result['class'][] = $data;
-                }
-            } elseif ($item['type'] === 'objectbrick' && $this->getAdminUser()->isAllowed('objectbricks')) {
-                if ($objectBrick = DataObject\Objectbrick\Definition::getByKey($item['name'])) {
-                    $objectBrickJson = json_decode(DataObject\ClassDefinition\Service::generateObjectBrickJson($objectBrick));
-                    $objectBrickJson->key = $item['name'];
-                    $result['objectbrick'][] = $objectBrickJson;
-                }
-            } elseif ($item['type'] === 'customlayout' && $this->getAdminUser()->isAllowed('classes')) {
-                if ($customLayout = DataObject\ClassDefinition\CustomLayout::getById($item['name'])) {
-                    $classId = $customLayout->getClassId();
-                    $class = DataObject\ClassDefinition::getById($classId);
-                    $customLayoutJson = json_decode(DataObject\ClassDefinition\Service::generateCustomLayoutJson($customLayout));
-                    $customLayoutJson->name = $customLayout->getName();
-                    $customLayoutJson->className = $class->getName();
-                    $result['customlayout'][] = $customLayoutJson;
-                }
-            }
-        }
-
-        $result = json_encode($result, JSON_PRETTY_PRINT);
-        $response = new Response($result);
+        $response = new Response($result->json);
         $response->headers->set('Content-type', 'application/json');
         $response->headers->set('Content-Disposition', 'attachment; filename="bulk_export.json"');
 
         return $response;
     }
 
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        // check permissions
-        $unrestrictedActions = [
-            'getTreeAction', 'fieldcollectionListAction', 'fieldcollectionTreeAction', 'fieldcollectionGetAction',
-            'getClassDefinitionForColumnConfigAction', 'objectbrickListAction', 'objectbrickTreeAction', 'objectbrickGetAction',
-            'objectbrickDeleteAction', 'objectbrickUpdateAction', 'importObjectbrickAction', 'exportObjectbrickAction', 'bulkCommitAction', 'doBulkExportAction', 'bulkExportAction', 'importFieldcollectionAction', 'exportFieldcollectionAction', // permissions for listed write operations handled separately in action methods
-            'selectOptionsGetAction', 'selectOptionsTreeAction', 'selectOptionsUpdateAction', 'getSelectOptionsUsagesAction', 'selectOptionsDeleteAction',
-        ];
-
-        $this->checkActionPermission($event, 'classes', $unrestrictedActions);
-    }
-
-    #[Route('/get-fieldcollection-usages', name: 'getfieldcollectionusages', methods: ['GET'])]
-    public function getFieldcollectionUsagesAction(Request $request): Response
-    {
-        $key = $request->query->get('key');
-        $result = [];
-
-        $classes = new DataObject\ClassDefinition\Listing();
-        $classes = $classes->load();
-        foreach ($classes as $class) {
-            $fieldDefs = $class->getFieldDefinitions();
-            foreach ($fieldDefs as $fieldDef) {
-                if ($fieldDef instanceof DataObject\ClassDefinition\Data\Fieldcollections) {
-                    $allowedKeys = $fieldDef->getAllowedTypes();
-                    if (in_array($key, $allowedKeys)) {
-                        $result[] = [
-                            'class' => $class->getName(),
-                            'field' => $fieldDef->getName(),
-                        ];
-                    }
-                }
-            }
-        }
-
-        return $this->adminJson($result);
-    }
-
-    #[Route('/get-bricks-usages', name: 'getbrickusages', methods: ['GET'])]
-    public function getBrickUsagesAction(Request $request): Response
-    {
-        $classId = $request->query->get('classId');
-        $myclass = DataObject\ClassDefinition::getById($classId);
-
-        $result = [];
-
-        $brickDefinitions = new DataObject\Objectbrick\Definition\Listing();
-        $brickDefinitions = $brickDefinitions->load();
-        foreach ($brickDefinitions as $brickDefinition) {
-            $classes = $brickDefinition->getClassDefinitions();
-            foreach ($classes as $class) {
-                if ($myclass->getName() == $class['classname']) {
-                    $result[] = [
-                        'objectbrick' => $brickDefinition->getKey(),
-                        'field' => $class['fieldname'],
-                    ];
-                }
-            }
-        }
-
-        return $this->adminJson($result);
-    }
-
     #[Route('/get-select-options-usages', name: 'getselectoptionsusages', methods: [Request::METHOD_GET])]
-    public function getSelectOptionsUsagesAction(Request $request): Response
-    {
-        $usages = [];
-        $id = $request->query->get(DataObject\SelectOptions\Config::PROPERTY_ID);
-        $selectOptionsConfiguration = $this->getSelectOptionsConfig($id);
-        foreach ($selectOptionsConfiguration->getFieldsUsedIn() as $className => $fieldNames) {
-            foreach ($fieldNames as $fieldName) {
-                $usages[] = [
-                    'class' => $className,
-                    'field' => $fieldName,
-                ];
-            }
-        }
-
-        return $this->adminJson($usages);
+    public function getSelectOptionsUsagesAction(
+        GetSelectOptionsUsagesHandler $handler,
+        #[MapQueryParameter(name: DataObject\SelectOptions\Config::PROPERTY_ID)] ?string $id = null,
+    ): Response {
+        return $this->adminJson($handler($id)->usages);
     }
 
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/get-icons', name: 'geticons', methods: ['GET'])]
-    public function getIconsAction(Request $request, EventDispatcherInterface $eventDispatcher): Response
-    {
-        $classId = $request->query->get('classId');
-        $type = $request->query->has('type') ? $request->query->getString('type') : null;
-
-        $iconDir = OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img';
-        if ($type === '') {
-            return $this->adminJson([]);
-        }
-
-        if ($type === null) {
-            $classIcons = FileSystemHelper::scanDirectory($iconDir . '/object-icons/');
-            $colorIcons = FileSystemHelper::scanDirectory($iconDir . '/flat-color-icons/');
-            $twemoji = FileSystemHelper::scanDirectory($iconDir . '/twemoji/');
-            $icons = [...$classIcons, ...$colorIcons, ...$twemoji];
-        } else {
-            $icons = match($type) {
-                'color' => FileSystemHelper::scanDirectory($iconDir . '/flat-color-icons/'),
-                'white' => FileSystemHelper::scanDirectory($iconDir . '/flat-white-icons/'),
-                'twemoji-1', 'twemoji-2', 'twemoji-3',
-                'twemoji_variants-1', 'twemoji_variants-2', 'twemoji_variants-3'
-                => FileSystemHelper::scanDirectory($iconDir . '/twemoji/'),
-                default => [],
-            };
-        }
-
-        $style = '';
-        if ($type === 'white') {
-            $style = 'background-color:#000';
-        }
-
-        foreach ($icons as &$icon) {
-            $icon = str_replace(OPENDXP_WEB_ROOT, '', $icon);
-        }
-
-        $event = new GenericEvent($this, [
-            'icons' => $icons,
-            'classId' => $classId,
-        ]);
-        $eventDispatcher->dispatch($event, AdminEvents::CLASS_OBJECT_ICONS_PRE_SEND_DATA);
-        $icons = $event->getArgument('icons');
-
-        $startIndex = 0;
-        $result = [];
-
-        if ($type !== null && str_starts_with($type, 'twemoji')) {
-            foreach ($icons as $index => $twemojiIcon) {
-                $iconBase = basename($twemojiIcon);
-
-                // All the variants (like skin color) have a hyphen in their base name
-                // Here we remove/unset wheter if the selected icon type is the variant list
-                $explodeByHyphen = explode('-', $iconBase);
-                if (
-                    (!str_starts_with($type, 'twemoji_variants') && isset($explodeByHyphen[1])) ||
-                    (str_starts_with($type, 'twemoji_variants')  && !isset($explodeByHyphen[1]))
-                ) {
-                    unset($icons[$index]);
-                }
-            }
-
-            $icons = array_values($icons);
-            $limit = count($icons);
-
-            if (str_ends_with($type, '-1')) {
-                $limit = floor($limit / 3);
-            }
-            if (str_ends_with($type, '-2')) {
-                $startIndex = floor($limit / 3);
-                $limit = floor($limit / 3 * 2);
-            }
-            if (str_ends_with($type, '-3')) {
-                $startIndex = floor($limit / 3 * 2);
-            }
-        } else {
-            $limit = count($icons);
-        }
-
-        for ($i = $startIndex; $i < $limit; $i++) {
-            $icon = $icons[$i];
-            $content = file_get_contents(OPENDXP_WEB_ROOT . $icon);
-            $result[] = [
-                'text' => sprintf(
-                    '<img style="%s" src="data:%s;base64,%s"/>',
-                    $style,
-                    mime_content_type(OPENDXP_WEB_ROOT . $icon),
-                    base64_encode($content)
-                ),
-                'value' => $icon,
-            ];
-        }
-
-        return $this->adminJson($result);
+    public function getIconsAction(
+        GetClassIconsHandler $handler,
+        #[MapQueryParameter] ?string $classId = null,
+        #[MapQueryParameter] ?string $type = null,
+    ): Response {
+        return $this->adminJson($handler($type, $classId)->icons);
     }
 
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/suggest-class-identifier', name: 'suggestclassidentifier')]
-    public function suggestClassIdentifierAction(): Response
+    public function suggestClassIdentifierAction(SuggestClassIdentifierHandler $handler): Response
     {
-        $db = Db::get();
-        $maxId = $db->fetchOne('SELECT MAX(CAST(id AS SIGNED)) FROM classes');
+        $result = $handler();
 
-        $existingIds = $db->fetchFirstColumn('SELECT LOWER(id) FROM classes');
-
-        $result = [
-            'suggestedIdentifier' => $maxId ? $maxId + 1 : 1,
-            'existingIds' => $existingIds,
-            ];
-
-        return $this->adminJson($result);
+        return $this->adminJson([
+            'suggestedIdentifier' => $result->suggestedIdentifier,
+            'existingIds' => $result->existingIds,
+        ]);
     }
 
-    #[Route('/suggest-custom-layout-identifier', name: 'suggestcustomlayoutidentifier', methods: ['GET'])]
-    public function suggestCustomLayoutIdentifierAction(Request $request): Response
-    {
-        $classId = $request->query->get('classId');
-
-        $identifier = DataObject\ClassDefinition\CustomLayout::getIdentifier($classId);
-
-        $list = new DataObject\ClassDefinition\CustomLayout\Listing();
-
-        $list = $list->load();
-        $existingIds = [];
-        $existingNames = [];
-
-        foreach ($list as $item) {
-            $existingIds[] = $item->getId();
-            if ($item->getClassId() == $classId) {
-                $existingNames[] = $item->getName();
-            }
-        }
-
-        $result = [
-            'suggestedIdentifier' => $identifier,
-            'existingIds' => $existingIds,
-            'existingNames' => $existingNames,
-            ];
-
-        return $this->adminJson($result);
-    }
-
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/text-layout-preview', name: 'textlayoutpreview', methods: ['GET'])]
-    public function textLayoutPreviewAction(Request $request): Response
-    {
-        $objPath = $request->query->get('previewObject', '');
-        $className = '\\OpenDxp\\Model\\DataObject\\' . $request->query->get('className');
-        $obj = DataObject::getByPath($objPath) ?? new $className();
-
-        $textLayout = new DataObject\ClassDefinition\Layout\Text();
-        $textLayout->setName('textLayoutPreview' . $className);
-
-        $context = [
-          'data' => $request->query->get('renderingData'),
-        ];
-
-        if ($renderingClass = $request->query->get('renderingClass')) {
-            $textLayout->setRenderingClass($renderingClass);
-            $textLayout->setRenderingData($request->query->get('renderingData', ''));
-        }
-
-        if ($staticHtml = $request->query->get('html')) {
-            $textLayout->setHtml($staticHtml);
-        }
-
-        $html = $textLayout->enrichLayoutDefinition($obj, $context)->getHtml();
-
-        $content =
-            "<html>\n" .
-            "<head>\n" .
-            '<style type="text/css">' . "\n" .
-            file_get_contents(OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/css/admin.css') .
-            "</style>\n" .
-            "</head>\n\n" .
-            "<body class='objectlayout_element_text'>\n" .
-            $html .
-            "\n\n</body>\n" .
-            "</html>\n";
-
-        $response = new Response($content);
+    public function textLayoutPreviewAction(
+        GetTextLayoutPreviewHandler $handler,
+        #[MapQueryParameter] string $previewObject = '',
+        #[MapQueryParameter] ?string $className = null,
+        #[MapQueryParameter] ?string $renderingData = null,
+        #[MapQueryParameter] ?string $renderingClass = null,
+        #[MapQueryParameter] ?string $html = null,
+    ): Response {
+        $response = new Response($handler(
+            objPath: $previewObject,
+            className: $className,
+            renderingData: $renderingData,
+            renderingClass: $renderingClass,
+            html: $html,
+        )->content);
         $response->headers->set('Content-Type', 'text/html');
 
         return $response;
     }
 
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/video-supported-types', name: 'videosupportedTypestypes', methods: ['GET'])]
-    public function videoAllowedTypesAction(Request $request, TranslatorInterface $translator): Response
+    public function videoAllowedTypesAction(GetVideoAllowedTypesHandler $handler): Response
     {
-        $videoDef = new DataObject\ClassDefinition\Data\Video();
-        $res = [];
-
-        foreach ($videoDef->getSupportedTypes() as $type) {
-            $res[] = [
-                'key' => $type,
-                'value' => $translator->trans($type, [], 'admin'),
-            ];
-        }
-
-        return $this->adminJson($res);
+        return $this->adminJson($handler()->types);
     }
 
+    #[IsGranted(CorePermission::Selectoptions->value)]
     #[Route('/select-options-get', name: 'selectoptionsget', methods: [Request::METHOD_GET])]
-    public function selectOptionsGetAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('selectoptions');
-        $id = $request->query->get(DataObject\SelectOptions\Config::PROPERTY_ID);
-        $selectOptionsConfiguration = $this->getSelectOptionsConfig($id);
-
-        $data = $selectOptionsConfiguration->getObjectVars();
-        $data['isWriteable'] = $selectOptionsConfiguration->isWriteable();
-        $data['enumName'] = $selectOptionsConfiguration->getEnumName(true);
-
-        return $this->adminJson($data);
+    public function selectOptionsGetAction(
+        GetSelectOptionsHandler $handler,
+        #[MapQueryParameter(name: DataObject\SelectOptions\Config::PROPERTY_ID)] ?string $id = null,
+    ): JsonResponse {
+        return $this->adminJson($handler($id)->data);
     }
 
+    #[IsGranted(CorePermission::Selectoptions->value)]
     #[Route('/select-options-update', name: 'selectoptionsupdate', methods: [Request::METHOD_PUT, Request::METHOD_POST])]
-    public function selectOptionsUpdateAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
-    {
-        $this->checkPermission('selectoptions');
+    public function selectOptionsUpdateAction(
+        Request $request,
+        SaveSelectOptionsHandler $handler,
+    ): JsonResponse {
+        $result = $handler(
+            id: $request->request->get(DataObject\SelectOptions\Config::PROPERTY_ID),
+            task: $request->request->get('task', ''),
+            group: $request->request->get(DataObject\SelectOptions\Config::PROPERTY_GROUP),
+            useTraits: $request->request->get(DataObject\SelectOptions\Config::PROPERTY_USE_TRAITS, ''),
+            implementsInterfaces: $request->request->get(DataObject\SelectOptions\Config::PROPERTY_IMPLEMENTS_INTERFACES, ''),
+            selectOptionsData: $this->decodeJson($request->request->get(DataObject\SelectOptions\Config::PROPERTY_SELECT_OPTIONS, 'null')),
+        );
 
-        try {
-            $id = $request->request->get(DataObject\SelectOptions\Config::PROPERTY_ID);
-
-            if ($request->request->get('task') === 'add' && (new DataObject\SelectOptions\Config\Listing())->hasConfig($id)) {
-                throw new Exception('Select options with the same ID already exists (lower/upper cases may be different)');
-            }
-
-            $group = $request->request->get(DataObject\SelectOptions\Config::PROPERTY_GROUP);
-            $useTraits = $request->request->get(DataObject\SelectOptions\Config::PROPERTY_USE_TRAITS, '');
-            $implementsInterfaces = $request->request->get(DataObject\SelectOptions\Config::PROPERTY_IMPLEMENTS_INTERFACES, '');
-            $selectOptionsData = $request->request->get(DataObject\SelectOptions\Config::PROPERTY_SELECT_OPTIONS, 'null');
-            $selectOptionsConfiguration = DataObject\SelectOptions\Config::createFromData(
-                [
-                    DataObject\SelectOptions\Config::PROPERTY_ID => $id,
-                    DataObject\SelectOptions\Config::PROPERTY_GROUP => $group,
-                    DataObject\SelectOptions\Config::PROPERTY_USE_TRAITS => $useTraits,
-                    DataObject\SelectOptions\Config::PROPERTY_IMPLEMENTS_INTERFACES => $implementsInterfaces,
-                    DataObject\SelectOptions\Config::PROPERTY_SELECT_OPTIONS => $this->decodeJson($selectOptionsData),
-                ]
-            );
-
-            $event = new GenericEvent($this, [
-                'selectOptionsConfiguration' => $selectOptionsConfiguration,
-            ]);
-            $eventDispatcher->dispatch($event, AdminEvents::CLASS_SELECTOPTIONS_UPDATE_CONFIGURATION);
-            /** @var DataObject\SelectOptions\Config $selectOptionsConfiguration */
-            $selectOptionsConfiguration = $event->getArgument('selectOptionsConfiguration');
-
-            $selectOptionsConfiguration->save();
-
-            return $this->adminJson(['success' => true, 'id' => $selectOptionsConfiguration->getId()]);
-        } catch (Exception $exception) {
-            Logger::error($exception->getMessage());
-
-            return $this->adminJson(['success' => false, 'message' => $exception->getMessage()]);
-        }
+        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
 
+    #[IsGranted(CorePermission::Selectoptions->value)]
     #[Route('/select-options-tree', name: 'selectoptionstree', methods: [Request::METHOD_GET, Request::METHOD_POST])]
-    public function selectOptionsTreeAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
-    {
-        $this->checkPermission('selectoptions');
-        $configurations = $groups = [];
-
-        $selectOptionConfigs = new DataObject\SelectOptions\Config\Listing();
-        foreach ($selectOptionConfigs as $selectOptionConfig) {
-            $id = $selectOptionConfig->getId();
-            $configurationData = [
-                'id' => $id,
-                'text' => $id,
-                'leaf' => true,
-                'iconCls' => 'opendxp_icon_select',
-            ];
-
-            if ((int)$request->query->get('grouped', '0') === 0 || !$selectOptionConfig->hasGroup()) {
-                $configurations[] = $configurationData;
-
-                continue;
-            }
-
-            $group = $selectOptionConfig->getGroup();
-            if (!isset($groups[$group])) {
-                $groups[$group] = [
-                    'id' => 'group_' . $id,
-                    'text' => htmlspecialchars($group ?? ''),
-                    'expandable' => true,
-                    'leaf' => false,
-                    'allowChildren' => true,
-                    'iconCls' => 'opendxp_icon_folder',
-                    'group' => $group,
-                    'children' => [],
-                ];
-            }
-            $groups[$group]['children'][] = $configurationData;
-        }
-
-        foreach ($groups as $group) {
-            $configurations[] = $group;
-        }
-
-        $event = new GenericEvent($this, [
-            'list' => $configurations,
-        ]);
-        $eventDispatcher->dispatch($event, AdminEvents::CLASS_SELECTOPTIONS_LIST_PRE_SEND_DATA);
-
-        return $this->adminJson($configurations);
+    public function selectOptionsTreeAction(
+        GetSelectOptionsTreeHandler $handler,
+        #[MapQueryParameter] int $grouped = 0,
+    ): JsonResponse {
+        return $this->adminJson($handler($grouped)->configurations);
     }
 
+    #[IsGranted(CorePermission::Selectoptions->value)]
     #[Route('/select-options-delete', name: 'selectoptionsdelete', methods: [Request::METHOD_DELETE])]
-    public function selectOptionsDeleteAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('selectoptions');
+    public function selectOptionsDeleteAction(
+        Request $request,
+        DeleteSelectOptionsHandler $handler,
+    ): JsonResponse {
+        $handler($request->request->get(DataObject\SelectOptions\Config::PROPERTY_ID));
 
-        try {
-            $id = $request->request->get(DataObject\SelectOptions\Config::PROPERTY_ID);
-            $this->getSelectOptionsConfig($id)->delete();
-
-            return $this->adminJson(['success' => true]);
-        } catch (Exception $exception) {
-            return $this->adminJson(['success' => false, 'message' => $exception->getMessage()]);
-        }
-    }
-
-    protected function getSelectOptionsConfig(string $id): DataObject\SelectOptions\Config
-    {
-        $selectOptions = DataObject\SelectOptions\Config::getById($id);
-        if (!$selectOptions instanceof \OpenDxp\Model\DataObject\SelectOptions\Config) {
-            throw new NotFoundHttpException('Not Found', code: 1677133720896);
-        }
-
-        return $selectOptions;
+        return $this->adminJson(ApiResponse::ok());
     }
 }

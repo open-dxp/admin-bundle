@@ -17,34 +17,28 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Controller\KernelControllerEventInterface;
+use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
 use OpenDxp\Model\Tool\Email\Log;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
  */
 #[Route('/sent-mail')]
-class SentMailController extends AdminAbstractController implements KernelControllerEventInterface
+#[IsGranted(AdminPermission::GdprDataExtractor->value)]
+class SentMailController extends AdminAbstractController
 {
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        $this->checkActionPermission($event, 'gdpr_data_extractor');
-    }
-
     #[Route('/export', name: 'opendxp_admin_gdpr_sentmail_exportdataobject', methods: ['GET'])]
-    public function exportDataObjectAction(Request $request): JsonResponse
+    public function exportDataObjectAction(
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse
     {
         $this->checkPermission('emails');
 
-        $sentMail = Log::getById((int) $request->query->get('id'));
+        $sentMail = Log::getById($id);
         if (!$sentMail) {
             throw $this->createNotFoundException();
         }

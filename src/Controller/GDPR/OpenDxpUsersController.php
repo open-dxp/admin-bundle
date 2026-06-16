@@ -18,11 +18,12 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\OpenDxpUsers;
-use OpenDxp\Controller\KernelControllerEventInterface;
+use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * Class OpenDxpController
@@ -30,17 +31,9 @@ use Symfony\Component\Routing\Attribute\Route;
  * @internal
  */
 #[Route('/opendxp-users')]
-class OpenDxpUsersController extends AdminAbstractController implements KernelControllerEventInterface
+#[IsGranted(AdminPermission::GdprDataExtractor->value)]
+class OpenDxpUsersController extends AdminAbstractController
 {
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        $this->checkActionPermission($event, 'gdpr_data_extractor');
-    }
-
     #[Route('/search-users', name: 'opendxp_admin_gdpr_opendxpusers_searchusers', methods: ['GET'])]
     public function searchUsersAction(Request $request, OpenDxpUsers $openDxpUsers): JsonResponse
     {
@@ -60,10 +53,13 @@ class OpenDxpUsersController extends AdminAbstractController implements KernelCo
     }
 
     #[Route('/export-user-data', name: 'opendxp_admin_gdpr_opendxpusers_exportuserdata', methods: ['GET'])]
-    public function exportUserDataAction(Request $request, OpenDxpUsers $openDxpUsers): JsonResponse
+    public function exportUserDataAction(
+        OpenDxpUsers $openDxpUsers,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse
     {
         $this->checkPermission('users');
-        $userData = $openDxpUsers->getExportData((int)$request->query->get('id'));
+        $userData = $openDxpUsers->getExportData($id);
 
         $json = $this->encodeJson($userData, [], JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_PRETTY_PRINT);
 

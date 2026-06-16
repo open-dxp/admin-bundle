@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * OpenDXP
@@ -14,321 +13,154 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
+declare(strict_types=1);
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use DateTime;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Helper\Dashboard;
-use OpenDxp\Controller\KernelControllerEventInterface;
-use OpenDxp\Model\Asset;
-use OpenDxp\Model\DataObject;
-use OpenDxp\Model\Document;
+use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\AddWidgetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\CreateDashboardHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\DeleteDashboardHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\GetDashboardConfigurationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\GetDashboardListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\GetModificationStatisticsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\GetModifiedAssetsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\GetModifiedDocumentsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\GetModifiedObjectsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\RemoveWidgetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\ReorderWidgetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Portal\UpdatePortletConfigHandler;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * @internal
  */
 #[Route('/portal')]
-class PortalController extends AdminAbstractController implements KernelControllerEventInterface
+class PortalController extends AdminAbstractController
 {
-    protected ?Dashboard $dashboardHelper = null;
-
     #[Route('/dashboard-list', name: 'opendxp_admin_portal_dashboardlist', methods: ['GET'])]
-    public function dashboardListAction(Request $request): JsonResponse
+    public function dashboardListAction(GetDashboardListHandler $getDashboardList): JsonResponse
     {
-        $dashboards = $this->dashboardHelper->getAllDashboards();
+        $result = $getDashboardList();
 
-        $data = [];
-        foreach (array_keys($dashboards) as $key) {
-            if ($key !== 'welcome') {
-                $data[] = $key;
-            }
-        }
-
-        return $this->adminJson($data);
+        return $this->adminJson($result->dashboards);
     }
 
     #[Route('/create-dashboard', name: 'opendxp_admin_portal_createdashboard', methods: ['POST'])]
-    public function createDashboardAction(Request $request): JsonResponse
+    public function createDashboardAction(Request $request, CreateDashboardHandler $createDashboard): JsonResponse
     {
-        $dashboards = $this->dashboardHelper->getAllDashboards();
         $key = trim($request->request->get('key', ''));
-        if (isset($dashboards[$key])) {
-            return $this->adminJson(['success' => false, 'message' => 'name_already_in_use']);
+
+        try {
+            $createDashboard($key);
+        } catch (\InvalidArgumentException $e) {
+            return $this->adminJson(ApiResponse::error($e->getMessage()));
         }
 
-        if (!empty($key)) {
-            $this->dashboardHelper->saveDashboard($key);
-
-            return $this->adminJson(['success' => true]);
-        }
-
-        return $this->adminJson(['success' => false, 'message' => 'empty']);
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/delete-dashboard', name: 'opendxp_admin_portal_deletedashboard', methods: ['DELETE'])]
-    public function deleteDashboardAction(Request $request): JsonResponse
+    public function deleteDashboardAction(Request $request, DeleteDashboardHandler $deleteDashboard): JsonResponse
     {
-        $key = $request->request->get('key');
-        $this->dashboardHelper->deleteDashboard($key);
+        $deleteDashboard((string) $request->request->get('key'));
 
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/get-configuration', name: 'opendxp_admin_portal_getconfiguration', methods: ['GET'])]
-    public function getConfigurationAction(Request $request): JsonResponse
-    {
-        $config = $this->dashboardHelper->getDashboard($request->query->get('key'));
+    public function getConfigurationAction(
+        GetDashboardConfigurationHandler $getDashboardConfiguration,
+        #[MapQueryParameter] ?string $key = null,
+    ): JsonResponse {
+        $result = $getDashboardConfiguration($key);
 
-        return $this->adminJson($config);
+        return $this->adminJson($result->config);
     }
 
     #[Route('/remove-widget', name: 'opendxp_admin_portal_removewidget', methods: ['DELETE'])]
-    public function removeWidgetAction(Request $request): JsonResponse
+    public function removeWidgetAction(Request $request, RemoveWidgetHandler $removeWidget): JsonResponse
     {
-        $dashboardId = $request->request->get('key');
-        $config = $this->dashboardHelper->getDashboard($dashboardId);
+        $widgetId = $request->request->has('id') ? (int) $request->request->get('id') : null;
+        $removeWidget(
+            dashboardId: (string) $request->request->get('key'),
+            widgetId: $widgetId,
+        );
 
-        $newConfig = [[], []];
-        $colCount = 0;
-
-        $currentId = $request->request->has('id') ? (int) $request->request->get('id') : null;
-
-        foreach ($config['positions'] as $col) {
-            foreach ($col as $row) {
-                if ($row['id'] !== $currentId) {
-                    $newConfig[$colCount][] = $row;
-                }
-            }
-            $colCount++;
-        }
-
-        $config['positions'] = $newConfig;
-
-        $this->dashboardHelper->saveDashboard($dashboardId, $config);
-
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/add-widget', name: 'opendxp_admin_portal_addwidget', methods: ['POST'])]
-    public function addWidgetAction(Request $request): JsonResponse
+    public function addWidgetAction(Request $request, AddWidgetHandler $addWidget): JsonResponse
     {
-        $dashboardId = $request->request->get('key');
-        $config = $this->dashboardHelper->getDashboard($dashboardId);
+        $result = $addWidget(
+            dashboardId: (string) $request->request->get('key'),
+            type: (string) $request->request->get('type'),
+        );
 
-        $nextId = 0;
-        foreach ($config['positions'] as $col) {
-            foreach ($col as $row) {
-                $nextId = ($row['id'] > $nextId ? $row['id'] : $nextId);
-            }
-        }
-
-        $nextId += 1;
-        $config['positions'][0][] = [
-            'id' => $nextId,
-            'type' => $request->request->get('type'),
-            'config' => null,
-        ];
-
-        $this->dashboardHelper->saveDashboard($dashboardId, $config);
-
-        return $this->adminJson(['success' => true, 'id' => $nextId]);
+        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
 
     #[Route('/reorder-widget', name: 'opendxp_admin_portal_reorderwidget', methods: ['PUT'])]
-    public function reorderWidgetAction(Request $request): JsonResponse
+    public function reorderWidgetAction(Request $request, ReorderWidgetHandler $reorderWidget): JsonResponse
     {
-        $dashboardId = $request->request->get('key');
-        $config = $this->dashboardHelper->getDashboard($dashboardId);
+        $widgetId = $request->request->has('id') ? (int) $request->request->get('id') : null;
+        $reorderWidget(
+            dashboardId: (string) $request->request->get('key'),
+            widgetId: $widgetId,
+            column: $request->request->getInt('column'),
+            row: $request->request->getInt('row'),
+        );
 
-        $newConfig = [[], []];
-        $colCount = 0;
-        $toMove = null;
-
-        $currentId = $request->request->has('id') ? (int) $request->request->get('id') : null;
-
-        foreach ($config['positions'] as $col) {
-            foreach ($col as $row) {
-                if ($row['id'] !== $currentId) {
-                    $newConfig[$colCount][] = $row;
-                } else {
-                    $toMove = $row;
-                }
-            }
-            $colCount++;
-        }
-
-        array_splice($newConfig[$request->request->get('column')], $request->request->getInt('row'), 0, [$toMove]);
-
-        $config['positions'] = $newConfig;
-
-        $this->dashboardHelper->saveDashboard($dashboardId, $config);
-
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/update-portlet-config', name: 'opendxp_admin_portal_updateportletconfig', methods: ['PUT'])]
-    public function updatePortletConfigAction(Request $request): JsonResponse
+    public function updatePortletConfigAction(Request $request, UpdatePortletConfigHandler $updatePortletConfig): JsonResponse
     {
-        $key = $request->request->get('key');
+        $portletId = $request->request->has('id') ? (int) $request->request->get('id') : null;
+        $updatePortletConfig(
+            dashboardKey: (string) $request->request->get('key'),
+            portletId: $portletId,
+            configuration: $request->request->get('config'),
+        );
 
-        $currentId = $request->request->has('id') ? (int) $request->request->get('id') : null;
-        $configuration = $request->request->get('config');
-
-        $dashboard = $this->dashboardHelper->getDashboard($key);
-        foreach ($dashboard['positions'] as &$col) {
-            foreach ($col as &$portlet) {
-                if ($portlet['id'] === $currentId) {
-                    $portlet['config'] = $configuration;
-
-                    break;
-                }
-            }
-        }
-
-        $this->dashboardHelper->saveDashboard($key, $dashboard);
-
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/portlet-modified-documents', name: 'opendxp_admin_portal_portletmodifieddocuments', methods: ['GET'])]
-    public function portletModifiedDocumentsAction(Request $request): JsonResponse
+    public function portletModifiedDocumentsAction(GetModifiedDocumentsHandler $getModifiedDocuments): JsonResponse
     {
-        $list = Document::getList([
-            'limit' => 10,
-            'order' => 'DESC',
-            'orderKey' => 'modificationDate',
-            'condition' => "userModification = '".$this->getAdminUser()->getId()."'",
-        ]);
+        $result = $getModifiedDocuments();
 
-        $response = [];
-        $response['documents'] = [];
-
-        foreach ($list as $doc) {
-            if ($doc->isAllowed('view')) {
-                $response['documents'][] = [
-                    'id' => $doc->getId(),
-                    'type' => $doc->getType(),
-                    'path' => $doc->getRealFullPath(),
-                    'date' => $doc->getModificationDate(),
-                ];
-            }
-        }
-
-        return $this->adminJson($response);
+        return $this->adminJson(['documents' => $result->documents]);
     }
 
     #[Route('/portlet-modified-assets', name: 'opendxp_admin_portal_portletmodifiedassets', methods: ['GET'])]
-    public function portletModifiedAssetsAction(Request $request): JsonResponse
+    public function portletModifiedAssetsAction(GetModifiedAssetsHandler $getModifiedAssets): JsonResponse
     {
-        $list = Asset::getList([
-            'limit' => 10,
-            'order' => 'DESC',
-            'orderKey' => 'modificationDate',
-            'condition' => "userModification = '".$this->getAdminUser()->getId()."'",
-        ]);
+        $result = $getModifiedAssets();
 
-        $response = [];
-        $response['assets'] = [];
-
-        foreach ($list as $doc) {
-            /**
-             * @var Asset $doc
-             */
-            if ($doc->isAllowed('view')) {
-                $response['assets'][] = [
-                    'id' => $doc->getId(),
-                    'type' => $doc->getType(),
-                    'path' => $doc->getRealFullPath(),
-                    'date' => $doc->getModificationDate(),
-                ];
-            }
-        }
-
-        return $this->adminJson($response);
+        return $this->adminJson(['assets' => $result->assets]);
     }
 
     #[Route('/portlet-modified-objects', name: 'opendxp_admin_portal_portletmodifiedobjects', methods: ['GET'])]
-    public function portletModifiedObjectsAction(Request $request): JsonResponse
+    public function portletModifiedObjectsAction(GetModifiedObjectsHandler $getModifiedObjects): JsonResponse
     {
-        $list = DataObject::getList([
-            'limit' => 10,
-            'order' => 'DESC',
-            'orderKey' => 'modificationDate',
-            'condition' => "userModification = '".$this->getAdminUser()->getId()."'",
-        ]);
+        $result = $getModifiedObjects();
 
-        $response = [];
-        $response['objects'] = [];
-
-        foreach ($list as $object) {
-            if ($object->isAllowed('view')) {
-                $response['objects'][] = [
-                    'id' => $object->getId(),
-                    'type' => $object->getType(),
-                    'path' => $object->getRealFullPath(),
-                    'date' => $object->getModificationDate(),
-                ];
-            }
-        }
-
-        return $this->adminJson($response);
+        return $this->adminJson(['objects' => $result->objects]);
     }
 
     #[Route('/portlet-modification-statistics', name: 'opendxp_admin_portal_portletmodificationstatistics', methods: ['GET'])]
-    public function portletModificationStatisticsAction(Request $request): JsonResponse
+    public function portletModificationStatisticsAction(GetModificationStatisticsHandler $getModificationStatistics): JsonResponse
     {
-        $db = \OpenDxp\Db::get();
+        $result = $getModificationStatistics();
 
-        $days = 31;
-        $startDate = mktime(23, 59, 59, (int) date('m'), (int) date('d'), (int) date('Y'));
-
-        $data = [];
-
-        for ($i = 0; $i < $days; $i++) {
-            // documents
-            $end = $startDate - ($i * 86400);
-            $start = $end - 86399;
-
-            $o = $db->fetchOne(
-                'SELECT COUNT(*) AS count FROM objects WHERE modificationDate > ? AND modificationDate < ?',
-                [$start, $end]
-            );
-            $a = $db->fetchOne(
-                'SELECT COUNT(*) AS count FROM assets WHERE modificationDate > ? AND modificationDate < ?',
-                [$start, $end]
-            );
-            $d = $db->fetchOne(
-                'SELECT COUNT(*) AS count FROM documents WHERE modificationDate > ? AND modificationDate < ?',
-                [$start, $end]
-            );
-
-            $date = new DateTime();
-            $date->setTimestamp($start);
-
-            $data[] = [
-                'timestamp' => $start,
-                'datetext' => $date->format('Y-m-d'),
-                'objects' => (int) $o,
-                'documents' => (int) $d,
-                'assets' => (int) $a,
-            ];
-        }
-
-        $data = array_reverse($data);
-
-        return $this->adminJson(['data' => $data]);
-    }
-
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        $this->dashboardHelper = new Dashboard($this->getAdminUser());
+        return $this->adminJson(['data' => $result->data]);
     }
 }

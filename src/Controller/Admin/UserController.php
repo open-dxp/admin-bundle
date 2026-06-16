@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * OpenDXP
@@ -14,810 +13,196 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
+declare(strict_types=1);
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Helper\User as UserHelper;
-use OpenDxp\Bundle\AdminBundle\Perspective\Config;
-use OpenDxp\Controller\KernelControllerEventInterface;
+use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Handler\User\AddUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUserImageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\Disable2FaHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetMinimalUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLinkHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserImageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserTreeChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUsersHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\Reset2FaSecretHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\SearchUsersHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\SendInvitationLinkHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImageHandler;
+use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Http\Request\Host\GeneralHostResolver;
-use OpenDxp\Logger;
-use OpenDxp\Model\Asset;
-use OpenDxp\Model\DataObject;
-use OpenDxp\Model\Element;
-use OpenDxp\Model\User;
-use OpenDxp\Model\User\Workspace;
-use OpenDxp\Tool;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Routing\RouterInterface;
-use Symfony\Component\Security\Core\Validator\Constraints\UserPassword;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
  */
-class UserController extends AdminAbstractController implements KernelControllerEventInterface
+class UserController extends AdminAbstractController
 {
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/tree-get-children-by-id', name: 'opendxp_admin_user_treegetchildrenbyid', methods: ['GET'])]
-    public function treeGetChildrenByIdAction(Request $request): JsonResponse
-    {
-        $list = new User\Listing();
-        $list->setCondition('parentId = ?', (int)$request->query->get('node'));
-        $list->setOrder('ASC');
-        $list->setOrderKey('name');
-        $list->load();
-
-        $users = [];
-        foreach ($list->getUsers() as $user) {
-            if ($user->getId() && $user->getName() !== 'system') {
-                $users[] = $this->getTreeNodeConfig($user);
-            }
-        }
-
-        return $this->adminJson($users);
+    public function treeGetChildrenByIdAction(
+        GetUserTreeChildrenHandler $getUserTreeChildren,
+        #[MapQueryParameter] int $node = 0,
+    ): JsonResponse {
+        return $this->adminJson($getUserTreeChildren($node));
     }
 
-    protected function getTreeNodeConfig(User|User\Folder $user): array
-    {
-        $tmpUser = [
-            'id' => $user->getId(),
-            'text' => $user->getName(),
-            'elementType' => 'user',
-            'type' => $user->getType(),
-            'qtipCfg' => [
-                'title' => 'ID: ' . $user->getId(),
-            ],
-        ];
-
-        // set type specific settings
-        if ($user instanceof User\Folder) {
-            $tmpUser['leaf'] = false;
-            $tmpUser['iconCls'] = 'opendxp_icon_folder';
-            $tmpUser['expanded'] = true;
-            $tmpUser['allowChildren'] = true;
-
-            if ($user->hasChildren()) {
-                $tmpUser['expanded'] = false;
-            } else {
-                $tmpUser['loaded'] = true;
-            }
-        } else {
-            $tmpUser['leaf'] = true;
-            $tmpUser['iconCls'] = 'opendxp_icon_user';
-            if (!$user->getActive()) {
-                $tmpUser['cls'] = ' opendxp_unpublished';
-            }
-            $tmpUser['allowChildren'] = false;
-            $tmpUser['admin'] = $user->isAdmin();
-        }
-
-        return $tmpUser;
-    }
-
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/add', name: 'opendxp_admin_user_add', methods: ['POST'])]
-    public function addAction(Request $request): JsonResponse
+    public function addAction(Request $request, AddUserHandler $addUser): JsonResponse
     {
-        try {
-            $type = $request->request->get('type');
+        $referenceId = $request->request->has('rid') ? (int) $request->request->get('rid') : null;
 
-            $className = User\Service::getClassNameForType($type);
-            $user = $className::create([
-                'parentId' => $request->request->getInt('parentId'),
-                'name' => trim($request->request->get('name', '')),
-                'password' => '',
-                'active' => $request->request->getBoolean('active'),
-            ]);
+        $result = $addUser(
+            type: $request->request->get('type'),
+            parentId: $request->request->getInt('parentId'),
+            name: trim($request->request->get('name', '')),
+            active: $request->request->getBoolean('active'),
+            referenceId: $referenceId,
+        );
 
-            if ($request->request->has('rid')) {
-                $rid = (int)$request->request->get('rid');
-                $rObject = $className::getById($rid);
-                if ($rObject && ($type === 'user' || $type === 'role')) {
-                    $user->setParentId($rObject->getParentId());
-                    if ($rObject->getClasses()) {
-                        $user->setClasses(implode(',', $rObject->getClasses()));
-                    }
-                    if ($rObject->getDocTypes()) {
-                        $user->setDocTypes(implode(',', $rObject->getDocTypes()));
-                    }
-                    $keys = ['asset', 'document', 'object'];
-                    foreach ($keys as $key) {
-                        $getter = 'getWorkspaces' . ucfirst($key);
-                        $setter = 'setWorkspaces' . ucfirst($key);
-                        $workspaces = $rObject->$getter();
-                        $clonedWorkspaces = [];
-                        if (is_array($workspaces)) {
-                            /** @var User\Workspace\AbstractWorkspace $workspace */
-                            foreach ($workspaces as $workspace) {
-                                $vars = $workspace->getObjectVars();
-                                if ($key === 'object') {
-                                    $workspaceClass = \OpenDxp\Model\User\Workspace\DataObject::class;
-                                } else {
-                                    $workspaceClass = '\\OpenDxp\\Model\\User\\Workspace\\' . ucfirst($key);
-                                }
-                                $newWorkspace = new $workspaceClass();
-                                foreach ($vars as $varKey => $varValue) {
-                                    $newWorkspace->setObjectVar($varKey, $varValue);
-                                }
-                                $newWorkspace->setUserId($user->getId());
-                                $clonedWorkspaces[] = $newWorkspace;
-                            }
-                        }
-
-                        $user->$setter($clonedWorkspaces);
-                    }
-                    $user->setPerspectives($rObject->getPerspectives());
-                    $user->setPermissions($rObject->getPermissions());
-                    if ($type === 'user') {
-                        $user->setAdmin(false);
-                        if ($this->getAdminUser()->isAdmin()) {
-                            $user->setAdmin($rObject->getAdmin());
-                        }
-                        $user->setActive($rObject->getActive());
-                        $user->setRoles($rObject->getRoles());
-                        $user->setWelcomeScreen($rObject->getWelcomescreen());
-                        $user->setMemorizeTabs($rObject->getMemorizeTabs());
-                        $user->setCloseWarning($rObject->getCloseWarning());
-                    }
-                    $user->setWebsiteTranslationLanguagesView($rObject->getWebsiteTranslationLanguagesView());
-                    $user->setWebsiteTranslationLanguagesEdit($rObject->getWebsiteTranslationLanguagesEdit());
-                    $user->save();
-                }
-            }
-
-            return $this->adminJson([
-                'success' => true,
-                'id' => $user->getId(),
-            ]);
-        } catch (Exception $e) {
-            return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-        }
+        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
 
-    /**
-     * @throws Exception
-     */
-    protected function populateChildNodes(User\AbstractUser $node, array &$currentList, bool $roleMode): array
-    {
-        $currentUser = \OpenDxp\Tool\Admin::getCurrentUser();
-
-        $list = $roleMode ? new User\Role\Listing() : new User\Listing();
-        $list->setCondition('parentId = ?', $node->getId());
-        $list->setOrder('ASC');
-        $list->setOrderKey('name');
-        $list->load();
-
-        $childList = $roleMode ? $list->getRoles() : $list->getUsers();
-
-        foreach ($childList as $user) {
-            if ($user->getId() === $currentUser->getId()) {
-                throw new Exception('Cannot delete current user');
-            }
-            if ($user->getId() && $currentUser->getId() && $user->getName() !== 'system') {
-                $currentList[] = $user;
-                $this->populateChildNodes($user, $currentList, $roleMode);
-            }
-        }
-
-        return $currentList;
-    }
-
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/delete', name: 'opendxp_admin_user_delete', methods: ['DELETE'])]
-    public function deleteAction(Request $request): JsonResponse
+    public function deleteAction(Request $request, DeleteUserHandler $deleteUser): JsonResponse
     {
-        $user = User\AbstractUser::getById((int)$request->request->get('id'));
+        $deleteUser($request->request->getInt('id'));
 
-        // only admins are allowed to delete admins and folders
-        // because a folder might contain an admin user, so it is simply not allowed for users with the "users" permission
-        if (($user instanceof User\Folder && !$this->getAdminUser()->isAdmin()) || ($user instanceof User && $user->isAdmin() && !$this->getAdminUser()->isAdmin())) {
-            throw new Exception('You are not allowed to delete this user');
-        }
-
-        if ($user instanceof User\Role\Folder) {
-            $list = [$user];
-            $this->populateChildNodes($user, $list, true);
-            $listCount = count($list);
-            for ($i = $listCount - 1; $i >= 0; $i--) {
-                // iterate over the list from the so that nothing can get "lost"
-                $user = $list[$i];
-                $user->delete();
-            }
-        } elseif ($user->getId()) {
-            $user->delete();
-        }
-
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/update', name: 'opendxp_admin_user_update', methods: ['PUT'])]
-    public function updateAction(Request $request, TranslatorInterface $translator): JsonResponse
+    public function updateAction(Request $request, UpdateUserHandler $updateUser): JsonResponse
     {
-        /** @var User|User\Role|null $user */
-        $user = User\UserRole::getById($request->request->getInt('id'));
-        $currentUserIsAdmin = $this->getAdminUser()->isAdmin();
+        $values = $request->request->has('data')
+            ? $this->decodeJson($request->request->get('data'), true)
+            : null;
 
-        if (!$user) {
-            throw $this->createNotFoundException();
-        }
+        $workspaces = $request->request->has('workspaces')
+            ? $this->decodeJson($request->request->get('workspaces'), true)
+            : null;
 
-        if ($user instanceof User && $user->isAdmin() && !$currentUserIsAdmin) {
-            throw $this->createAccessDeniedHttpException('Only admin users are allowed to modify admin users');
-        }
+        $keyBindingsJson = $request->request->has('keyBindings')
+            ? $request->request->get('keyBindings')
+            : null;
 
-        if ($request->request->has('data')) {
-            $values = $this->decodeJson($request->request->get('data'), true);
+        $updateUser($request->request->getInt('id'), $values, $workspaces, $keyBindingsJson);
 
-            if (!empty($values['password'])) {
-                if (strlen($values['password']) < 10) {
-                    throw new Exception('Passwords have to be at least 10 characters long');
-                }
-                $values['password'] = Tool\Authentication::getPasswordHash($user->getName(), $values['password']);
-            }
-
-            // check if there are permissions transmitted, if so reset them all to false (they will be set later)
-            foreach ($values as $key => $value) {
-                if (str_starts_with($key, 'permission_')) {
-                    $user->setAllAclToFalse();
-
-                    break;
-                }
-            }
-
-            if ($user instanceof User && isset($values['2fa_required'])) {
-                $user->setTwoFactorAuthentication('required', (bool) $values['2fa_required']);
-            }
-
-            $user->setValues($values);
-
-            // only admins are allowed to create admin users
-            // if the logged in user isn't an admin, set admin always to false
-            if ($user instanceof User && !$currentUserIsAdmin) {
-                $user->setAdmin(false);
-            }
-
-            // check for permissions
-            $availableUserPermissionsList = new User\Permission\Definition\Listing();
-            $availableUserPermissions = $availableUserPermissionsList->load();
-
-            foreach ($availableUserPermissions as $permission) {
-                if (isset($values['permission_' . $permission->getKey()])) {
-                    $user->setPermission($permission->getKey(), (bool) $values['permission_' . $permission->getKey()]);
-                }
-            }
-
-            // check for workspaces
-            if ($request->request->has('workspaces')) {
-                $processedPaths = ['object' => [], 'asset' => [], 'document' => []]; //array to find if there are multiple entries for a path
-                $workspaces = $this->decodeJson($request->request->get('workspaces'), true);
-                foreach ($workspaces as $type => $spaces) {
-                    $newWorkspaces = [];
-                    foreach ($spaces as $space) {
-                        if (in_array($space['path'], $processedPaths[$type])) {
-                            throw new Exception('Error saving workspaces as multiple entries found for path "' . $space['path'] .'" in '.$translator->trans((string)$type, [], 'admin') . 's');
-                        }
-
-                        $element = Element\Service::getElementByPath($type, $space['path']);
-                        if ($element) {
-                            $className = '\\OpenDxp\\Model\\User\\Workspace\\' . Element\Service::getBaseClassNameForElement($type);
-                            $workspace = new $className();
-                            $workspace->setValues($space);
-
-                            $workspace->setCid($element->getId());
-                            $workspace->setCpath($element->getRealFullPath());
-                            $workspace->setUserId($user->getId());
-
-                            $newWorkspaces[] = $workspace;
-                            $processedPaths[$type][] = $space['path'];
-                        }
-                    }
-                    $user->{'setWorkspaces' . ucfirst($type)}($newWorkspaces);
-                }
-            }
-        }
-
-        if ($user instanceof User && $request->request->has('keyBindings')) {
-            $keyBindings = json_decode($request->request->get('keyBindings'), true);
-            $tmpArray = [];
-            foreach ($keyBindings as $item) {
-                $tmpArray[] = json_decode($item, true);
-            }
-            $tmpArray = array_values(array_filter($tmpArray));
-            $tmpArray = json_encode($tmpArray);
-
-            $user->setKeyBindings($tmpArray);
-        }
-
-        $user->save();
-
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/get', name: 'opendxp_admin_user_get', methods: ['GET'])]
-    public function getAction(Request $request): JsonResponse
-    {
-        $userId = (int)$request->query->get('id');
-        if ($userId < 1) {
-            throw $this->createNotFoundException();
-        }
+    public function getAction(
+        GetUserHandler $getUser,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse {
+        $result = $getUser($id);
 
-        $user = User::getById($userId);
-
-        if (!$user) {
-            throw $this->createNotFoundException();
-        }
-
-        if ($user->isAdmin() && !$this->getAdminUser()->isAdmin()) {
-            throw $this->createAccessDeniedHttpException('Only admin users are allowed to modify admin users');
-        }
-
-        // workspaces
-        $types = ['asset', 'document', 'object'];
-        foreach ($types as $type) {
-            /** @var Workspace\Document[]|Workspace\Asset[]|Workspace\DataObject[] $workspaces */
-            $workspaces = $user->{'getWorkspaces' . ucfirst($type)}();
-            foreach ($workspaces as $wKey => $workspace) {
-                $el = Element\Service::getElementById($type, $workspace->getCid());
-                if ($el) {
-                    $workspaceVars = $workspace->getObjectVars();
-                    $workspaceVars['path'] = $el->getRealFullPath();
-                    $workspaces[$wKey] = $workspaceVars;
-                }
-            }
-            $user->{'setWorkspaces' . ucfirst($type)}($workspaces);
-        }
-
-        // object <=> user dependencies
-        $userObjects = DataObject\Service::getObjectsReferencingUser($user->getId());
-        $userObjectData = [];
-        $hasHidden = false;
-
-        foreach ($userObjects as $o) {
-            if ($o->isAllowed('list')) {
-                $userObjectData[] = [
-                    'path' => $o->getRealFullPath(),
-                    'id' => $o->getId(),
-                    'subtype' => $o->getClass()->getName(),
-                ];
-            } else {
-                $hasHidden = true;
-            }
-        }
-
-        // get available permissions
-        $availableUserPermissionsList = new User\Permission\Definition\Listing();
-        $availableUserPermissionsList->setOrderKey('category');
-        $availableUserPermissions = $availableUserPermissionsList->load();
-
-        $availableUserPermissionsData = [];
-        foreach ($availableUserPermissions as $availableUserPermission) {
-            $availableUserPermissionsData[] = $availableUserPermission->getObjectVars();
-        }
-
-        // get available roles
-        $list = new User\Role\Listing();
-        $list->setCondition('`type` = ?', ['role']);
-        $list->load();
-
-        $roles = [];
-        foreach ($list->getItems() as $role) {
-            $roles[] = [$role->getId(), $role->getName()];
-        }
-
-        // unset confidential informations
-        $userData = $user->getObjectVars();
-        $userData['roles'] =  $user->getRoles();
-        $userData['docTypes'] =  $user->getDocTypes();
-        $contentLanguages = Tool\Admin::reorderWebsiteLanguages($user, Tool::getValidLanguages());
-        $userData['contentLanguages'] = $contentLanguages;
-        $userData['twoFactorAuthentication']['isActive'] = ($user->getTwoFactorAuthentication('enabled') || $user->getTwoFactorAuthentication('secret'));
-        unset($userData['password'], $userData['twoFactorAuthentication']['secret']);
-        $userData['hasImage'] = $user->hasImage();
-
-        $availablePerspectives = Config::getAvailablePerspectives(null);
-
-        return $this->adminJson([
-            'success' => true,
-            'user' => $userData,
-            'roles' => $roles,
-            'permissions' => $user->generatePermissionList(),
-            'availablePermissions' => $availableUserPermissionsData,
-            'availablePerspectives' => $availablePerspectives,
-            'validLanguages' => Tool::getValidLanguages(),
-            'validLocales' => Tool::getSupportedJSLocales(),
-            'objectDependencies' => [
-                'hasHidden' => $hasHidden,
-                'dependencies' => $userObjectData,
-            ],
-        ]);
+        return $this->adminJson(ApiResponse::ok([
+            'user' => $result->userData,
+            'roles' => $result->roles,
+            'permissions' => $result->permissions,
+            'availablePermissions' => $result->availablePermissions,
+            'availablePerspectives' => $result->availablePerspectives,
+            'validLanguages' => $result->validLanguages,
+            'validLocales' => $result->validLocales,
+            'objectDependencies' => $result->objectDependencies,
+        ]));
     }
 
     #[Route('/user/get-minimal', name: 'opendxp_admin_user_getminimal', methods: ['GET'])]
-    public function getMinimalAction(Request $request): JsonResponse
-    {
-        $user = User::getById((int)$request->query->get('id'));
-
-        if (!$user) {
-            throw $this->createNotFoundException();
-        }
-
-        $minimalUserData['id'] = $user->getId();
-        $minimalUserData['admin'] = $user->isAdmin();
-        $minimalUserData['active'] = $user->isActive();
-        $minimalUserData['permissionInfo']['assets'] = $user->isAllowed('assets');
-        $minimalUserData['permissionInfo']['documents'] = $user->isAllowed('documents');
-        $minimalUserData['permissionInfo']['objects'] = $user->isAllowed('objects');
-
-        return $this->adminJson($minimalUserData);
-    }
-
-    #[Route('/user/upload-current-user-image', name: 'opendxp_admin_user_uploadcurrentuserimage', methods: ['POST'])]
-    public function uploadCurrentUserImageAction(Request $request): JsonResponse
-    {
-        $user = $this->getAdminUser();
-
-        if ($user !== null) {
-
-            if ($user->getId() === (int)$request->query->get('id')) {
-                return $this->uploadImageAction($request);
-            }
-
-            Logger::warn('prevented save current user, because ids do not match. ');
-
-            return $this->adminJson(false);
-        }
-
-        return $this->adminJson(false);
-    }
-
-    #[Route('/user/update-current-user', name: 'opendxp_admin_user_updatecurrentuser', methods: ['PUT'])]
-    public function updateCurrentUserAction(Request $request, ValidatorInterface $validator): JsonResponse
-    {
-        //TODO Can be completely validated with Symfony Validator
-        $user = $this->getAdminUser();
-
-        $isPasswordReset = Tool\Session::useBag($request->getSession(), static fn (AttributeBagInterface $adminSession) => (bool) $adminSession->get('password_reset'));
-
-        if ($user !== null && $request->request->has('id')) {
-            if ($user->getId() === (int) $request->request->get('id')) {
-                $values = $this->decodeJson($request->request->get('data'), true);
-
-                unset($values['name'], $values['id'], $values['admin'], $values['permissions'], $values['roles'], $values['active']);
-
-                if (!empty($values['new_password'])) {
-                    $oldPasswordCheck = false;
-
-                    if ($isPasswordReset) {
-                        // if the user want to reset the password, the old password isn't required
-                        $oldPasswordCheck = true;
-                    } elseif (!empty($values['old_password'])) {
-                        $errors = $validator->validate($values['old_password'], [new UserPassword()]);
-
-                        if (count($errors) === 0) {
-                            $oldPasswordCheck = true;
-                        }
-                    }
-
-                    if (strlen($values['new_password']) < 10) {
-                        throw new Exception('Passwords have to be at least 10 characters long');
-                    }
-
-                    if ($oldPasswordCheck && $values['new_password'] == $values['retype_password']) {
-
-                        if (Tool\Authentication::verifyPassword($user, $values['new_password'])) {
-                            throw new Exception('The new password cannot be the same as the old one');
-                        }
-
-                        $values['password'] = Tool\Authentication::getPasswordHash($user->getName(), $values['new_password']);
-                    } else {
-                        if (!$oldPasswordCheck) {
-                            return $this->adminJson(['success' => false, 'message' => 'incorrect_password']);
-                        }
-
-                        return $this->adminJson(['success' => false, 'message' => 'password_cannot_be_changed']);
-                    }
-                }
-
-                $user->setValues($values);
-
-                if ($request->request->has('keyBindings')) {
-                    $keyBindings = json_decode($request->request->get('keyBindings'), true);
-                    $tmpArray = [];
-                    foreach ($keyBindings as $item) {
-                        $tmpArray[] = json_decode($item, true);
-                    }
-                    $tmpArray = array_values(array_filter($tmpArray));
-                    $tmpArray = json_encode($tmpArray);
-
-                    $user->setKeyBindings($tmpArray);
-                }
-
-                $user->save();
-
-                return $this->adminJson(['success' => true]);
-            }
-            Logger::warn('prevented save current user, because ids do not match. ');
-
-            return $this->adminJson(false);
-        }
-
-        return $this->adminJson(false);
-    }
-
-    #[Route('/user/get-current-user', name: 'opendxp_admin_user_getcurrentuser', methods: ['GET'])]
-    public function getCurrentUserAction(Request $request): Response
-    {
-        $user = $this->getAdminUser();
-
-        $list = new User\Permission\Definition\Listing();
-        $definitions = $list->load();
-
-        foreach ($definitions as $definition) {
-            $user->setPermission($definition->getKey(), $user->isAllowed($definition->getKey()));
-        }
-
-        // unset confidential informations
-        $userData = $user->getObjectVars();
-        $contentLanguages = Tool\Admin::reorderWebsiteLanguages($user, Tool::getValidLanguages());
-        $userData['contentLanguages'] = $contentLanguages;
-        $userData['keyBindings'] = UserHelper::getDefaultKeyBindings($user);
-
-        unset($userData['password']);
-        $userData['twoFactorAuthentication'] = $user->getTwoFactorAuthentication();
-        unset($userData['twoFactorAuthentication']['secret']);
-        $userData['twoFactorAuthentication']['isActive'] = $user->getTwoFactorAuthentication('enabled') && $user->getTwoFactorAuthentication('secret');
-        $userData['hasImage'] = $user->hasImage();
-
-        $userData['isPasswordReset'] = Tool\Session::useBag($request->getSession(), fn (AttributeBagInterface $adminSession) => $adminSession->get('password_reset'));
-
-        $userData['validLocales'] = Tool::getSupportedJSLocales();
-
-        $response = new Response('opendxp.currentuser = ' . $this->encodeJson($userData));
-        $response->headers->set('Content-Type', 'text/javascript');
-
-        return $response;
-    }
-
-    // ROLES
-
-    #[Route('/user/role-tree-get-children-by-id', name: 'opendxp_admin_user_roletreegetchildrenbyid', methods: ['GET'])]
-    public function roleTreeGetChildrenByIdAction(Request $request): JsonResponse
-    {
-        $list = new User\Role\Listing();
-        $list->setCondition('parentId = ?', (int)$request->query->get('node'));
-        $list->load();
-
-        $roles = [];
-        foreach ($list->getItems() as $role) {
-            $roles[] = $this->getRoleTreeNodeConfig($role);
-        }
-
-        return $this->adminJson($roles);
-    }
-
-    protected function getRoleTreeNodeConfig(User\Role|User\Role\Folder $role): array
-    {
-        $tmpUser = [
-            'id' => $role->getId(),
-            'text' => $role->getName(),
-            'elementType' => 'role',
-            'qtipCfg' => [
-                'title' => 'ID: ' . $role->getId(),
-            ],
-        ];
-
-        // set type specific settings
-        if ($role instanceof User\Role\Folder) {
-            $tmpUser['leaf'] = false;
-            $tmpUser['iconCls'] = 'opendxp_icon_folder';
-            $tmpUser['expanded'] = true;
-            $tmpUser['allowChildren'] = true;
-
-            if ($role->hasChildren()) {
-                $tmpUser['expanded'] = false;
-            } else {
-                $tmpUser['loaded'] = true;
-            }
-        } else {
-            $tmpUser['leaf'] = true;
-            $tmpUser['iconCls'] = 'opendxp_icon_roles';
-            $tmpUser['allowChildren'] = false;
-        }
-
-        return $tmpUser;
-    }
-
-    #[Route('/user/role-get', name: 'opendxp_admin_user_roleget', methods: ['GET'])]
-    public function roleGetAction(Request $request): JsonResponse
-    {
-        $role = User\Role::getById((int)$request->query->get('id'));
-
-        if (!$role) {
-            throw $this->createNotFoundException();
-        }
-
-        // workspaces
-        $types = ['asset', 'document', 'object'];
-        foreach ($types as $type) {
-            /** @var Workspace\Document[]|Workspace\Asset[]|Workspace\DataObject[] $workspaces */
-            $workspaces = $role->{'getWorkspaces' . ucfirst($type)}();
-            foreach ($workspaces as $wKey => $workspace) {
-                $el = Element\Service::getElementById($type, $workspace->getCid());
-                if ($el) {
-                    $workspaceVars = $workspace->getObjectVars();
-                    $workspaceVars['path'] = $el->getRealFullPath();
-                    $workspaces[$wKey] = $workspaceVars;
-                }
-            }
-            $role->{'setWorkspaces' . ucfirst($type)}($workspaces);
-        }
-
-        $replaceFn = (static fn ($value) => $value->getObjectVars());
-
-        // get available permissions
-        $availableUserPermissionsList = new User\Permission\Definition\Listing();
-        $availableUserPermissionsList->setOrderKey('category');
-        $availableUserPermissions = $availableUserPermissionsList->load();
-        $availableUserPermissions = array_map($replaceFn, $availableUserPermissions);
-
-        $availablePerspectives = Config::getAvailablePerspectives(null);
+    public function getMinimalAction(
+        GetMinimalUserHandler $getMinimalUser,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse {
+        $result = $getMinimalUser($id);
 
         return $this->adminJson([
-            'success' => true,
-            'role' => $role->getObjectVars(),
-            'permissions' => $role->generatePermissionList(),
-            'classes' => $role->getClasses(),
-            'docTypes' => $role->getDocTypes(),
-            'availablePermissions' => $availableUserPermissions,
-            'availablePerspectives' => $availablePerspectives,
-            'validLanguages' => Tool::getValidLanguages(),
+            'id' => $result->id,
+            'admin' => $result->admin,
+            'active' => $result->active,
+            'permissionInfo' => $result->permissionInfo,
         ]);
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/upload-image', name: 'opendxp_admin_user_uploadimage', methods: ['POST'])]
-    public function uploadImageAction(Request $request): JsonResponse
-    {
-        $requestUserId = $request->query->has('id') ? (int)$request->query->get('id') : null;
-        $userObj = User::getById($this->getUserId($requestUserId));
+    public function uploadImageAction(
+        Request $request,
+        UploadUserImageHandler $uploadUserImage,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse {
+        $targetUserId = $request->query->has('id') ? $id : null;
 
-        if (!$userObj) {
-            throw $this->createNotFoundException();
-        }
-
-        if ($userObj->isAdmin() && !$this->getAdminUser()->isAdmin()) {
-            throw $this->createAccessDeniedHttpException('Only admin users are allowed to modify admin users');
-        }
-
-        //Check if uploaded file is an image
+        /** @var UploadedFile $avatarFile */
         $avatarFile = $request->files->get('Filedata');
 
-        $assetType = Asset::getTypeFromMimeMapping($avatarFile->getMimeType(), $avatarFile->getFileName());
-
-        if (!$avatarFile instanceof UploadedFile || $assetType !== 'image') {
-            throw new Exception('Unsupported file format.');
-        }
-
-        $userObj->setImage($avatarFile->getPathname());
+        $uploadUserImage($targetUserId, $avatarFile);
 
         // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
         // Ext.form.Action.Submit and mark the submission as failed
-
-        $response = $this->adminJson(['success' => true]);
+        $response = $this->adminJson(ApiResponse::ok());
         $response->headers->set('Content-Type', 'text/html');
 
         return $response;
     }
 
-    /**
-     * @throws Exception
-     */
     #[Route('/user/delete-image', name: 'opendxp_admin_user_deleteimage', methods: ['DELETE'])]
-    public function deleteImageAction(Request $request): JsonResponse
-    {
-        $requestUserId = $request->query->has('id') ? (int)$request->query->get('id') : null;
-        $userObj = User::getById($this->getUserId($requestUserId));
+    public function deleteImageAction(
+        Request $request,
+        DeleteUserImageHandler $deleteUserImage,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse {
+        $targetUserId = $request->query->has('id') ? $id : null;
+        $deleteUserImage($targetUserId);
 
-        if (!$userObj) {
-            throw $this->createNotFoundException();
-        }
-
-        $adminUser = $this->getAdminUser();
-
-        if (!$adminUser->isAdmin()) {
-            if ($userObj->isAdmin()) {
-                throw $this->createAccessDeniedHttpException('Only admin users are allowed to modify admin users');
-            }
-
-            if ($adminUser->getId() !== $userObj->getId()) {
-                throw $this->createAccessDeniedHttpException('Only admin users are allowed to modify users other than themselves');
-            }
-        }
-
-        $userObj->setImage(null);
-
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/user/disable-2fa', name: 'opendxp_admin_user_disable2fasecret', methods: ['DELETE'])]
-    public function disable2FaSecretAction(Request $request): JsonResponse
+    public function disable2FaSecretAction(Disable2FaHandler $disable2Fa): JsonResponse
     {
-        $user = $this->getAdminUser();
-        $success = false;
-
-        if (!$user->getTwoFactorAuthentication('required')) {
-            $user->setTwoFactorAuthentication([]);
-            $user->save();
-
-            $success = true;
+        try {
+            $disable2Fa();
+        } catch (\Throwable $e) {
+            return $this->adminJson(ApiResponse::error($e->getMessage()));
         }
 
-        return $this->adminJson([
-            'success' => $success,
-        ]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/reset-2fa-secret', name: 'opendxp_admin_user_reset2fasecret', methods: ['PUT'])]
-    public function reset2FaSecretAction(Request $request): JsonResponse
+    public function reset2FaSecretAction(Request $request, Reset2FaSecretHandler $reset2FaSecret): JsonResponse
     {
-        $user = User::getById((int)$request->request->get('id'));
+        $reset2FaSecret($request->request->getInt('id'));
 
-        if (!$user) {
-            throw $this->createNotFoundException();
-        }
-
-        $user->setTwoFactorAuthentication('enabled', false);
-        $user->setTwoFactorAuthentication('secret', '');
-        $user->save();
-
-        return $this->adminJson([
-            'success' => true,
-        ]);
-    }
-
-    #[Route('/user/reset-my-2fa-secret', name: 'opendxp_admin_user_reset_my_2fa_secret', methods: ['PUT'])]
-    public function resetMy2FaSecretAction(Request $request): JsonResponse
-    {
-        $user = $this->getAdminUser();
-        $user->setTwoFactorAuthentication('required', true);
-        $user->setTwoFactorAuthentication('enabled', false);
-        $user->setTwoFactorAuthentication('secret', '');
-        $user->save();
-
-        return $this->adminJson([
-            'success' => true,
-        ]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/user/get-image', name: 'opendxp_admin_user_getimage', methods: ['GET'])]
-    public function getImageAction(Request $request): StreamedResponse
-    {
-        $requestUserId = $request->query->has('id') ? (int)$request->query->get('id') : null;
-        $userObj = User::getById($this->getUserId($requestUserId));
-
-        if (!$userObj) {
-            throw $this->createNotFoundException();
-        }
-        $stream = $userObj->getImage();
+    public function getImageAction(
+        Request $request,
+        GetUserImageHandler $getUserImage,
+        #[MapQueryParameter] int $id = 0,
+    ): StreamedResponse {
+        $targetUserId = $request->query->has('id') ? $id : null;
+        $stream = $getUserImage($targetUserId);
 
         return new StreamedResponse(function () use ($stream): void {
             fpassthru($stream);
@@ -826,269 +211,66 @@ class UserController extends AdminAbstractController implements KernelController
         ]);
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/get-token-login-link', name: 'opendxp_admin_user_gettokenloginlink', methods: ['GET'])]
-    public function getTokenLoginLinkAction(Request $request, TranslatorInterface $translator): JsonResponse
-    {
-        $user = User::getById((int) $request->query->get('id'));
-
-        if (!$user) {
-            return $this->adminJson([
-                'success' => false,
-                'message' => $translator->trans('login_token_invalid_user_error', [], 'admin'),
-            ], Response::HTTP_NOT_FOUND);
+    public function getTokenLoginLinkAction(
+        GetTokenLoginLinkHandler $getTokenLoginLink,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse {
+        try {
+            $result = $getTokenLoginLink($id);
+        } catch (\Throwable $e) {
+            return $this->adminJson(ApiResponse::error($e->getMessage()));
         }
 
-        if ($user->isAdmin() && !$this->getAdminUser()->isAdmin()) {
-            return $this->adminJson([
-                'success' => false,
-                'message' => $translator->trans('login_token_as_admin_non_admin_user_error', [], 'admin'),
-            ], Response::HTTP_FORBIDDEN);
-        }
-
-        if (empty($user->getPassword())) {
-            return $this->adminJson([
-                'success' => false,
-                'message' => $translator->trans('login_token_no_password_error', [], 'admin'),
-            ], Response::HTTP_FORBIDDEN);
-        }
-
-        $token = Tool\Authentication::generateTokenByUser($user);
-        $link = $this->generateCustomUrl([
-            'token' => $token,
-        ]);
-
-        return $this->adminJson([
-            'success' => true,
-            'link' => $link,
-        ]);
+        return $this->adminJson(ApiResponse::ok(['link' => $result->link]));
     }
 
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/search', name: 'opendxp_admin_user_search', methods: ['GET'])]
-    public function searchAction(Request $request): JsonResponse
-    {
-        $q = '%' . $request->query->get('query') . '%';
-
-        $list = new User\Listing();
-        $list->setCondition('name LIKE ? OR firstname LIKE ? OR lastname LIKE ? OR email LIKE ? OR id = ?', [$q, $q, $q, $q, (int)$request->query->get('query')]);
-        $list->setOrder('ASC');
-        $list->setOrderKey('name');
-
-        $users = [];
-        foreach ($list->getUsers() as $user) {
-            if ($user->getId() && $user->getName() !== 'system') {
-                $users[] = [
-                    'id' => $user->getId(),
-                    'name' => $user->getName(),
-                    'email' => $user->getEmail(),
-                    'firstname' => $user->getFirstname(),
-                    'lastname' => $user->getLastname(),
-                ];
-            }
-        }
-
-        return $this->adminJson([
-            'success' => true,
-            'users' => $users,
-        ]);
+    public function searchAction(
+        SearchUsersHandler $searchUsers,
+        #[MapQueryParameter] ?string $query = null,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['users' => $searchUsers($query)]));
     }
 
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        // check permissions
-        $unrestrictedActions = [
-            'getCurrentUserAction', 'updateCurrentUserAction', 'getAvailablePermissionsAction', 'getMinimalAction',
-            'getImageAction', 'uploadCurrentUserImageAction', 'disable2FaSecretAction', 'renew2FaSecretAction',
-            'getUsersForSharingAction', 'getRolesForSharingAction', 'deleteImageAction',
-        ];
-
-        $this->checkActionPermission($event, 'users', $unrestrictedActions);
-    }
-
+    #[IsGranted(CorePermission::ShareConfigurations->value)]
     #[Route('/user/get-users-for-sharing', name: 'opendxp_admin_user_getusersforsharing', methods: ['GET'])]
-    public function getUsersForSharingAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('share_configurations');
-
-        return $this->getUsersAction($request);
+    public function getUsersForSharingAction(
+        GetUsersHandler $getUsers,
+        #[MapQueryParameter(name: 'include_current_user')] ?string $includeCurrentUser = null,
+        #[MapQueryParameter] ?string $permission = null,
+    ): JsonResponse {
+        return $this->getUsersAction($getUsers, $includeCurrentUser, $permission);
     }
 
-    #[Route('/user/get-roles-for-sharing', name: 'opendxp_admin_user_getrolesforsharing', methods: ['GET'])]
-    public function getRolesForSharingAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('share_configurations');
-
-        return $this->getRolesAction($request);
-    }
-
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/get-users', name: 'opendxp_admin_user_getusers', methods: ['GET'])]
-    public function getUsersAction(Request $request): JsonResponse
-    {
-        $users = [];
+    public function getUsersAction(
+        GetUsersHandler $getUsers,
+        #[MapQueryParameter(name: 'include_current_user')] ?string $includeCurrentUser = null,
+        #[MapQueryParameter] ?string $permission = null,
+    ): JsonResponse {
+        $users = $getUsers(
+            includeCurrentUser: (bool) $includeCurrentUser,
+            permission: $permission,
+        );
 
-        // get available user
-        $list = new User\Listing();
-
-        $conditions = [ 'type = "user"' ];
-
-        if (!$request->query->get('include_current_user')) {
-            $conditions[] = 'id != ' . $this->getAdminUser()->getId();
-        }
-
-        $list->setCondition(implode(' AND ', $conditions));
-
-        $list->load();
-        $userList = $list->getUsers();
-
-        foreach ($userList as $user) {
-            if (!$request->query->get('permission') || $user->isAllowed($request->query->get('permission'))) {
-                $users[] = [
-                    'id' => $user->getId(),
-                    'label' => $user->getUsername(),
-                ];
-            }
-        }
-
-        return $this->adminJson(['success' => true, 'total' => count($users), 'data' => $users]);
+        return $this->adminJson(ApiResponse::ok(['total' => count($users), 'data' => $users]));
     }
 
-    #[Route('/user/get-roles', name: 'opendxp_admin_user_getroles', methods: ['GET'])]
-    public function getRolesAction(Request $request): JsonResponse
-    {
-        $roles = [];
-        $list = new User\Role\Listing();
-
-        $list->setCondition('`type` = "role"');
-        $list->load();
-        $roleList = $list->getRoles();
-
-        foreach ($roleList as $role) {
-            if (!$request->query->has('permission') || in_array($request->query->get('permission'), $role->getPermissions())) {
-                $roles[] = [
-                    'id' => $role->getId(),
-                    'label' => $role->getName(),
-                ];
-            }
-        }
-
-        return $this->adminJson(['success' => true, 'total' => count($roles), 'data' => $roles]);
-    }
-
-    #[Route('/user/get-default-key-bindings', name: 'opendxp_admin_user_getdefaultkeybindings', methods: ['GET'])]
-    public function getDefaultKeyBindingsAction(Request $request): JsonResponse
-    {
-        return $this->adminJson(['success' => true, 'data' => UserHelper::getDefaultKeyBindings()]);
-    }
-
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/invitationlink', name: 'opendxp_admin_user_invitationlink', methods: ['POST'])]
     public function invitationLinkAction(
         Request $request,
-        TranslatorInterface $translator,
-        RouterInterface $router,
-        GeneralHostResolver $generalHostResolver
+        SendInvitationLinkHandler $sendInvitationLink,
+        GeneralHostResolver $generalHostResolver,
     ): JsonResponse {
+        $username = (string) $request->request->get('username', '');
+        $domain = $generalHostResolver->resolve(['source' => $request]) ?? '';
+        $result = $sendInvitationLink($username, $domain);
 
-        $success = false;
-        $message = '';
-
-        if ($username = $request->request->get('username')) {
-            $user = User::getByName($username);
-            if ($user instanceof User) {
-                if (!$user->isActive()) {
-                    $message .= 'User inactive  <br />';
-                }
-
-                if (!$user->getEmail()) {
-                    $message .= 'User has no email address <br />';
-                }
-            } else {
-                $message .= 'User unknown <br />';
-            }
-
-            if (empty($message)) {
-                //generate random password if user has no password
-                if (!$user->getPassword()) {
-                    $user->setPassword(bin2hex(random_bytes(16)));
-                    $user->save();
-                }
-
-                $token = Tool\Authentication::generateTokenByUser($user);
-
-                $domain = $generalHostResolver->resolve(['source' => $request]);
-                if (!$domain) {
-                    throw new Exception('No main domain set in system settings, unable to generate login invitation link');
-                }
-
-                $context = $router->getContext();
-                $context->setHost($domain);
-
-                $loginUrl = $this->generateCustomUrl([
-                    'token' => $token,
-                    'reset' => true,
-                ]);
-
-                try {
-                    $mail = Tool::getMail([$user->getEmail()], 'OpenDXP login invitation for ' . Tool::getHostname());
-                    $mail->setIgnoreDebugMode(true);
-                    $mail->text("Login to OpenDXP and change your password using the following link. This temporary login link will expire in  24 hours: \r\n\r\n" . $loginUrl);
-                    $mail->send();
-
-                    $success = true;
-                    $message = sprintf($translator->trans('invitation_link_sent', [], 'admin_ext'), $user->getEmail());
-                } catch (Exception) {
-                    $message .= 'could not send email';
-                }
-            }
-        }
-
-        return $this->adminJson([
-            'success' => $success,
-            'message' => $message,
-        ]);
-    }
-
-    protected function getUserId(?int $requestedUserId): int
-    {
-        $currentAdminUserId = $this->getAdminUser()->getId();
-
-        if ($requestedUserId !== null) {
-
-            if ($currentAdminUserId !== $requestedUserId) {
-                $this->checkPermission('users');
-            }
-
-            return $requestedUserId;
-        }
-
-        return $currentAdminUserId;
-    }
-
-    /**
-     * @param int $referenceType //UrlGeneratorInterface::ABSOLUTE_URL, ABSOLUTE_PATH, RELATIVE_PATH, NETWORK_PATH
-     *
-     * @return string The generated URL
-     */
-    private function generateCustomUrl(array $params, string $fallbackUrl = 'opendxp_admin_login_check', int $referenceType = UrlGeneratorInterface::ABSOLUTE_URL): string
-    {
-        try {
-            $adminEntryPointRoute = $this->getParameter('opendxp_admin.custom_admin_route_name');
-
-            //try to generate invitation link for custom admin point
-            $loginUrl = $this->generateUrl($adminEntryPointRoute, $params, $referenceType);
-        } catch (Exception) {
-            //use default login check for invitation link
-            $loginUrl = $this->generateUrl($fallbackUrl, $params, $referenceType);
-        }
-
-        return $loginUrl;
+        return $this->adminJson(ApiResponse::fromBool($result->success, ['message' => $result->message]));
     }
 }

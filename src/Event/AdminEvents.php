@@ -338,11 +338,36 @@ class AdminEvents
     public const string DOCUMENT_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA = 'opendxp.admin.document.treeGetChildrenById.preSendData';
 
     /**
-     * Fired before the edit lock is handled.
+     * Fired before the edit lock is handled for an asset.
      *
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObjectController
      * Arguments:
-     *  - data | array | editLock behaviour, this can be modified
+     *  - data  | array | editLock behaviour — set data['task'] = 'overwrite' to force-acquire the lock
+     *  - object | Asset | the current asset
+     *
+     * @Event("Symfony\Component\EventDispatcher\GenericEvent")
+     *
+     * @var string
+     */
+    public const string ASSET_GET_IS_LOCKED = 'opendxp.admin.asset.get.isLocked';
+
+    /**
+     * Fired before the edit lock is handled for a document.
+     *
+     * Arguments:
+     *  - data  | array | editLock behaviour — set data['task'] = 'overwrite' to force-acquire the lock
+     *  - object | Document | the current document
+     *
+     * @Event("Symfony\Component\EventDispatcher\GenericEvent")
+     *
+     * @var string
+     */
+    public const string DOCUMENT_GET_IS_LOCKED = 'opendxp.admin.document.get.isLocked';
+
+    /**
+     * Fired before the edit lock is handled for a data object.
+     *
+     * Arguments:
+     *  - data  | array | editLock behaviour — set data['task'] = 'overwrite' to force-acquire the lock
      *  - object | AbstractObject | the current object
      *
      * @Event("Symfony\Component\EventDispatcher\GenericEvent")

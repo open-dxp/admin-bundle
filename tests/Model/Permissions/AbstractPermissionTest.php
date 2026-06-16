@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use Codeception\Stub;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\ElementService;
 use OpenDxp\Config;
 use OpenDxp\Model\User;
@@ -29,11 +30,12 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 abstract class AbstractPermissionTest extends ModelTestCase
 {
-    protected function buildController(string $classname, User $user): mixed
+    protected function buildElementService(User $user): ElementService
     {
         $openDxpModule = $this->getModule('\\'.OpenDxp::class);
         $config = $openDxpModule->grabService(Config::class);
-        $elementService = Stub::construct(
+
+        return Stub::construct(
             ElementService::class,
             [
                 Stub::makeEmpty(UrlGeneratorInterface::class),
@@ -45,8 +47,22 @@ abstract class AbstractPermissionTest extends ModelTestCase
                 ]),
             ]
         );
+    }
 
-        return Stub::construct($classname, [$elementService], [
+    protected function buildUserContext(User $user): AdminUserContextInterface
+    {
+        return Stub::makeEmpty(AdminUserContextInterface::class, [
+            'getAdminUser' => function () use ($user) {
+                return $user;
+            },
+        ]);
+    }
+
+    protected function buildController(string $classname, User $user, array $extraConstructorArgs = []): mixed
+    {
+        $elementService = $this->buildElementService($user);
+
+        return Stub::construct($classname, [$elementService, ...$extraConstructorArgs], [
             'getAdminUser' => function () use ($user) {
                 return $user;
             },

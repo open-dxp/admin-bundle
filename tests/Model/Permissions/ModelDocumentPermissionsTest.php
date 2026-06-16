@@ -18,6 +18,8 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\Document\DocumentController;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildrenHandler;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Document\Page;
 use OpenDxp\Model\User;
@@ -162,6 +164,11 @@ class ModelDocumentPermissionsTest extends AbstractPermissionTest
 
     protected function doTestTreeGetChildrenById(Document $element, User $user, array $expectedChildren): void
     {
+        $elementService = $this->buildElementService($user);
+        $userContext = $this->buildUserContext($user);
+        $childrenHandler = new GetDocumentChildrenHandler($elementService);
+        $handler = new TreeGetDocumentChildrenHandler($userContext, $elementService, $childrenHandler, new EventDispatcher());
+
         $controller = $this->buildController(DocumentController::class, $user);
 
         $request = new Request([
@@ -169,12 +176,8 @@ class ModelDocumentPermissionsTest extends AbstractPermissionTest
             'limit' => 100,
             'view' => 0,
         ]);
-        $eventDispatcher = new EventDispatcher();
 
-        $responseData = $controller->treeGetChildrenByIdAction(
-            $request,
-            $eventDispatcher
-        );
+        $responseData = $controller->treeGetChildrenByIdAction($handler, $request);
 
         $responsePaths = [];
         $responseData = json_decode($responseData->getContent(), true);

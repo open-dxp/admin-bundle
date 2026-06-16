@@ -1,0 +1,85 @@
+<?php
+
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) Pimcore GmbH (https://pimcore.com)
+ * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
+declare(strict_types=1);
+
+namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Page;
+
+use OpenDxp\Model\Document;
+use OpenDxp\Model\Element;
+use OpenDxp\Tool\Frontend;
+
+final class CheckPrettyUrlHandler
+{
+    public function __invoke(int $docId, string $path): CheckPrettyUrlResult
+    {
+        $path = rtrim($path, '/');
+
+        if ($path === '') {
+            return new CheckPrettyUrlResult(success: true, messages: []);
+        }
+
+        $messages = [];
+        $success = true;
+
+        // must start with /
+        if (!str_starts_with($path, '/')) {
+            $success = false;
+            $messages[] = 'URL must start with /.';
+        }
+
+        if (strlen($path) < 2) {
+            $success = false;
+            $messages[] = 'URL must be at least 2 characters long.';
+        }
+
+        if (!Element\Service::isValidPath($path, 'document')) {
+            $success = false;
+            $messages[] = 'URL is invalid.';
+        }
+
+        if ($success) {
+            $list = new Document\Listing();
+            $list->setCondition('(CONCAT(`path`, `key`) = ? OR id IN (SELECT id from documents_page WHERE prettyUrl = ?))
+                AND id != ?', [
+                $path, $path, $docId,
+            ]);
+
+            if ($list->getTotalCount() > 0) {
+                $checkDocument = Document::getById($docId);
+                $checkSite = Frontend::getSiteForDocument($checkDocument);
+                $checkSiteId = empty($checkSite) ? 0 : $checkSite->getId();
+
+                foreach ($list as $document) {
+                    if (empty($document)) {
+                        continue;
+                    }
+
+                    $site = Frontend::getSiteForDocument($document);
+                    $siteId = empty($site) ? 0 : $site->getId();
+
+                    if ($siteId === $checkSiteId) {
+                        $success = false;
+                        $messages[] = 'URL path already exists.';
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        return new CheckPrettyUrlResult(success: $success, messages: $messages);
+    }
+}

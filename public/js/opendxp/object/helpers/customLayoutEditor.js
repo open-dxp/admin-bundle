@@ -828,7 +828,7 @@ opendxp.object.helpers.customLayoutEditor = Class.create({
                 this.layoutComboStore.reload();
                 this.data = res.data;
             } else {
-                Ext.Msg.alert(t('error'), t(res.msg));
+                Ext.Msg.alert(t('error'), t(res.message));
             }
         } catch (e) {
             this.saveOnError();

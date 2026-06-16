@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -17,11 +18,14 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
-use OpenDxp\Model\Document;
-use OpenDxp\Model\Element;
-use OpenDxp\Model\Schedule\Task;
+use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\GetSnippetDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippetHandler;
+use OpenDxp\Bundle\AdminBundle\Payload\Document\SnippetPayload;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -34,105 +38,51 @@ class SnippetController extends DocumentControllerBase
      * @throws Exception
      */
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
-    public function getDataByIdAction(Request $request): JsonResponse
+    public function getDataByIdAction(
+        Request $request,
+        GetSnippetDataHandler $handler,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse
     {
-        $snippet = Document\Snippet::getById((int)$request->query->get('id'));
-
-        if (!$snippet) {
-            throw $this->createNotFoundException('Snippet not found');
+        try {
+            $result = $handler($id);
+        } catch (ElementLockedException $e) {
+            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
-
-        if (($lock = $this->checkForLock($snippet, $request->getSession()->getId())) instanceof JsonResponse) {
-            return $lock;
-        }
-
-        $snippet = clone $snippet;
-        $draftVersion = null;
-        $snippet = $this->getLatestVersion($snippet, $draftVersion);
-
-        $versions = Element\Service::getSafeVersionInfo($snippet->getVersions());
-        $snippet->setVersions(array_splice($versions, -1, 1));
-        $snippet->setParent(null);
-
-        // unset useless data
-        $snippet->setEditables(null);
-
-        $data = $snippet->getObjectVars();
-        $data['locked'] = $snippet->isLocked();
-
-        $this->addTranslationsData($snippet, $data);
-        $this->minimizeProperties($snippet, $data);
-        $this->populateUsersNames($snippet, $data);
-
-        $data['url'] = $snippet->getUrl();
-        $data['scheduledTasks'] = array_map(
-            static fn (Task $task) => $task->getObjectVars(),
-            $snippet->getScheduledTasks()
-        );
-
-        if ($snippet->getContentMainDocument()) {
-            $data['contentMainDocumentPath'] = $snippet->getContentMainDocument()->getRealFullPath();
-        }
-
-        return $this->preSendDataActions($data, $snippet, $draftVersion);
+        return $this->preSendDataActions($result->data, $result->snippet);
     }
 
     /**
      * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
-    public function saveAction(Request $request): JsonResponse
+    public function saveAction(Request $request, SaveSnippetHandler $handler): JsonResponse
     {
-        $snippet = Document\Snippet::getById((int) $request->request->get('id'));
-        if (!$snippet) {
-            throw $this->createNotFoundException('Snippet not found');
+        try {
+            $result = $handler((int) $request->request->get('id'), SnippetPayload::fromRequest($request));
+        } catch (ElementLockedException $e) {
+            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
 
-        /** @var Document\Snippet|null $snippetSession */
-        $snippetSession = $this->getFromSession($snippet, $request->getSession());
-
-        $snippet = $snippetSession ?: $this->getLatestVersion($snippet);
-
-        if ($request->request->has('missingRequiredEditable')) {
-            $snippet->setMissingRequiredEditable($request->request->get('missingRequiredEditable') === 'true');
-        }
-
-        [$task, $snippet, $version] = $this->saveDocument($snippet, $request);
-
-        if ($task === self::TASK_PUBLISH || $task === self::TASK_UNPUBLISH) {
-            $this->saveToSession($snippet, $request->getSession());
-
-            $treeData = $this->getTreeNodeConfig($snippet);
-
-            return $this->adminJson([
-                'success' => true,
+        if ($result->task === self::TASK_PUBLISH || $result->task === self::TASK_UNPUBLISH) {
+            return $this->adminJson(ApiResponse::ok([
                 'data' => [
-                    'versionDate' => $snippet->getModificationDate(),
-                    'versionCount' => $snippet->getVersionCount(),
+                    'versionDate' => $result->snippet->getModificationDate(),
+                    'versionCount' => $result->snippet->getVersionCount(),
                 ],
-                'treeData' => $treeData,
-            ]);
+                'treeData' => $result->treeData,
+            ]));
         }
-
-        $this->saveToSession($snippet, $request->getSession());
 
         $draftData = [];
-        if ($version) {
+        if ($result->version) {
             $draftData = [
-                'id' => $version->getId(),
-                'modificationDate' => $version->getDate(),
-                'isAutoSave' => $version->isAutoSave(),
+                'id' => $result->version->getId(),
+                'modificationDate' => $result->version->getDate(),
+                'isAutoSave' => $result->version->isAutoSave(),
             ];
         }
 
-        return $this->adminJson(['success' => true, 'draft' => $draftData]);
-    }
-
-    protected function setValuesToDocument(Request $request, Document $document): void
-    {
-        $this->addSettingsToDocument($request, $document);
-        $this->addDataToDocument($request, $document);
-        $this->applySchedulerDataToElement($request, $document, $this->getAdminUser());
-        $this->addPropertiesToDocument($request, $document);
+        return $this->adminJson(ApiResponse::ok(['draft' => $draftData]));
     }
 }

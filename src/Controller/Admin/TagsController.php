@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * OpenDXP
@@ -14,17 +13,27 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
+declare(strict_types=1);
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Model\Element\Tag;
-use Symfony\Component\EventDispatcher\GenericEvent;
+use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTagHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTagToElementHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\DeleteTagHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\DoBatchAssignmentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\GetBatchAssignmentJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\GetTagsForElementHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\GetTagTreeChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\RemoveTagFromElementHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\UpdateTagHandler;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 
 /**
  * @internal
@@ -32,346 +41,127 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 #[Route('/tags')]
 class TagsController extends AdminAbstractController
 {
+    #[IsGranted(CorePermission::TagsConfiguration->value)]
     #[Route('/add', name: 'opendxp_admin_tags_add', methods: ['POST'])]
-    public function addAction(Request $request): JsonResponse
+    public function addAction(Request $request, AddTagHandler $addTag): JsonResponse
     {
-        $this->checkPermission('tags_configuration');
+        $result = $addTag(
+            name: strip_tags($request->request->get('text', '')),
+            parentId: (int)$request->request->get('parentId'),
+        );
 
-        try {
-            $tag = new Tag();
-            $tag->setName(strip_tags($request->request->get('text', '')));
-            $tag->setParentId((int)$request->request->get('parentId'));
-            $tag->save();
-
-            return $this->adminJson(['success' => true, 'id' => $tag->getId()]);
-        } catch (Exception $e) {
-            return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-        }
+        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::TagsConfiguration->value)]
     #[Route('/delete', name: 'opendxp_admin_tags_delete', methods: ['DELETE'])]
-    public function deleteAction(Request $request): JsonResponse
+    public function deleteAction(Request $request, DeleteTagHandler $deleteTag): JsonResponse
     {
-        $this->checkPermission('tags_configuration');
+        $deleteTag(id: (int)$request->request->get('id'));
 
-        $tag = Tag::getById((int) $request->request->get('id'));
-        if ($tag) {
-            $tag->delete();
-
-            return $this->adminJson(['success' => true]);
-        }
-
-        throw $this->createNotFoundException('Tag with ID ' . $request->request->get('id') . ' not found.');
+        return $this->adminJson(ApiResponse::ok());
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::TagsConfiguration->value)]
     #[Route('/update', name: 'opendxp_admin_tags_update', methods: ['PUT'])]
-    public function updateAction(Request $request): JsonResponse
+    public function updateAction(Request $request, UpdateTagHandler $updateTag): JsonResponse
     {
-        $this->checkPermission('tags_configuration');
+        $parentId = $request->request->get('parentId');
+        $updateTag(
+            id: (int)$request->request->get('id'),
+            parentId: ($parentId || $parentId === '0') ? (int)$parentId : null,
+            name: $request->request->has('text') ? strip_tags($request->request->get('text', '')) : null,
+        );
 
-        $tag = Tag::getById((int) $request->request->get('id'));
-        if ($tag) {
-            $parentId = $request->request->get('parentId');
-            if ($parentId || $parentId === '0') {
-                $tag->setParentId((int)$parentId);
-            }
-            if ($request->request->has('text')) {
-                $tag->setName(strip_tags($request->request->get('text', '')));
-            }
-
-            $tag->save();
-
-            return $this->adminJson(['success' => true]);
-        }
-
-        throw $this->createNotFoundException('Tag with ID ' . $request->request->get('id') . ' not found.');
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_tags_treegetchildrenbyid', methods: ['GET'])]
-    public function treeGetChildrenByIdAction(Request $request): JsonResponse
-    {
-        $showSelection = $request->query->get('showSelection') === 'true';
-        $assignmentCId = (int)$request->query->get('assignmentCId');
-        $assignmentCType = strip_tags($request->query->get('assignmentCType', ''));
+    public function treeGetChildrenByIdAction(
+        GetTagTreeChildrenHandler $getTagTreeChildren,
+        #[MapQueryParameter] ?string $showSelection = null,
+        #[MapQueryParameter(flags: \FILTER_NULL_ON_FAILURE)] ?int $assignmentCId = null,
+        #[MapQueryParameter] string $assignmentCType = '',
+        #[MapQueryParameter] ?string $node = null,
+        #[MapQueryParameter] ?string $filter = null,
+    ): JsonResponse {
+        $result = $getTagTreeChildren(
+            showSelection: $showSelection === 'true',
+            assignmentCId: $assignmentCId,
+            assignmentCType: strip_tags($assignmentCType),
+            node: $node,
+            filter: $filter,
+        );
 
-        $recursiveChildren = false;
-        $assignedTagIds = [];
-        if ($assignmentCId && $assignmentCType) {
-            $assignedTags = Tag::getTagsForElement($assignmentCType, $assignmentCId);
-
-            foreach ($assignedTags as $assignedTag) {
-                $assignedTagIds[$assignedTag->getId()] = $assignedTag;
-            }
-        }
-
-        $tagList = new Tag\Listing();
-        if ($request->query->get('node')) {
-            $tagList->setCondition('parentId = ?', (int)$request->query->get('node'));
-        } else {
-            $tagList->setCondition('ISNULL(parentId) OR parentId = 0');
-        }
-        $tagList->setOrderKey('name');
-
-        if (!empty($request->query->get('filter'))) {
-            $filterIds = [0];
-            $filterTagList = new Tag\Listing();
-            $filterTagList->setCondition('LOWER(`name`) LIKE ?', ['%' . $filterTagList->escapeLike(mb_strtolower($request->query->get('filter'))) . '%']);
-            foreach ($filterTagList->load() as $filterTag) {
-                if ($filterTag->getParentId() === 0) {
-                    $filterIds[] = $filterTag->getId();
-                } else {
-                    $ids = explode('/', $filterTag->getIdPath());
-                    if (isset($ids[1])) {
-                        $filterIds[] = (int)$ids[1];
-                    }
-                }
-            }
-
-            $filterIds = array_unique($filterIds);
-            $tagList->setCondition('id IN('.implode(',', $filterIds).')');
-            $recursiveChildren = true;
-        }
-
-        $tags = [];
-        foreach ($tagList->load() as $tag) {
-            $tags[] = $this->convertTagToArray($tag, $showSelection, $assignedTagIds, true, $recursiveChildren);
-        }
-
-        return $this->adminJson($tags);
-    }
-
-    protected function convertTagToArray(Tag $tag, bool $showSelection, array $assignedTagIds, bool $loadChildren = false, bool $recursiveChildren = false): array
-    {
-        $hasChildren = $tag->hasChildren();
-
-        $tagArray = [
-            'id' => $tag->getId(),
-            'text' => $tag->getName(),
-            'path' => $tag->getNamePath(),
-            'expandable' => $hasChildren,
-            'leaf' => !$hasChildren,
-            'iconCls' => 'opendxp_icon_element_tags',
-            'qtipCfg' => [
-                'title' => 'ID: ' . $tag->getId(),
-            ],
-        ];
-
-        if ($showSelection) {
-            $tagArray['checked'] = isset($assignedTagIds[$tag->getId()]);
-        }
-
-        if ($hasChildren && $loadChildren) {
-            $children = $tag->getChildren();
-            $loadChildren = $recursiveChildren;
-            foreach ($children as $child) {
-                $tagArray['children'][] = $this->convertTagToArray($child, $showSelection, $assignedTagIds, $loadChildren, $recursiveChildren);
-            }
-        }
-
-        return $tagArray;
+        return $this->adminJson($result->tags);
     }
 
     #[Route('/load-tags-for-element', name: 'opendxp_admin_tags_loadtagsforelement', methods: ['GET'])]
-    public function loadTagsForElementAction(Request $request): JsonResponse
-    {
-        $assignmentId = (int)$request->query->get('assignmentCId');
-        $assignmentType = strip_tags($request->query->get('assignmentCType', ''));
-
-        $assignedTagArray = [];
-        if ($assignmentId && $assignmentType) {
-            $assignedTags = Tag::getTagsForElement($assignmentType, $assignmentId);
-
-            foreach ($assignedTags as $assignedTag) {
-                $assignedTagArray[] = $this->convertTagToArray($assignedTag, false, []);
-            }
+    public function loadTagsForElementAction(
+        GetTagsForElementHandler $getTagsForElement,
+        #[MapQueryParameter(flags: \FILTER_NULL_ON_FAILURE)] ?int $assignmentCId = null,
+        #[MapQueryParameter] string $assignmentCType = '',
+    ): JsonResponse {
+        if (!$assignmentCId || !$assignmentCType) {
+            return $this->adminJson([]);
         }
 
-        return $this->adminJson($assignedTagArray);
+        $result = $getTagsForElement(
+            assignmentId: $assignmentCId,
+            assignmentType: strip_tags($assignmentCType),
+        );
+
+        return $this->adminJson($result->tags);
     }
 
     #[Route('/add-tag-to-element', name: 'opendxp_admin_tags_addtagtoelement', methods: ['PUT'])]
-    public function addTagToElementAction(Request $request): JsonResponse
+    public function addTagToElementAction(Request $request, AddTagToElementHandler $addTagToElement): JsonResponse
     {
-        $assignmentElementId = (int)$request->request->get('assignmentElementId');
-        $assignmentElementType = strip_tags($request->request->get('assignmentElementType', ''));
-        $tagId = (int)$request->request->get('tagId');
+        $result = $addTagToElement(
+            tagId: (int)$request->request->get('tagId'),
+            elementType: strip_tags($request->request->get('assignmentElementType', '')),
+            elementId: (int)$request->request->get('assignmentElementId'),
+        );
 
-        $tag = Tag::getById($tagId);
-        if ($tag) {
-            Tag::addTagToElement($assignmentElementType, $assignmentElementId, $tag);
-
-            return $this->adminJson(['success' => true, 'id' => $tag->getId()]);
-        }
-
-        return $this->adminJson(['success' => false]);
+        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
 
     #[Route('/remove-tag-from-element', name: 'opendxp_admin_tags_removetagfromelement', methods: ['DELETE'])]
-    public function removeTagFromElementAction(Request $request): JsonResponse
+    public function removeTagFromElementAction(Request $request, RemoveTagFromElementHandler $removeTagFromElement): JsonResponse
     {
-        $assignmentElementId = (int)$request->request->get('assignmentElementId');
-        $assignmentElementType = strip_tags($request->request->get('assignmentElementType', ''));
-        $tagId = (int)$request->request->get('tagId');
+        $result = $removeTagFromElement(
+            tagId: (int)$request->request->get('tagId'),
+            elementType: strip_tags($request->request->get('assignmentElementType', '')),
+            elementId: (int)$request->request->get('assignmentElementId'),
+        );
 
-        $tag = Tag::getById($tagId);
-        if ($tag) {
-            Tag::removeTagFromElement($assignmentElementType, $assignmentElementId, $tag);
-
-            return $this->adminJson(['success' => true, 'id' => $tag->getId()]);
-        }
-
-        return $this->adminJson(['success' => false]);
+        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
 
     #[Route('/get-batch-assignment-jobs', name: 'opendxp_admin_tags_getbatchassignmentjobs', methods: ['GET'])]
-    public function getBatchAssignmentJobsAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
-    {
-        $elementId = (int)$request->query->get('elementId');
-        $elementType = strip_tags($request->query->get('elementType', ''));
+    public function getBatchAssignmentJobsAction(
+        GetBatchAssignmentJobsHandler $getBatchAssignmentJobs,
+        #[MapQueryParameter] int $elementId = 0,
+        #[MapQueryParameter] string $elementType = '',
+    ): JsonResponse {
+        $result = $getBatchAssignmentJobs(
+            elementType: strip_tags($elementType),
+            elementId: $elementId,
+        );
 
-        $idList = [];
-        switch ($elementType) {
-            case 'object':
-                $object = \OpenDxp\Model\DataObject::getById($elementId);
-                if ($object) {
-                    $idList = $this->getSubObjectIds($object, $eventDispatcher);
-                }
-
-                break;
-            case 'asset':
-                $asset = \OpenDxp\Model\Asset::getById($elementId);
-                if ($asset) {
-                    $idList = $this->getSubAssetIds($asset, $eventDispatcher);
-                }
-
-                break;
-            case 'document':
-                $document = \OpenDxp\Model\Document::getById($elementId);
-                if ($document) {
-                    $idList = $this->getSubDocumentIds($document, $eventDispatcher);
-                }
-
-                break;
-        }
-
-        $size = 2;
-        $offset = 0;
-        $idListParts = [];
-        while ($offset < count($idList)) {
-            $idListParts[] = array_slice($idList, $offset, $size);
-            $offset += $size;
-        }
-
-        return $this->adminJson(['success' => true, 'idLists' => $idListParts, 'totalCount' => count($idList)]);
-    }
-
-    /**
-     * @return int[]
-     */
-    private function getSubObjectIds(\OpenDxp\Model\DataObject\AbstractObject $object, EventDispatcherInterface $eventDispatcher): array
-    {
-        $childrenList = new \OpenDxp\Model\DataObject\Listing();
-        $condition = '`path` LIKE ?';
-        if (!$this->getAdminUser()->isAdmin()) {
-            $userIds = $this->getAdminUser()->getRoles();
-            $userIds[] = $this->getAdminUser()->getId();
-            $condition .= ' AND (
-                (SELECT `view` FROM users_workspaces_object WHERE userId IN (' . implode(',', $userIds) . ') and LOCATE(CONCAT(`path`,`key`),cpath)=1  ORDER BY LENGTH(cpath) DESC LIMIT 1)=1
-                    OR
-                (SELECT `view` FROM users_workspaces_object WHERE userId IN (' . implode(',', $userIds) . ') and LOCATE(cpath,CONCAT(`path`,`key`))=1  ORDER BY LENGTH(cpath) DESC LIMIT 1)=1
-             )';
-        }
-
-        $childrenList->setCondition($condition, $childrenList->escapeLike($object->getRealFullPath()) . '/%');
-
-        $beforeListLoadEvent = new GenericEvent($this, [
-            'list' => $childrenList,
-            'context' => [],
-        ]);
-        $eventDispatcher->dispatch($beforeListLoadEvent, AdminEvents::OBJECT_LIST_BEFORE_LIST_LOAD);
-        /** @var \OpenDxp\Model\DataObject\Listing $childrenList */
-        $childrenList = $beforeListLoadEvent->getArgument('list');
-
-        return $childrenList->loadIdList();
-    }
-
-    /**
-     * @return int[]
-     */
-    private function getSubAssetIds(\OpenDxp\Model\Asset $asset, EventDispatcherInterface $eventDispatcher): array
-    {
-        $childrenList = new \OpenDxp\Model\Asset\Listing();
-        $condition = '`path` LIKE ?';
-        if (!$this->getAdminUser()->isAdmin()) {
-            $userIds = $this->getAdminUser()->getRoles();
-            $userIds[] = $this->getAdminUser()->getId();
-            $condition .= ' AND (
-                (SELECT `view` FROM users_workspaces_asset WHERE userId IN (' . implode(',', $userIds) . ') and LOCATE(CONCAT(`path`,filename),cpath)=1  ORDER BY LENGTH(cpath) DESC LIMIT 1)=1
-                    OR
-                (SELECT `view` FROM users_workspaces_asset WHERE userId IN (' . implode(',', $userIds) . ') and LOCATE(cpath,CONCAT(`path`,filename))=1  ORDER BY LENGTH(cpath) DESC LIMIT 1)=1
-            )';
-        }
-
-        $childrenList->setCondition($condition, $childrenList->escapeLike($asset->getRealFullPath()) . '/%');
-
-        $beforeListLoadEvent = new GenericEvent($this, [
-            'list' => $childrenList,
-            'context' => [],
-        ]);
-
-        $eventDispatcher->dispatch($beforeListLoadEvent, AdminEvents::ASSET_LIST_BEFORE_LIST_LOAD);
-        /** @var \OpenDxp\Model\Asset\Listing $childrenList */
-        $childrenList = $beforeListLoadEvent->getArgument('list');
-
-        return $childrenList->loadIdList();
-    }
-
-    /**
-     * @return int[]
-     */
-    private function getSubDocumentIds(\OpenDxp\Model\Document $document, EventDispatcherInterface $eventDispatcher): array
-    {
-        $childrenList = new \OpenDxp\Model\Document\Listing();
-        $condition = '`path` LIKE ?';
-        if (!$this->getAdminUser()->isAdmin()) {
-            $userIds = $this->getAdminUser()->getRoles();
-            $userIds[] = $this->getAdminUser()->getId();
-            $condition .= ' AND (
-                (SELECT `view` FROM users_workspaces_document WHERE userId IN (' . implode(',', $userIds) . ') and LOCATE(CONCAT(`path`,`key`),cpath)=1  ORDER BY LENGTH(cpath) DESC LIMIT 1)=1
-                    OR
-                (SELECT `view` FROM users_workspaces_document WHERE userId IN (' . implode(',', $userIds) . ') and LOCATE(cpath,CONCAT(`path`,`key`))=1  ORDER BY LENGTH(cpath) DESC LIMIT 1)=1
-            )';
-        }
-
-        $childrenList->setCondition($condition, $childrenList->escapeLike($document->getRealFullPath()) . '/%');
-
-        $beforeListLoadEvent = new GenericEvent($this, [
-            'list' => $childrenList,
-            'context' => [],
-        ]);
-        $eventDispatcher->dispatch($beforeListLoadEvent, AdminEvents::DOCUMENT_LIST_BEFORE_LIST_LOAD);
-        /** @var \OpenDxp\Model\Document\Listing $childrenList */
-        $childrenList = $beforeListLoadEvent->getArgument('list');
-
-        return $childrenList->loadIdList();
+        return $this->adminJson(ApiResponse::ok(['idLists' => $result->idListParts, 'totalCount' => $result->totalCount]));
     }
 
     #[Route('/do-batch-assignment', name: 'opendxp_admin_tags_dobatchassignment', methods: ['PUT'])]
-    public function doBatchAssignmentAction(Request $request): JsonResponse
+    public function doBatchAssignmentAction(Request $request, DoBatchAssignmentHandler $doBatchAssignment): JsonResponse
     {
-        $cType = strip_tags($request->request->get('elementType', ''));
-        $assignedTags = json_decode($request->request->get('assignedTags'));
-        $elementIds = json_decode($request->request->get('childrenIds'));
-        $doCleanupTags = $request->request->get('removeAndApply') === 'true';
+        $doBatchAssignment(
+            elementType: strip_tags($request->request->get('elementType', '')),
+            elementIds: json_decode($request->request->get('childrenIds'), true) ?? [],
+            assignedTags: json_decode($request->request->get('assignedTags'), true) ?? [],
+            doCleanupTags: $request->request->get('removeAndApply') === 'true',
+        );
 
-        Tag::batchAssignTagsToElement($cType, $elementIds, $assignedTags, $doCleanupTags);
-
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 }

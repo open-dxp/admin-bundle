@@ -17,42 +17,31 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use Browser;
-use Endroid\QrCode\Builder\Builder;
-use Endroid\QrCode\Writer\PngWriter;
-use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\Login\LoginRedirectEvent;
-use OpenDxp\Bundle\AdminBundle\Event\Login\LostPasswordEvent;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\GenerateTwoFactorSetupHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\LostPasswordHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetupHandler;
+use OpenDxp\Bundle\AdminBundle\Factory\LoginPageFactory;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
-use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
-use OpenDxp\Config;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use OpenDxp\Controller\KernelResponseEventInterface;
-use OpenDxp\Extension\Bundle\OpenDxpBundleManager;
 use OpenDxp\Http\Request\Host\GeneralHostResolver;
 use OpenDxp\Http\ResponseHelper;
 use OpenDxp\Logger;
-use OpenDxp\Model\User;
 use OpenDxp\Security\SecurityHelper;
-use OpenDxp\Tool;
-use OpenDxp\Tool\Authentication;
-use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Google\GoogleAuthenticatorInterface;
-use Symfony\Component\EventDispatcher\GenericEvent;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\Security\Http\SecurityRequestAttributes;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
@@ -66,21 +55,18 @@ class LoginController extends AdminAbstractController implements KernelControlle
     public function __construct(
         protected ResponseHelper $responseHelper,
         protected TranslatorInterface $translator,
-        protected OpenDxpBundleManager $bundleManager,
-        protected EventDispatcherInterface $eventDispatcher
-    ) {
-    }
+        protected EventDispatcherInterface $eventDispatcher,
+        private readonly LoginPageFactory $loginPageFactory,
+    ) {}
 
     public function onKernelControllerEvent(ControllerEvent $event): void
     {
-        // use browser language for login page if possible
         $locale = 'en';
+        $availableLocales = \OpenDxp\Tool\Admin::getLanguages();
 
-        $availableLocales = Tool\Admin::getLanguages();
         foreach ($event->getRequest()->getLanguages() as $userLocale) {
             if (in_array($userLocale, $availableLocales)) {
                 $locale = $userLocale;
-
                 break;
             }
         }
@@ -101,11 +87,9 @@ class LoginController extends AdminAbstractController implements KernelControlle
     #[Route('/login/', name: 'opendxp_admin_login_fallback')]
     public function loginAction(
         Request $request,
-        AuthenticationUtils $authenticationUtils,
         CsrfProtectionHandler $csrfProtection,
-        Config $config
+        #[MapQueryParameter(name: 'too_many_attempts')] ?string $tooManyAttempts = null,
     ): RedirectResponse|Response {
-
         $queryParams = $request->query->all();
 
         if ($request->attributes->get('_route') === 'opendxp_admin_login_fallback') {
@@ -117,58 +101,22 @@ class LoginController extends AdminAbstractController implements KernelControlle
             return new RedirectResponse($redirectUrl);
         }
 
-        // check csrf token before generating a new one with force=true
         if (!$csrfProtection->getCsrfToken($request->getSession())) {
             $csrfProtection->regenerateCsrfToken($request->getSession());
         }
 
-        $user = $this->getUser();
-        if ($user instanceof UserInterface) {
+        if ($this->getUser() instanceof UserInterface) {
             return $this->redirectToRoute('opendxp_admin_index');
         }
 
-        $params = $this->buildLoginPageViewParams($config);
-
-        $session_gc_maxlifetime = ini_get('session.gc_maxlifetime');
-        if (empty($session_gc_maxlifetime)) {
-            $session_gc_maxlifetime = 120;
-        }
-
-        $params['csrfTokenRefreshInterval'] = ((int)$session_gc_maxlifetime - 60) * 1000;
-
-        if ($request->query->has('too_many_attempts')) {
-            $params['error'] = SecurityHelper::convertHtmlSpecialChars($request->query->get('too_many_attempts'));
-        }
-        if ($request->query->has('auth_failed')) {
-            $params['error'] = 'error_auth_failed';
-        }
-        if ($request->query->has('session_expired')) {
-            $params['error'] = 'error_session_expired';
-        }
-        if ($request->query->has('deeplink')) {
-            $params['deeplink'] = true;
-        }
-
-        $params['browserSupported'] = $this->detectBrowser();
-        $params['debug'] = OpenDxp::inDebugMode();
-
-        $params['includeTemplates'] = [];
-        $event = new GenericEvent($this, [
-            'parameters' => $params,
-            'config' => $config,
-            'request' => $request,
-        ]);
-
-        $this->eventDispatcher->dispatch($event, AdminEvents::LOGIN_BEFORE_RENDER);
-        $params = $event->getArgument('parameters');
-
-        $params['login_error'] = $authenticationUtils->getLastAuthenticationError();
-
-        return $this->render('@OpenDxpAdmin/admin/login/login.html.twig', $params);
+        return $this->render(
+            '@OpenDxpAdmin/admin/login/login.html.twig',
+            $this->loginPageFactory->create($request)->forLoginPage($tooManyAttempts),
+        );
     }
 
     #[Route('/login/csrf-token', name: 'opendxp_admin_login_csrf_token')]
-    public function csrfTokenAction(Request $request, CsrfProtectionHandler $csrfProtection): \Symfony\Component\HttpFoundation\JsonResponse
+    public function csrfTokenAction(Request $request, CsrfProtectionHandler $csrfProtection): JsonResponse
     {
         if (!$this->getAdminUser()) {
             $csrfProtection->regenerateCsrfToken($request->getSession());
@@ -182,21 +130,21 @@ class LoginController extends AdminAbstractController implements KernelControlle
     #[Route('/logout', name: 'opendxp_admin_logout', methods: ['POST'])]
     public function logoutAction(): void
     {
-        // this route will never be matched, but will be handled by the logout handler
+        // handled by the logout handler
     }
 
     /**
      * Dummy route used to check authentication
      */
     #[Route('/login/login', name: 'opendxp_admin_login_check')]
-    public function loginCheckAction(Request $request): RedirectResponse
-    {
+    public function loginCheckAction(
+        #[MapQueryParameter] ?string $perspective = null,
+    ): RedirectResponse {
         $params = [];
-        if ($request->query->has('perspective')) {
-            $params['perspective'] = strip_tags($request->query->get('perspective'));
+        if ($perspective !== null) {
+            $params['perspective'] = strip_tags($perspective);
         }
 
-        // just in case the authenticator didn't redirect
         return new RedirectResponse($this->generateUrl('opendxp_admin_login', $params));
     }
 
@@ -204,81 +152,24 @@ class LoginController extends AdminAbstractController implements KernelControlle
     public function lostpasswordAction(
         Request $request,
         CsrfProtectionHandler $csrfProtection,
-        Config $config,
-        RateLimiterFactory $resetPasswordLimiter,
-        RouterInterface $router,
-        GeneralHostResolver $generalHostResolver
+        LostPasswordHandler $lostPassword,
+        GeneralHostResolver $generalHostResolver,
     ): Response {
-        $params = $this->buildLoginPageViewParams($config);
-        $error = null;
+        $params = $this->loginPageFactory->create($request)->base();
 
         if ($request->getMethod() === 'POST' && $request->request->has('username')) {
+            $result = $lostPassword(
+                username: (string) $request->request->get('username'),
+                clientIp: (string) $request->getClientIp(),
+                domain: $generalHostResolver->resolve(['source' => $request]) ?? '',
+            );
 
-            $username = $request->request->get('username');
-            $user = User::getByName($username);
-            if (!$user instanceof User) {
-                $error = 'user_unknown';
+            if ($result->eventResponse !== null) {
+                return $result->eventResponse;
             }
 
-            $limiter = $resetPasswordLimiter->create($request->getClientIp());
-
-            if (false === $limiter->consume(1)->isAccepted()) {
-                $error = 'user_reset_password_too_many_attempts';
-            }
-
-            if (!$error) {
-                if (!$user->isActive()) {
-                    $error = 'user_inactive';
-                }
-                if (!$user->getEmail()) {
-                    $error = 'user_no_email_address';
-                }
-                if (!$user->getPassword()) {
-                    $error = 'user_no_password';
-                }
-            }
-
-            if (!$error) {
-                $token = Authentication::generateTokenByUser($user);
-
-                try {
-                    $domain = $generalHostResolver->resolve(['source' => $request]);
-                    if (!$domain) {
-                        throw new Exception('No main domain set in system settings, unable to generate reset password link');
-                    }
-
-                    $context = $router->getContext();
-                    $context->setHost($domain);
-
-                    $loginUrl = $this->generateUrl('opendxp_admin_login_check', [
-                        'token' => $token,
-                        'reset' => 'true',
-                    ], UrlGeneratorInterface::ABSOLUTE_URL);
-
-                    $event = new LostPasswordEvent($user, $loginUrl);
-                    $this->eventDispatcher->dispatch($event, AdminEvents::LOGIN_LOSTPASSWORD);
-
-                    // only send mail if it wasn't prevented in event
-                    if ($event->getSendMail()) {
-                        $mail = Tool::getMail([$user->getEmail()], 'OpenDXP lost password service');
-                        $mail->setIgnoreDebugMode(true);
-                        $mail->text("Login to OpenDXP and change your password using the following link. This temporary login link will expire in 24 hours: \r\n\r\n" . $loginUrl);
-                        $mail->send();
-                    }
-
-                    // directly return event response
-                    if ($event->hasResponse()) {
-                        return $event->getResponse();
-                    }
-                } catch (Exception $e) {
-                    Logger::error('Error sending password recovery email: ' . $e->getMessage());
-                    $error = 'lost_password_email_error';
-                }
-            }
-
-            if ($error) {
-                Logger::error('Lost password service: ' . $error);
-                //to avoid timing based enumeration
+            if ($result->error !== null) {
+                Logger::error('Lost password service: ' . $result->error);
                 usleep(random_int(50, 200));
             }
         }
@@ -289,34 +180,32 @@ class LoginController extends AdminAbstractController implements KernelControlle
     }
 
     #[Route('/login/deeplink', name: 'opendxp_admin_login_deeplink')]
-    public function deeplinkAction(Request $request): Response
-    {
-        // check for deeplink
+    public function deeplinkAction(
+        Request $request,
+        #[MapQueryParameter] string $perspective = '',
+    ): Response {
         $queryString = $request->server->get('QUERY_STRING');
 
         if (preg_match('/(document|asset|object)_(\d+)_([a-z]+)/', $queryString, $deeplink)) {
             $deeplink = $deeplink[0];
-            $perspective = strip_tags($request->query->get('perspective', ''));
+            $perspective = strip_tags($perspective);
+
             if (strpos($queryString, 'token')) {
                 $url = $this->dispatchLoginRedirect([
                     'deeplink' => $deeplink,
                     'perspective' => $perspective,
                 ]);
 
-                $url .= '&' . $queryString;
-
-                return $this->redirect($url);
+                return $this->redirect($url . '&' . $queryString);
             }
 
             if ($queryString) {
-                $url = $this->dispatchLoginRedirect([
-                    'deeplink' => 'true',
-                    'perspective' => $perspective,
-                ]);
-
                 return $this->render('@OpenDxpAdmin/admin/login/deeplink.html.twig', [
                     'tab' => $deeplink,
-                    'redirect' => $url,
+                    'redirect' => $this->dispatchLoginRedirect([
+                        'deeplink' => 'true',
+                        'perspective' => $perspective,
+                    ]),
                 ]);
             }
         }
@@ -324,29 +213,17 @@ class LoginController extends AdminAbstractController implements KernelControlle
         throw $this->createNotFoundException();
     }
 
-    /**
-     * @return array{config: Config, pluginCssPaths: string[]}
-     */
-    protected function buildLoginPageViewParams(Config $config): array
-    {
-        return [
-            'config' => $config,
-            'adminSettings' => AdminConfig::get(),
-            'pluginCssPaths' => $this->bundleManager->getCssPaths(),
-        ];
-    }
-
     #[Route('/login/2fa', name: 'opendxp_admin_2fa')]
-    public function twoFactorAuthenticationAction(Request $request, Config $config): Response
+    public function twoFactorAuthenticationAction(Request $request): Response
     {
-        $params = $this->buildLoginPageViewParams($config);
+        $params = $this->loginPageFactory->create($request)->base();
 
         if ($request->hasSession()) {
             $session = $request->getSession();
             $authException = $session->get(SecurityRequestAttributes::AUTHENTICATION_ERROR);
+
             if ($authException instanceof AuthenticationException) {
                 $session->remove(SecurityRequestAttributes::AUTHENTICATION_ERROR);
-
                 $params['error'] = $authException->getMessage();
             }
         } else {
@@ -359,85 +236,41 @@ class LoginController extends AdminAbstractController implements KernelControlle
     #[Route('/login/2fa-setup', name: 'opendxp_admin_2fa_setup')]
     public function twoFactorSetupAuthenticationAction(
         Request $request,
-        Config $config,
-        GoogleAuthenticatorInterface $twoFactor
+        GenerateTwoFactorSetupHandler $generateSetup,
+        SaveTwoFactorSetupHandler $saveSetup,
+        #[MapQueryParameter] ?string $error = null,
     ): Response {
-        $params = $this->buildLoginPageViewParams($config);
+        $params = $this->loginPageFactory->create($request)->base();
         $params['setup'] = true;
 
-        $user = $this->getAdminUser();
-        $proxyUser = $this->getAdminUser(true);
-
-        if ($request->query->get('error')) {
-            $params['error'] = $request->query->get('error');
+        if ($error) {
+            $params['error'] = $error;
         }
 
         if ($request->isMethod('post')) {
-            $secret = $request->getSession()->get('2fa_secret');
-
-            if (!$secret) {
-                throw new Exception('2fa secret not found');
-            }
-
-            $user->setTwoFactorAuthentication('enabled', true);
-            $user->setTwoFactorAuthentication('type', 'google');
-            $user->setTwoFactorAuthentication('secret', $secret);
-
-            if (!$twoFactor->checkCode($proxyUser, $request->request->get('_auth_code'))) {
+            try {
+                $saveSetup(
+                    secret: (string) $request->getSession()->get('2fa_secret'),
+                    authCode: (string) $request->request->get('_auth_code'),
+                );
+            } catch (\Throwable) {
                 return new RedirectResponse($this->generateUrl('opendxp_admin_2fa_setup', ['error' => '2fa_wrong']));
             }
-
-            $user->save();
 
             return new RedirectResponse($this->generateUrl('opendxp_admin_login'));
         }
 
-        $newSecret = $twoFactor->generateSecret();
-
-        $request->getSession()->set('2fa_secret', $newSecret);
-
-        $user->setTwoFactorAuthentication('enabled', true);
-        $user->setTwoFactorAuthentication('type', 'google');
-        $user->setTwoFactorAuthentication('secret', $newSecret);
-
-        $url = $twoFactor->getQRContent($proxyUser);
-
-        $result = Builder::create()
-            ->writer(new PngWriter())
-            ->data($url)
-            ->size(200)
-            ->build();
-
-        $params['image'] = $result->getDataUri();
+        $result = $generateSetup();
+        $request->getSession()->set('2fa_secret', $result->secret);
+        $params['image'] = $result->qrDataUri;
 
         return $this->render('@OpenDxpAdmin/admin/login/two_factor_setup.html.twig', $params);
     }
 
     #[Route('/login/2fa-verify', name: 'opendxp_admin_2fa-verify')]
-    public function twoFactorAuthenticationVerifyAction(Request $request): void
+    public function twoFactorAuthenticationVerifyAction(): void
     {
-    }
-
-    public function detectBrowser(): bool
-    {
-        $supported = false;
-        $browser = new Browser();
-        $browserVersion = (int)$browser->getVersion();
-
-        if ($browser->getBrowser() == Browser::BROWSER_FIREFOX && $browserVersion >= 72) {
-            $supported = true;
-        }
-        if ($browser->getBrowser() == Browser::BROWSER_CHROME && $browserVersion >= 84) {
-            $supported = true;
-        }
-        if ($browser->getBrowser() == Browser::BROWSER_SAFARI && $browserVersion >= 13.1) {
-            $supported = true;
-        }
-        if ($browser->getBrowser() == Browser::BROWSER_EDGE && $browserVersion >= 90) {
-            return true;
-        }
-
-        return $supported;
+        // handled by firewall
     }
 
     private function dispatchLoginRedirect(array $routeParams = []): string

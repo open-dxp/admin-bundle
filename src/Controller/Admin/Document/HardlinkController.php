@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -17,10 +18,14 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
-use OpenDxp\Model\Document;
-use OpenDxp\Model\Schedule\Task;
+use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\GetHardlinkDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlinkHandler;
+use OpenDxp\Bundle\AdminBundle\Payload\Document\HardlinkPayload;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -33,82 +38,34 @@ class HardlinkController extends DocumentControllerBase
      * @throws Exception
      */
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
-    public function getDataByIdAction(Request $request): JsonResponse
+    public function getDataByIdAction(
+        GetHardlinkDataHandler $handler,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse
     {
-        $link = Document\Hardlink::getById((int)$request->query->get('id'));
-
-        if (!$link) {
-            throw $this->createNotFoundException('Hardlink not found');
+        try {
+            $result = $handler($id);
+        } catch (ElementLockedException $e) {
+            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
 
-        if (($lock = $this->checkForLock($link, $request->getSession()->getId())) instanceof JsonResponse) {
-            return $lock;
-        }
-
-        $link = clone $link;
-        $link->setParent(null);
-
-        $data = $link->getObjectVars();
-        $data['locked'] = $link->isLocked();
-        $data['scheduledTasks'] = array_map(
-            static fn (Task $task) => $task->getObjectVars(),
-            $link->getScheduledTasks()
-        );
-
-        $this->addTranslationsData($link, $data);
-        $this->minimizeProperties($link, $data);
-        $this->populateUsersNames($link, $data);
-
-        if ($link->getSourceDocument()) {
-            $data['sourcePath'] = $link->getSourceDocument()->getRealFullPath();
-        }
-
-        return $this->preSendDataActions($data, $link);
+        return $this->preSendDataActions($result->data, $result->link);
     }
 
     /**
      * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
-    public function saveAction(Request $request): JsonResponse
+    public function saveAction(Request $request, SaveHardlinkHandler $handler): JsonResponse
     {
-        $link = Document\Hardlink::getById((int) $request->request->get('id'));
-        if (!$link) {
-            throw $this->createNotFoundException('Hardlink not found');
-        }
+        $result = $handler((int) $request->request->get('id'), HardlinkPayload::fromRequest($request));
 
-        $result = $this->saveDocument($link, $request);
-        /** @var Document\Hardlink $link */
-        $link = $result[1];
-        $treeData = $this->getTreeNodeConfig($link);
-
-        return $this->adminJson([
-            'success' => true,
+        return $this->adminJson(ApiResponse::ok([
             'data' => [
-                'versionDate' => $link->getModificationDate(),
-                'versionCount' => $link->getVersionCount(),
+                'versionDate' => $result->link->getModificationDate(),
+                'versionCount' => $result->link->getVersionCount(),
             ],
-            'treeData' => $treeData,
-        ]);
-    }
-
-    /**
-     * @param Document\Hardlink $document
-     */
-    protected function setValuesToDocument(Request $request, Document $document): void
-    {
-        if ($request->request->has('data')) {
-            $data = $this->decodeJson($request->request->get('data'));
-
-            $sourceId = null;
-            if ($sourceDocument = Document::getByPath($data['sourcePath'])) {
-                $sourceId = $sourceDocument->getId();
-            }
-            $document->setSourceId($sourceId);
-            $document->setValues($data);
-        }
-
-        $this->addPropertiesToDocument($request, $document);
-        $this->applySchedulerDataToElement($request, $document, $this->getAdminUser());
+            'treeData' => $result->treeData,
+        ]));
     }
 }

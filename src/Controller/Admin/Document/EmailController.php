@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * OpenDXP
@@ -14,13 +13,18 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
+declare(strict_types=1);
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
-use Exception;
-use OpenDxp\Model\Document;
-use OpenDxp\Model\Element;
+use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\GetEmailDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\SaveEmailHandler;
+use OpenDxp\Bundle\AdminBundle\Payload\Document\EmailPayload;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -29,89 +33,49 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/email', name: 'opendxp_admin_document_email_')]
 class EmailController extends DocumentControllerBase
 {
-    /**
-     * @throws Exception
-     */
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
-    public function getDataByIdAction(Request $request): JsonResponse
+    public function getDataByIdAction(
+        GetEmailDataHandler $handler,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse
     {
-        $email = Document\Email::getById((int)$request->query->get('id'));
-
-        if (!$email) {
-            throw $this->createNotFoundException('Email not found');
+        try {
+            $result = $handler($id);
+        } catch (ElementLockedException $e) {
+            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
 
-        if (($lock = $this->checkForLock($email, $request->getSession()->getId())) instanceof JsonResponse) {
-            return $lock;
-        }
-
-        $email = clone $email;
-        $draftVersion = null;
-        $email = $this->getLatestVersion($email, $draftVersion);
-
-        $versions = Element\Service::getSafeVersionInfo($email->getVersions());
-        $email->setVersions(array_splice($versions, -1, 1));
-        $email->setParent(null);
-
-        // unset useless data
-        $email->setEditables(null);
-        $email->setChildren(null);
-
-        $data = $email->getObjectVars();
-        $data['locked'] = $email->isLocked();
-
-        $this->addTranslationsData($email, $data);
-        $this->minimizeProperties($email, $data);
-        $this->populateUsersNames($email, $data);
-
-        $data['url'] = $email->getUrl();
-
-        return $this->preSendDataActions($data, $email, $draftVersion);
+        return $this->preSendDataActions($result->data, $result->email);
     }
 
-    /**
-     * @throws Exception
-     */
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
-    public function saveAction(Request $request): JsonResponse
+    public function saveAction(Request $request, SaveEmailHandler $handler): JsonResponse
     {
-        $page = Document\Email::getById((int) $request->request->get('id'));
-        if (!$page) {
-            throw $this->createNotFoundException('Email not found');
+        try {
+            $result = $handler((int) $request->request->get('id'), EmailPayload::fromRequest($request));
+        } catch (ElementLockedException $e) {
+            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
 
-        [$task, $page, $version] = $this->saveDocument($page, $request);
-        $this->saveToSession($page, $request->getSession());
-
-        if ($task === self::TASK_PUBLISH || $task === self::TASK_UNPUBLISH) {
-            $treeData = $this->getTreeNodeConfig($page);
-
-            return $this->adminJson([
-                'success' => true,
+        if ($result->task === self::TASK_PUBLISH || $result->task === self::TASK_UNPUBLISH) {
+            return $this->adminJson(ApiResponse::ok([
                 'data' => [
-                    'versionDate' => $page->getModificationDate(),
-                    'versionCount' => $page->getVersionCount(),
+                    'versionDate' => $result->email->getModificationDate(),
+                    'versionCount' => $result->email->getVersionCount(),
                 ],
-                'treeData' => $treeData,
-            ]);
+                'treeData' => $result->treeData,
+            ]));
         }
+
         $draftData = [];
-        if ($version) {
+        if ($result->version) {
             $draftData = [
-                'id' => $version->getId(),
-                'modificationDate' => $version->getDate(),
-                'isAutoSave' => $version->isAutoSave(),
+                'id' => $result->version->getId(),
+                'modificationDate' => $result->version->getDate(),
+                'isAutoSave' => $result->version->isAutoSave(),
             ];
         }
 
-        return $this->adminJson(['success' => true, 'draft' => $draftData]);
-    }
-
-    protected function setValuesToDocument(Request $request, Document $document): void
-    {
-        $this->addSettingsToDocument($request, $document);
-        $this->addDataToDocument($request, $document);
-        $this->addPropertiesToDocument($request, $document);
-        $this->applySchedulerDataToElement($request, $document, $this->getAdminUser());
+        return $this->adminJson(ApiResponse::ok(['draft' => $draftData]));
     }
 }

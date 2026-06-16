@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -17,9 +18,13 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
-use OpenDxp\Model\Document;
+use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\GetFolderDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\SaveFolderHandler;
+use OpenDxp\Bundle\AdminBundle\Payload\Document\FolderPayload;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -32,47 +37,23 @@ class FolderController extends DocumentControllerBase
      * @throws Exception
      */
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
-    public function getDataByIdAction(Request $request): JsonResponse
+    public function getDataByIdAction(
+        GetFolderDataHandler $handler,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse
     {
-        $folder = Document\Folder::getById((int)$request->query->get('id'));
-        if (!$folder) {
-            throw $this->createNotFoundException('Folder not found');
-        }
-
-        $folder = clone $folder;
-        $folder->setParent(null);
-
-        $data = $folder->getObjectVars();
-        $data['locked'] = $folder->isLocked();
-
-        $this->addTranslationsData($folder, $data);
-        $this->minimizeProperties($folder, $data);
-        $this->populateUsersNames($folder, $data);
-
-        return $this->preSendDataActions($data, $folder);
+        $result = $handler($id);
+        return $this->preSendDataActions($result->data, $result->folder);
     }
 
     /**
      * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
-    public function saveAction(Request $request): JsonResponse
+    public function saveAction(Request $request, SaveFolderHandler $handler): JsonResponse
     {
-        $folder = Document\Folder::getById((int) $request->request->get('id'));
-        if (!$folder) {
-            throw $this->createNotFoundException('Folder not found');
-        }
+        $result = $handler((int) $request->request->get('id'), FolderPayload::fromRequest($request));
 
-        $result = $this->saveDocument($folder, $request, false, self::TASK_PUBLISH);
-        /** @var Document\Folder $folder */
-        $folder = $result[1];
-        $treeData = $this->getTreeNodeConfig($folder);
-
-        return $this->adminJson(['success' => true, 'treeData' => $treeData]);
-    }
-
-    protected function setValuesToDocument(Request $request, Document $document): void
-    {
-        $this->addPropertiesToDocument($request, $document);
+        return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
     }
 }

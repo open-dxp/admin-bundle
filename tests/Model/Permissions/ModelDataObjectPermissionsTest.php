@@ -19,6 +19,9 @@ namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject\DataObjectController;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetChildrenByIdHandler;
+use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
 use OpenDxp\Tests\Support\Util\TestHelper;
@@ -216,18 +219,23 @@ class ModelDataObjectPermissionsTest extends AbstractPermissionTest
         User $user,
         ?array $expectedChildren
     ): void {
-        $controller = $this->buildController(DataObjectController::class, $user);
+        $elementService = $this->buildElementService($user);
+        $userContext = $this->buildUserContext($user);
+        $childrenHandler = new GetDataObjectChildrenHandler($userContext, $elementService);
+        $handler = new TreeGetChildrenByIdHandler($userContext, $elementService, $childrenHandler, new EventDispatcher());
 
-        $request = new Request([
-            'node' => $element->getId(),
+        $controller = $this->buildController(DataObjectController::class, $user, [
+            (new \ReflectionClass(SessionService::class))->newInstanceWithoutConstructor(),
         ]);
-        $eventDispatcher = new EventDispatcher();
+
+        $request = new Request(['node' => $element->getId()]);
 
         try {
             TestHelper::callMethod($controller, 'checkPermission', ['objects']);
             $responseData = $controller->treeGetChildrenByIdAction(
+                $handler,
                 $request,
-                $eventDispatcher
+                node: (int) $element->getId(),
             );
         } catch (Exception $e) {
             if (is_null($expectedChildren)) {

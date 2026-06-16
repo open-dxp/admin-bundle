@@ -19,28 +19,21 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\DataObjects;
-use OpenDxp\Controller\KernelControllerEventInterface;
+use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
  */
 #[Route('/data-object')]
-class DataObjectController extends AdminAbstractController implements KernelControllerEventInterface
+#[IsGranted(AdminPermission::GdprDataExtractor->value)]
+class DataObjectController extends AdminAbstractController
 {
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        $this->checkActionPermission($event, 'gdpr_data_extractor');
-    }
-
     #[Route('/search-data-objects', name: 'opendxp_admin_gdpr_dataobject_searchdataobjects', methods: ['GET'])]
     public function searchDataObjectsAction(Request $request, DataObjects $service): JsonResponse
     {
@@ -63,9 +56,12 @@ class DataObjectController extends AdminAbstractController implements KernelCont
      * @throws Exception
      */
     #[Route('/export', name: 'opendxp_admin_gdpr_dataobject_exportdataobject', methods: ['GET'])]
-    public function exportDataObjectAction(Request $request, DataObjects $service): JsonResponse
+    public function exportDataObjectAction(
+        DataObjects $service,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse
     {
-        $object = DataObject::getById((int) $request->query->get('id'));
+        $object = DataObject::getById($id);
 
         if (!$object) {
             throw $this->createNotFoundException('Object not found');

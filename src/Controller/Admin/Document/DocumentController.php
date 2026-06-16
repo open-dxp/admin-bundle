@@ -15,1355 +15,353 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
-use Exception;
-use Imagick;
-use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
-use OpenDxp\Bundle\AdminBundle\Controller\Traits\AdminStyleTrait;
-use OpenDxp\Bundle\AdminBundle\Controller\Traits\UserNameTrait;
-use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Bundle\AdminBundle\Event\ElementAdminStyleEvent;
-use OpenDxp\Bundle\AdminBundle\Event\SiteCustomSettingsEvent;
-use OpenDxp\Cache\RuntimeCache;
-use OpenDxp\Config;
-use OpenDxp\Controller\KernelControllerEventInterface;
-use OpenDxp\Db;
-use OpenDxp\Document\Renderer\DocumentRendererInterface;
-use OpenDxp\Event\Traits\RecursionBlockingEventDispatchHelperTrait;
-use OpenDxp\Image\HtmlToImage;
-use OpenDxp\Logger;
-use OpenDxp\Model\Document;
-use OpenDxp\Model\Document\DocType;
+use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
+use OpenDxp\Controller\Traits\ElementEditLockHelperTrait;
+use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocumentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\ConvertDocumentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\DeleteDocumentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentIdForPathHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocTypesByTypeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocTypesListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\ManageDocTypesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Site\GetSiteCustomSettingsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Site\RemoveSiteHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\AddDocumentTranslationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\CheckTranslationLanguageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\DetermineTranslationParentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRootHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\RemoveDocumentTranslationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateDocumentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateSiteHandler;
+use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Model\Element\ElementInterface;
-use OpenDxp\Model\Element\Service;
-use OpenDxp\Model\Exception\ConfigWriteException;
-use OpenDxp\Model\Site;
-use OpenDxp\Model\Version;
 use OpenDxp\Tool;
-use OpenDxp\Tool\Session;
 use Override;
-use RuntimeException;
-use Symfony\Component\EventDispatcher\GenericEvent;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\RouterInterface;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use function base64_encode;
-use function basename;
-use function date;
-use function file_exists;
-use function file_get_contents;
-use function file_put_contents;
-use function sprintf;
-use function uniqid;
-use function unlink;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
  */
 #[Route('/document')]
-class DocumentController extends ElementControllerBase implements KernelControllerEventInterface
+class DocumentController extends ElementControllerBase
 {
-    use AdminStyleTrait;
-    use UserNameTrait;
-    use RecursionBlockingEventDispatchHelperTrait;
+    use ElementEditLockHelperTrait;
 
-    protected Document\Service $_documentService;
+    public function __construct(
+        ElementServiceInterface $elementService,
+    ) {
+        parent::__construct($elementService);
+    }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Override]
     #[Route('/tree-get-root', name: 'opendxp_admin_document_document_treegetroot', methods: ['GET'])]
-    public function treeGetRootAction(Request $request): JsonResponse
-    {
-        return parent::treeGetRootAction($request);
+    public function treeGetRootAction(
+        #[MapQueryParameter] ?string $elementType = null,
+        #[MapQueryParameter(flags: \FILTER_NULL_ON_FAILURE)] ?int $id = null,
+    ): JsonResponse {
+        return parent::treeGetRootAction($elementType, $id);
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Override]
     #[Route('/delete-info', name: 'opendxp_admin_document_document_deleteinfo', methods: ['GET'])]
-    public function deleteInfoAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
-    {
-        return parent::deleteInfoAction($request, $eventDispatcher);
+    public function deleteInfoAction(
+        GetDeleteInfoHandler $handler,
+        Request $request,
+        #[MapQueryParameter] ?string $id = null,
+        #[MapQueryParameter] ?string $type = null,
+    ): JsonResponse {
+        return parent::deleteInfoAction($handler, $request, $id, $type);
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/get-data-by-id', name: 'opendxp_admin_document_document_getdatabyid', methods: ['GET'])]
-    public function getDataByIdAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
+    public function getDataByIdAction(
+        GetDocumentDataHandler $handler,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse
     {
-        $document = Document::getById((int) $request->query->get('id'));
-
-        if (!$document) {
-            throw $this->createNotFoundException('Document not found');
+        try {
+            $result = $handler($id);
+        } catch (ElementLockedException $e) {
+            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
 
-        $document = clone $document;
-        $data = $document->getObjectVars();
-        $data['versionDate'] = $document->getModificationDate();
-
-        $userOwnerName = $this->getUserName($document->getUserOwner());
-        $userModificationName = ($document->getUserOwner() === $document->getUserModification()) ? $userOwnerName : $this->getUserName($document->getUserModification());
-        $data['userOwnerUsername'] = $userOwnerName['userName'];
-        $data['userOwnerFullname'] = $userOwnerName['fullName'];
-        $data['userModificationUsername'] = $userModificationName['userName'];
-        $data['userModificationFullname'] = $userModificationName['fullName'];
-
-        $data['php'] = [
-            'classes' => [$document::class, ...array_values(class_parents($document))],
-            'interfaces' => array_values(class_implements($document)),
-        ];
-
-        $this->addAdminStyle($document, ElementAdminStyleEvent::CONTEXT_EDITOR, $data);
-
-        $event = new GenericEvent($this, [
-            'data' => $data,
-            'document' => $document,
-        ]);
-        $eventDispatcher->dispatch($event, AdminEvents::DOCUMENT_GET_PRE_SEND_DATA);
-        $data = $event->getArgument('data');
-
-        if ($document->isAllowed('view')) {
-            return $this->adminJson($data);
-        }
-
-        throw $this->createAccessDeniedHttpException();
+        return $this->adminJson($result->data);
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_document_document_treegetchildrenbyid', methods: ['GET'])]
-    public function treeGetChildrenByIdAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
+    public function treeGetChildrenByIdAction(
+        TreeGetDocumentChildrenHandler $handler,
+        Request $request,
+        #[MapQueryParameter] int $inSearch = 0,
+    ): JsonResponse
     {
-        $allParams = $request->query->all();
+        $result = $handler($request->query->all());
 
-        $filter = $request->query->get('filter');
-        $limit = (int)($allParams['limit'] ?? 100000000);
-        $offset = (int)($allParams['start'] ?? 0);
-
-        if (!is_null($filter)) {
-            if (!str_ends_with($filter, '*')) {
-                $filter .= '*';
-            }
-            $filter = str_replace('*', '%', $filter);
-            $limit = 100;
-            $offset = 0;
-        }
-
-        $document = Document::getById((int) $allParams['node']);
-        if (!$document) {
-            throw $this->createNotFoundException('Document was not found');
-        }
-
-        $documents = [];
-        $cv = [];
-        if ($document->hasChildren()) {
-            if ($allParams['view']) {
-                $cv = $this->elementService->getCustomViewById($allParams['view']);
-            }
-
-            $db = Db::get();
-
-            $list = new Document\Listing();
-
-            $condition = 'parentId =  ' . $db->quote($document->getId());
-
-            if (!$this->getAdminUser()->isAdmin()) {
-                $userIds = $this->getAdminUser()->getRoles();
-                $currentUserId = $this->getAdminUser()->getId();
-                $userIds[] = $currentUserId;
-
-                $inheritedPermission = $document->getDao()->isInheritingPermission('list', $userIds);
-
-                $anyAllowedRowOrChildren = 'EXISTS(SELECT list FROM users_workspaces_document uwd WHERE userId IN (' . implode(',', $userIds) . ') AND list=1 AND LOCATE(CONCAT(`path`,`key`),cpath)=1 AND
-                NOT EXISTS(SELECT list FROM users_workspaces_document WHERE userId =' . $currentUserId . '  AND list=0 AND cpath = uwd.cpath))';
-                $isDisallowedCurrentRow = 'EXISTS(SELECT list FROM users_workspaces_document WHERE userId IN (' . implode(',', $userIds) . ')  AND cid = id AND list=0)';
-
-                $condition .= ' AND IF(' . $anyAllowedRowOrChildren . ',1,IF(' . $inheritedPermission . ', ' . $isDisallowedCurrentRow . ' = 0, 0)) = 1';
-            }
-
-            if ($filter) {
-                $condition = '(' . $condition . ')' . ' AND CAST(documents.key AS CHAR CHARACTER SET utf8) COLLATE utf8_general_ci LIKE ' . $db->quote($filter);
-            }
-
-            $list->setCondition($condition);
-
-            $list->setOrderKey(['index', 'id']);
-            $list->setOrder(['asc', 'asc']);
-
-            $list->setLimit($limit);
-            $list->setOffset($offset);
-
-            Service::addTreeFilterJoins($cv, $list);
-
-            $beforeListLoadEvent = new GenericEvent($this, [
-                'list' => $list,
-                'context' => $allParams,
-            ]);
-
-            $eventDispatcher->dispatch($beforeListLoadEvent, AdminEvents::DOCUMENT_LIST_BEFORE_LIST_LOAD);
-            /** @var Document\Listing $list */
-            $list = $beforeListLoadEvent->getArgument('list');
-
-            $childrenList = $list->load();
-
-            foreach ($childrenList as $childDocument) {
-                $documentTreeNode = $this->elementService->getElementTreeNodeConfig($childDocument);
-                // the !isset is for printContainer case, there are no permissions sets there
-                if (!isset($documentTreeNode['permissions']['list']) || $documentTreeNode['permissions']['list'] == 1) {
-                    $documents[] = $documentTreeNode;
-                }
-            }
-        }
-
-        //Hook for modifying return value - e.g. for changing permissions based on document data
-        $event = new GenericEvent($this, [
-            'documents' => $documents,
-        ]);
-
-        $eventDispatcher->dispatch($event, AdminEvents::DOCUMENT_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA);
-        $documents = $event->getArgument('documents');
-
-        if ($allParams['limit']) {
+        if ($result->paginated) {
             return $this->adminJson([
-                'offset' => $offset,
-                'limit' => $limit,
-                'total' => $document->getChildAmount($this->getAdminUser()),
-                'nodes' => $documents,
-                'filter' => $request->query->get('filter') ?: '',
-                'inSearch' => (int)$request->query->get('inSearch'),
+                'offset' => $result->offset,
+                'limit' => $result->limit,
+                'total' => $result->total,
+                'nodes' => $result->documents,
+                'filter' => $result->filter ?: '',
+                'inSearch' => $inSearch,
             ]);
         }
 
-        return $this->adminJson($documents);
+        return $this->adminJson($result->documents);
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/add', name: 'opendxp_admin_document_document_add', methods: ['POST'])]
-    public function addAction(Request $request): JsonResponse
+    public function addAction(Request $request, AddDocumentHandler $handler): JsonResponse
     {
-        $success = false;
-        $errorMessage = '';
+        $result = $handler(
+            parentId: $request->request->getInt('parentId'),
+            type: $request->request->getString('type'),
+            key: $request->request->getString('key'),
+            docTypeId: $request->request->get('docTypeId'),
+            translationsBaseDocumentId: $request->request->get('translationsBaseDocument'),
+            language: $request->request->get('language'),
+            inheritanceSource: $request->request->has('inheritanceSource') ? $request->request->get('inheritanceSource') : null,
+            title: $request->request->get('title'),
+            name: $request->request->get('name'),
+        );
 
-        // check for permission
-        $parentDocument = Document::getById($request->request->getInt('parentId'));
-        $document = null;
-        if ($parentDocument->isAllowed('create')) {
-            $intendedPath = $parentDocument->getRealFullPath() . '/' . $request->request->get('key');
-
-            if (!Document\Service::pathExists($intendedPath)) {
-                $createValues = [
-                    'userOwner' => $this->getAdminUser()->getId(),
-                    'userModification' => $this->getAdminUser()->getId(),
-                    'published' => false,
-                ];
-
-                $createValues['key'] = Service::getValidKey($request->request->get('key'), 'document');
-
-                // check for a docType
-                $docType = Document\DocType::getById($request->request->get('docTypeId', ''));
-
-                if ($docType) {
-                    $createValues['template'] = $docType->getTemplate();
-                    $createValues['controller'] = $docType->getController();
-                    $createValues['staticGeneratorEnabled'] = $docType->getStaticGeneratorEnabled();
-                } elseif ($translationsBaseDocumentId = $request->request->get('translationsBaseDocument')) {
-                    $translationsBaseDocument = Document::getById((int) $translationsBaseDocumentId);
-                    if ($translationsBaseDocument instanceof Document\PageSnippet) {
-                        $createValues['template'] = $translationsBaseDocument->getTemplate();
-                        $createValues['controller'] = $translationsBaseDocument->getController();
-                    }
-                } elseif (in_array($request->request->get('type'), ['page', 'snippet', 'email'])) {
-                    $createValues['controller'] = $this->getParameter('opendxp.documents.default_controller');
-                }
-
-                if ($request->request->has('inheritanceSource')) {
-                    $createValues['contentMainDocumentId'] = $request->request->get('inheritanceSource');
-                }
-
-                switch ($request->request->get('type')) {
-                    case 'page':
-                        $document = Document\Page::create($parentDocument->getId(), $createValues, false);
-                        $document->setTitle($request->request->get('title'));
-                        $document->setProperty('navigation_name', 'text', $request->request->get('name'), false, false);
-                        $document->save();
-                        $success = true;
-
-                        break;
-                    case 'snippet':
-                        $document = Document\Snippet::create($parentDocument->getId(), $createValues);
-                        $success = true;
-
-                        break;
-                    case 'email': //ckogler
-                        $document = Document\Email::create($parentDocument->getId(), $createValues);
-                        $success = true;
-
-                        break;
-                    case 'link':
-                        $document = Document\Link::create($parentDocument->getId(), $createValues);
-                        $success = true;
-
-                        break;
-                    case 'hardlink':
-                        $document = Document\Hardlink::create($parentDocument->getId(), $createValues);
-                        $success = true;
-
-                        break;
-                    case 'folder':
-                        $document = Document\Folder::create($parentDocument->getId(), $createValues);
-                        $document->setPublished(true);
-
-                        try {
-                            $document->save();
-                            $success = true;
-                        } catch (Exception $e) {
-                            return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-                        }
-
-                        break;
-                    default:
-                        $classname = OpenDxp::getContainer()->get('opendxp.class.resolver.document')->resolve($request->request->get('type'));
-
-                        if (Tool::classExists($classname)) {
-                            $document = $classname::create($parentDocument->getId(), $createValues);
-
-                            try {
-                                $document->save();
-                                $success = true;
-                            } catch (Exception $e) {
-                                return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-                            }
-
-                            break;
-                        }
-
-                        Logger::debug("Unknown document type, can't add [ " . $request->request->get('type') . ' ] ');
-
-                        break;
-                }
-            } else {
-                $errorMessage = "prevented adding a document because document with same path+key [ $intendedPath ] already exists";
-                Logger::debug($errorMessage);
-            }
-        } else {
-            $errorMessage = 'prevented adding a document because of missing permissions';
-            Logger::debug($errorMessage);
-        }
-
-        if ($success && $document instanceof Document) {
-            if ($translationsBaseDocumentId = $request->request->get('translationsBaseDocument')) {
-                $translationsBaseDocument = Document::getById((int) $translationsBaseDocumentId);
-
-                $properties = $translationsBaseDocument->getProperties();
-                $properties = [...$properties, ...$document->getProperties()];
-                $document->setProperties($properties);
-                $document->setProperty('language', 'text', $request->request->get('language'), false, true);
-                $document->save();
-
-                $service = new Document\Service();
-                $service->addTranslation($translationsBaseDocument, $document);
-            }
-
-            return $this->adminJson([
-                'success' => $success,
-                'id' => $document->getId(),
-                'type' => $document->getType(),
-            ]);
-        }
-
-        return $this->adminJson([
-            'success' => $success,
-            'message' => $errorMessage,
-        ]);
+        return $this->adminJson(ApiResponse::ok([
+            'id' => $result->document->getId(),
+            'type' => $result->document->getType(),
+        ]));
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/delete', name: 'opendxp_admin_document_document_delete', methods: ['DELETE'])]
-    public function deleteAction(Request $request): JsonResponse
+    public function deleteAction(Request $request, DeleteDocumentHandler $handler): JsonResponse
     {
-        $type = $request->request->get('type');
+        $type = $request->request->getString('type');
+        $id = $request->request->getInt('id');
+        $amount = $request->request->getInt('amount');
+
+        $result = $handler($type, $id, $amount);
 
         if ($type === 'children') {
-            $parentDocument = Document::getById((int) $request->request->get('id'));
-
-            $list = new Document\Listing();
-            $list->setCondition('`path` LIKE ?', [$list->escapeLike($parentDocument->getRealFullPath()) . '/%']);
-            $list->setLimit((int)$request->request->get('amount'));
-            $list->setOrderKey('LENGTH(`path`)', false);
-            $list->setOrder('DESC');
-
-            $documents = $list->load();
-
-            $deletedItems = [];
-            foreach ($documents as $document) {
-                $deletedItems[$document->getId()] = $document->getRealFullPath();
-                if ($document->isAllowed('delete') && !$document->isLocked()) {
-                    $document->delete();
-                }
-            }
-
-            return $this->adminJson(['success' => true, 'deleted' => $deletedItems]);
+            return $this->adminJson(ApiResponse::ok(['deleted' => $result->deleted]));
         }
 
-        if ($id = $request->request->get('id')) {
-            $document = Document::getById((int) $id);
-            if ($document && $document->isAllowed('delete')) {
-                try {
-                    if ($document->isLocked()) {
-                        throw new Exception('prevented deleting document, because it is locked: ID: ' . $document->getId());
-                    }
-                    $document->delete();
-
-                    return $this->adminJson(['success' => true]);
-                } catch (Exception $e) {
-                    Logger::err((string) $e);
-
-                    return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-                }
-            }
-        }
-
-        throw $this->createAccessDeniedHttpException();
+        return $this->adminJson(ApiResponse::ok());
     }
 
-    /**
-     * @throws Exception
-     * @throws RuntimeException
-     */
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/update', name: 'opendxp_admin_document_document_update', methods: ['PUT'])]
-    public function updateAction(Request $request): JsonResponse
+    public function updateAction(Request $request, UpdateDocumentHandler $handler): JsonResponse
     {
-        $data = ['success' => false];
-        $allowUpdate = true;
+        $updateData = [...$request->request->all(), ...$request->query->all()];
 
-        $document = Document::getById((int) $request->request->get('id'));
+        $result = $handler((int) $request->request->get('id'), $updateData);
 
-        $oldPath = $document->getDao()->getCurrentFullPath();
-        $oldDocument = Document::getById($document->getId(), ['force' => true]);
-
-        // this prevents the user from renaming, relocating (actions in the tree) if the newest version isn't published
-        // the reason is that otherwise the content of the newer not published version will be overwritten
-        if ($document instanceof Document\PageSnippet) {
-            $latestVersion = $document->getLatestVersion();
-            if ($latestVersion &&
-                $latestVersion->getData()->getModificationDate() != $document->getModificationDate()
-            ) {
-                return $this->adminJson(
-                    [
-                        'success' => false,
-                        'message' => "You can't rename or relocate if there's a newer not published version",
-                    ]);
-            }
-        }
-
-        if ($document->isAllowed('settings')) {
-            // if the position is changed the path must be changed || also from the children
-            if ($parentId = $request->request->get('parentId')) {
-                $parentDocument = Document::getById((int) $parentId);
-
-                //check if parent is changed
-                if ($document->getParentId() !== $parentDocument->getId()) {
-                    if (!$parentDocument->isAllowed('create')) {
-                        throw new RuntimeException('Prevented moving document - no create permission on new parent.');
-                    }
-
-                    $intendedPath = $parentDocument->getRealPath();
-                    $pKey = $parentDocument->getKey();
-                    if (!empty($pKey)) {
-                        $intendedPath .= $parentDocument->getKey() . '/';
-                    }
-
-                    $documentWithSamePath = Document::getByPath($intendedPath . $document->getKey());
-
-                    if ($documentWithSamePath != null) {
-                        $allowUpdate = false;
-                    }
-
-                    if ($document->isLocked()) {
-                        $allowUpdate = false;
-                    }
-                }
-            }
-
-            if ($allowUpdate) {
-                $blockedVars = ['id', 'controller', 'action', 'module'];
-
-                if (!$document->isAllowed('rename') && $request->request->get('key')) {
-                    $blockedVars[] = 'key';
-                    Logger::debug('prevented renaming document because of missing permissions ');
-                }
-
-                $updateData = [...$request->request->all(), ...$request->query->all()];
-
-                foreach ($updateData as $key => $value) {
-                    if (!in_array($key, $blockedVars)) {
-                        $document->setValue($key, $value);
-                    }
-                }
-
-                $document->setUserModification($this->getAdminUser()->getId());
-
-                try {
-                    $document->save();
-
-                    if ($request->request->get('index') !== null) {
-                        $this->updateIndexesOfDocumentSiblings($document, $request->request->get('index'));
-                    }
-
-                    $data = [
-                        'success' => true,
-                        'treeData' => $this->getTreeNodeConfig($document),
-                    ];
-                    if ($oldPath && $oldPath != $document->getRealFullPath()) {
-                        $this->firePostMoveEvent($document, $oldDocument, $oldPath);
-                    }
-                } catch (Exception $e) {
-                    return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-                }
-            } else {
-                $msg = 'prevented moving document, because document with same path+key already exists' .
-                    ' or the document is locked. ID: ' . $document->getId();
-                Logger::debug($msg);
-
-                return $this->adminJson(['success' => false, 'message' => $msg]);
-            }
-        } elseif ($document->isAllowed('rename') && $request->request->get('key')) {
-            //just rename
-            try {
-                $document->setKey($request->request->get('key'));
-                $document->setUserModification($this->getAdminUser()->getId());
-                $document->save();
-                $data = [
-                    'success' => true,
-                    'treeData' => $this->getTreeNodeConfig($document),
-                ];
-
-                if ($oldPath && $oldPath != $document->getRealFullPath()) {
-                    $this->firePostMoveEvent($document, $oldDocument, $oldPath);
-                }
-            } catch (Exception $e) {
-                return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-            }
-        } else {
-            Logger::debug('Prevented update document, because of missing permissions.');
-        }
-
-        return $this->adminJson($data);
-    }
-
-    private function firePostMoveEvent(Document $document, Document $oldDocument, string $oldPath): void
-    {
-        $arguments = [
-            'oldPath' => $oldPath,
-            'oldDocument' => $oldDocument,
-        ];
-        $documentEvent = new OpenDxp\Event\Model\DocumentEvent($document, $arguments);
-        $this->dispatchEvent($documentEvent, OpenDxp\Event\DocumentEvents::POST_MOVE_ACTION);
-    }
-
-    protected function updateIndexesOfDocumentSiblings(Document $document, int $newIndex): void
-    {
-        $updateLatestVersionIndex = function ($document, $newIndex): void {
-            if ($document instanceof Document\PageSnippet && $latestVersion = $document->getLatestVersion()) {
-                $document = $latestVersion->loadData();
-                $document->setIndex($newIndex);
-                $latestVersion->save();
-            }
-        };
-
-        // if changed the index change also all documents on the same level
-
-        $document->saveIndex($newIndex);
-
-        $list = new Document\Listing();
-        $list->setCondition('parentId = ? AND id != ?', [$document->getParentId(), $document->getId()]);
-        $list->setOrderKey('index');
-        $list->setOrder('asc');
-        $childrenList = $list->load();
-
-        $count = 0;
-        foreach ($childrenList as $child) {
-            if ($count === $newIndex) {
-                $count++;
-            }
-            $child->saveIndex($count);
-            $updateLatestVersionIndex($child, $count);
-            $count++;
-        }
+        return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
     }
 
     #[Route('/doc-types', name: 'opendxp_admin_document_document_doctypesget', methods: ['GET'])]
-    public function docTypesGetAction(Request $request): JsonResponse
+    public function docTypesGetAction(GetDocTypesListHandler $getDocTypesList): JsonResponse
     {
-        // get list of types
-        $list = new DocType\Listing();
+        $result = $getDocTypesList();
 
-        $docTypes = [];
-        foreach ($list->getDocTypes() as $type) {
-            if ($this->getAdminUser()->isAllowed($type->getId(), 'docType')) {
-                $data = $type->getObjectVars();
-                $data['writeable'] = $type->isWriteable();
-                $docTypes[] = $data;
-            }
-        }
-
-        return $this->adminJson(['data' => $docTypes, 'success' => true, 'total' => count($docTypes)]);
+        return $this->adminJson(ApiResponse::ok(['data' => $result->docTypes, 'total' => $result->total]));
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
+    #[IsGranted(CorePermission::DocumentTypes->value)]
     #[Route('/doc-types', name: 'opendxp_admin_document_document_doctypes', methods: ['PUT', 'POST', 'DELETE'])]
-    public function docTypesAction(Request $request): JsonResponse
+    public function docTypesAction(
+        Request $request,
+        ManageDocTypesHandler $handler,
+        #[MapQueryParameter] ?string $xaction = null,
+    ): JsonResponse
     {
         if ($request->request->get('data')) {
-            $this->checkPermission('document_types');
-
             $data = $this->decodeJson($request->request->get('data'));
-            if ($request->query->get('xaction') === 'destroy') {
-                $type = Document\DocType::getById($data['id']);
-                if (!$type->isWriteable()) {
-                    throw new ConfigWriteException();
-                }
-                $type->delete();
+            $result = $handler($xaction, $data);
 
-                return $this->adminJson(['success' => true, 'data' => []]);
-            }
-            if ($request->query->get('xaction') === 'update') {
-                // save type
-                $type = Document\DocType::getById($data['id']);
-                if (!$type->isWriteable()) {
-                    throw new ConfigWriteException();
-                }
-                $type->setValues($data);
-                $type->save();
-                $responseData = $type->getObjectVars();
-                $responseData['writeable'] = $type->isWriteable();
-
-                return $this->adminJson(['data' => $responseData, 'success' => true]);
-            }
-
-            if ($request->query->get('xaction') === 'create') {
-                if (!(new DocType())->isWriteable()) {
-                    throw new ConfigWriteException();
-                }
-                unset($data['id']);
-                // save type
-                $type = Document\DocType::create();
-                $type->setValues($data);
-                $type->save();
-                $responseData = $type->getObjectVars();
-                $responseData['writeable'] = $type->isWriteable();
-
-                return $this->adminJson(['data' => $responseData, 'success' => true]);
-            }
+            return $this->adminJson(ApiResponse::ok(['data' => $result->data]));
         }
 
         return $this->adminJson(false);
     }
 
-    /**
-     * @throws BadRequestHttpException If type is invalid
-     */
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/get-doc-types', name: 'opendxp_admin_document_document_getdoctypes', methods: ['GET'])]
-    public function getDocTypesAction(Request $request): JsonResponse
+    public function getDocTypesAction(
+        GetDocTypesByTypeHandler $getDocTypesByType,
+        #[MapQueryParameter] ?string $type = null,
+    ): JsonResponse
     {
-        $list = new DocType\Listing();
-        if ($type = $request->query->get('type')) {
-            if (!Document\Service::isValidType($type)) {
-                throw new BadRequestHttpException('Invalid type: ' . $type);
-            }
-            $list->setFilter(static fn (DocType $docType) => $docType->getType() === $type);
-        }
+        $result = $getDocTypesByType($type);
 
-        $docTypes = [];
-        foreach ($list->getDocTypes() as $type) {
-            $docTypes[] = $type->getObjectVars();
-        }
-
-        return $this->adminJson(['docTypes' => $docTypes]);
+        return $this->adminJson(['docTypes' => $result->docTypes]);
     }
 
-    #[Route('/version-to-session', name: 'opendxp_admin_document_document_versiontosession', methods: ['POST'])]
-    public function versionToSessionAction(Request $request): Response
-    {
-        $id = $request->request->getInt('id');
-        $version = Version::getById($id);
-        $document = $version?->loadData();
-        if (!$document) {
-            throw $this->createNotFoundException('Version with id [' . $id . "] doesn't exist");
-        }
-        Document\Service::saveElementToSession($document, $request->getSession()->getId());
-
-        return new Response();
-    }
-
-    #[Route('/publish-version', name: 'opendxp_admin_document_document_publishversion', methods: ['POST'])]
-    public function publishVersionAction(Request $request): JsonResponse
-    {
-        $this->versionToSessionAction($request);
-
-        $id = $request->request->getInt('id');
-        $version = Version::getById($id);
-        $document = $version?->loadData();
-        if (!$document) {
-            throw $this->createNotFoundException('Version with id [' . $id . "] doesn't exist");
-        }
-
-        $currentDocument = Document::getById($document->getId());
-        if ($currentDocument->isAllowed('publish')) {
-            $document->setPublished(true);
-
-            try {
-                $document->setKey($currentDocument->getKey());
-                $document->setPath($currentDocument->getRealPath());
-                $document->setUserModification($this->getAdminUser()->getId());
-
-                $document->save();
-            } catch (Exception $e) {
-                return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-            }
-        }
-
-        $treeData = [];
-        $this->addAdminStyle($document, ElementAdminStyleEvent::CONTEXT_EDITOR, $treeData);
-
-        return $this->adminJson(['success' => true, 'treeData' => $treeData]);
-    }
-
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/get-site-custom-settings', name: 'opendxp_admin_document_document_get_site_custom_settings', methods: ['POST'])]
-    public function getSiteCustomSettingsAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
+    public function getSiteCustomSettingsAction(Request $request, GetSiteCustomSettingsHandler $getSiteCustomSettings): JsonResponse
     {
-        $site = Site::getById($request->request->getInt('id'));
+        $result = $getSiteCustomSettings($request->request->getInt('id'));
 
-        $event = new SiteCustomSettingsEvent($site);
-        $eventDispatcher->dispatch($event, AdminEvents::SITE_CUSTOM_SETTINGS);
-
-        $customSettings = $event->getConfigNodes();
-
-        return $this->adminJson([
-            'data' => $customSettings,
-        ]);
+        return $this->adminJson(['data' => $result->nodes]);
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/update-site', name: 'opendxp_admin_document_document_updatesite', methods: ['PUT'])]
-    public function updateSiteAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
+    public function updateSiteAction(Request $request, UpdateSiteHandler $handler): JsonResponse
     {
         $domains = $request->request->getString('domains');
         $domains = str_replace(' ', '', $domains);
         $domains = $domains ? explode("\n", $domains) : [];
 
-        if (!$site = Site::getByRootId($request->request->getInt('id'))) {
-            $site = Site::create([
-                'rootId' => $request->request->getInt('id'),
-            ]);
-        }
-
         $localizedErrorDocuments = [];
-        $validLanguages = Tool::getValidLanguages();
-
-        foreach ($validLanguages as $language) {
-            // localized error pages
+        foreach (Tool::getValidLanguages() as $language) {
             $requestValue = $request->request->get(sprintf('errorDocument_localized_%s', $language));
-
             if (isset($requestValue)) {
                 $localizedErrorDocuments[$language] = $requestValue;
             }
         }
 
-        $event = new SiteCustomSettingsEvent($site);
-        $eventDispatcher->dispatch($event, AdminEvents::SITE_CUSTOM_SETTINGS);
+        $result = $handler(
+            rootId: $request->request->getInt('id'),
+            domains: $domains,
+            mainDomain: $request->request->getString('mainDomain'),
+            errorDocument: $request->request->getString('errorDocument'),
+            localizedErrorDocuments: $localizedErrorDocuments,
+            redirectToMainDomain: $request->request->getBoolean('redirectToMainDomain'),
+            requestCustomSettings: $request->request->all(),
+        );
 
-        $customSettings = [];
-        foreach ($event->getConfigNodes() as $scope => $nodes) {
-            foreach ($nodes as $node) {
-                $requestValueName = sprintf('customSettings_%s_%s', $scope, $node['name']);
-                if ($request->request->has($requestValueName)) {
-                    $value = $request->request->get($requestValueName);
-                    if ($node['type'] === OpenDxp\Bundle\AdminBundle\Enum\SiteCustomConfigNodeType::CHECKBOX->value) {
-                        $value = $value === 'true';
-                    }
-
-                    $customSettings[$scope][$node['name']] = $value;
-                }
-            }
-        }
-
-        $site->setDomains($domains);
-        $site->setMainDomain($request->request->getString('mainDomain'));
-        $site->setErrorDocument($request->request->getString('errorDocument'));
-        $site->setLocalizedErrorDocuments($localizedErrorDocuments);
-        $site->setRedirectToMainDomain($request->request->getBoolean('redirectToMainDomain'));
-        $site->setCustomSettings(count($customSettings) === 0 ? null : $customSettings);
-        $site->save();
-
-        $site->setRootDocument(null); // do not send the document to the frontend
-
-        return $this->adminJson($site->getObjectVars());
+        return $this->adminJson($result->siteVars);
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/remove-site', name: 'opendxp_admin_document_document_removesite', methods: ['DELETE'])]
-    public function removeSiteAction(Request $request): JsonResponse
+    public function removeSiteAction(Request $request, RemoveSiteHandler $removeSite): JsonResponse
     {
-        $site = Site::getByRootId($request->request->getInt('id'));
-        $site->delete();
+        $removeSite($request->request->getInt('id'));
 
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
-    #[Route('/copy-info', name: 'opendxp_admin_document_document_copyinfo', methods: ['GET'])]
-    public function copyInfoAction(Request $request): JsonResponse
-    {
-        $transactionId = time();
-        $pasteJobs = [];
-
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId): void {
-            $session->set((string) $transactionId, ['idMapping' => []]);
-        }, 'opendxp_copy');
-
-        if ($request->query->get('type') === 'recursive' || $request->query->get('type') === 'recursive-update-references') {
-            $document = Document::getById((int) $request->query->get('sourceId'));
-
-            // first of all the new parent
-            $pasteJobs[] = [[
-                'url' => $this->generateUrl('opendxp_admin_document_document_copy'),
-                'method' => 'POST',
-                'params' => [
-                    'sourceId' => $request->query->get('sourceId'),
-                    'targetId' => $request->query->get('targetId'),
-                    'type' => 'child',
-                    'language' => $request->query->get('language'),
-                    'enableInheritance' => $request->query->get('enableInheritance'),
-                    'transactionId' => $transactionId,
-                    'saveParentId' => true,
-                    'resetIndex' => true,
-                ],
-            ]];
-
-            $childIds = [];
-            if ($document->hasChildren()) {
-                // get amount of children
-                $list = new Document\Listing();
-                $list->setCondition('`path` LIKE ?', [$list->escapeLike($document->getRealFullPath()) . '/%']);
-                $list->setOrderKey('LENGTH(`path`)', false);
-                $list->setOrder('ASC');
-                $childIds = $list->loadIdList();
-
-                if (count($childIds) > 0) {
-                    foreach ($childIds as $id) {
-                        $pasteJobs[] = [[
-                            'url' => $this->generateUrl('opendxp_admin_document_document_copy'),
-                            'method' => 'POST',
-                            'params' => [
-                                'sourceId' => $id,
-                                'targetParentId' => $request->query->get('targetId'),
-                                'sourceParentId' => $request->query->get('sourceId'),
-                                'type' => 'child',
-                                'language' => $request->query->get('language'),
-                                'enableInheritance' => $request->query->get('enableInheritance'),
-                                'transactionId' => $transactionId,
-                            ],
-                        ]];
-                    }
-                }
-            }
-
-            // add id-rewrite steps
-            if ($request->query->get('type') === 'recursive-update-references') {
-                for ($i = 0; $i < (count($childIds) + 1); $i++) {
-                    $pasteJobs[] = [[
-                        'url' => $this->generateUrl('opendxp_admin_document_document_copyrewriteids'),
-                        'method' => 'PUT',
-                        'params' => [
-                            'transactionId' => $transactionId,
-                            'enableInheritance' => $request->query->get('enableInheritance'),
-                            '_dc' => uniqid('', false),
-                        ],
-                    ]];
-                }
-            }
-        } elseif ($request->query->get('type') === 'child' || $request->query->get('type') === 'replace') {
-            // the object itself is the last one
-            $pasteJobs[] = [[
-                'url' => $this->generateUrl('opendxp_admin_document_document_copy'),
-                'method' => 'POST',
-                'params' => [
-                    'sourceId' => $request->query->get('sourceId'),
-                    'targetId' => $request->query->get('targetId'),
-                    'type' => $request->query->get('type'),
-                    'language' => $request->query->get('language'),
-                    'enableInheritance' => $request->query->get('enableInheritance'),
-                    'transactionId' => $transactionId,
-                    'resetIndex' => ($request->query->get('type') === 'child'),
-                ],
-            ]];
-        }
-
-        return $this->adminJson([
-            'pastejobs' => $pasteJobs,
-        ]);
-    }
-
-    #[Route('/copy-rewrite-ids', name: 'opendxp_admin_document_document_copyrewriteids', methods: ['PUT'])]
-    public function copyRewriteIdsAction(Request $request): JsonResponse
-    {
-        $transactionId = $request->request->get('transactionId');
-
-        $idStore = Session::useBag($request->getSession(), static fn (AttributeBagInterface $session) => $session->get($transactionId), 'opendxp_copy');
-
-        if (!array_key_exists('rewrite-stack', $idStore)) {
-            $idStore['rewrite-stack'] = array_values($idStore['idMapping']);
-        }
-
-        $id = array_shift($idStore['rewrite-stack']);
-        $document = Document::getById((int) $id);
-
-        if ($document) {
-            // create rewriteIds() config parameter
-            $rewriteConfig = ['document' => $idStore['idMapping']];
-
-            $document = Document\Service::rewriteIds($document, $rewriteConfig, [
-                'enableInheritance' => $request->request->get('enableInheritance') === 'true',
-            ]);
-
-            $document->setUserModification($this->getAdminUser()->getId());
-            $document->save();
-        }
-
-        // write the store back to the session
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId, $idStore): void {
-            $session->set($transactionId, $idStore);
-        }, 'opendxp_copy');
-
-        return $this->adminJson([
-            'success' => true,
-            'id' => $id,
-        ]);
-    }
-
-    #[Route('/copy', name: 'opendxp_admin_document_document_copy', methods: ['POST'])]
-    public function copyAction(Request $request): JsonResponse
-    {
-        $success = false;
-        $sourceId = (int)$request->request->get('sourceId');
-        $source = Document::getById($sourceId);
-        $session = Session::getSessionBag($request->getSession(), 'opendxp_copy');
-
-        $targetId = (int)$request->request->get('targetId');
-
-        $sessionBag = $session->get($request->request->get('transactionId'));
-
-        if ($request->request->get('targetParentId')) {
-            $sourceParent = Document::getById((int) $request->request->get('sourceParentId'));
-
-            // this is because the key can get the prefix "_copy" if the target does already exists
-            if ($sessionBag['parentId']) {
-                $targetParent = Document::getById((int) $sessionBag['parentId']);
-            } else {
-                $targetParent = Document::getById((int) $request->request->get('targetParentId'));
-            }
-
-            $targetPath = preg_replace('@^' . $sourceParent->getRealFullPath() . '@', $targetParent . '/', $source->getRealPath());
-            $target = Document::getByPath($targetPath);
-        } else {
-            $target = Document::getById($targetId);
-        }
-
-        if ($target instanceof Document) {
-            if ($target->isAllowed('create')) {
-                if ($source !== null) {
-                    if ($source instanceof Document\PageSnippet && $latestVersion = $source->getLatestVersion()) {
-                        $source = $latestVersion->loadData();
-                        $source->setPublished(false); //as latest version is used which is not published
-                    }
-
-                    if ($request->request->get('type') === 'child') {
-                        $enableInheritance = $request->request->get('enableInheritance') === 'true';
-
-                        $language = (string) $request->request->get('language') ?: null;
-                        if ($language && !Tool::isValidLanguage($language)) {
-                            throw new BadRequestHttpException('Invalid language: ' . $language);
-                        }
-
-                        $resetIndex = $request->request->get('resetIndex') === 'true';
-
-                        $newDocument = $this->_documentService->copyAsChild($target, $source, $enableInheritance, $resetIndex, $language);
-
-                        $sessionBag['idMapping'][(int)$source->getId()] = (int)$newDocument->getId();
-
-                        // this is because the key can get the prefix "_copy" if the target does already exists
-                        if ($request->request->get('saveParentId')) {
-                            $sessionBag['parentId'] = $newDocument->getId();
-                        }
-                        $session->set($request->request->get('transactionId'), $sessionBag);
-                    } elseif ($request->request->get('type') === 'replace') {
-                        $this->_documentService->copyContents($target, $source);
-                    }
-
-                    $success = true;
-                } else {
-                    Logger::error('prevended copy/paste because document with same path+key already exists in this location');
-                }
-            } else {
-                Logger::error('could not execute copy/paste because of missing permissions on target [ ' . $targetId . ' ]');
-
-                throw $this->createAccessDeniedHttpException();
-            }
-        }
-
-        return $this->adminJson(['success' => $success]);
-    }
-
-    #[Route('/diff-versions/from/{from}/to/{to}', name: 'opendxp_admin_document_document_diffversions', requirements: ['from' => "\d+", 'to' => "\d+"], methods: ['GET'])]
-    public function diffVersionsAction(
-        Request $request,
-        int $from,
-        int $to,
-        DocumentRendererInterface $documentRenderer,
-        RouterInterface $router
-    ): Response {
-        // return with error if prerequisites do not match
-        if (!HtmlToImage::isSupported() || !class_exists('Imagick')) {
-            return $this->render('@OpenDxpAdmin/admin/document/document/diff_versions_unsupported.html.twig');
-        }
-
-        $versionFrom = Version::getById($from);
-        $docFrom = $versionFrom?->loadData();
-
-        if (!$docFrom) {
-            throw $this->createNotFoundException('Version with id [' . $from . "] doesn't exist");
-        }
-
-        $versionTo = Version::getById($to);
-        $docTo = $versionTo?->loadData();
-
-        if (!$docTo) {
-            throw $this->createNotFoundException('Version with id [' . $to . "] doesn't exist");
-        }
-
-        $comparisonId = uniqid(date('Y-m-d') . '-', true);
-        $tempFileTemplate = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/version-diff-tmp-' . $comparisonId . '-%s.%s';
-        $fromImageFile = sprintf($tempFileTemplate, 'from', 'png');
-        $toImageFile = sprintf($tempFileTemplate, 'to', 'png');
-        $fromHtmlFile = sprintf($tempFileTemplate, 'from', 'html');
-        $toHtmlFile = sprintf($tempFileTemplate, 'to', 'html');
-
-        $viewParams = [];
-
-        $docContentFrom = $documentRenderer->render($docFrom);
-        $docContentTo = $documentRenderer->render($docTo);
-
-        file_put_contents($fromHtmlFile, $docContentFrom);
-        file_put_contents($toHtmlFile, $docContentTo);
-
-        $prefix = Config::getSystemConfiguration('documents')['preview_url_prefix'];
-        if (empty($prefix)) {
-            $prefix = $request->getSchemeAndHttpHost();
-        }
-
-        try {
-            HtmlToImage::convert($prefix . $router->generate('opendxp_admin_document_document_diff_versions_html', ['id' => basename($fromHtmlFile)]), $fromImageFile);
-            HtmlToImage::convert($prefix . $router->generate('opendxp_admin_document_document_diff_versions_html', ['id' => basename($toHtmlFile)]), $toImageFile);
-        } finally {
-            unlink($fromHtmlFile);
-            unlink($toHtmlFile);
-        }
-
-        $image1 = new Imagick($fromImageFile);
-        $image2 = new Imagick($toImageFile);
-
-        if ($image1->getImageWidth() === $image2->getImageWidth() && $image1->getImageHeight() === $image2->getImageHeight()) {
-            $result = $image1->compareImages($image2, Imagick::METRIC_MEANSQUAREERROR);
-            $result[0]->setImageFormat('png');
-
-            $viewParams['image'] = base64_encode($result[0]->getImageBlob());
-
-            $result[0]->clear();
-            $result[0]->destroy();
-
-        } else {
-            $viewParams['image1'] = base64_encode(file_get_contents($fromImageFile));
-            $viewParams['image2'] = base64_encode(file_get_contents($toImageFile));
-        }
-
-        // cleanup
-        $image1->clear();
-        $image1->destroy();
-        $image2->clear();
-        $image2->destroy();
-
-        unlink($fromImageFile);
-        unlink($toImageFile);
-
-        return $this->render('@OpenDxpAdmin/admin/document/document/diff_versions.html.twig', $viewParams);
-    }
-
-    public function diffVersionsHtmlAction(Request $request): BinaryFileResponse
-    {
-        $file = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/' . basename($request->query->get('id'));
-        if (file_exists($file)) {
-            return new BinaryFileResponse($file);
-        }
-
-        throw $this->createNotFoundException('Version diff file not found');
-    }
-
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/get-id-for-path', name: 'opendxp_admin_document_document_getidforpath', methods: ['GET'])]
-    public function getIdForPathAction(Request $request): JsonResponse
+    public function getIdForPathAction(
+        GetDocumentIdForPathHandler $getDocumentIdForPath,
+        #[MapQueryParameter] ?string $path = null,
+    ): JsonResponse
     {
-        if ($doc = Document::getByPath($request->query->get('path'))) {
-            return $this->adminJson([
-                'id' => $doc->getId(),
-                'type' => $doc->getType(),
-            ]);
+        $result = $getDocumentIdForPath($path);
+        if (!$result) {
+            return $this->adminJson(false);
         }
 
-        return $this->adminJson(false);
+        return $this->adminJson(['id' => $result->id, 'type' => $result->type]);
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/language-tree', name: 'opendxp_admin_document_document_languagetree', methods: ['GET'])]
-    public function languageTreeAction(Request $request): JsonResponse
+    public function languageTreeAction(
+        GetLanguageTreeHandler $handler,
+        #[MapQueryParameter] int $node = 0,
+        #[MapQueryParameter] ?string $languages = null,
+    ): JsonResponse
     {
-        $document = Document::getById((int) $request->query->get('node'));
+        $result = $handler($node, explode(',', (string) $languages));
 
-        $languages = explode(',', $request->query->get('languages'));
-
-        $result = [];
-        foreach ($document->getChildren() as $child) {
-            $result[] = $this->getTranslationTreeNodeConfig($child, $languages);
-        }
-
-        return $this->adminJson($result);
+        return $this->adminJson($result->nodes);
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/language-tree-root', name: 'opendxp_admin_document_document_languagetreeroot', methods: ['GET'])]
-    public function languageTreeRootAction(Request $request): JsonResponse
+    public function languageTreeRootAction(
+        GetLanguageTreeRootHandler $handler,
+        #[MapQueryParameter] int $id = 0,
+    ): JsonResponse
     {
-        $document = Document::getById((int) $request->query->get('id'));
-
-        if (!$document) {
-            return $this->adminJson([
-                'success' => false,
-            ]);
-        }
-        $service = new Document\Service();
-
-        $locales = Tool::getSupportedLocales();
-
-        $lang = $document->getProperty('language');
-
-        $columns = [
-            [
-                'xtype' => 'treecolumn',
-                'text' => $lang ? $locales[$lang] : '',
-                'dataIndex' => 'text',
-                'cls' => $lang ? 'x-column-header_' . strtolower($lang) : null,
-                'width' => 300,
-                'sortable' => false,
-            ],
-        ];
-
-        $translations = $service->getTranslations($document);
-
-        $combinedTranslations = $translations;
-
-        if ($parentDocument = $document->getParent()) {
-            $parentTranslations = $service->getTranslations($parentDocument);
-            foreach ($parentTranslations as $language => $languageDocumentId) {
-                $combinedTranslations[$language] = $translations[$language] ?? $languageDocumentId;
-            }
-        }
-
-        foreach ($combinedTranslations as $language => $languageDocumentId) {
-            $languageDocument = Document::getById($languageDocumentId);
-
-            if ($languageDocument && $languageDocument->isAllowed('list') && $language != $document->getProperty('language')) {
-                $columns[] = [
-                    'text' => $locales[$language],
-                    'dataIndex' => $language,
-                    'cls' => 'x-column-header_' . strtolower($language),
-                    'width' => 300,
-                    'sortable' => false,
-                ];
-            }
-        }
+        $result = $handler($id);
 
         return $this->adminJson([
-            'root' => $this->getTranslationTreeNodeConfig($document, array_keys($translations), $translations),
-            'columns' => $columns,
-            'languages' => array_keys($translations),
+            'root' => $result->root,
+            'columns' => $result->columns,
+            'languages' => $result->languages,
         ]);
     }
 
-    private function getTranslationTreeNodeConfig(Document $document, array $languages, ?array $translations = null): array
-    {
-        $service = new Document\Service();
-
-        $config = $this->elementService->getElementTreeNodeConfig($document);
-
-        $translations = is_null($translations) ? $service->getTranslations($document) : $translations;
-
-        foreach ($languages as $language) {
-            if ($languageDocument = $translations[$language] ?? false) {
-                $languageDocument = Document::getById((int)$languageDocument);
-                $config[$language] = [
-                    'text' => $languageDocument->getKey(),
-                    'id' => $languageDocument->getId(),
-                    'type' => $languageDocument->getType(),
-                    'fullPath' => $languageDocument->getFullPath(),
-                    'published' => $languageDocument->getPublished(),
-                    'itemType' => 'document',
-                    'permissions' => $languageDocument->getUserPermissions($this->getAdminUser()),
-                ];
-            } elseif (!$document instanceof Document\Folder) {
-                $config[$language] = [
-                    'text' => '--',
-                    'itemType' => 'empty',
-                ];
-            }
-        }
-
-        return $config;
-    }
-
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/convert', name: 'opendxp_admin_document_document_convert', methods: ['PUT'])]
-    public function convertAction(Request $request): JsonResponse
+    public function convertAction(Request $request, ConvertDocumentHandler $handler): JsonResponse
     {
-        $document = Document::getById((int) $request->request->get('id'));
-        if (!$document) {
-            throw $this->createNotFoundException();
-        }
+        $handler((int) $request->request->get('id'), $request->request->get('type'));
 
-        $type = $request->request->get('type');
-        $class = '\\OpenDxp\\Model\\Document\\' . ucfirst($type);
-        if (Tool::classExists($class)) {
-            $new = new $class;
-
-            // overwrite internal store to avoid "duplicate full path" error
-            RuntimeCache::set('document_' . $document->getId(), $new);
-
-            $props = $document->getObjectVars();
-            foreach ($props as $name => $value) {
-                if (in_array($name, ['children', 'siblings', 'scheduledTasks', 'controller', 'template'])) {
-                    continue;
-                }
-                $new->setValue($name, $value);
-            }
-
-            if ($type === 'hardlink' || $type === 'folder') {
-                // remove navigation settings
-                foreach (['name', 'title', 'target', 'exclude', 'class', 'anchor', 'parameters', 'relation', 'accesskey', 'tabindex'] as $propertyName) {
-                    $new->removeProperty('navigation_' . $propertyName);
-                }
-            }
-
-            $new->setType($type);
-            $new->save();
-        }
-
-        return $this->adminJson(['success' => true]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/translation-determine-parent', name: 'opendxp_admin_document_document_translationdetermineparent', methods: ['GET'])]
-    public function translationDetermineParentAction(Request $request): JsonResponse
+    public function translationDetermineParentAction(
+        DetermineTranslationParentHandler $handler,
+        #[MapQueryParameter] int $id = 0,
+        #[MapQueryParameter] ?string $language = null,
+    ): JsonResponse
     {
-        $success = false;
-        $targetDocument = null;
+        $result = $handler($id, $language);
 
-        $document = Document::getById((int) $request->query->get('id'));
-        if ($document) {
-            $service = new Document\Service();
-            $document = $document->getId() === 1 ? $document : $document->getParent();
-
-            $translations = $service->getTranslations($document);
-            if (isset($translations[$request->query->get('language')])) {
-                $targetDocument = Document::getById($translations[$request->query->get('language')]);
-                $success = true;
-            }
-        }
-
-        return $this->adminJson([
-            'success' => $success,
-            'targetPath' => $targetDocument?->getRealFullPath(),
-            'targetId' => $targetDocument?->getid(),
-        ]);
+        return $this->adminJson(ApiResponse::fromBool($result->found, [
+            'targetPath' => $result->targetPath,
+            'targetId' => $result->targetId,
+        ]));
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/translation-add', name: 'opendxp_admin_document_document_translationadd', methods: ['POST'])]
-    public function translationAddAction(Request $request): JsonResponse
+    public function translationAddAction(Request $request, AddDocumentTranslationHandler $handler): JsonResponse
     {
-        $sourceDocument = Document::getById((int) $request->request->get('sourceId'));
-        $targetDocument = Document::getByPath($request->request->get('targetPath'));
+        $handler($request->request->getInt('sourceId'), $request->request->getString('targetPath'));
 
-        if ($sourceDocument && $targetDocument) {
-            if (empty($sourceDocument->getProperty('language'))) {
-                throw new Exception(sprintf('Source Document(ID:%s) Language(Properties) missing', $sourceDocument->getId()));
-            }
-
-            if (empty($targetDocument->getProperty('language'))) {
-                throw new Exception(sprintf('Target Document(ID:%s) Language(Properties) missing', $sourceDocument->getId()));
-            }
-
-            $service = new Document\Service;
-            if ($service->getTranslationSourceId($targetDocument) != $targetDocument->getId()) {
-                throw new Exception('Target Document already linked to Source Document ID('.$service->getTranslationSourceId($targetDocument).'). Please unlink existing relation first.');
-            }
-            $service->addTranslation($sourceDocument, $targetDocument);
-        }
-
-        return $this->adminJson([
-            'success' => true,
-        ]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/translation-remove', name: 'opendxp_admin_document_document_translationremove', methods: ['DELETE'])]
-    public function translationRemoveAction(Request $request): JsonResponse
+    public function translationRemoveAction(Request $request, RemoveDocumentTranslationHandler $handler): JsonResponse
     {
-        $sourceDocument = Document::getById($request->request->getInt('sourceId'));
-        $targetDocument = Document::getById($request->request->getInt('targetId'));
-        if ($sourceDocument && $targetDocument) {
-            $service = new Document\Service;
-            $service->removeTranslationLink($sourceDocument, $targetDocument);
-        }
+        $handler($request->request->getInt('sourceId'), $request->request->getInt('targetId'));
 
-        return $this->adminJson([
-            'success' => true,
-        ]);
+        return $this->adminJson(ApiResponse::ok());
     }
 
+    #[IsGranted(CorePermission::Documents->value)]
     #[Route('/translation-check-language', name: 'opendxp_admin_document_document_translationchecklanguage', methods: ['GET'])]
-    public function translationCheckLanguageAction(Request $request): JsonResponse
+    public function translationCheckLanguageAction(
+        CheckTranslationLanguageHandler $handler,
+        #[MapQueryParameter] ?string $path = null,
+    ): JsonResponse
     {
-        $success = false;
-        $language = null;
-        $translationLinks = null;
+        $result = $handler($path);
 
-        $document = Document::getByPath($request->query->get('path'));
-        if ($document) {
-            $language = $document->getProperty('language');
-            if ($language) {
-                $success = true;
-            }
-
-            //check if document is already linked to other langauges
-            $translationLinks = array_keys($this->_documentService->getTranslations($document));
-        }
-
-        return $this->adminJson([
-            'success' => $success,
-            'language' => $language,
-            'translationLinks' => $translationLinks,
-        ]);
-    }
-
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        // check permissions
-        $this->checkActionPermission($event, 'documents', ['docTypesGetAction', 'diffVersionsHtmlAction']);
-
-        $this->_documentService = new Document\Service($this->getAdminUser());
+        return $this->adminJson(ApiResponse::fromBool($result->found, [
+            'language' => $result->language,
+            'translationLinks' => $result->translationLinks,
+        ]));
     }
 
     #[Override]
