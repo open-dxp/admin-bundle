@@ -24,6 +24,7 @@ use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use OpenDxp\Bundle\AdminBundle\Payload\DataObject\ChangeChildrenSortByPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class ChangeChildrenSortByHandler
@@ -32,12 +33,12 @@ final class ChangeChildrenSortByHandler
     {
     }
 
-    public function __invoke(int $id, string $sortBy, string $sortOrder): void
+    public function __invoke(ChangeChildrenSortByPayload $payload): void
     {
         $adminUser = $this->userContext->getAdminUser();
-        if (!in_array($sortOrder, ['ASC', 'DESC'])) {
-            $sortOrder = 'ASC';
-        }
+        $id = $payload->id;
+        $sortBy = $payload->sortBy;
+        $sortOrder = in_array($payload->sortOrder, ['ASC', 'DESC']) ? $payload->sortOrder : 'ASC';
 
         $object = DataObject::getById($id);
 

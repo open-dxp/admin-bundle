@@ -17,13 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrick\GetObjectBrickPayload;
 use OpenDxp\Model\DataObject;
 
 final class GetObjectBrickHandler
 {
-    public function __invoke(string $id): GetObjectBrickResult
+    public function __invoke(GetObjectBrickPayload $payload): GetObjectBrickResult
     {
-        $brick = DataObject\Objectbrick\Definition::getByKey($id);
+        $brick = DataObject\Objectbrick\Definition::getByKey($payload->id);
 
         return new GetObjectBrickResult($brick->getObjectVars(), $brick->isWritable());
     }

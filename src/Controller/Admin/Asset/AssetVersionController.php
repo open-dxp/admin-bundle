@@ -20,13 +20,14 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersion\PublishVersionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\ShowVersion\ShowVersionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\ShowVersionHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Tool;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
@@ -43,14 +44,12 @@ class AssetVersionController extends AdminAbstractController
 {
     #[Route('/publish-version', name: 'opendxp_admin_asset_publishversion', methods: ['POST'])]
     public function publishVersionAction(
-        Request $request,
+        PublishVersionPayload $payload,
         PublishVersionHandler $publishVersion,
         ElementServiceInterface $elementService,
     ): JsonResponse {
 
-        $result = $publishVersion(
-            (int) $request->request->get('id'),
-            );
+        $result = $publishVersion($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'treeData' => $elementService->getElementTreeNodeConfig($result->asset),
@@ -60,11 +59,11 @@ class AssetVersionController extends AdminAbstractController
     #[Route('/show-version', name: 'opendxp_admin_asset_showversion', methods: ['GET'])]
     public function showVersionAction(
         Environment $twig,
+        ShowVersionPayload $payload,
         ShowVersionHandler $showVersion,
-        #[MapQueryParameter] int $id = 0,
         #[MapQueryParameter] ?string $userTimezone = null,
     ): Response {
-        $result = $showVersion($id);
+        $result = $showVersion($payload);
 
         if ($result->isPdf) {
             return $this->render(

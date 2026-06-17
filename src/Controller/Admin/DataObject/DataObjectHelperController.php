@@ -18,33 +18,43 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAllHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatchHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetBatchJobsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportConfigsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAllPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteDataObjectGridColumnConfigHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteGridColumnConfigHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteDataObjectGridColumnConfigPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DoDataObjectExportHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ImportUploadHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\LoadObjectDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DoDataObjectExportPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatchHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatchPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetAvailableVisibleFieldsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetAvailableVisibleFieldsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetBatchJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetBatchJobsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportConfigsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportConfigsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportJobsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetGridColumnConfig\GetGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetGridColumnConfig\GetGridColumnConfigPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ImportUploadHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ImportUploadPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\LoadObjectDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\LoadObjectDataPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\MarkDataObjectGridConfigFavouriteHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\MarkDataObjectGridConfigFavouritePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\PrepareHelperColumnConfigsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\PrepareHelperColumnConfigsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\File;
-use OpenDxp\Tool;
-use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
-use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * @internal
@@ -56,149 +66,77 @@ class DataObjectHelperController extends AdminAbstractController
 
     #[Route('/load-object-data', name: 'loadobjectdata', methods: ['GET'])]
     public function loadObjectDataAction(
+        LoadObjectDataPayload $payload,
         LoadObjectDataHandler $handler,
-        Request $request,
-        #[MapQueryParameter] int $id = 0,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['fields' => $handler($id, $request->query->all('fields'))]));
+        return $this->adminJson(ApiResponse::ok(['fields' => $handler($payload)]));
     }
 
     #[Route('/get-export-configs', name: 'getexportconfigs', methods: ['GET'])]
     public function getExportConfigsAction(
+        GetExportConfigsPayload $payload,
         GetExportConfigsHandler $getExportConfigs,
-        #[MapQueryParameter] ?string $classId = null,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $getExportConfigs($classId)]));
+        return $this->adminJson(ApiResponse::ok(['data' => $getExportConfigs($payload)]));
     }
 
     #[Route('/grid-delete-column-config', name: 'griddeletecolumnconfig', methods: ['DELETE'])]
     public function gridDeleteColumnConfigAction(
-        DeleteDataObjectGridColumnConfigHandler $deleteGridColumnConfig,
+        DeleteGridColumnConfigPayload $payload,
         DeleteGridColumnConfigHandler $handler,
-        Request $request,
-        #[MapQueryParameter(name: 'no_system_columns')] bool $noSystemColumns = false,
-        #[MapQueryParameter(name: 'no_brick_columns')] bool $noBrickColumns = false,
+        DeleteDataObjectGridColumnConfigHandler $deleteGridColumnConfig,
     ): JsonResponse {
-        $params = [
-            'id'              => $request->request->get('id'),
-            'objectId'        => $request->request->get('objectId'),
-            'name'            => $request->request->get('name'),
-            'type'            => $request->request->get('type'),
-            'types'           => $request->request->get('types'),
-            'gridtype'        => $request->request->get('gridtype'),
-            'gridConfigId'    => $request->request->get('gridConfigId'),
-            'searchType'      => $request->request->get('searchType'),
-            'noSystemColumns' => $noSystemColumns,
-            'noBrickColumns'  => $noBrickColumns,
-            'locale'          => $request->getLocale(),
-        ];
+        $deleteGridColumnConfig(new DeleteDataObjectGridColumnConfigPayload(gridConfigId: (int) $payload->gridConfigId));
 
-        $deleteGridColumnConfig((int) $request->request->get('gridConfigId'));
-
-        return $this->adminJson($handler($request, $params));
+        return $this->adminJson($handler($payload));
     }
 
     #[Route('/grid-get-column-config', name: 'gridgetcolumnconfig', methods: ['GET'])]
     public function gridGetColumnConfigAction(
+        GetGridColumnConfigPayload $payload,
         GetGridColumnConfigHandler $handler,
-        Request $request,
-        #[MapQueryParameter] ?string $id = null,
-        #[MapQueryParameter(flags: \FILTER_NULL_ON_FAILURE)] ?int $objectId = null,
-        #[MapQueryParameter] ?string $name = null,
-        #[MapQueryParameter] ?string $type = null,
-        #[MapQueryParameter] ?string $types = null,
-        #[MapQueryParameter] ?string $gridtype = null,
-        #[MapQueryParameter(flags: \FILTER_NULL_ON_FAILURE)] ?int $gridConfigId = null,
-        #[MapQueryParameter] ?string $searchType = null,
-        #[MapQueryParameter(name: 'no_system_columns')] bool $noSystemColumns = false,
-        #[MapQueryParameter(name: 'no_brick_columns')] bool $noBrickColumns = false,
     ): JsonResponse {
-        $params = [
-            'id'              => $id,
-            'objectId'        => $objectId,
-            'name'            => $name,
-            'type'            => $type,
-            'types'           => $types,
-            'gridtype'        => $gridtype,
-            'gridConfigId'    => $gridConfigId,
-            'searchType'      => $searchType,
-            'noSystemColumns' => $noSystemColumns,
-            'noBrickColumns'  => $noBrickColumns,
-        ];
-
-        return $this->adminJson($handler($request, $params));
+        return $this->adminJson($handler($payload));
     }
 
     #[Route('/prepare-helper-column-configs', name: 'preparehelpercolumnconfigs', methods: ['POST'])]
-    public function prepareHelperColumnConfigs(Request $request, PrepareHelperColumnConfigsHandler $prepareHelperColumns): JsonResponse
-    {
-        /** @var stdClass[] $columns */
-        $columns = json_decode($request->request->get('columns'));
+    public function prepareHelperColumnConfigs(
+        PrepareHelperColumnConfigsPayload $payload,
+        PrepareHelperColumnConfigsHandler $prepareHelperColumns,
+    ): JsonResponse {
+        $result = $prepareHelperColumns($payload);
 
-        $existingHelperColumns = Tool\Session::useBag(
-            $request->getSession(),
-            static fn(AttributeBagInterface $bag) => $bag->get('helpercolumns', []),
-            'opendxp_gridconfig',
-        );
-
-        $result = $prepareHelperColumns($columns, $existingHelperColumns);
-
-        Tool\Session::useBag(
-            $request->getSession(),
-            static function (AttributeBagInterface $bag) use ($result): void {
-                $bag->set('helpercolumns', $result['helperColumns']);
-            },
-            'opendxp_gridconfig',
-        );
+        $payload->helperColumnsBag->set('helpercolumns', $result['helperColumns']);
 
         return $this->adminJson(ApiResponse::ok(['columns' => $result['newData']]));
     }
 
     #[Route('/grid-config-apply-to-all', name: 'gridconfigapplytoall', methods: ['POST'])]
-    public function gridConfigApplyToAllAction(ApplyGridConfigToAllHandler $applyToAll, Request $request): JsonResponse
-    {
-        $applyToAll(
-            $request->request->getInt('objectId'),
-            (string) $request->request->get('classId'),
-            (string) $request->request->get('searchType'),
-            );
+    public function gridConfigApplyToAllAction(
+        ApplyGridConfigToAllPayload $payload,
+        ApplyGridConfigToAllHandler $applyToAll,
+    ): JsonResponse {
+        $applyToAll($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/grid-mark-favourite-column-config', name: 'gridmarkfavouritecolumnconfig', methods: ['POST'])]
     public function gridMarkFavouriteColumnConfigAction(
+        MarkDataObjectGridConfigFavouritePayload $payload,
         MarkDataObjectGridConfigFavouriteHandler $markFavourite,
-        Request $request,
     ): JsonResponse {
-        $result = $markFavourite(
-            $request->request->getInt('objectId'),
-            $request->request->get('classId'),
-            (int) $request->request->get('gridConfigId'),
-            $request->request->get('searchType'),
-            (bool) $request->request->get('global'),
-            $request->request->get('type'),
-            );
+        $result = $markFavourite($payload);
 
         return $this->adminJson(ApiResponse::ok(['specializedConfigs' => $result->specializedConfigs]));
     }
 
     #[Route('/grid-save-column-config', name: 'gridsavecolumnconfig', methods: ['POST'])]
     public function gridSaveColumnConfigAction(
+        SaveDataObjectGridColumnConfigPayload $payload,
         SaveDataObjectGridColumnConfigHandler $saveGridColumnConfig,
-        Request $request,
     ): JsonResponse {
-        $gridConfigData = $this->decodeJson($request->request->get('gridconfig'));
-        $metadata = json_decode($request->request->get('settings'), true);
-
-        $result = $saveGridColumnConfig(
-            $request->request->getInt('id'),
-            $request->request->get('class_id'),
-            $request->request->get('context'),
-            $request->request->get('searchType'),
-            $gridConfigData,
-            $metadata,
-            );
+        $result = $saveGridColumnConfig($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'settings'         => $result->settings,
@@ -211,12 +149,11 @@ class DataObjectHelperController extends AdminAbstractController
      * IMPORTER
      */
     #[Route('/import-upload', name: 'importupload', methods: ['POST'])]
-    public function importUploadAction(Request $request, ImportUploadHandler $importUpload): JsonResponse
-    {
-        /** @var UploadedFile $file */
-        $file = $request->files->get('Filedata');
-
-        $importUpload(file_get_contents($file->getPathname()), (string) $request->request->get('importId'));
+    public function importUploadAction(
+        ImportUploadPayload $payload,
+        ImportUploadHandler $importUpload,
+    ): JsonResponse {
+        $importUpload($payload);
 
         $response = $this->adminJson(ApiResponse::ok());
 
@@ -228,45 +165,31 @@ class DataObjectHelperController extends AdminAbstractController
     }
 
     #[Route('/get-export-jobs', name: 'getexportjobs', methods: ['POST'])]
-    public function getExportJobsAction(Request $request, GetExportJobsHandler $handler): JsonResponse
-    {
-        $requestedLanguage = $this->extractLanguage($request);
-        $allParams = [...$request->request->all(), ...$request->query->all()];
+    public function getExportJobsAction(
+        GetExportJobsPayload $payload,
+        GetExportJobsHandler $handler,
+        Request $request,
+    ): JsonResponse {
+        if ($payload->requestedLanguage !== $request->getLocale()) {
+            $request->setLocale($payload->requestedLanguage);
+        }
 
-        $result = $handler($allParams, $requestedLanguage);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['jobs' => $result->jobs, 'fileHandle' => $result->fileHandle]));
     }
 
     #[Route('/do-export', name: 'doexport', methods: ['POST'])]
-    public function doExportAction(DoDataObjectExportHandler $doExport, Request $request): JsonResponse
-    {
-        $fileHandle = File::getValidFilename($request->request->get('fileHandle'));
-        $settings = json_decode($request->request->get('settings'), true);
-        $fields = json_decode($request->request->all('fields')[0], true);
-
-        $allParams = [...$request->request->all(), ...$request->query->all()];
-
-        $context = ['source' => 'opendxp-export'];
-        $contextFromRequest = $request->request->get('context');
-        if ($contextFromRequest) {
-            $context = [...$context, ...json_decode($contextFromRequest, true)];
+    public function doExportAction(
+        DoDataObjectExportPayload $payload,
+        DoDataObjectExportHandler $doExport,
+        Request $request,
+    ): JsonResponse {
+        if ($payload->requestedLanguage !== $request->getLocale()) {
+            $request->setLocale($payload->requestedLanguage);
         }
 
-        $doExport(
-            $fileHandle,
-            $request->request->all('ids'),
-            (string) $request->request->get('classId'),
-            $settings['delimiter'] ?? ';',
-            $settings['header'] ?? 'title',
-            $request->request->get('userTimezone'),
-            $allParams,
-            $this->extractLanguage($request),
-            $fields,
-            (bool) $request->request->get('initial'),
-            (bool) ($settings['enableInheritance'] ?? false),
-            $context,
-        );
+        $doExport($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -294,52 +217,41 @@ class DataObjectHelperController extends AdminAbstractController
     }
 
     #[Route('/get-batch-jobs', name: 'getbatchjobs', methods: ['POST'])]
-    public function getBatchJobsAction(Request $request, GetBatchJobsHandler $handler): JsonResponse
-    {
-        if ($request->request->get('language')) {
-            $request->setLocale($request->request->get('language'));
+    public function getBatchJobsAction(
+        GetBatchJobsPayload $payload,
+        GetBatchJobsHandler $handler,
+        Request $request,
+    ): JsonResponse {
+        if ($payload->locale !== $request->getLocale()) {
+            $request->setLocale($payload->locale);
         }
 
-        $allParams = [...$request->request->all(), ...$request->query->all()];
-        $result = $handler($allParams, $request->getLocale());
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['jobs' => $result->jobs]));
     }
 
     #[Route('/batch', name: 'batch', methods: ['PUT'])]
-    public function batchAction(Request $request, ExecuteBatchHandler $handler): JsonResponse
-    {
-        if ($request->request->has('data')) {
-            $params = $this->decodeJson($request->request->get('data'), true);
-            $saved = $handler($params, $request->getLocale());
-
-            return $this->adminJson(ApiResponse::fromBool($saved));
+    public function batchAction(
+        ExecuteBatchPayload $payload,
+        ExecuteBatchHandler $handler,
+    ): JsonResponse {
+        if (!$payload->hasData) {
+            return $this->adminJson(ApiResponse::ok());
         }
 
-        return $this->adminJson(ApiResponse::ok());
+        $saved = $handler($payload);
+
+        return $this->adminJson(ApiResponse::fromBool($saved));
     }
 
     #[Route('/get-available-visible-vields', name: 'getavailablevisiblefields', methods: ['GET'])]
     public function getAvailableVisibleFieldsAction(
+        GetAvailableVisibleFieldsPayload $payload,
         GetAvailableVisibleFieldsHandler $getAvailableFields,
-        #[MapQueryParameter] ?string $classes = null,
     ): JsonResponse {
-        $result = $getAvailableFields($classes);
+        $result = $getAvailableFields($payload);
 
         return $this->adminJson(['availableFields' => $result->availableFields]);
-    }
-
-    private function extractLanguage(Request $request): string
-    {
-        $requestedLanguage = $request->request->get('language');
-        if ($requestedLanguage) {
-            if ($requestedLanguage !== 'default') {
-                $request->setLocale($requestedLanguage);
-            }
-        } else {
-            $requestedLanguage = $request->getLocale();
-        }
-
-        return $requestedLanguage;
     }
 }

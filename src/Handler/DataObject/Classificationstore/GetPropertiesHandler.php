@@ -24,26 +24,15 @@ use stdClass;
 
 final class GetPropertiesHandler
 {
-    public function __invoke(
-        array $queryAll,
-        int $storeId,
-        ?string $frameName,
-        int $limit,
-        int $start,
-        ?string $dir,
-        bool $overrideSort,
-        ?string $groupIds,
-        ?string $keyIds,
-        ?string $searchfilter,
-        ?string $filter,
-    ): GetPropertiesResult {
+    public function __invoke(GetPropertiesPayload $payload): GetPropertiesResult
+    {
         $db = Db::get();
 
         $conditionParts = [];
 
-        if ($frameName) {
+        if ($payload->frameName) {
             $keyCriteria = ' FALSE ';
-            $frameConfig = Classificationstore\CollectionConfig::getByName($frameName, $storeId);
+            $frameConfig = Classificationstore\CollectionConfig::getByName($payload->frameName, $payload->storeId);
             if ($frameConfig) {
                 // get all keys within that collection / frame
                 $frameId = $frameConfig->getId();
@@ -76,40 +65,40 @@ final class GetPropertiesHandler
         $orderKey = 'name';
         $order = 'ASC';
 
-        if ($dir !== null) {
-            $order = $dir;
+        if ($payload->dir !== null) {
+            $order = $payload->dir;
         }
 
-        $sortingSettings = QueryParams::extractSortingSettings($queryAll);
+        $sortingSettings = QueryParams::extractSortingSettings($payload->queryAll);
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $sortingSettings['orderKey'];
             $order = $sortingSettings['order'];
         }
 
-        if ($overrideSort) {
+        if ($payload->overrideSort) {
             $orderKey = 'id';
             $order = 'DESC';
         }
 
         $list = new Classificationstore\KeyConfig\Listing();
 
-        if ($limit > 0 && !$groupIds && !$keyIds) {
-            $list->setLimit($limit);
+        if ($payload->limit > 0 && !$payload->groupIds && !$payload->keyIds) {
+            $list->setLimit($payload->limit);
         }
-        $list->setOffset($start);
+        $list->setOffset($payload->start);
         $list->setOrder($order);
         $list->setOrderKey($orderKey);
 
-        if ($searchfilter) {
-            $conditionParts[] = '(name LIKE ' . $db->quote('%' . $searchfilter . '%') . ' OR description LIKE ' . $db->quote('%' . $searchfilter . '%') . ')';
+        if ($payload->searchfilter) {
+            $conditionParts[] = '(name LIKE ' . $db->quote('%' . $payload->searchfilter . '%') . ' OR description LIKE ' . $db->quote('%' . $payload->searchfilter . '%') . ')';
         }
 
-        if ($storeId) {
-            $conditionParts[] = '(storeId = ' . $db->quote($storeId) . ')';
+        if ($payload->storeId) {
+            $conditionParts[] = '(storeId = ' . $db->quote($payload->storeId) . ')';
         }
 
-        if ($filter !== null) {
-            $filters = json_decode($filter);
+        if ($payload->filter !== null) {
+            $filters = json_decode($payload->filter);
             /** @var stdClass $f */
             foreach ($filters as $f) {
                 if (!isset($f->value)) {
@@ -122,12 +111,12 @@ final class GetPropertiesHandler
         $condition = implode(' AND ', $conditionParts);
         $list->setCondition($condition);
 
-        if ($groupIds || $keyIds) {
-            if ($groupIds) {
-                $ids = json_decode($groupIds, true);
+        if ($payload->groupIds || $payload->keyIds) {
+            if ($payload->groupIds) {
+                $ids = json_decode($payload->groupIds, true);
                 $col = 'group';
             } else {
-                $ids = json_decode($keyIds, true);
+                $ids = json_decode($payload->keyIds, true);
                 $col = 'id';
             }
 

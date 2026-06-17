@@ -35,18 +35,19 @@ use OpenDxp\Bundle\AdminBundle\Handler\Element\GetRequiresDependenciesHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetSubtypeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetVersionsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\LockElementHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\NoteListPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\ReplaceAssignmentsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\TypePathHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\UnlockElementHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\UnlockElementsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\UnlockPropagateHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\VersionUpdateHandler;
-use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -121,31 +122,28 @@ class ElementController extends AdminAbstractController
     #[Route('/element/note-list', name: 'opendxp_admin_element_notelist', methods: ['POST'])]
     #[IsGranted(CorePermission::NotesEvents->value)]
     public function noteListAction(
-        Request $request,
+        NoteListPayload $payload,
         GetNoteListHandler $getNoteList,
         DeleteNoteHandler $deleteNote,
         #[MapQueryParameter] ?string $xaction = null,
-    ): JsonResponse
-    {
-
-        if ($xaction === 'destroy') {
-            $data = $this->decodeJson($request->request->get('data'));
-            $success = $deleteNote((int) $data['id']);
-
-            return $this->adminJson(ApiResponse::fromBool($success));
+    ): JsonResponse {
+        if ($payload->hasData) {
+            return match ($xaction) {
+                'destroy' => $this->destroyNote($deleteNote, $payload),
+                default   => throw new BadRequestHttpException(),
+            };
         }
 
-        $result = ($getNoteList)(
-            offset: $request->request->getInt('start', 0),
-            limit: $request->request->getInt('limit') ?: null,
-            sortingSettings: QueryParams::extractSortingSettings($request->request->all()),
-            filterText: $request->request->get('filterText'),
-            filterJson: $request->request->get('filter'),
-            cid: $request->request->has('cid') ? $request->request->get('cid') : null,
-            ctype: $request->request->has('ctype') ? $request->request->get('ctype') : null,
-        );
+        $result = $getNoteList($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+    }
+
+    private function destroyNote(DeleteNoteHandler $handler, NoteListPayload $payload): JsonResponse
+    {
+        $handler($payload);
+
+        return $this->adminJson(ApiResponse::ok(['data' => []]));
     }
 
     #[Route('/element/note-add', name: 'opendxp_admin_element_noteadd', methods: ['POST'])]

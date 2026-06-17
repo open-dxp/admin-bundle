@@ -26,8 +26,6 @@ use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
-use OpenDxp\Tool\Session;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 
 final class DataObjectGridColumnConfigResolver
@@ -40,7 +38,7 @@ final class DataObjectGridColumnConfigResolver
         private readonly AdminUserContextInterface $userContext,
     ) {}
 
-    public function resolve(Request $request, array $params, bool $isDelete = false): GridColumnConfigResult
+    public function resolve(string $locale, array $params, ?AttributeBagInterface $helperColumnsBag = null, bool $isDelete = false): GridColumnConfigResult
     {
         $user = $this->userContext->getAdminUser();
         $class = null;
@@ -183,7 +181,9 @@ final class DataObjectGridColumnConfigResolver
                                 }
                             }
                         } elseif (DataObject\Service::isHelperGridColumnConfig($key)) {
-                            $calculatedColumnConfig = $this->getCalculatedColumnConfig($request, $sc);
+                            $calculatedColumnConfig = $helperColumnsBag !== null
+                                ? $this->getCalculatedColumnConfig($helperColumnsBag, $sc)
+                                : null;
                             if ($calculatedColumnConfig) {
                                 $availableFields[] = $calculatedColumnConfig;
                             }
@@ -214,7 +214,7 @@ final class DataObjectGridColumnConfigResolver
         usort($availableFields, static fn ($a, $b) => $a['position'] <=> $b['position']);
 
         $frontendLanguages = Tool\Admin::reorderWebsiteLanguages(Tool\Admin::getCurrentUser(), $this->config['general']['valid_languages']);
-        $language = $frontendLanguages ? $frontendLanguages[0] : $request->getLocale();
+        $language = $frontendLanguages ? $frontendLanguages[0] : $locale;
         if (!Tool::isValidLanguage($language)) {
             $validLanguages = Tool::getValidLanguages();
             $language = $validLanguages[0];
@@ -368,34 +368,32 @@ final class DataObjectGridColumnConfigResolver
         return $fieldConfig;
     }
 
-    private function getCalculatedColumnConfig(Request $request, array $config): mixed
+    private function getCalculatedColumnConfig(AttributeBagInterface $helperColumnsBag, array $config): mixed
     {
         try {
-            return Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($config) {
-                $existingKey = $config['fieldConfig']['key'];
-                $calculatedColumnConfig['key'] = $existingKey;
-                $calculatedColumnConfig['position'] = $config['position'];
-                $calculatedColumnConfig['isOperator'] = true;
-                $calculatedColumnConfig['attributes'] = $config['fieldConfig']['attributes'];
-                $calculatedColumnConfig['width'] = $config['width'];
-                $calculatedColumnConfig['locked'] = $config['locked'];
+            $existingKey = $config['fieldConfig']['key'];
+            $calculatedColumnConfig['key'] = $existingKey;
+            $calculatedColumnConfig['position'] = $config['position'];
+            $calculatedColumnConfig['isOperator'] = true;
+            $calculatedColumnConfig['attributes'] = $config['fieldConfig']['attributes'];
+            $calculatedColumnConfig['width'] = $config['width'];
+            $calculatedColumnConfig['locked'] = $config['locked'];
 
-                $existingColumns = $session->get('helpercolumns', []);
+            $existingColumns = $helperColumnsBag->get('helpercolumns', []);
 
-                if (isset($existingColumns[$existingKey])) {
-                    return $calculatedColumnConfig;
-                }
-
-                $newKey = '#' . uniqid('', false);
-                $calculatedColumnConfig['key'] = $newKey;
-
-                $phpConfig = json_encode($config['fieldConfig']);
-                $phpConfig = json_decode($phpConfig);
-                $helperColumns = [$newKey => $phpConfig, ...$existingColumns];
-                $session->set('helpercolumns', $helperColumns);
-
+            if (isset($existingColumns[$existingKey])) {
                 return $calculatedColumnConfig;
-            }, 'opendxp_gridconfig');
+            }
+
+            $newKey = '#' . uniqid('', false);
+            $calculatedColumnConfig['key'] = $newKey;
+
+            $phpConfig = json_encode($config['fieldConfig']);
+            $phpConfig = json_decode($phpConfig);
+            $helperColumns = [$newKey => $phpConfig, ...$existingColumns];
+            $helperColumnsBag->set('helpercolumns', $helperColumns);
+
+            return $calculatedColumnConfig;
         } catch (Exception $e) {
             Logger::error((string) $e);
         }

@@ -23,8 +23,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class UpdateWebsiteSettingHandler
 {
-    public function __invoke(array $data): UpdateWebsiteSettingResult
+    public function __invoke(WebsiteSettingPayload $payload): UpdateWebsiteSettingResult
     {
+        $data = $payload->data;
         $setting = WebsiteSetting::getById($data['id']);
 
         if (!$setting instanceof WebsiteSetting) {

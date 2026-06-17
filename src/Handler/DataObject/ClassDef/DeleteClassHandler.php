@@ -21,9 +21,9 @@ use OpenDxp\Model\DataObject;
 
 final class DeleteClassHandler
 {
-    public function __invoke(?string $id): void
+    public function __invoke(DeleteClassPayload $payload): void
     {
-        $class = DataObject\ClassDefinition::getById($id);
+        $class = DataObject\ClassDefinition::getById($payload->id);
         if ($class) {
             $class->delete();
         }

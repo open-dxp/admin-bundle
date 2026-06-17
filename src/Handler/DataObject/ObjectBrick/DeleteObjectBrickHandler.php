@@ -17,13 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick;
 
+use OpenDxp\Bundle\AdminBundle\Payload\Common\StringIdBodyPayload;
 use OpenDxp\Model\DataObject;
 
 final class DeleteObjectBrickHandler
 {
-    public function __invoke(string $id): void
+    public function __invoke(StringIdBodyPayload $payload): void
     {
-        $brick = DataObject\Objectbrick\Definition::getByKey($id);
+        $brick = DataObject\Objectbrick\Definition::getByKey($payload->id);
         $brick->delete();
     }
 }

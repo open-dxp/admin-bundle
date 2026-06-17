@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\AddCustomLayout\AddCustomLayoutPayload;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Exception\ConfigWriteException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class AddCustomLayoutHandler
 {
@@ -28,8 +29,12 @@ final class AddCustomLayoutHandler
     {
     }
 
-    public function __invoke(string $layoutId, string $layoutName, string $classId): DataObject\ClassDefinition\CustomLayout
+    public function __invoke(AddCustomLayoutPayload $payload): DataObject\ClassDefinition\CustomLayout
     {
+        $layoutId = $payload->layoutIdentifier;
+        $layoutName = $payload->layoutName;
+        $classId = $payload->classId;
+
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
         if (DataObject\ClassDefinition\CustomLayout::getById($layoutId)) {
             throw new BadRequestHttpException('Custom Layout identifier already exists');

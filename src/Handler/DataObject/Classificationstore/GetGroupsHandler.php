@@ -28,55 +28,44 @@ final class GetGroupsHandler
 {
     public function __construct(private readonly AdminSearchTermResolver $searchTermResolver) {}
 
-    public function __invoke(
-        array $queryAll,
-        int $limit,
-        int $start,
-        ?string $dir,
-        ?string $sort,
-        bool $overrideSort,
-        ?string $searchfilter,
-        int $storeId,
-        ?string $filter,
-        ?int $oid,
-        ?string $fieldname,
-    ): GetGroupsResult {
+    public function __invoke(GetGroupsPayload $payload): GetGroupsResult
+    {
         $orderKey = 'name';
         $order = 'ASC';
 
-        if ($dir !== null) {
-            $order = $dir;
+        if ($payload->dir !== null) {
+            $order = $payload->dir;
         }
 
-        if ($sort !== null) {
-            $orderKey = $sort;
+        if ($payload->sort !== null) {
+            $orderKey = $payload->sort;
         }
 
-        $sortingSettings = QueryParams::extractSortingSettings($queryAll);
+        $sortingSettings = QueryParams::extractSortingSettings($payload->queryAll);
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $sortingSettings['orderKey'];
             $order = $sortingSettings['order'];
         }
 
-        if ($overrideSort) {
+        if ($payload->overrideSort) {
             $orderKey = 'id';
             $order = 'DESC';
         }
 
         $list = new Classificationstore\GroupConfig\Listing();
 
-        $list->setLimit($limit);
-        $list->setOffset($start);
+        $list->setLimit($payload->limit);
+        $list->setOffset($payload->start);
         $list->setOrder($order);
         $list->setOrderKey($orderKey);
 
         $conditionParts = [];
         $db = Db::get();
 
-        if ($searchfilter !== null) {
+        if ($payload->searchfilter !== null) {
             $searchFilterConditions = [];
 
-            $searchTerms = [$searchfilter, ...$this->searchTermResolver->resolve($searchfilter)];
+            $searchTerms = [$payload->searchfilter, ...$this->searchTermResolver->resolve($payload->searchfilter)];
             foreach ($searchTerms as $searchFilterTerm) {
                 $searchFilterConditions[] = 'name LIKE ' . $db->quote('%' . $searchFilterTerm . '%') . ' OR description LIKE ' . $db->quote('%' . $searchFilterTerm . '%');
             }
@@ -84,12 +73,12 @@ final class GetGroupsHandler
             $conditionParts[] = '(' . implode(' OR ', $searchFilterConditions) . ')';
         }
 
-        if ($storeId) {
-            $conditionParts[] = '(storeId = ' . $db->quote($storeId) . ')';
+        if ($payload->storeId) {
+            $conditionParts[] = '(storeId = ' . $db->quote($payload->storeId) . ')';
         }
 
-        if ($filter !== null) {
-            $filters = json_decode($filter);
+        if ($payload->filter !== null) {
+            $filters = json_decode($payload->filter);
             /** @var stdClass $f */
             foreach ($filters as $f) {
                 if (!isset($f->value)) {
@@ -100,11 +89,11 @@ final class GetGroupsHandler
             }
         }
 
-        if ($oid !== null) {
-            $object = DataObject\Concrete::getById($oid);
+        if ($payload->oid !== null) {
+            $object = DataObject\Concrete::getById($payload->oid);
             $class = $object->getClass();
             /** @var DataObject\ClassDefinition\Data\Classificationstore $fd */
-            $fd = $class->getFieldDefinition($fieldname);
+            $fd = $class->getFieldDefinition($payload->fieldname);
             $allowedGroupIds = $fd->getAllowedGroupIds();
 
             if ($allowedGroupIds) {

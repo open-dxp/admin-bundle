@@ -22,27 +22,22 @@ use OpenDxp\Model\WebsiteSetting;
 
 final class GetWebsiteSettingsListHandler
 {
-    public function __invoke(
-        int $limit,
-        int $offset,
-        ?string $orderKey,
-        ?string $order,
-        ?string $filter,
-    ): GetWebsiteSettingsListResult {
+    public function __invoke(WebsiteSettingPayload $payload): GetWebsiteSettingsListResult
+    {
         $list = new WebsiteSetting\Listing();
-        $list->setLimit($limit);
-        $list->setOffset($offset);
+        $list->setLimit($payload->limit);
+        $list->setOffset($payload->offset);
 
-        if ($orderKey) {
-            $list->setOrderKey($orderKey);
-            $list->setOrder($order);
+        if ($payload->orderKey) {
+            $list->setOrderKey($payload->orderKey);
+            $list->setOrder($payload->order);
         } else {
             $list->setOrderKey('name');
             $list->setOrder('asc');
         }
 
-        if ($filter) {
-            $list->setCondition('`name` LIKE ' . $list->quote('%' . $filter . '%'));
+        if ($payload->filter) {
+            $list->setCondition('`name` LIKE ' . $list->quote('%' . $payload->filter . '%'));
         }
 
         $totalCount = $list->getTotalCount();

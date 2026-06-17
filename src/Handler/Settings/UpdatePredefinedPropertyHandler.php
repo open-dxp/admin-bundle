@@ -22,8 +22,9 @@ use OpenDxp\Model\Property;
 
 final class UpdatePredefinedPropertyHandler
 {
-    public function __invoke(array $data): UpdatePredefinedPropertyResult
+    public function __invoke(PredefinedPropertyPayload $payload): UpdatePredefinedPropertyResult
     {
+        $data = $payload->data;
         $property = Property\Predefined::getById($data['id']);
 
         if (!$property->isWriteable()) {

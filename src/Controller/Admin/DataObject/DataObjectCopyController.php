@@ -19,11 +19,14 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObjectHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\GetDataObjectChildIdsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\RewriteDataObjectIdsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject\CopyDataObjectHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject\CopyDataObjectPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\GetDataObjectChildIds\GetDataObjectChildIdsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\GetDataObjectChildIds\GetDataObjectChildIdsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\RewriteDataObjectIds\RewriteDataObjectIdsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\RewriteDataObjectIds\RewriteDataObjectIdsPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Tool;
+use OpenDxp\Tool\Session;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
@@ -40,18 +43,20 @@ class DataObjectCopyController extends AdminAbstractController
 {
     #[Route('/copy-info', name: 'copyinfo', methods: ['GET'])]
     public function copyInfoAction(
+        GetDataObjectChildIdsPayload $getChildIdsPayload,
         GetDataObjectChildIdsHandler $getChildIds,
         Request $request,
         #[MapQueryParameter] ?string $type = null,
-        #[MapQueryParameter] int $sourceId = 0,
         #[MapQueryParameter(flags: \FILTER_NULL_ON_FAILURE)] ?int $targetId = null,
     ): JsonResponse {
         $transactionId = time();
         $pasteJobs = [];
 
-        Tool\Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId): void {
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId): void {
             $session->set((string) $transactionId, ['idMapping' => []]);
         }, 'opendxp_copy');
+
+        $sourceId = $getChildIdsPayload->sourceId;
 
         if ($type === 'recursive' || $type === 'recursive-update-references') {
             $pasteJobs[] = [[
@@ -66,7 +71,7 @@ class DataObjectCopyController extends AdminAbstractController
                 ],
             ]];
 
-            $childIds = $getChildIds($sourceId)->ids;
+            $childIds = $getChildIds($getChildIdsPayload)->ids;
 
             foreach ($childIds as $id) {
                 $pasteJobs[] = [[
@@ -111,51 +116,37 @@ class DataObjectCopyController extends AdminAbstractController
     }
 
     #[Route('/copy-rewrite-ids', name: 'copyrewriteids', methods: ['PUT'])]
-    public function copyRewriteIdsAction(RewriteDataObjectIdsHandler $rewriteIds, Request $request): JsonResponse
-    {
-        $transactionId = $request->request->get('transactionId');
+    public function copyRewriteIdsAction(
+        RewriteDataObjectIdsPayload $payload,
+        RewriteDataObjectIdsHandler $rewriteIds,
+        Request $request,
+    ): JsonResponse {
+        $rewriteIds($payload);
 
-        $idStore = Tool\Session::useBag($request->getSession(), static fn (AttributeBagInterface $session) => $session->get($transactionId), 'opendxp_copy');
-
-        if (!array_key_exists('rewrite-stack', $idStore)) {
-            $idStore['rewrite-stack'] = array_values($idStore['idMapping']);
-        }
-
-        $id = array_shift($idStore['rewrite-stack']);
-
-        $rewriteIds((int) $id, $idStore['idMapping']);
-
-        Tool\Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId, $idStore): void {
-            $session->set($transactionId, $idStore);
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($payload): void {
+            $session->set($payload->transactionId, $payload->updatedIdStore);
         }, 'opendxp_copy');
 
-        return $this->adminJson(ApiResponse::ok(['id' => $id]));
+        return $this->adminJson(ApiResponse::ok(['id' => $payload->objectId]));
     }
 
     #[Route('/copy', name: 'copy', methods: ['POST'])]
-    public function copyAction(CopyDataObjectHandler $copyObject, Request $request): JsonResponse
-    {
-        $sourceId = $request->request->getInt('sourceId');
-        $targetId = $request->request->getInt('targetId');
-        $type = (string) $request->request->get('type');
-
-        $session = Tool\Session::getSessionBag($request->getSession(), 'opendxp_copy');
-        $sessionBag = $session->get($request->request->get('transactionId'));
-
-        $sourceParentId = $request->request->has('targetParentId') ? $request->request->getInt('sourceParentId') : null;
-        $targetParentId = $request->request->has('targetParentId') ? $request->request->getInt('targetParentId') : null;
-        $sessionParentId = !empty($sessionBag['parentId']) ? (int) $sessionBag['parentId'] : null;
-
-        $result = $copyObject($sourceId, $targetId, $type, $sourceParentId, $targetParentId, $sessionParentId);
+    public function copyAction(
+        CopyDataObjectPayload $payload,
+        CopyDataObjectHandler $copyObject,
+        Request $request,
+    ): JsonResponse {
+        $result = $copyObject($payload);
 
         if ($result->newObject !== null) {
+            $sessionBag = $payload->sessionBag;
             $sessionBag['idMapping'][$result->sourceId] = $result->newObject->getId();
 
-            if ($request->request->get('saveParentId')) {
+            if ($payload->saveParentId) {
                 $sessionBag['parentId'] = $result->newObject->getId();
             }
 
-            $session->set($request->request->get('transactionId'), $sessionBag);
+            Session::getSessionBag($request->getSession(), 'opendxp_copy')->set($payload->transactionId, $sessionBag);
         }
 
         return $this->adminJson(ApiResponse::ok([

@@ -19,7 +19,9 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset\CopyAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\GetAssetChildIds\GetAssetChildIdsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\GetAssetChildIdsHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Tool;
@@ -39,6 +41,7 @@ class AssetCopyController extends AdminAbstractController
 {
     #[Route('/copy-info', name: 'opendxp_admin_asset_copyinfo', methods: ['GET'])]
     public function copyInfoAction(
+        GetAssetChildIdsPayload $childIdsPayload,
         GetAssetChildIdsHandler $getChildIds,
         Request $request,
         #[MapQueryParameter] ?string $type = null,
@@ -65,7 +68,7 @@ class AssetCopyController extends AdminAbstractController
                 ],
             ]];
 
-            $childIds = $getChildIds($sourceId)->ids;
+            $childIds = $getChildIds($childIdsPayload)->ids;
             foreach ($childIds as $id) {
                 $pasteJobs[] = [[
                     'url' => $this->generateUrl('opendxp_admin_asset_copy'),
@@ -109,7 +112,7 @@ class AssetCopyController extends AdminAbstractController
         $targetParentId = $request->request->has('targetParentId') ? (int) $request->request->get('targetParentId') : null;
         $sessionParentId = $sessionBag['parentId'] ? (int) $sessionBag['parentId'] : null;
 
-        $result = $copyAsset($sourceId, $targetId, $type, $sourceParentId, $targetParentId, $sessionParentId);
+        $result = $copyAsset(new CopyAssetPayload($sourceId, $targetId, $type, $sourceParentId, $targetParentId, $sessionParentId));
 
         if ($result->newAsset !== null && $request->request->get('saveParentId')) {
             $sessionBag['parentId'] = $result->newAsset->getId();

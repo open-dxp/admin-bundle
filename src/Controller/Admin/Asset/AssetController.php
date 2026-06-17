@@ -20,15 +20,21 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail\ClearAssetThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolder\CreateAssetFolderPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolderHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAsset\DeleteAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildren\GetAssetChildrenPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetData\GetAssetDataPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetDataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\UpdateAsset\UpdateAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\UpdateAssetHandler;
-use OpenDxp\Bundle\AdminBundle\Payload\Asset\AssetPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService;
@@ -106,13 +112,11 @@ class AssetController extends ElementControllerBase
 
     #[Route('/get-data-by-id', name: 'opendxp_admin_asset_getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
+        GetAssetDataPayload $payload,
         GetAssetDataHandler $getAssetData,
-        Request $request,
-        #[MapQueryParameter] int $id = 0,
-        #[MapQueryParameter] ?string $type = null,
     ): JsonResponse {
         try {
-            $result = $getAssetData($id, $request->getSchemeAndHttpHost());
+            $result = $getAssetData($payload);
         } catch (ElementLockedException $e) {
             return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
@@ -122,32 +126,19 @@ class AssetController extends ElementControllerBase
 
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_asset_treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(
+        GetAssetChildrenPayload $payload,
         GetAssetChildrenHandler $getChildren,
         Request $request,
-        #[MapQueryParameter] ?string $filter = null,
         #[MapQueryParameter] int $inSearch = 0,
     ): JsonResponse {
-        $allParams = $request->query->all();
-        $nodeId = (int) $allParams['node'];
+        $result = $getChildren($payload);
 
-        $limit = (int) ($allParams['limit'] ?? 0);
-        if ($filter !== null) {
-            $limit = 100;
-        } elseif (!$limit) {
-            $limit = 100000000;
-        }
-
-        $offset = isset($allParams['start']) ? (int) $allParams['start'] : 0;
-        $customViewId = ($allParams['view'] ?? null) ?: null;
-
-        $result = $getChildren($nodeId, $customViewId, $filter, $limit, $offset);
-
-        if ($allParams['limit'] ?? false) {
+        if ($request->query->has('limit')) {
             return $this->adminJson([
                 'offset'   => $result->offset,
                 'limit'    => $result->limit,
                 'total'    => $result->totalChildCount,
-                'overflow' => $filter !== null && ($result->filteredTotalCount > $result->limit),
+                'overflow' => $payload->filter !== null && ($result->filteredTotalCount > $result->limit),
                 'nodes'    => $result->assets,
                 'filter'   => $result->filter ?: '',
                 'inSearch' => $inSearch,
@@ -158,24 +149,17 @@ class AssetController extends ElementControllerBase
     }
 
     #[Route('/add-folder', name: 'opendxp_admin_asset_addfolder', methods: ['POST'])]
-    public function addFolderAction(CreateAssetFolderHandler $createFolder, Request $request): JsonResponse
+    public function addFolderAction(CreateAssetFolderPayload $payload, CreateAssetFolderHandler $createFolder): JsonResponse
     {
-        $createFolder(
-            (int) $request->request->get('parentId'),
-            (string) $request->request->get('name'),
-        );
+        $createFolder($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/delete', name: 'opendxp_admin_asset_delete', methods: ['DELETE'])]
-    public function deleteAction(DeleteAssetHandler $deleteAsset, Request $request): JsonResponse
+    public function deleteAction(DeleteAssetPayload $payload, DeleteAssetHandler $deleteAsset): JsonResponse
     {
-        $result = $deleteAsset(
-            (string) $request->request->get('type', ''),
-            (int) $request->request->get('id'),
-            (int) $request->request->get('amount', 0),
-        );
+        $result = $deleteAsset($payload);
 
         if ($result->deleted) {
             return $this->adminJson(ApiResponse::ok(['deleted' => $result->deleted]));
@@ -185,21 +169,17 @@ class AssetController extends ElementControllerBase
     }
 
     #[Route('/update', name: 'opendxp_admin_asset_update', methods: ['PUT'])]
-    public function updateAction(UpdateAssetHandler $updateAsset, Request $request): JsonResponse
+    public function updateAction(UpdateAssetPayload $payload, UpdateAssetHandler $updateAsset): JsonResponse
     {
-        $updateData = [...$request->request->all(), ...$request->query->all()];
-        $result = $updateAsset((int) $request->request->get('id'), $updateData);
+        $result = $updateAsset($payload);
 
         return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
     }
 
     #[Route('/save', name: 'opendxp_admin_asset_save', methods: ['PUT', 'POST'])]
-    public function saveAction(SaveAssetHandler $saveAsset, Request $request): JsonResponse
+    public function saveAction(SaveAssetHandler $saveAsset, SaveAssetPayload $payload): JsonResponse
     {
-        $result = $saveAsset(
-            (int) $request->request->get('id'),
-            AssetPayload::fromRequest($request),
-        );
+        $result = $saveAsset($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'data'     => [
@@ -211,9 +191,9 @@ class AssetController extends ElementControllerBase
     }
 
     #[Route('/clear-thumbnail', name: 'opendxp_admin_asset_clearthumbnail', methods: ['POST'])]
-    public function clearThumbnailAction(ClearAssetThumbnailHandler $clearThumbnail, Request $request): JsonResponse
+    public function clearThumbnailAction(ClearAssetThumbnailPayload $payload, ClearAssetThumbnailHandler $clearThumbnail): JsonResponse
     {
-        $clearThumbnail((int) $request->request->get('id'));
+        $clearThumbnail($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Payload\DataObject\GetSelectOptionsPayload;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPayloadMapper;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\ClassDefinition\Helper\OptionsProviderResolver;
@@ -26,21 +27,21 @@ final class GetSelectOptionsHandler
 {
     public function __construct(private readonly DataObjectPayloadMapper $mapper) {}
 
-    public function __invoke(int $objectId, ?array $changedData, array $fieldDefinitionConfig, array $context): array
+    public function __invoke(GetSelectOptionsPayload $payload): array
     {
-        $object = DataObject\Concrete::getById($objectId);
+        $object = DataObject\Concrete::getById($payload->objectId);
         if (!$object instanceof DataObject\Concrete) {
             throw new NotFoundHttpException('Object not found.');
         }
 
-        if ($changedData !== null) {
-            $this->mapper->applyChanges($object, $changedData);
+        if ($payload->changedData !== null) {
+            $this->mapper->applyChanges($object, $payload->changedData);
         }
 
         /** @var DataObject\ClassDefinition\Data\Select|DataObject\ClassDefinition\Data\Multiselect $fieldDefinition */
         $fieldDefinition = DataObject\Classificationstore\Service::getFieldDefinitionFromJson(
-            $fieldDefinitionConfig,
-            $fieldDefinitionConfig['fieldtype']
+            $payload->fieldDefinitionConfig,
+            $payload->fieldDefinitionConfig['fieldtype']
         );
 
         $optionsProvider = OptionsProviderResolver::resolveProvider(
@@ -55,7 +56,7 @@ final class GetSelectOptionsHandler
                 'object' => $object,
                 'fieldname' => $fieldDefinition->getName(),
                 'class' => $object->getClass(),
-                'context' => $context,
+                'context' => $payload->context,
             ],
             $fieldDefinition
         );

@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertQuantityValue\ConvertQuantityValuePayload;
 use OpenDxp\Model\DataObject\Data\QuantityValue;
 use OpenDxp\Model\DataObject\QuantityValue\Unit;
 use OpenDxp\Model\DataObject\QuantityValue\UnitConversionService;
@@ -28,16 +29,16 @@ final class ConvertQuantityValueHandler
         private readonly UnitConversionService $conversionService,
     ) {}
 
-    public function __invoke(?string $fromUnitId, ?string $toUnitId, ?string $value): ConvertQuantityValueResult
+    public function __invoke(ConvertQuantityValuePayload $payload): ConvertQuantityValueResult
     {
-        $fromUnit = Unit::getById($fromUnitId);
-        $toUnit = Unit::getById($toUnitId);
+        $fromUnit = Unit::getById($payload->fromUnitId);
+        $toUnit = Unit::getById($payload->toUnitId);
 
         if (!$fromUnit instanceof Unit || !$toUnit instanceof Unit) {
             throw new BadRequestHttpException('Invalid unit IDs provided');
         }
 
-        $convertedValue = $this->conversionService->convert(new QuantityValue($value, $fromUnit), $toUnit);
+        $convertedValue = $this->conversionService->convert(new QuantityValue($payload->value, $fromUnit), $toUnit);
 
         return new ConvertQuantityValueResult($convertedValue->getValue());
     }

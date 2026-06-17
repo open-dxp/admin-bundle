@@ -22,9 +22,9 @@ use OpenDxp\Model\Property;
 
 final class DeletePredefinedPropertyHandler
 {
-    public function __invoke(string $id): void
+    public function __invoke(PredefinedPropertyPayload $payload): void
     {
-        $property = Property\Predefined::getById($id);
+        $property = Property\Predefined::getById((string) $payload->data['id']);
 
         if (!$property->isWriteable()) {
             throw new ConfigWriteException();

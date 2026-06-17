@@ -24,10 +24,10 @@ final class ImportUploadHandler
 {
     public function __construct(private readonly Filesystem $filesystem) {}
 
-    public function __invoke(string $fileContents, string $importId): void
+    public function __invoke(ImportUploadPayload $payload): void
     {
-        $data = Text::convertToUTF8($fileContents);
-        $importId = str_replace('..', '', $importId);
+        $data = Text::convertToUTF8($payload->fileContents);
+        $importId = str_replace('..', '', $payload->importId);
 
         $importFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/import_' . $importId;
         $this->filesystem->dumpFile($importFile, $data);

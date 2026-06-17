@@ -21,18 +21,23 @@ use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\DeleteObjectBrickHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ExportObjectBrickHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ExportObjectBrick\ExportObjectBrickPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetBrickUsagesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetBrickUsages\GetBrickUsagesPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrick\GetObjectBrickPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickList\GetObjectBrickListPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickTreeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickTree\GetObjectBrickTreePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ImportObjectBrickHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ImportObjectBrick\ImportObjectBrickPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\UpdateObjectBrickHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\UpdateObjectBrick\UpdateObjectBrickPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\StringIdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -44,9 +49,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class ObjectBrickController extends AdminAbstractController
 {
     #[Route('/objectbrick-get', name: 'objectbrickget', methods: ['GET'])]
-    public function objectbrickGetAction(GetObjectBrickHandler $getObjectBrick, #[MapQueryParameter] string $id): JsonResponse
+    public function objectbrickGetAction(GetObjectBrickHandler $getObjectBrick, GetObjectBrickPayload $payload): JsonResponse
     {
-        $result = $getObjectBrick($id);
+        $result = $getObjectBrick($payload);
         $data = $result->data;
         $data['isWriteable'] = $result->isWriteable;
 
@@ -54,46 +59,27 @@ class ObjectBrickController extends AdminAbstractController
     }
 
     #[Route('/objectbrick-update', name: 'objectbrickupdate', methods: ['PUT', 'POST'])]
-    public function objectbrickUpdateAction(UpdateObjectBrickHandler $updateObjectBrick, Request $request): JsonResponse
+    public function objectbrickUpdateAction(UpdateObjectBrickHandler $updateObjectBrick, UpdateObjectBrickPayload $payload): JsonResponse
     {
-        $brickDef = $updateObjectBrick(
-            (string) $request->request->get('key'),
-            (string) $request->request->get('title'),
-            (string) $request->request->get('group'),
-            $request->request->get('task') === 'add',
-            $request->request->has('values') ? $this->decodeJson($request->request->get('values')) : null,
-            $request->request->has('configuration') ? $this->decodeJson($request->request->get('configuration')) : null,
-        );
+        $brickDef = $updateObjectBrick($payload);
 
         return $this->adminJson(ApiResponse::ok(['id' => $brickDef->getKey()]));
     }
 
     #[Route('/objectbrick-delete', name: 'objectbrickdelete', methods: ['DELETE'])]
-    public function objectbrickDeleteAction(DeleteObjectBrickHandler $deleteObjectBrick, Request $request): JsonResponse
+    public function objectbrickDeleteAction(DeleteObjectBrickHandler $deleteObjectBrick, StringIdBodyPayload $payload): JsonResponse
     {
-        $deleteObjectBrick((string) $request->request->get('id'));
+        $deleteObjectBrick($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/objectbrick-tree', name: 'objectbricktree', methods: ['GET', 'POST'])]
-    public function objectbrickTreeAction(
-        GetObjectBrickTreeHandler $getTree,
-        #[MapQueryParameter] ?string $forObjectEditor = null,
-        #[MapQueryParameter(name: 'object_id')] int $objectId = 0,
-        #[MapQueryParameter(name: 'class_id')] ?string $classId = null,
-        #[MapQueryParameter(name: 'field_name')] ?string $fieldName = null,
-        #[MapQueryParameter] ?string $layoutId = null,
-    ): JsonResponse {
-        $result = $getTree(
-            $forObjectEditor !== null,
-            $objectId,
-            $classId,
-            $fieldName,
-            $layoutId,
-            );
+    public function objectbrickTreeAction(GetObjectBrickTreeHandler $getTree, GetObjectBrickTreePayload $payload): JsonResponse
+    {
+        $result = $getTree($payload);
 
-        if ($forObjectEditor) {
+        if ($payload->forObjectEditor) {
             return $this->adminJson(['objectbricks' => $result->definitions, 'layoutDefinitions' => $result->layoutDefinitions]);
         }
 
@@ -101,24 +87,17 @@ class ObjectBrickController extends AdminAbstractController
     }
 
     #[Route('/objectbrick-list', name: 'objectbricklist', methods: ['GET'])]
-    public function objectbrickListAction(
-        GetObjectBrickListHandler $getList,
-        #[MapQueryParameter(name: 'class_id')] ?string $classId = null,
-        #[MapQueryParameter(name: 'field_name')] ?string $fieldName = null,
-        #[MapQueryParameter] ?string $layoutId = null,
-        #[MapQueryParameter(name: 'object_id')] int $objectId = 0,
-    ): JsonResponse {
-        $result = $getList($classId, $fieldName, $layoutId, $objectId);
+    public function objectbrickListAction(GetObjectBrickListHandler $getList, GetObjectBrickListPayload $payload): JsonResponse
+    {
+        $result = $getList($payload);
 
         return $this->adminJson(['objectbricks' => $result->objectbricks]);
     }
 
     #[Route('/import-objectbrick', name: 'importobjectbrick', methods: ['POST'])]
-    public function importObjectbrickAction(ImportObjectBrickHandler $importObjectBrick, Request $request, #[MapQueryParameter] string $id): JsonResponse
+    public function importObjectbrickAction(ImportObjectBrickHandler $importObjectBrick, ImportObjectBrickPayload $payload): JsonResponse
     {
-        /** @var UploadedFile $file */
-        $file = $request->files->get('Filedata');
-        $importObjectBrick($id, file_get_contents($file->getPathname()));
+        $importObjectBrick($payload);
         $response = $this->adminJson(ApiResponse::ok());
         $response->headers->set('Content-Type', 'text/html');
 
@@ -126,9 +105,9 @@ class ObjectBrickController extends AdminAbstractController
     }
 
     #[Route('/export-objectbrick', name: 'exportobjectbrick', methods: ['GET'])]
-    public function exportObjectbrickAction(ExportObjectBrickHandler $exportObjectBrick, #[MapQueryParameter] string $id): Response
+    public function exportObjectbrickAction(ExportObjectBrickHandler $exportObjectBrick, ExportObjectBrickPayload $payload): Response
     {
-        $result = $exportObjectBrick($id);
+        $result = $exportObjectBrick($payload);
 
         $response = new Response($result->json);
         $response->headers->set('Content-type', 'application/json');
@@ -138,8 +117,8 @@ class ObjectBrickController extends AdminAbstractController
     }
 
     #[Route('/get-bricks-usages', name: 'getbrickusages', methods: ['GET'])]
-    public function getBrickUsagesAction(GetBrickUsagesHandler $getBrickUsages, #[MapQueryParameter] string $classId): Response
+    public function getBrickUsagesAction(GetBrickUsagesHandler $getBrickUsages, GetBrickUsagesPayload $payload): Response
     {
-        return $this->adminJson($getBrickUsages($classId)->usages);
+        return $this->adminJson($getBrickUsages($payload)->usages);
     }
 }

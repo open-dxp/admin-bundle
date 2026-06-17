@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetDocumentThumbnail\GetDocumentThumbnailPayload;
 use OpenDxp\Messenger\AssetPreviewImageMessage;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -28,13 +29,13 @@ final class GetDocumentThumbnailHandler
 {
     public function __construct(private readonly MessageBusInterface $messageBus) {}
 
-    public function __invoke(
-        int $id,
-        bool $hasThumbnailPreview,
-        ?int $page,
-        ?string $origin,
-        array $queryAll,
-    ): GetDocumentThumbnailResult {
+    public function __invoke(GetDocumentThumbnailPayload $payload): GetDocumentThumbnailResult
+    {
+        $id = $payload->id;
+        $hasThumbnailPreview = $payload->hasThumbnailPreview;
+        $page = $payload->page;
+        $origin = $payload->origin;
+        $queryAll = $payload->queryAll;
         $document = Asset\Document::getById($id) ?? throw new AssetNotFoundException($id);
 
         if (!$document->isAllowed('view')) {

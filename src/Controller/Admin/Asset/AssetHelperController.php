@@ -18,17 +18,23 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExportHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatchHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetMetadataForColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\MarkGridConfigFavouritePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavouriteHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\AssetGridColumnConfigResolver;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
-use OpenDxp\File;
 use OpenDxp\Tool\Session;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -52,6 +58,7 @@ class AssetHelperController extends AdminAbstractController
 
     #[Route('/grid-delete-column-config', name: 'opendxp_admin_asset_assethelper_griddeletecolumnconfig', methods: ['DELETE'])]
     public function gridDeleteColumnConfigAction(
+        DeleteGridColumnConfigPayload $deletePayload,
         DeleteGridColumnConfigHandler $deleteGridColumnConfig,
         Request $request,
         #[MapQueryParameter(name: 'no_system_columns')] bool $noSystemColumns = false,
@@ -65,9 +72,7 @@ class AssetHelperController extends AdminAbstractController
             'noSystemColumns' => $noSystemColumns,
         ];
 
-        $deleteGridColumnConfig(
-            (int) $request->request->get('gridConfigId'),
-            );
+        $deleteGridColumnConfig($deletePayload);
 
         $resolverResult = $this->gridConfigResolver->resolve($params, true);
 
@@ -126,36 +131,20 @@ class AssetHelperController extends AdminAbstractController
 
     #[Route('/grid-mark-favourite-column-config', name: 'opendxp_admin_asset_assethelper_gridmarkfavouritecolumnconfig', methods: ['POST'])]
     public function gridMarkFavouriteColumnConfigAction(
+        MarkGridConfigFavouritePayload $payload,
         MarkGridConfigFavouriteHandler $markFavourite,
-        Request $request,
     ): JsonResponse {
-        $result = $markFavourite(
-            $request->request->get('classId'),
-            (int) $request->request->get('gridConfigId'),
-            $request->request->get('searchType'),
-            $request->request->get('type'),
-            );
+        $result = $markFavourite($payload);
 
         return $this->adminJson(ApiResponse::ok(['specializedConfigs' => $result->specializedConfigs]));
     }
 
     #[Route('/grid-save-column-config', name: 'opendxp_admin_asset_assethelper_gridsavecolumnconfig', methods: ['POST'])]
     public function gridSaveColumnConfigAction(
+        SaveGridColumnConfigPayload $payload,
         SaveGridColumnConfigHandler $saveGridColumnConfig,
-        Request $request,
     ): JsonResponse {
-        $gridConfigData = $this->decodeJson($request->request->get('gridconfig'));
-        $metadata = json_decode($request->request->get('settings'), true);
-
-        $result = $saveGridColumnConfig(
-            (int) $request->request->get('id'),
-            $request->request->get('class_id'),
-            $request->request->get('context'),
-            $request->request->get('searchType'),
-            $request->request->get('type'),
-            $gridConfigData,
-            $metadata,
-            );
+        $result = $saveGridColumnConfig($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'settings'         => $result->settings,
@@ -165,30 +154,17 @@ class AssetHelperController extends AdminAbstractController
     }
 
     #[Route('/get-export-jobs', name: 'opendxp_admin_asset_assethelper_getexportjobs', methods: ['POST'])]
-    public function getExportJobsAction(GetExportJobsHandler $getExportJobs, Request $request): JsonResponse
+    public function getExportJobsAction(GetExportJobsPayload $payload, GetExportJobsHandler $getExportJobs): JsonResponse
     {
-        $allParams = [...$request->request->all(), ...$request->query->all()];
-        $result = $getExportJobs($allParams);
+        $result = $getExportJobs($payload);
 
         return $this->adminJson(ApiResponse::ok(['jobs' => $result->jobs, 'fileHandle' => $result->fileHandle]));
     }
 
     #[Route('/do-export', name: 'opendxp_admin_asset_assethelper_doexport', methods: ['POST'])]
-    public function doExportAction(DoAssetExportHandler $doExport, Request $request): JsonResponse
+    public function doExportAction(DoAssetExportPayload $payload, DoAssetExportHandler $doExport): JsonResponse
     {
-        $fileHandle = File::getValidFilename($request->request->get('fileHandle'));
-        $settings = json_decode($request->request->get('settings'), true);
-        $fields = json_decode($request->request->all('fields')[0], true);
-
-        $doExport(
-            $fileHandle,
-            $request->request->all('ids'),
-            $settings['delimiter'] ?? ';',
-            str_replace('default', '', $request->request->get('language')),
-            $settings['header'] ?? 'title',
-            $fields,
-            (bool) $request->request->get('initial'),
-        );
+        $doExport($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -226,24 +202,22 @@ class AssetHelperController extends AdminAbstractController
     }
 
     #[Route('/get-batch-jobs', name: 'opendxp_admin_asset_assethelper_getbatchjobs', methods: ['POST'])]
-    public function getBatchJobsAction(GetAssetBatchJobsHandler $getAssetBatchJobs, Request $request): JsonResponse
+    public function getBatchJobsAction(GetAssetBatchJobsPayload $payload, GetAssetBatchJobsHandler $getAssetBatchJobs, Request $request): JsonResponse
     {
-        if ($request->request->get('language')) {
-            $request->setLocale($request->request->get('language'));
+        if ($payload->language) {
+            $request->setLocale($payload->language);
         }
 
-        $allParams = [...$request->request->all(), ...$request->query->all()];
-        $result = $getAssetBatchJobs($allParams);
+        $result = $getAssetBatchJobs($payload);
 
         return $this->adminJson(ApiResponse::ok(['jobs' => $result->jobs]));
     }
 
     #[Route('/batch', name: 'opendxp_admin_asset_assethelper_batch', methods: ['PUT'])]
-    public function batchAction(ExecuteAssetBatchHandler $executeAssetBatch, Request $request): JsonResponse
+    public function batchAction(ExecuteAssetBatchPayload $payload, ExecuteAssetBatchHandler $executeAssetBatch): JsonResponse
     {
-        if ($request->request->has('data')) {
-            $data = $this->decodeJson($request->request->get('data'), true);
-            $executeAssetBatch($data);
+        if ($payload->data !== null) {
+            $executeAssetBatch($payload);
         }
 
         return $this->adminJson(ApiResponse::ok());

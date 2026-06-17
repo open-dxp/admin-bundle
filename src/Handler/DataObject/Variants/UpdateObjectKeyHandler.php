@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\UpdateObjectKey\UpdateObjectKeyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -27,8 +28,11 @@ final class UpdateObjectKeyHandler
         private readonly DataObjectGridService $dataObjectGridService,
     ) {}
 
-    public function __invoke(int $id, string $key): UpdateObjectKeyResult
+    public function __invoke(UpdateObjectKeyPayload $payload): UpdateObjectKeyResult
     {
+        $id = $payload->id;
+        $key = $payload->key;
+
         $object = DataObject\Concrete::getById($id);
 
         if (!$object) {

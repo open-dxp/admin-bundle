@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\GetVariants\GetVariantsPayload;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -28,8 +29,12 @@ final class GetVariantsHandler
         private readonly DataObjectGridService $dataObjectGridService,
     ) {}
 
-    public function __invoke(int $parentObjectId, array $allParams, string $requestedLanguage): GetVariantsResult
+    public function __invoke(GetVariantsPayload $payload): GetVariantsResult
     {
+        $parentObjectId = $payload->objectId;
+        $allParams = $payload->allParams;
+        $requestedLanguage = $payload->requestedLanguage;
+
         $parentObject = DataObject\Concrete::getById($parentObjectId);
         if (!$parentObject) {
             throw new NotFoundHttpException('No Object found with id ' . $parentObjectId);

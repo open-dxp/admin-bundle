@@ -18,12 +18,15 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadZip\DownloadZipPayload;
 use OpenDxp\Model\Asset;
 
 final class DownloadZipHandler
 {
-    public function __invoke(int $id, string $jobId): DownloadZipResult
+    public function __invoke(DownloadZipPayload $payload): DownloadZipResult
     {
+        $id = $payload->id;
+        $jobId = $payload->jobId;
         $asset = Asset::getById($id) ?? throw new AssetNotFoundException($id);
         $zipFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/download-zip-' . $jobId . '.zip';
         $suggestedFilename = $asset->getFilename() ?: 'assets';

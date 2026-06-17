@@ -18,19 +18,22 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element;
 
 use OpenDxp\Model\Element\Note;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class DeleteNoteHandler
 {
-    public function __invoke(int $id): bool
+    public function __invoke(NoteListPayload $payload): void
     {
-        $note = Note::getById($id);
+        $note = Note::getById($payload->id);
 
-        if ($note && !$note->getLocked()) {
-            $note->delete();
-
-            return true;
+        if (!$note) {
+            return;
         }
 
-        return false;
+        if ($note->getLocked()) {
+            throw new BadRequestHttpException('note_is_locked');
+        }
+
+        $note->delete();
     }
 }

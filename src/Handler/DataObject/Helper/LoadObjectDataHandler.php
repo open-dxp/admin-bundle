@@ -22,13 +22,13 @@ use OpenDxp\Model\DataObject;
 
 final class LoadObjectDataHandler
 {
-    public function __invoke(int $id, array $fields): array
+    public function __invoke(LoadObjectDataPayload $payload): array
     {
-        $object = DataObject::getById($id);
+        $object = DataObject::getById($payload->id);
         if (!$object instanceof DataObject) {
-            throw new DataObjectNotFoundException($id);
+            throw new DataObjectNotFoundException($payload->id);
         }
 
-        return GridData\DataObject::getData($object, $fields);
+        return GridData\DataObject::getData($object, $payload->fields);
     }
 }

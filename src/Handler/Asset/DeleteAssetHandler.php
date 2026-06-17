@@ -17,9 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAsset\DeleteAssetPayload;
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
-use OpenDxp\Model\User;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -30,8 +30,11 @@ final class DeleteAssetHandler
     {
     }
 
-    public function __invoke(string $type, int $id, int $amount): DeleteAssetResult
+    public function __invoke(DeleteAssetPayload $payload): DeleteAssetResult
     {
+        $type = $payload->type;
+        $id = $payload->id;
+        $amount = $payload->amount;
         $adminUser = $this->userContext->getAdminUser();
         if ($type === 'children') {
             $parentAsset = Asset::getById($id);

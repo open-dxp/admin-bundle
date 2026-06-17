@@ -18,12 +18,12 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderContentPreview\GetFolderContentPreviewPayload;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
-use OpenDxp\Model\User;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -37,8 +37,9 @@ final class GetFolderContentPreviewHandler
         private readonly ElementServiceInterface $elementService,
     ) {}
 
-    public function __invoke(array $requestParams): GetFolderContentPreviewResult
+    public function __invoke(GetFolderContentPreviewPayload $payload): GetFolderContentPreviewResult
     {
+        $requestParams = $payload->requestParams;
         $adminUser = $this->userContext->getAdminUser();
         $filterPrepareEvent = new GenericEvent(null, ['requestParams' => $requestParams]);
         $this->eventDispatcher->dispatch($filterPrepareEvent, AdminEvents::ASSET_LIST_BEFORE_FILTER_PREPARE);

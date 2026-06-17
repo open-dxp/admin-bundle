@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper;
 
 use League\Flysystem\UnableToReadFile;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Logger;
@@ -33,15 +34,15 @@ final class DoAssetExportHandler
         private readonly GridColumnConfigService $gridColumnConfigService,
     ) {}
 
-    public function __invoke(
-        string $fileHandle,
-        array $ids,
-        string $delimiter,
-        string $language,
-        string $header,
-        array $fields,
-        bool $addTitles,
-    ): void {
+    public function __invoke(DoAssetExportPayload $payload): void
+    {
+        $fileHandle = $payload->fileHandle;
+        $ids = $payload->ids;
+        $delimiter = $payload->delimiter;
+        $language = $payload->language;
+        $header = $payload->header;
+        $fields = $payload->fields;
+        $addTitles = $payload->addTitles;
         $list = new Asset\Listing();
 
         $quotedIds = [];

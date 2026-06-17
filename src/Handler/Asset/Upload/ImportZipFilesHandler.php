@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles\ImportZipFilesPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService;
 use OpenDxp\File;
 use OpenDxp\Logger;
@@ -34,14 +35,14 @@ final class ImportZipFilesHandler
         private readonly Filesystem $filesystem,
     ) {}
 
-    public function __invoke(
-        int $parentId,
-        string $jobId,
-        int $offset,
-        int $limit,
-        bool $allowOverwrite,
-        bool $isLast,
-    ): void {
+    public function __invoke(ImportZipFilesPayload $payload): void
+    {
+        $parentId = $payload->parentId;
+        $jobId = $payload->jobId;
+        $offset = $payload->offset;
+        $limit = $payload->limit;
+        $allowOverwrite = $payload->allowOverwrite;
+        $isLast = $payload->isLast;
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
         $importAsset = Asset::getById($parentId);
         $zipFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/' . $jobId . '.zip';

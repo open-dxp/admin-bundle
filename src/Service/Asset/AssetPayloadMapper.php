@@ -18,7 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\Service\Asset;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Bundle\AdminBundle\Payload\Asset\AssetPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Logger;
 use OpenDxp\Model;
@@ -34,7 +34,7 @@ final class AssetPayloadMapper
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
-    public function applyPayload(AssetPayload $payload, Asset $asset): void
+    public function applyPayload(SaveAssetPayload $payload, Asset $asset): void
     {
         if ($payload->metadata !== null) {
             $metadataEvent = new GenericEvent(null, [

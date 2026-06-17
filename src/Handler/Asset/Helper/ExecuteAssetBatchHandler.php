@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridBatchService;
 use OpenDxp\Model\User;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -28,8 +29,9 @@ final class ExecuteAssetBatchHandler
         private readonly GridBatchService $gridBatchService,
     ) {}
 
-    public function __invoke(array $data): void
+    public function __invoke(ExecuteAssetBatchPayload $payload): void
     {
+        $data = $payload->data ?? [];
         $adminUser = $this->userContext->getAdminUser();
         // Returns false when there is no asset to update (job already completed) — not an error.
         // Throws on permission denied or save failure.

@@ -21,16 +21,16 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class DeleteCollectionHandler
 {
-    public function __invoke(int $id): void
+    public function __invoke(DeleteCollectionPayload $payload): void
     {
         $configRelations = new Classificationstore\CollectionGroupRelation\Listing();
-        $configRelations->setCondition('colId = ?', $id);
+        $configRelations->setCondition('colId = ?', $payload->id);
         $list = $configRelations->load();
         foreach ($list as $item) {
             $item->delete();
         }
 
-        $config = Classificationstore\CollectionConfig::getById($id);
+        $config = Classificationstore\CollectionConfig::getById($payload->id);
         $config->delete();
     }
 }

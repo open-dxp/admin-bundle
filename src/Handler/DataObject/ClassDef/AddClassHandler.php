@@ -27,13 +27,13 @@ final class AddClassHandler
     {
     }
 
-    public function __invoke(string $className, ?string $classId): AddClassResult
+    public function __invoke(AddClassPayload $payload): AddClassResult
     {
-        $className = preg_replace('/[^a-zA-Z0-9_]+/', '', $className);
+        $className = preg_replace('/[^a-zA-Z0-9_]+/', '', $payload->className);
         $className = preg_replace('/^\d+/', '', $className);
 
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
-        $existingClass = DataObject\ClassDefinition::getById($classId);
+        $existingClass = DataObject\ClassDefinition::getById($payload->classId);
         if ($existingClass) {
             throw new Exception('Class identifier already exists');
         }
@@ -43,7 +43,7 @@ final class AddClassHandler
             'userOwner' => $userId,
         ]);
 
-        $class->setId($classId);
+        $class->setId($payload->classId);
         $class->save(true);
 
         return new AddClassResult(id: $class->getId());

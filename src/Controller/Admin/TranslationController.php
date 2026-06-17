@@ -30,6 +30,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Translation\GetTranslationsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\GetWebsiteTranslationLanguagesHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\ImportTranslationsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\MergeTranslationItemsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\TranslationPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\UpdateTranslationHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\UploadTranslationImportFileHandler;
 use OpenDxp\Model\Translation;
@@ -39,6 +40,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -155,62 +157,60 @@ class TranslationController extends AdminAbstractController
 
     #[Route('/translations', name: 'opendxp_admin_translation_translations', methods: ['POST'])]
     public function translationsAction(
-        Request $request,
+        TranslationPayload $payload,
         DeleteTranslationHandler $deleteTranslation,
         UpdateTranslationHandler $updateTranslation,
         CreateTranslationHandler $createTranslation,
         GetTranslationsHandler $getTranslations,
         #[MapQueryParameter] ?string $xaction = null,
     ): JsonResponse {
-        $domain = $request->request->get('domain', Translation::DOMAIN_DEFAULT);
-        $admin = $domain === Translation::DOMAIN_ADMIN;
+        $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
 
-        $this->checkPermission(($admin ? 'admin_' : '') . 'translations');
-
-        if ($request->request->has('data')) {
-            $data = $this->decodeJson($request->request->get('data'));
-
-            if ($xaction === 'destroy') {
-                $deleteTranslation($data['key'], $domain);
-
-                return $this->adminJson(ApiResponse::ok(['data' => []]));
-            }
-
-            if ($xaction === 'update') {
-                $result = $updateTranslation($data, $domain);
-
-                return $this->adminJson(ApiResponse::ok(['data' => [
-                    'key'              => $result->key,
-                    'creationDate'     => $result->creationDate,
-                    'modificationDate' => $result->modificationDate,
-                    'type'             => $result->type,
-                    ...$this->prefixTranslations($result->translations),
-                ]]));
-            }
-
-            if ($xaction === 'create') {
-                $result = $createTranslation($data, $domain);
-
-                return $this->adminJson(ApiResponse::ok(['data' => [
-                    'key'              => $result->key,
-                    'creationDate'     => $result->creationDate,
-                    'modificationDate' => $result->modificationDate,
-                    'type'             => $result->type,
-                    ...$this->prefixTranslations($result->translations),
-                ]]));
-            }
+        if ($payload->hasData) {
+            return match ($xaction) {
+                'destroy' => $this->handleDestroyTranslation($deleteTranslation, $payload),
+                'update'  => $this->handleUpdateTranslation($updateTranslation, $payload),
+                'create'  => $this->handleCreateTranslation($createTranslation, $payload),
+                default   => throw new BadRequestHttpException(),
+            };
         }
 
-        $result = $getTranslations(
-            domain: $domain,
-            requestParams: [...$request->request->all(), ...$request->query->all()],
-            limit: (int) $request->request->get('limit', 50),
-            offset: (int) $request->request->get('start', 0),
-            filter: $request->request->get('filter'),
-            searchString: $request->request->get('searchString'),
-        );
+        $result = $getTranslations($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->translations, 'total' => $result->total]));
+    }
+
+    private function handleDestroyTranslation(DeleteTranslationHandler $handler, TranslationPayload $payload): JsonResponse
+    {
+        $handler($payload);
+
+        return $this->adminJson(ApiResponse::ok(['data' => []]));
+    }
+
+    private function handleUpdateTranslation(UpdateTranslationHandler $handler, TranslationPayload $payload): JsonResponse
+    {
+        $result = $handler($payload);
+
+        return $this->adminJson(ApiResponse::ok(['data' => [
+            'key'              => $result->key,
+            'creationDate'     => $result->creationDate,
+            'modificationDate' => $result->modificationDate,
+            'type'             => $result->type,
+            ...$this->prefixTranslations($result->translations),
+        ]]));
+    }
+
+    private function handleCreateTranslation(CreateTranslationHandler $handler, TranslationPayload $payload): JsonResponse
+    {
+        $result = $handler($payload);
+
+        return $this->adminJson(ApiResponse::ok(['data' => [
+            'key'              => $result->key,
+            'creationDate'     => $result->creationDate,
+            'modificationDate' => $result->modificationDate,
+            'type'             => $result->type,
+            ...$this->prefixTranslations($result->translations),
+        ]]));
     }
 
     protected function prefixTranslations(array $translations): array

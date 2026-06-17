@@ -21,18 +21,21 @@ use DateInterval;
 use DateTime;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetDocumentThumbnail\GetDocumentThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetDocumentThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderContentPreview\GetFolderContentPreviewPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderContentPreviewHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderThumbnail\GetFolderThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail\GetImageThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetVideoThumbnail\GetVideoThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetVideoThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -44,37 +47,10 @@ class AssetThumbnailController extends AdminAbstractController
 {
     #[Route('/get-image-thumbnail', name: 'opendxp_admin_asset_getimagethumbnail', methods: ['GET'])]
     public function getImageThumbnailAction(
+        GetImageThumbnailPayload $payload,
         GetImageThumbnailHandler $getImageThumbnail,
-        Request $request,
-        #[MapQueryParameter] ?string $fileinfo = null,
-        #[MapQueryParameter] int $id = 0,
-        #[MapQueryParameter] ?string $config = null,
-        #[MapQueryParameter] ?array $thumbnail = null,
-        #[MapQueryParameter] ?string $treepreview = null,
-        #[MapQueryParameter] ?string $origin = null,
-        #[MapQueryParameter] ?string $cropPercent = null,
-        #[MapQueryParameter] ?string $cropWidth = null,
-        #[MapQueryParameter] ?string $cropHeight = null,
-        #[MapQueryParameter] ?string $cropTop = null,
-        #[MapQueryParameter] ?string $cropLeft = null,
     ): BinaryFileResponse|JsonResponse|StreamedResponse {
-        $configDecoded = $config ? $this->decodeJson($config) : null;
-        $hasCropPercent = $cropPercent !== null && filter_var($cropPercent, FILTER_VALIDATE_BOOLEAN);
-
-        $result = $getImageThumbnail(
-            $id,
-            $fileinfo !== null,
-            $thumbnail,
-            $configDecoded,
-            $request->query->all(),
-            $treepreview !== null,
-            $origin,
-            $hasCropPercent,
-            $cropWidth,
-            $cropHeight,
-            $cropTop,
-            $cropLeft,
-        );
+        $result = $getImageThumbnail($payload);
 
         if ($result->returnLoadingGif) {
             $response = new BinaryFileResponse(OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/video-loading.gif');
@@ -112,9 +88,9 @@ class AssetThumbnailController extends AdminAbstractController
 
     #[Route('/get-folder-thumbnail', name: 'opendxp_admin_asset_getfolderthumbnail', methods: ['GET'])]
     #[IsGranted(CorePermission::Assets->value)]
-    public function getFolderThumbnailAction(GetFolderThumbnailHandler $getFolderThumbnail, #[MapQueryParameter] ?int $id = null): StreamedResponse
+    public function getFolderThumbnailAction(GetFolderThumbnailPayload $payload, GetFolderThumbnailHandler $getFolderThumbnail): StreamedResponse
     {
-        $result = $getFolderThumbnail($id);
+        $result = $getFolderThumbnail($payload);
 
         $response = new StreamedResponse(static function () use ($result): void {
             fpassthru($result->stream);
@@ -128,26 +104,10 @@ class AssetThumbnailController extends AdminAbstractController
 
     #[Route('/get-video-thumbnail', name: 'opendxp_admin_asset_getvideothumbnail', methods: ['GET'])]
     public function getVideoThumbnailAction(
+        GetVideoThumbnailPayload $payload,
         GetVideoThumbnailHandler $getVideoThumbnail,
-        Request $request,
-        #[MapQueryParameter] int $id = 0,
-        #[MapQueryParameter] ?string $path = null,
-        #[MapQueryParameter] ?string $time = null,
-        #[MapQueryParameter] int $image = 0,
-        #[MapQueryParameter] ?string $origin = null,
     ): StreamedResponse {
-        $result = $getVideoThumbnail(
-            $request->query->has('id') ? $id : null,
-            $path,
-            $request->query->has('treepreview'),
-            $request->query->has('settime'),
-            $request->query->has('setimage'),
-            $request->query->has('image'),
-            $image,
-            $time,
-            $origin,
-            $request->query->all(),
-        );
+        $result = $getVideoThumbnail($payload);
 
         $response = new StreamedResponse(static function () use ($result): void {
             fpassthru($result->stream);
@@ -161,14 +121,10 @@ class AssetThumbnailController extends AdminAbstractController
 
     #[Route('/get-document-thumbnail', name: 'opendxp_admin_asset_getdocumentthumbnail', methods: ['GET'])]
     public function getDocumentThumbnailAction(
+        GetDocumentThumbnailPayload $payload,
         GetDocumentThumbnailHandler $getDocumentThumbnail,
-        Request $request,
-        #[MapQueryParameter] int $id = 0,
-        #[MapQueryParameter] ?string $treepreview = null,
-        #[MapQueryParameter] ?int $page = null,
-        #[MapQueryParameter] ?string $origin = null,
     ): BinaryFileResponse|StreamedResponse {
-        $result = $getDocumentThumbnail($id, $treepreview !== null, $page, $origin, $request->query->all());
+        $result = $getDocumentThumbnail($payload);
 
         if ($result->stream) {
             $response = new StreamedResponse(static function () use ($result): void {
@@ -188,10 +144,10 @@ class AssetThumbnailController extends AdminAbstractController
     #[Route('/get-folder-content-preview', name: 'opendxp_admin_asset_getfoldercontentpreview', methods: ['GET'])]
     #[IsGranted(CorePermission::Assets->value)]
     public function getFolderContentPreviewAction(
+        GetFolderContentPreviewPayload $payload,
         GetFolderContentPreviewHandler $getFolderContentPreview,
-        Request $request,
     ): JsonResponse {
-        $result = $getFolderContentPreview($request->query->all());
+        $result = $getFolderContentPreview($payload);
 
         return $this->adminJson(ApiResponse::ok(['assets' => $result->assets, 'total' => $result->total]));
     }

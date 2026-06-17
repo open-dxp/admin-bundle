@@ -21,14 +21,14 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class CreateGroupHandler
 {
-    public function __invoke(string $name, int $storeId): CreateGroupResult
+    public function __invoke(CreateGroupPayload $payload): CreateGroupResult
     {
-        $config = Classificationstore\GroupConfig::getByName($name, $storeId);
+        $config = Classificationstore\GroupConfig::getByName($payload->name, $payload->storeId);
 
         if (!$config) {
             $config = new Classificationstore\GroupConfig();
-            $config->setStoreId($storeId);
-            $config->setName($name);
+            $config->setStoreId($payload->storeId);
+            $config->setName($payload->name);
             $config->save();
 
             return new CreateGroupResult(name: $config->getName(), alreadyExists: false);

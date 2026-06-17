@@ -28,29 +28,23 @@ final class GetTranslationsHandler
 
     public function __construct(private readonly AdminUserContextInterface $userContext) {}
 
-    public function __invoke(
-        string $domain,
-        array $requestParams,
-        int $limit,
-        int $offset,
-        ?string $filter,
-        ?string $searchString,
-    ): GetTranslationsResult {
-        $admin = $domain === Translation::DOMAIN_ADMIN;
+    public function __invoke(TranslationPayload $payload): GetTranslationsResult
+    {
+        $admin = $payload->domain === Translation::DOMAIN_ADMIN;
         $validLanguages = $admin
             ? Tool\Admin::getLanguages()
             : $this->userContext->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations();
         $translation = new Translation();
-        $translation->setDomain($domain);
+        $translation->setDomain($payload->domain);
         $tableName = $translation->getDao()->getDatabaseTableName();
 
         $list = new Translation\Listing();
-        $list->setDomain($domain);
+        $list->setDomain($payload->domain);
         $list->setOrder('asc');
         $list->setOrderKey($tableName . '.key', false);
         $list->setLanguages($validLanguages);
 
-        $sortingSettings = QueryParams::extractSortingSettings($requestParams);
+        $sortingSettings = QueryParams::extractSortingSettings($payload->requestParams);
 
         $joins = [];
 
@@ -69,12 +63,12 @@ final class GetTranslationsHandler
             $list->setOrder($sortingSettings['order']);
         }
 
-        $list->setLimit($limit);
-        $list->setOffset($offset);
+        $list->setLimit($payload->limit);
+        $list->setOffset($payload->offset);
 
         $filterParameters = [
-            'filter' => $filter,
-            'searchString' => $searchString,
+            'filter' => $payload->filter,
+            'searchString' => $payload->searchString,
         ];
 
         $conditions = $this->getGridFilterCondition($filterParameters, $tableName, false, $validLanguages);
@@ -92,7 +86,7 @@ final class GetTranslationsHandler
 
         $translations = [];
         foreach ($list->getTranslations() as $t) {
-            if ($searchString && !strpos($searchString, (string) $t->getKey()) && !$t = Translation::getByKey($t->getKey(), $domain)) {
+            if ($payload->searchString && !strpos($payload->searchString, (string) $t->getKey()) && !$t = Translation::getByKey($t->getKey(), $payload->domain)) {
                 continue;
             }
 

@@ -22,7 +22,6 @@ use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigFavourite;
 use OpenDxp\Db;
 use OpenDxp\Model\DataObject;
-use OpenDxp\Model\User;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -34,16 +33,10 @@ final class MarkDataObjectGridConfigFavouriteHandler
     {
     }
 
-    public function __invoke(
-        int $objectId,
-        ?string $classId,
-        int $gridConfigId,
-        ?string $searchType,
-        bool $global,
-        ?string $type,
-    ): MarkDataObjectGridConfigFavouriteResult {
+    public function __invoke(MarkDataObjectGridConfigFavouritePayload $payload): MarkDataObjectGridConfigFavouriteResult
+    {
         $adminUser = $this->userContext->getAdminUser();
-        $object = DataObject::getById($objectId);
+        $object = DataObject::getById($payload->objectId);
         if (!$object) {
             throw new NotFoundHttpException();
         }
@@ -52,36 +45,36 @@ final class MarkDataObjectGridConfigFavouriteHandler
             throw new AccessDeniedHttpException();
         }
 
-        $class = DataObject\ClassDefinition::getById($classId);
+        $class = DataObject\ClassDefinition::getById($payload->classId);
         if (!$class) {
-            throw new BadRequestHttpException('class ' . $classId . ' does not exist anymore');
+            throw new BadRequestHttpException('class ' . $payload->classId . ' does not exist anymore');
         }
 
         $favourite = new GridConfigFavourite();
         $favourite->setOwnerId($adminUser->getId());
-        $favourite->setClassId($classId);
-        $favourite->setSearchType($searchType);
-        $favourite->setType($type);
+        $favourite->setClassId($payload->classId);
+        $favourite->setSearchType($payload->searchType);
+        $favourite->setType($payload->type);
 
         $specializedConfigs = false;
 
         try {
-            if ($gridConfigId !== 0) {
-                $gridConfig = GridConfig::getById($gridConfigId);
+            if ($payload->gridConfigId !== 0) {
+                $gridConfig = GridConfig::getById($payload->gridConfigId);
                 $favourite->setGridConfigId($gridConfig->getId());
             }
 
-            $favourite->setObjectId($objectId);
+            $favourite->setObjectId($payload->objectId);
             $favourite->save();
 
-            if ($global) {
+            if ($payload->global) {
                 $favourite->setObjectId(0);
                 $favourite->save();
             }
 
             $count = Db::get()->fetchOne(
                 'SELECT * FROM gridconfig_favourites WHERE ownerId = ? AND classId = ? AND searchType = ? AND objectId != ? AND objectId != 0 AND `type` != ?',
-                [$adminUser->getId(), $classId, $searchType, $objectId, $type]
+                [$adminUser->getId(), $payload->classId, $payload->searchType, $payload->objectId, $payload->type]
             );
             $specializedConfigs = $count > 0;
         } catch (Exception) {

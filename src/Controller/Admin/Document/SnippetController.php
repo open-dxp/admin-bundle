@@ -20,12 +20,11 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\GetSnippetDataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippetHandler;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\SnippetPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\GetSnippetData\GetSnippetDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippet\SaveSnippetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippet\SaveSnippetPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -39,13 +38,12 @@ class SnippetController extends DocumentControllerBase
      */
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
-        Request $request,
         GetSnippetDataHandler $handler,
-        #[MapQueryParameter] int $id = 0,
+        IdQueryPayload $payload,
     ): JsonResponse
     {
         try {
-            $result = $handler($id);
+            $result = $handler($payload);
         } catch (ElementLockedException $e) {
             return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
@@ -56,10 +54,10 @@ class SnippetController extends DocumentControllerBase
      * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
-    public function saveAction(Request $request, SaveSnippetHandler $handler): JsonResponse
+    public function saveAction(SaveSnippetPayload $payload, SaveSnippetHandler $handler): JsonResponse
     {
         try {
-            $result = $handler((int) $request->request->get('id'), SnippetPayload::fromRequest($request));
+            $result = $handler($payload);
         } catch (ElementLockedException $e) {
             return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }

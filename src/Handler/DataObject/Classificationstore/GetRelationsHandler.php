@@ -25,39 +25,32 @@ use stdClass;
 
 final class GetRelationsHandler
 {
-    public function __invoke(
-        array $queryAll,
-        ?string $relationIds,
-        int $limit,
-        int $start,
-        ?string $dir,
-        bool $overrideSort,
-        ?string $filter,
-        ?string $groupId,
-    ): GetRelationsResult {
+    public function __invoke(GetRelationsPayload $payload): GetRelationsResult
+    {
         $mapping = ['keyName' => 'name', 'keyDescription' => 'description'];
 
         $orderKey = 'name';
         $order = 'ASC';
 
-        $relationIdList = $relationIds ? json_decode($relationIds, true) : null;
+        $relationIdList = $payload->relationIds ? json_decode($payload->relationIds, true) : null;
 
-        if ($dir !== null) {
-            $order = $dir;
+        if ($payload->dir !== null) {
+            $order = $payload->dir;
         }
 
-        $sortingSettings = QueryParams::extractSortingSettings($queryAll);
+        $sortingSettings = QueryParams::extractSortingSettings($payload->queryAll);
 
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $mapping[$sortingSettings['orderKey']] ?? $sortingSettings['orderKey'];
             $order = $sortingSettings['order'];
         }
 
-        if ($overrideSort) {
+        if ($payload->overrideSort) {
             $orderKey = 'id';
             $order = 'DESC';
         }
 
+        $limit = $payload->limit;
         if ($limit === 0 && is_array($relationIdList)) {
             $limit = count($relationIdList);
         }
@@ -68,14 +61,14 @@ final class GetRelationsHandler
             $list->setLimit($limit);
         }
 
-        $list->setOffset($start);
+        $list->setOffset($payload->start);
         $list->setOrder($order);
         $list->setOrderKey($orderKey);
         $conditionParts = [];
 
-        if ($filter !== null) {
+        if ($payload->filter !== null) {
             $db = Db::get();
-            $filters = json_decode($filter);
+            $filters = json_decode($payload->filter);
             /** @var stdClass $f */
             foreach ($filters as $f) {
                 if (!isset($f->value)) {
@@ -88,7 +81,7 @@ final class GetRelationsHandler
         }
 
         if ($relationIdList === null) {
-            $conditionParts[] = ' groupId = ' . $list->quote($groupId);
+            $conditionParts[] = ' groupId = ' . $list->quote($payload->groupId);
         }
 
         if ($relationIdList) {

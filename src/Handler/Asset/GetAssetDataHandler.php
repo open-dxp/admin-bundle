@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset;
 use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetData\GetAssetDataPayload;
 use OpenDxp\Bundle\AdminBundle\Event\ElementAdminStyleEvent;
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizer;
@@ -47,8 +48,10 @@ final class GetAssetDataHandler
         private readonly EditLockService $editLockService,
     ) {}
 
-    public function __invoke(int $id, string $requestSchemeAndHost): GetAssetDataResult
+    public function __invoke(GetAssetDataPayload $payload): GetAssetDataResult
     {
+        $id = $payload->id;
+        $requestSchemeAndHost = $payload->requestSchemeAndHost;
         $asset = Asset::getById($id);
         if (!$asset instanceof Asset) {
             throw new AssetNotFoundException($id);

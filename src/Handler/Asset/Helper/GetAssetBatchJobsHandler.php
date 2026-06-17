@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridBatchService;
 use OpenDxp\Model\User;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -28,8 +29,9 @@ final class GetAssetBatchJobsHandler
         private readonly GridBatchService $gridBatchService,
     ) {}
 
-    public function __invoke(array $allParams): GetAssetBatchJobsResult
+    public function __invoke(GetAssetBatchJobsPayload $payload): GetAssetBatchJobsResult
     {
+        $allParams = $payload->allParams;
         $adminUser = $this->userContext->getAdminUser();
         return new GetAssetBatchJobsResult(
             $this->gridBatchService->getAssetBatchJobIds($allParams, $adminUser),

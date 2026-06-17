@@ -17,14 +17,18 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Payload\DataObject\DeleteDataObjectPayload;
 use OpenDxp\Model\DataObject;
 use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 final class DeleteDataObjectHandler
 {
-    public function __invoke(string $type, int $id, int $amount = 0): DeleteDataObjectResult
+    public function __invoke(DeleteDataObjectPayload $payload): DeleteDataObjectResult
     {
+        $type = $payload->type;
+        $id = $payload->id;
+        $amount = $payload->amount;
         if ($type === 'children') {
             $parentObject = DataObject::getById($id);
 

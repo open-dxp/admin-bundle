@@ -22,9 +22,11 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class UpdateTranslationHandler
 {
-    public function __invoke(array $data, string $domain): UpdateTranslationResult
+    public function __invoke(TranslationPayload $payload): UpdateTranslationResult
     {
-        $t = Translation::getByKey($data['key'], $domain);
+        $data = $payload->data;
+
+        $t = Translation::getByKey($data['key'], $payload->domain);
         if (!$t instanceof Translation) {
             throw new NotFoundHttpException(sprintf('Translation with key "%s" not found.', $data['key']));
         }

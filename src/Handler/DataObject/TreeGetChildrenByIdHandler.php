@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Payload\DataObject\TreeGetChildrenByIdPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Db;
@@ -35,15 +36,16 @@ final class TreeGetChildrenByIdHandler
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
-    public function __invoke(
-        int $node,
-        ?string $filter,
-        int $start,
-        int $limit,
-        string $view,
-        int $fromPaging,
-        array $requestQueryAll,
-    ): GetDataObjectChildrenResult {
+    public function __invoke(TreeGetChildrenByIdPayload $payload): GetDataObjectChildrenResult
+    {
+        $node = $payload->node;
+        $filter = $payload->filter;
+        $start = $payload->start;
+        $limit = $payload->limit;
+        $view = $payload->view;
+        $fromPaging = $payload->fromPaging;
+        $requestQueryAll = $payload->allParams;
+
         $object = DataObject::getById($node);
         $objectTypes = [DataObject::OBJECT_TYPE_OBJECT, DataObject::OBJECT_TYPE_FOLDER];
 

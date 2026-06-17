@@ -23,8 +23,11 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class AddGroupsHandler
 {
-    public function __invoke(array $ids, int $oid, ?string $fieldname): AddGroupsResult
+    public function __invoke(AddGroupsPayload $payload): AddGroupsResult
     {
+        $ids = $payload->ids;
+        $oid = $payload->oid;
+        $fieldname = $payload->fieldname;
         $object = $oid ? DataObject\Concrete::getById($oid) : null;
 
         $placeholders = implode(',', array_fill(0, count($ids), '?'));

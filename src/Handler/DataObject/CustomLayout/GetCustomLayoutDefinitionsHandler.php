@@ -17,17 +17,17 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayoutDefinitions\GetCustomLayoutDefinitionsPayload;
 use OpenDxp\Model\DataObject;
 
 final class GetCustomLayoutDefinitionsHandler
 {
-    public function __invoke(string $classId): CustomLayoutDefinitionsResult
+    public function __invoke(GetCustomLayoutDefinitionsPayload $payload): CustomLayoutDefinitionsResult
     {
-        $classIds = explode(',', $classId);
+        $classIds = explode(',', $payload->classId);
         $list = new DataObject\ClassDefinition\CustomLayout\Listing();
         $list->setFilter(
-            fn (DataObject\ClassDefinition\CustomLayout $layout) =>
-                in_array($layout->getClassId(), $classIds) && !str_contains($layout->getId(), '.brick.')
+            fn (DataObject\ClassDefinition\CustomLayout $layout) => in_array($layout->getClassId(), $classIds) && !str_contains($layout->getId(), '.brick.')
         );
 
         $definitions = [];

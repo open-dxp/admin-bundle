@@ -21,9 +21,9 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class DeletePropertyHandler
 {
-    public function __invoke(int $id): void
+    public function __invoke(DeletePropertyPayload $payload): void
     {
-        $config = Classificationstore\KeyConfig::getById($id);
+        $config = Classificationstore\KeyConfig::getById($payload->id);
         $config->setEnabled(false);
         $config->save();
     }

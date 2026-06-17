@@ -19,10 +19,10 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildren\GetAssetChildrenPayload;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
-use OpenDxp\Model\User;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -35,13 +35,13 @@ final class GetAssetChildrenHandler
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
-    public function __invoke(
-        int $nodeId,
-        ?string $customViewId,
-        ?string $filter,
-        int $limit,
-        int $offset,
-    ): GetAssetChildrenResult {
+    public function __invoke(GetAssetChildrenPayload $payload): GetAssetChildrenResult
+    {
+        $nodeId = $payload->nodeId;
+        $customViewId = $payload->customViewId;
+        $filter = $payload->filter;
+        $limit = $payload->limit;
+        $offset = $payload->offset;
         $asset = Asset::getById($nodeId);
         if (!$asset instanceof Asset) {
             throw new AssetNotFoundException($nodeId);

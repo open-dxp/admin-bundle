@@ -18,10 +18,10 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Service\Document;
 
 use Exception;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\FolderPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\HardlinkPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\LinkPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\PagePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\SaveFolder\SaveFolderPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlink\SaveHardlinkPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Link\SaveLink\SaveLinkPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\PagePayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\PersonalizationBundle\Model\Document\Targeting\TargetingDocumentInterface;
 use OpenDxp\Logger;
@@ -56,21 +56,21 @@ final class DocumentPayloadMapper
         $this->applyScheduler($payload->scheduler, $document);
     }
 
-    public function applyLinkPayload(LinkPayload $payload, Link $document): void
+    public function applyLinkPayload(SaveLinkPayload $payload, Link $document): void
     {
         $this->applyLinkData($payload->data, $document);
         $this->applyProperties($payload->properties, $document);
         $this->applyScheduler($payload->scheduler, $document);
     }
 
-    public function applyHardlinkPayload(HardlinkPayload $payload, Hardlink $document): void
+    public function applyHardlinkPayload(SaveHardlinkPayload $payload, Hardlink $document): void
     {
         $this->applyHardlinkData($payload->data, $document);
         $this->applyProperties($payload->properties, $document);
         $this->applyScheduler($payload->scheduler, $document);
     }
 
-    public function applyFolderPayload(FolderPayload $payload, Folder $document): void
+    public function applyFolderPayload(SaveFolderPayload $payload, Folder $document): void
     {
         $this->applyProperties($payload->properties, $document);
     }

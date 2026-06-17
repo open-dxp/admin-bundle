@@ -21,9 +21,9 @@ use OpenDxp\Model\Tool;
 
 final class DeleteBlocklistEntryHandler
 {
-    public function __invoke(string $address): void
+    public function __invoke(BlocklistPayload $payload): void
     {
-        $entry = Tool\Email\Blocklist::getByAddress($address);
+        $entry = Tool\Email\Blocklist::getByAddress($payload->data['address']);
         $entry->delete();
     }
 }

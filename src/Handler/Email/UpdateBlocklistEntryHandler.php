@@ -21,10 +21,10 @@ use OpenDxp\Model\Tool;
 
 final class UpdateBlocklistEntryHandler
 {
-    public function __invoke(array $data): array
+    public function __invoke(BlocklistPayload $payload): array
     {
-        $address = Tool\Email\Blocklist::getByAddress($data['address']);
-        $address->setValues($data);
+        $address = Tool\Email\Blocklist::getByAddress($payload->data['address']);
+        $address->setValues($payload->data);
         $address->save();
 
         return $address->getObjectVars();

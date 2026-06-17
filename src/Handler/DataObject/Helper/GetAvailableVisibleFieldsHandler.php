@@ -22,8 +22,9 @@ use OpenDxp\Model\DataObject;
 
 final class GetAvailableVisibleFieldsHandler
 {
-    public function __invoke(?string $classes): GetAvailableVisibleFieldsResult
+    public function __invoke(GetAvailableVisibleFieldsPayload $payload): GetAvailableVisibleFieldsResult
     {
+        $classes = $payload->classes;
         if ($classes === null) {
             return new GetAvailableVisibleFieldsResult([]);
         }

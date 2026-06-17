@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Service\DataObject;
 
 use Exception;
-use OpenDxp\Bundle\AdminBundle\Payload\DataObject\DataObjectPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Logger;
 use OpenDxp\Model;
@@ -32,7 +32,7 @@ final class DataObjectPayloadMapper
 {
     public function __construct(private readonly AdminUserContextInterface $userContext) {}
 
-    public function applyPayload(DataObjectPayload $payload, DataObject\Concrete $object, DataObject\Concrete $objectFromDatabase): void
+    public function applyPayload(SaveDataObjectPayload $payload, DataObject\Concrete $object, DataObject\Concrete $objectFromDatabase): void
     {
         if ($payload->data !== []) {
             try {

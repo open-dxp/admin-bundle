@@ -17,20 +17,21 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SuggestCustomLayoutIdentifier\SuggestCustomLayoutIdentifierPayload;
 use OpenDxp\Model\DataObject;
 
 final class SuggestCustomLayoutIdentifierHandler
 {
-    public function __invoke(string $classId): SuggestCustomLayoutIdentifierResult
+    public function __invoke(SuggestCustomLayoutIdentifierPayload $payload): SuggestCustomLayoutIdentifierResult
     {
-        $identifier = DataObject\ClassDefinition\CustomLayout::getIdentifier($classId);
+        $identifier = DataObject\ClassDefinition\CustomLayout::getIdentifier($payload->classId);
 
         $existingIds = [];
         $existingNames = [];
 
         foreach ((new DataObject\ClassDefinition\CustomLayout\Listing())->load() as $item) {
             $existingIds[] = $item->getId();
-            if ($item->getClassId() == $classId) {
+            if ($item->getClassId() == $payload->classId) {
                 $existingNames[] = $item->getName();
             }
         }

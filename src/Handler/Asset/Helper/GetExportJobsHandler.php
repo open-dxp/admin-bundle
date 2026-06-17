@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Model\User;
@@ -31,8 +32,9 @@ final class GetExportJobsHandler
         private readonly GridExportService $gridExportService,
     ) {}
 
-    public function __invoke(array $allParams): GetExportJobsResult
+    public function __invoke(GetExportJobsPayload $payload): GetExportJobsResult
     {
+        $allParams = $payload->allParams;
         $adminUser = $this->userContext->getAdminUser();
         $list = $this->gridHelperService->prepareAssetListingForGrid($allParams, $adminUser);
 

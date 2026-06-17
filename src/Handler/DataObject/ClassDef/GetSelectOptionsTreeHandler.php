@@ -26,8 +26,9 @@ final class GetSelectOptionsTreeHandler
 {
     public function __construct(private readonly EventDispatcherInterface $eventDispatcher) {}
 
-    public function __invoke(int $grouped): GetSelectOptionsTreeResult
+    public function __invoke(GetSelectOptionsTreePayload $payload): GetSelectOptionsTreeResult
     {
+        $grouped = $payload->grouped;
         $configurations = $groups = [];
 
         $selectOptionConfigs = new DataObject\SelectOptions\Config\Listing();

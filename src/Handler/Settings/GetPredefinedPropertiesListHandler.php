@@ -21,18 +21,18 @@ use OpenDxp\Model\Property;
 
 final class GetPredefinedPropertiesListHandler
 {
-    public function __invoke(?string $filter): GetPredefinedPropertiesListResult
+    public function __invoke(PredefinedPropertyPayload $payload): GetPredefinedPropertiesListResult
     {
         $list = new Property\Predefined\Listing();
 
-        if ($filter) {
-            $list->setFilter(function (Property\Predefined $predefined) use ($filter) {
+        if ($payload->filter) {
+            $list->setFilter(function (Property\Predefined $predefined) use ($payload) {
                 foreach ($predefined->getObjectVars() as $value) {
                     if ($value) {
                         $cellValues = is_array($value) ? $value : [$value];
 
                         foreach ($cellValues as $cellValue) {
-                            if (stripos((string) $cellValue, $filter) !== false) {
+                            if (stripos((string) $cellValue, $payload->filter) !== false) {
                                 return true;
                             }
                         }

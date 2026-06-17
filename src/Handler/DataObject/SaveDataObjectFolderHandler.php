@@ -24,6 +24,7 @@ use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use OpenDxp\Bundle\AdminBundle\Payload\DataObject\SaveDataObjectFolderPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class SaveDataObjectFolderHandler
@@ -32,9 +33,12 @@ final class SaveDataObjectFolderHandler
     {
     }
 
-    public function __invoke(int $id, array $general, ?array $propertiesData): void
+    public function __invoke(SaveDataObjectFolderPayload $payload): void
     {
         $adminUser = $this->userContext->getAdminUser();
+        $id = $payload->id;
+        $general = $payload->general;
+        $propertiesData = $payload->propertiesData;
         $object = DataObject::getById($id);
 
         if (!$object) {

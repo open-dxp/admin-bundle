@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Model\Asset;
-use OpenDxp\Model\User;
 use OpenDxp\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -34,15 +34,15 @@ final class SaveGridColumnConfigHandler
         private readonly GridColumnConfigService $gridColumnConfigService,
     ) {}
 
-    public function __invoke(
-        int $assetId,
-        ?string $classId,
-        ?string $context,
-        ?string $searchType,
-        ?string $type,
-        array $gridConfigData,
-        ?array $metadata,
-    ): SaveGridColumnConfigResult {
+    public function __invoke(SaveGridColumnConfigPayload $payload): SaveGridColumnConfigResult
+    {
+        $assetId = $payload->assetId;
+        $classId = $payload->classId;
+        $context = $payload->context;
+        $searchType = $payload->searchType;
+        $type = $payload->type;
+        $gridConfigData = $payload->gridConfigData;
+        $metadata = $payload->metadata;
         $adminUser = $this->userContext->getAdminUser();
         $asset = Asset::getById($assetId);
         if (!$asset) {

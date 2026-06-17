@@ -19,13 +19,14 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\DiffVersionsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\PublishVersionHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\SaveVersionToSessionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\DiffVersions\DiffVersionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\DiffVersions\DiffVersionsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\PublishVersion\PublishVersionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\SaveVersionToSession\SaveVersionToSessionHandler;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
@@ -39,27 +40,33 @@ class DocumentVersionController extends AdminAbstractController
 {
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/version-to-session', name: 'opendxp_admin_document_document_versiontosession', methods: ['POST'])]
-    public function versionToSessionAction(Request $request, SaveVersionToSessionHandler $saveToSession): Response
-    {
-        $saveToSession($request->request->getInt('id'));
+    public function versionToSessionAction(
+        IdBodyPayload              $payload,
+        SaveVersionToSessionHandler $saveToSession,
+    ): Response {
+        $saveToSession($payload);
 
         return new Response();
     }
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/publish-version', name: 'opendxp_admin_document_document_publishversion', methods: ['POST'])]
-    public function publishVersionAction(Request $request, PublishVersionHandler $publishVersion): JsonResponse
-    {
-        $result = $publishVersion($request->request->getInt('id'));
+    public function publishVersionAction(
+        IdBodyPayload          $payload,
+        PublishVersionHandler  $publishVersion,
+    ): JsonResponse {
+        $result = $publishVersion($payload);
 
         return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/diff-versions/from/{from}/to/{to}', name: 'opendxp_admin_document_document_diffversions', requirements: ['from' => "\d+", 'to' => "\d+"], methods: ['GET'])]
-    public function diffVersionsAction(Request $request, DiffVersionsHandler $diffVersions, int $from, int $to): Response
-    {
-        $result = $diffVersions($from, $to, $request->getSchemeAndHttpHost());
+    public function diffVersionsAction(
+        DiffVersionsPayload $payload,
+        DiffVersionsHandler $diffVersions,
+    ): Response {
+        $result = $diffVersions($payload);
 
         if (!$result->supported) {
             return $this->render('@OpenDxpAdmin/admin/document/document/diff_versions_unsupported.html.twig');
@@ -74,8 +81,7 @@ class DocumentVersionController extends AdminAbstractController
 
     public function diffVersionsHtmlAction(
         #[MapQueryParameter] ?string $id = null,
-    ): BinaryFileResponse
-    {
+    ): BinaryFileResponse {
         $file = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/' . basename($id);
         if (file_exists($file)) {
             return new BinaryFileResponse($file);

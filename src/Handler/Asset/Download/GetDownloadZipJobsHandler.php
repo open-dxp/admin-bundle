@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\GetDownloadZipJobs\GetDownloadZipJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
@@ -32,8 +33,10 @@ final class GetDownloadZipJobsHandler
         private readonly RouterInterface $router,
     ) {}
 
-    public function __invoke(int $id, string $selectedIds): GetDownloadZipJobsResult
+    public function __invoke(GetDownloadZipJobsPayload $payload): GetDownloadZipJobsResult
     {
+        $id = $payload->id;
+        $selectedIds = $payload->selectedIds;
         $adminUser = $this->userContext->getAdminUser();
         $asset = Asset::getById($id) ?? throw new AssetNotFoundException($id);
 

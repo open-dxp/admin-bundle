@@ -19,17 +19,19 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\CheckAssetExists\CheckAssetExistsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\CheckAssetExistsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles\ImportZipFilesPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFilesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZip\ImportZipPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ReplaceAsset\ReplaceAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ReplaceAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -81,23 +83,18 @@ class AssetUploadController extends AdminAbstractController
 
     #[Route('/exists', name: 'opendxp_admin_asset_exists', methods: ['GET'])]
     public function existsAction(
+        CheckAssetExistsPayload $payload,
         CheckAssetExistsHandler $checkAssetExists,
-        #[MapQueryParameter] int $parentId,
-        #[MapQueryParameter] string $filename = '',
-        #[MapQueryParameter] string $dir = '',
     ): JsonResponse {
         return new JsonResponse([
-            'exists' => $checkAssetExists($parentId, $filename, $dir),
+            'exists' => $checkAssetExists($payload),
         ]);
     }
 
     #[Route('/replace-asset', name: 'opendxp_admin_asset_replaceasset', methods: ['POST', 'PUT'])]
-    public function replaceAssetAction(ReplaceAssetHandler $replaceAsset, Request $request, #[MapQueryParameter] int $id): JsonResponse
+    public function replaceAssetAction(ReplaceAssetPayload $payload, ReplaceAssetHandler $replaceAsset): JsonResponse
     {
-        /** @var UploadedFile $file */
-        $file = $request->files->get('Filedata');
-
-        $asset = $replaceAsset($id, $file->getPathname(), $file->getClientOriginalName());
+        $asset = $replaceAsset($payload);
 
         $response = $this->adminJson(ApiResponse::ok(['id' => $asset->getId(), 'path' => $asset->getRealFullPath()]));
         $response->headers->set('Content-Type', 'text/html');
@@ -107,37 +104,23 @@ class AssetUploadController extends AdminAbstractController
 
     #[Route('/import-zip', name: 'opendxp_admin_asset_importzip', methods: ['POST'])]
     public function importZipAction(
+        ImportZipPayload $payload,
         ImportZipHandler $importZip,
         Request $request,
-        #[MapQueryParameter] int $parentId = 0,
-        #[MapQueryParameter] ?string $allowOverwrite = null,
     ): Response {
         if (!$request->files->has('Filedata')) {
             throw new BadRequestHttpException('Something went wrong, please check upload_max_filesize and post_max_size in your php.ini as well as the write permissions on the file system');
         }
 
-        /** @var UploadedFile $file */
-        $file = $request->files->get('Filedata');
-        if (!is_file($file->getPathname())) {
-            throw new BadRequestHttpException('Something went wrong, please check upload_max_filesize and post_max_size in your php.ini as well as the write permissions on the file system');
-        }
-
-        $importResult = $importZip($parentId, $file->getPathname(), $allowOverwrite);
+        $importResult = $importZip($payload);
 
         return new Response($this->encodeJson(ApiResponse::ok(['jobs' => $importResult->jobs, 'jobId' => $importResult->jobId])));
     }
 
     #[Route('/import-zip-files', name: 'opendxp_admin_asset_importzipfiles', methods: ['POST'])]
-    public function importZipFilesAction(ImportZipFilesHandler $importZipFiles, Request $request): JsonResponse
+    public function importZipFilesAction(ImportZipFilesPayload $payload, ImportZipFilesHandler $importZipFiles): JsonResponse
     {
-        $importZipFiles(
-            (int) $request->request->get('parentId'),
-            (string) $request->request->get('jobId'),
-            (int) $request->request->get('offset'),
-            (int) $request->request->get('limit'),
-            $request->request->get('allowOverwrite') === 'true',
-            (bool) $request->request->get('last'),
-            );
+        $importZipFiles($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

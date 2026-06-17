@@ -25,8 +25,10 @@ final class EditStoreHandler
     /**
      * @throws Exception
      */
-    public function __invoke(int $id, string $name, ?string $description): void
+    public function __invoke(EditStorePayload $payload): void
     {
+        $id = $payload->id;
+        $name = $payload->name;
         if (!$name) {
             throw new Exception('Name must not be empty');
         }
@@ -43,7 +45,7 @@ final class EditStoreHandler
         }
 
         $config->setName($name);
-        $config->setDescription($description);
+        $config->setDescription($payload->description);
         $config->save();
     }
 }

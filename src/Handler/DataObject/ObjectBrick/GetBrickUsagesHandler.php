@@ -17,13 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetBrickUsages\GetBrickUsagesPayload;
 use OpenDxp\Model\DataObject;
 
 final class GetBrickUsagesHandler
 {
-    public function __invoke(string $classId): BrickUsagesResult
+    public function __invoke(GetBrickUsagesPayload $payload): BrickUsagesResult
     {
-        $myClass = DataObject\ClassDefinition::getById($classId);
+        $myClass = DataObject\ClassDefinition::getById($payload->classId);
         $usages = [];
 
         foreach ((new DataObject\Objectbrick\Definition\Listing())->load() as $brickDefinition) {

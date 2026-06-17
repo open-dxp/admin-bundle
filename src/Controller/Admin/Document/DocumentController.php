@@ -20,29 +20,49 @@ use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
 use OpenDxp\Controller\Traits\ElementEditLockHelperTrait;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocumentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\ConvertDocument\ConvertDocumentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\ConvertDocument\ConvertDocumentPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\DeleteDocument\DeleteDocumentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\DeleteDocument\DeleteDocumentPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\CreateDocType\CreateDocTypeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\DeleteDocType\DeleteDocTypeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\DocTypePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\UpdateDocType\UpdateDocTypeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocTypesByType\GetDocTypesByTypeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocTypesByType\GetDocTypesByTypePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\GetDocTypesList\GetDocTypesListHandler;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentData\GetDocumentDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentData\GetDocumentDataPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentIdForPath\GetDocumentIdForPathHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentIdForPath\GetDocumentIdForPathPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Site\GetSiteCustomSettings\GetSiteCustomSettingsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Site\GetSiteCustomSettings\GetSiteCustomSettingsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Site\RemoveSite\RemoveSiteHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Site\RemoveSite\RemoveSitePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Site\UpdateSite\UpdateSiteHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Site\UpdateSite\UpdateSitePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\AddDocumentTranslation\AddDocumentTranslationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\AddDocumentTranslation\AddDocumentTranslationPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\CheckTranslationLanguage\CheckTranslationLanguageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\CheckTranslationLanguage\CheckTranslationLanguagePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\DetermineTranslationParent\DetermineTranslationParentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\DetermineTranslationParent\DetermineTranslationParentPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTree\GetLanguageTreeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTree\GetLanguageTreePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRoot\GetLanguageTreeRootHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRoot\GetLanguageTreeRootPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\RemoveDocumentTranslation\RemoveDocumentTranslationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\RemoveDocumentTranslation\RemoveDocumentTranslationPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren\TreeGetDocumentChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren\TreeGetDocumentChildrenPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateDocument\UpdateDocumentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateDocument\UpdateDocumentPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfoHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\ConvertDocumentHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\DeleteDocumentHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildrenHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentDataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentIdForPathHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocTypesByTypeHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocTypesListHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\ManageDocTypesHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Site\GetSiteCustomSettingsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Site\RemoveSiteHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\AddDocumentTranslationHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\CheckTranslationLanguageHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\DetermineTranslationParentHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRootHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\RemoveDocumentTranslationHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateDocumentHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateSiteHandler;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Model\Element\ElementInterface;
-use OpenDxp\Tool;
 use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -58,9 +78,8 @@ class DocumentController extends ElementControllerBase
 {
     use ElementEditLockHelperTrait;
 
-    public function __construct(
-        ElementServiceInterface $elementService,
-    ) {
+    public function __construct(ElementServiceInterface $elementService)
+    {
         parent::__construct($elementService);
     }
 
@@ -90,11 +109,11 @@ class DocumentController extends ElementControllerBase
     #[Route('/get-data-by-id', name: 'opendxp_admin_document_document_getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
         GetDocumentDataHandler $handler,
-        #[MapQueryParameter] int $id = 0,
+        GetDocumentDataPayload $payload,
     ): JsonResponse
     {
         try {
-            $result = $handler($id);
+            $result = $handler($payload);
         } catch (ElementLockedException $e) {
             return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
@@ -106,11 +125,10 @@ class DocumentController extends ElementControllerBase
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_document_document_treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(
         TreeGetDocumentChildrenHandler $handler,
-        Request $request,
-        #[MapQueryParameter] int $inSearch = 0,
+        TreeGetDocumentChildrenPayload $payload,
     ): JsonResponse
     {
-        $result = $handler($request->query->all());
+        $result = $handler($payload);
 
         if ($result->paginated) {
             return $this->adminJson([
@@ -119,7 +137,7 @@ class DocumentController extends ElementControllerBase
                 'total' => $result->total,
                 'nodes' => $result->documents,
                 'filter' => $result->filter ?: '',
-                'inSearch' => $inSearch,
+                'inSearch' => $payload->inSearch,
             ]);
         }
 
@@ -128,19 +146,12 @@ class DocumentController extends ElementControllerBase
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/add', name: 'opendxp_admin_document_document_add', methods: ['POST'])]
-    public function addAction(Request $request, AddDocumentHandler $handler): JsonResponse
+    public function addAction(
+        AddDocumentPayload $payload,
+        AddDocumentHandler $handler,
+    ): JsonResponse
     {
-        $result = $handler(
-            parentId: $request->request->getInt('parentId'),
-            type: $request->request->getString('type'),
-            key: $request->request->getString('key'),
-            docTypeId: $request->request->get('docTypeId'),
-            translationsBaseDocumentId: $request->request->get('translationsBaseDocument'),
-            language: $request->request->get('language'),
-            inheritanceSource: $request->request->has('inheritanceSource') ? $request->request->get('inheritanceSource') : null,
-            title: $request->request->get('title'),
-            name: $request->request->get('name'),
-        );
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'id' => $result->document->getId(),
@@ -150,15 +161,14 @@ class DocumentController extends ElementControllerBase
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/delete', name: 'opendxp_admin_document_document_delete', methods: ['DELETE'])]
-    public function deleteAction(Request $request, DeleteDocumentHandler $handler): JsonResponse
+    public function deleteAction(
+        DeleteDocumentPayload $payload,
+        DeleteDocumentHandler $handler,
+    ): JsonResponse
     {
-        $type = $request->request->getString('type');
-        $id = $request->request->getInt('id');
-        $amount = $request->request->getInt('amount');
+        $result = $handler($payload);
 
-        $result = $handler($type, $id, $amount);
-
-        if ($type === 'children') {
+        if ($payload->type === 'children') {
             return $this->adminJson(ApiResponse::ok(['deleted' => $result->deleted]));
         }
 
@@ -167,19 +177,23 @@ class DocumentController extends ElementControllerBase
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/update', name: 'opendxp_admin_document_document_update', methods: ['PUT'])]
-    public function updateAction(Request $request, UpdateDocumentHandler $handler): JsonResponse
+    public function updateAction(
+        UpdateDocumentPayload $payload,
+        UpdateDocumentHandler $handler,
+    ): JsonResponse
     {
-        $updateData = [...$request->request->all(), ...$request->query->all()];
-
-        $result = $handler((int) $request->request->get('id'), $updateData);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
     }
 
     #[Route('/doc-types', name: 'opendxp_admin_document_document_doctypesget', methods: ['GET'])]
-    public function docTypesGetAction(GetDocTypesListHandler $getDocTypesList): JsonResponse
+    public function docTypesGetAction(
+        EmptyPayload $payload,
+        GetDocTypesListHandler $getDocTypesList,
+    ): JsonResponse
     {
-        $result = $getDocTypesList();
+        $result = $getDocTypesList($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->docTypes, 'total' => $result->total]));
     }
@@ -188,76 +202,65 @@ class DocumentController extends ElementControllerBase
     #[IsGranted(CorePermission::DocumentTypes->value)]
     #[Route('/doc-types', name: 'opendxp_admin_document_document_doctypes', methods: ['PUT', 'POST', 'DELETE'])]
     public function docTypesAction(
-        Request $request,
-        ManageDocTypesHandler $handler,
+        DocTypePayload $payload,
+        DeleteDocTypeHandler $delete,
+        UpdateDocTypeHandler $update,
+        CreateDocTypeHandler $create,
         #[MapQueryParameter] ?string $xaction = null,
     ): JsonResponse
     {
-        if ($request->request->get('data')) {
-            $data = $this->decodeJson($request->request->get('data'));
-            $result = $handler($xaction, $data);
-
-            return $this->adminJson(ApiResponse::ok(['data' => $result->data]));
-        }
-
-        return $this->adminJson(false);
+        return match ($xaction) {
+            'destroy' => $this->adminJson(ApiResponse::ok(['data' => $delete($payload)->data])),
+            'update'  => $this->adminJson(ApiResponse::ok(['data' => $update($payload)->data])),
+            'create'  => $this->adminJson(ApiResponse::ok(['data' => $create($payload)->data])),
+            default   => $this->adminJson(false),
+        };
     }
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/get-doc-types', name: 'opendxp_admin_document_document_getdoctypes', methods: ['GET'])]
     public function getDocTypesAction(
+        GetDocTypesByTypePayload $payload,
         GetDocTypesByTypeHandler $getDocTypesByType,
-        #[MapQueryParameter] ?string $type = null,
     ): JsonResponse
     {
-        $result = $getDocTypesByType($type);
+        $result = $getDocTypesByType($payload);
 
         return $this->adminJson(['docTypes' => $result->docTypes]);
     }
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/get-site-custom-settings', name: 'opendxp_admin_document_document_get_site_custom_settings', methods: ['POST'])]
-    public function getSiteCustomSettingsAction(Request $request, GetSiteCustomSettingsHandler $getSiteCustomSettings): JsonResponse
+    public function getSiteCustomSettingsAction(
+        GetSiteCustomSettingsPayload $payload,
+        GetSiteCustomSettingsHandler $getSiteCustomSettings,
+    ): JsonResponse
     {
-        $result = $getSiteCustomSettings($request->request->getInt('id'));
+        $result = $getSiteCustomSettings($payload);
 
         return $this->adminJson(['data' => $result->nodes]);
     }
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/update-site', name: 'opendxp_admin_document_document_updatesite', methods: ['PUT'])]
-    public function updateSiteAction(Request $request, UpdateSiteHandler $handler): JsonResponse
+    public function updateSiteAction(
+        UpdateSitePayload $payload,
+        UpdateSiteHandler $handler,
+    ): JsonResponse
     {
-        $domains = $request->request->getString('domains');
-        $domains = str_replace(' ', '', $domains);
-        $domains = $domains ? explode("\n", $domains) : [];
-
-        $localizedErrorDocuments = [];
-        foreach (Tool::getValidLanguages() as $language) {
-            $requestValue = $request->request->get(sprintf('errorDocument_localized_%s', $language));
-            if (isset($requestValue)) {
-                $localizedErrorDocuments[$language] = $requestValue;
-            }
-        }
-
-        $result = $handler(
-            rootId: $request->request->getInt('id'),
-            domains: $domains,
-            mainDomain: $request->request->getString('mainDomain'),
-            errorDocument: $request->request->getString('errorDocument'),
-            localizedErrorDocuments: $localizedErrorDocuments,
-            redirectToMainDomain: $request->request->getBoolean('redirectToMainDomain'),
-            requestCustomSettings: $request->request->all(),
-        );
+        $result = $handler($payload);
 
         return $this->adminJson($result->siteVars);
     }
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/remove-site', name: 'opendxp_admin_document_document_removesite', methods: ['DELETE'])]
-    public function removeSiteAction(Request $request, RemoveSiteHandler $removeSite): JsonResponse
+    public function removeSiteAction(
+        RemoveSitePayload $payload,
+        RemoveSiteHandler $removeSite,
+    ): JsonResponse
     {
-        $removeSite($request->request->getInt('id'));
+        $removeSite($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -265,11 +268,11 @@ class DocumentController extends ElementControllerBase
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/get-id-for-path', name: 'opendxp_admin_document_document_getidforpath', methods: ['GET'])]
     public function getIdForPathAction(
+        GetDocumentIdForPathPayload $payload,
         GetDocumentIdForPathHandler $getDocumentIdForPath,
-        #[MapQueryParameter] ?string $path = null,
     ): JsonResponse
     {
-        $result = $getDocumentIdForPath($path);
+        $result = $getDocumentIdForPath($payload);
         if (!$result) {
             return $this->adminJson(false);
         }
@@ -280,12 +283,11 @@ class DocumentController extends ElementControllerBase
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/language-tree', name: 'opendxp_admin_document_document_languagetree', methods: ['GET'])]
     public function languageTreeAction(
+        GetLanguageTreePayload $payload,
         GetLanguageTreeHandler $handler,
-        #[MapQueryParameter] int $node = 0,
-        #[MapQueryParameter] ?string $languages = null,
     ): JsonResponse
     {
-        $result = $handler($node, explode(',', (string) $languages));
+        $result = $handler($payload);
 
         return $this->adminJson($result->nodes);
     }
@@ -293,11 +295,11 @@ class DocumentController extends ElementControllerBase
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/language-tree-root', name: 'opendxp_admin_document_document_languagetreeroot', methods: ['GET'])]
     public function languageTreeRootAction(
+        GetLanguageTreeRootPayload $payload,
         GetLanguageTreeRootHandler $handler,
-        #[MapQueryParameter] int $id = 0,
     ): JsonResponse
     {
-        $result = $handler($id);
+        $result = $handler($payload);
 
         return $this->adminJson([
             'root' => $result->root,
@@ -308,9 +310,12 @@ class DocumentController extends ElementControllerBase
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/convert', name: 'opendxp_admin_document_document_convert', methods: ['PUT'])]
-    public function convertAction(Request $request, ConvertDocumentHandler $handler): JsonResponse
+    public function convertAction(
+        ConvertDocumentPayload $payload,
+        ConvertDocumentHandler $handler,
+    ): JsonResponse
     {
-        $handler((int) $request->request->get('id'), $request->request->get('type'));
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -318,12 +323,11 @@ class DocumentController extends ElementControllerBase
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/translation-determine-parent', name: 'opendxp_admin_document_document_translationdetermineparent', methods: ['GET'])]
     public function translationDetermineParentAction(
+        DetermineTranslationParentPayload $payload,
         DetermineTranslationParentHandler $handler,
-        #[MapQueryParameter] int $id = 0,
-        #[MapQueryParameter] ?string $language = null,
     ): JsonResponse
     {
-        $result = $handler($id, $language);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::fromBool($result->found, [
             'targetPath' => $result->targetPath,
@@ -333,18 +337,24 @@ class DocumentController extends ElementControllerBase
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/translation-add', name: 'opendxp_admin_document_document_translationadd', methods: ['POST'])]
-    public function translationAddAction(Request $request, AddDocumentTranslationHandler $handler): JsonResponse
+    public function translationAddAction(
+        AddDocumentTranslationPayload $payload,
+        AddDocumentTranslationHandler $handler,
+    ): JsonResponse
     {
-        $handler($request->request->getInt('sourceId'), $request->request->getString('targetPath'));
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/translation-remove', name: 'opendxp_admin_document_document_translationremove', methods: ['DELETE'])]
-    public function translationRemoveAction(Request $request, RemoveDocumentTranslationHandler $handler): JsonResponse
+    public function translationRemoveAction(
+        RemoveDocumentTranslationPayload $payload,
+        RemoveDocumentTranslationHandler $handler,
+    ): JsonResponse
     {
-        $handler($request->request->getInt('sourceId'), $request->request->getInt('targetId'));
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -352,11 +362,11 @@ class DocumentController extends ElementControllerBase
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/translation-check-language', name: 'opendxp_admin_document_document_translationchecklanguage', methods: ['GET'])]
     public function translationCheckLanguageAction(
+        CheckTranslationLanguagePayload $payload,
         CheckTranslationLanguageHandler $handler,
-        #[MapQueryParameter] ?string $path = null,
     ): JsonResponse
     {
-        $result = $handler($path);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::fromBool($result->found, [
             'language' => $result->language,

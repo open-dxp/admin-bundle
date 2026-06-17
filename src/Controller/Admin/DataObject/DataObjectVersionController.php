@@ -19,13 +19,15 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\DiffVersionsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PreviewVersionHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PublishVersionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\DiffVersions\DiffVersionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\DiffVersions\DiffVersionsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PreviewVersion\PreviewVersionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PublishVersion\PublishVersionHandler;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Tool;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
@@ -41,9 +43,9 @@ use Twig\Extension\CoreExtension;
 class DataObjectVersionController extends AdminAbstractController
 {
     #[Route('/publish-version', name: 'publishversion', methods: ['POST'])]
-    public function publishVersionAction(Request $request, PublishVersionHandler $publishVersion): JsonResponse
+    public function publishVersionAction(IdBodyPayload $payload, PublishVersionHandler $publishVersion): JsonResponse
     {
-        $result = $publishVersion($request->request->getInt('id'));
+        $result = $publishVersion($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'general' => ['modificationDate' => $result->modificationDate],
@@ -55,11 +57,11 @@ class DataObjectVersionController extends AdminAbstractController
     public function previewVersionAction(
         Environment $twig,
         PreviewVersionHandler $previewVersion,
-        #[MapQueryParameter] int $id = 0,
+        IdQueryPayload $payload,
         #[MapQueryParameter] ?string $userTimezone = null,
     ): Response
     {
-        $result = $previewVersion($id);
+        $result = $previewVersion($payload);
 
         Tool\UserTimezone::setUserTimezone($userTimezone);
         if ($timezone = Tool\UserTimezone::getUserTimezone()) {
@@ -77,12 +79,11 @@ class DataObjectVersionController extends AdminAbstractController
     public function diffVersionsAction(
         Environment $twig,
         DiffVersionsHandler $diffVersions,
-        int $from,
-        int $to,
+        DiffVersionsPayload $payload,
         #[MapQueryParameter] ?string $userTimezone = null,
     ): Response
     {
-        $result = $diffVersions($from, $to);
+        $result = $diffVersions($payload);
 
         Tool\UserTimezone::setUserTimezone($userTimezone);
         if ($timezone = Tool\UserTimezone::getUserTimezone()) {

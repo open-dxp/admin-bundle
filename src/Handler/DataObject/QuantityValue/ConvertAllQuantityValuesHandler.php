@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValues\ConvertAllQuantityValuesPayload;
 use OpenDxp\Model\DataObject\Data\QuantityValue;
 use OpenDxp\Model\DataObject\QuantityValue\Unit;
 use OpenDxp\Model\DataObject\QuantityValue\UnitConversionService;
@@ -28,9 +29,9 @@ final class ConvertAllQuantityValuesHandler
         private readonly UnitConversionService $conversionService,
     ) {}
 
-    public function __invoke(?string $unitId, ?string $value): ConvertAllQuantityValuesResult
+    public function __invoke(ConvertAllQuantityValuesPayload $payload): ConvertAllQuantityValuesResult
     {
-        $fromUnit = Unit::getById($unitId);
+        $fromUnit = Unit::getById($payload->unitId);
         if (!$fromUnit instanceof Unit) {
             throw new BadRequestHttpException('Invalid unit ID provided');
         }
@@ -42,7 +43,7 @@ final class ConvertAllQuantityValuesHandler
 
         $convertedValues = [];
         foreach ($units->getUnits() as $targetUnit) {
-            $convertedValue = $this->conversionService->convert(new QuantityValue($value, $fromUnit), $targetUnit);
+            $convertedValue = $this->conversionService->convert(new QuantityValue($payload->value, $fromUnit), $targetUnit);
             $convertedValues[] = [
                 'unit' => $targetUnit->getAbbreviation(),
                 'unitName' => $targetUnit->getLongname(),
@@ -50,6 +51,6 @@ final class ConvertAllQuantityValuesHandler
             ];
         }
 
-        return new ConvertAllQuantityValuesResult($value, $fromUnit->getAbbreviation(), $convertedValues);
+        return new ConvertAllQuantityValuesResult($payload->value, $fromUnit->getAbbreviation(), $convertedValues);
     }
 }

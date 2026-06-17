@@ -27,13 +27,13 @@ final class GetExportConfigsHandler
         private readonly GridColumnConfigService $gridColumnConfigService,
     ) {}
 
-    public function __invoke(?string $classId): array
+    public function __invoke(GetExportConfigsPayload $payload): array
     {
         $adminUser = $this->userContext->getAdminUser();
         $userId = $adminUser?->getId() ?? 0;
 
-        $list = $this->gridColumnConfigService->getMyOwnColumnConfigs($userId, $classId);
-        $list = [...$list, ...$this->gridColumnConfigService->getSharedColumnConfigs($adminUser, $classId)];
+        $list = $this->gridColumnConfigService->getMyOwnColumnConfigs($userId, $payload->classId);
+        $list = [...$list, ...$this->gridColumnConfigService->getSharedColumnConfigs($adminUser, $payload->classId)];
 
         $result = [['id' => -1, 'name' => '--default--']];
 

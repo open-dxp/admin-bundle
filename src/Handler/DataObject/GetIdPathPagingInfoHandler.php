@@ -17,12 +17,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo\GetIdPathPagingInfoPayload;
 use OpenDxp\Model\DataObject;
 
 final class GetIdPathPagingInfoHandler
 {
-    public function __invoke(string $path, int $limit): GetIdPathPagingInfoResult
+    public function __invoke(GetIdPathPagingInfoPayload $payload): GetIdPathPagingInfoResult
     {
+        $path = $payload->path;
+        $limit = $payload->limit;
         $pathParts = explode('/', $path);
         $id = (int) array_pop($pathParts);
 

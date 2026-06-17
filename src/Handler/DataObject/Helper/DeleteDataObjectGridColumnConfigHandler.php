@@ -29,10 +29,10 @@ final class DeleteDataObjectGridColumnConfigHandler
     {
     }
 
-    public function __invoke(int $gridConfigId): void
+    public function __invoke(DeleteDataObjectGridColumnConfigPayload $payload): void
     {
         $adminUser = $this->userContext->getAdminUser();
-        $gridConfig = GridConfig::getById($gridConfigId);
+        $gridConfig = GridConfig::getById($payload->gridConfigId);
         if (!$gridConfig) {
             throw new NotFoundHttpException('Grid config not found: ' . $gridConfigId);
         }

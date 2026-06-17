@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl\GetDataObjectPreviewUrlPayload;
 use OpenDxp\Model\DataObject\ClassDefinition\PreviewGeneratorInterface;
-use OpenDxp\Model\DataObject\Concrete;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetDataObjectPreviewUrlHandler
@@ -27,8 +27,10 @@ final class GetDataObjectPreviewUrlHandler
         private readonly PreviewGeneratorInterface $defaultPreviewGenerator,
     ) {}
 
-    public function __invoke(Concrete $object, array $queryParams): string
+    public function __invoke(GetDataObjectPreviewUrlPayload $payload): string
     {
+        $object = $payload->object;
+        $queryParams = $payload->queryParams;
         $url = null;
         if ($previewService = $object->getClass()->getPreviewGenerator()) {
             $url = $previewService->generatePreviewUrl($object, ['preview' => true, ...$queryParams]);

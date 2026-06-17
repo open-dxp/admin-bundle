@@ -23,11 +23,11 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ExportClassHandler
 {
-    public function __invoke(?string $id): ExportClassResult
+    public function __invoke(ExportClassPayload $payload): ExportClassResult
     {
-        $class = DataObject\ClassDefinition::getById($id);
+        $class = DataObject\ClassDefinition::getById($payload->id);
         if (!$class instanceof DataObject\ClassDefinition) {
-            $errorMessage = ': Class with id [ ' . $id . ' not found. ]';
+            $errorMessage = ': Class with id [ ' . $payload->id . ' not found. ]';
             Logger::error($errorMessage);
 
             throw new NotFoundHttpException($errorMessage);

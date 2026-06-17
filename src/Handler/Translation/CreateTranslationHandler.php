@@ -26,18 +26,19 @@ final class CreateTranslationHandler
 {
     public function __construct(private readonly AdminUserContextInterface $userContext) {}
 
-    public function __invoke(array $data, string $domain): CreateTranslationResult
+    public function __invoke(TranslationPayload $payload): CreateTranslationResult
     {
-        $admin = $domain === Translation::DOMAIN_ADMIN;
+        $data = $payload->data;
+        $admin = $payload->domain === Translation::DOMAIN_ADMIN;
         $validLanguages = $admin
             ? Tool\Admin::getLanguages()
             : $this->userContext->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations();
-        if (Translation::getByKey($data['key'], $domain)) {
+        if (Translation::getByKey($data['key'], $payload->domain)) {
             throw new BadRequestHttpException('identifier_already_exists');
         }
 
         $t = new Translation();
-        $t->setDomain($domain);
+        $t->setDomain($payload->domain);
         $t->setKey($data['key']);
         $t->setCreationDate(time());
         $t->setModificationDate(time());

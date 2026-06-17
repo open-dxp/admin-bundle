@@ -21,29 +21,23 @@ use OpenDxp\Model\Element\Recyclebin;
 
 final class ListRecyclebinHandler
 {
-    public function __invoke(
-        int $limit,
-        int $offset,
-        string $orderKey,
-        string $order,
-        ?string $filterFullText,
-        array $filters,
-    ): ListRecyclebinResult {
+    public function __invoke(RecyclebinPayload $payload): ListRecyclebinResult
+    {
         $db = \OpenDxp\Db::get();
 
         $list = new Recyclebin\Item\Listing();
-        $list->setLimit($limit);
-        $list->setOffset($offset);
-        $list->setOrderKey($orderKey);
-        $list->setOrder($order);
+        $list->setLimit($payload->limit);
+        $list->setOffset($payload->offset);
+        $list->setOrderKey($payload->orderKey);
+        $list->setOrder($payload->order);
 
         $conditionFilters = [];
 
-        if ($filterFullText) {
-            $conditionFilters[] = '`path` LIKE ' . $list->quote('%' . $list->escapeLike($filterFullText) . '%');
+        if ($payload->filterFullText) {
+            $conditionFilters[] = '`path` LIKE ' . $list->quote('%' . $list->escapeLike($payload->filterFullText) . '%');
         }
 
-        foreach ($filters as $filter) {
+        foreach ($payload->filters as $filter) {
             $operator = '=';
 
             $filterField = $filter['property'];

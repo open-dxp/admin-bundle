@@ -21,8 +21,11 @@ use OpenDxp\Model\WebsiteSetting;
 
 final class CreateWebsiteSettingHandler
 {
-    public function __invoke(array $data): CreateWebsiteSettingResult
+    public function __invoke(WebsiteSettingPayload $payload): CreateWebsiteSettingResult
     {
+        $data = $payload->data;
+        unset($data['id']);
+
         $setting = new WebsiteSetting();
         $setting->setValues($data);
         $setting->save();

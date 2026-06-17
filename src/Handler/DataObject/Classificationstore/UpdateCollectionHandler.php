@@ -21,8 +21,9 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class UpdateCollectionHandler
 {
-    public function __invoke(array $data): UpdateCollectionResult
+    public function __invoke(UpdateCollectionPayload $payload): UpdateCollectionResult
     {
+        $data = $payload->data;
         $id = $data['id'];
         $config = Classificationstore\CollectionConfig::getById($id);
 

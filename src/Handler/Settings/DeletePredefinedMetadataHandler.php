@@ -22,9 +22,9 @@ use OpenDxp\Model\Metadata;
 
 final class DeletePredefinedMetadataHandler
 {
-    public function __invoke(string $id): void
+    public function __invoke(PredefinedMetadataPayload $payload): void
     {
-        $metadata = Metadata\Predefined::getById($id);
+        $metadata = Metadata\Predefined::getById((string) $payload->data['id']);
 
         if (!$metadata->isWriteable()) {
             throw new ConfigWriteException();

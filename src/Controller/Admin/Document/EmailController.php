@@ -19,12 +19,11 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\GetEmailDataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\SaveEmailHandler;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\EmailPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\GetEmailData\GetEmailDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\SaveEmail\SaveEmailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\SaveEmail\SaveEmailPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -36,11 +35,11 @@ class EmailController extends DocumentControllerBase
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
         GetEmailDataHandler $handler,
-        #[MapQueryParameter] int $id = 0,
+        IdQueryPayload $payload,
     ): JsonResponse
     {
         try {
-            $result = $handler($id);
+            $result = $handler($payload);
         } catch (ElementLockedException $e) {
             return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
@@ -49,10 +48,10 @@ class EmailController extends DocumentControllerBase
     }
 
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
-    public function saveAction(Request $request, SaveEmailHandler $handler): JsonResponse
+    public function saveAction(SaveEmailPayload $payload, SaveEmailHandler $handler): JsonResponse
     {
         try {
-            $result = $handler((int) $request->request->get('id'), EmailPayload::fromRequest($request));
+            $result = $handler($payload);
         } catch (ElementLockedException $e) {
             return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }

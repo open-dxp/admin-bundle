@@ -21,6 +21,7 @@ use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use OpenDxp\Bundle\AdminBundle\Payload\DataObject\AddObjectFolderPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class AddObjectFolderHandler
@@ -29,9 +30,11 @@ final class AddObjectFolderHandler
     {
     }
 
-    public function __invoke(int $parentId, string $key): void
+    public function __invoke(AddObjectFolderPayload $payload): void
     {
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
+        $parentId = $payload->parentId;
+        $key = $payload->key;
         $parent = DataObject::getById($parentId);
         if ($parent === null) {
             throw new NotFoundHttpException("Parent object not found: $parentId");

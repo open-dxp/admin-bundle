@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ReplaceAsset\ReplaceAssetPayload;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -31,8 +32,11 @@ final class ReplaceAssetHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,private readonly TranslatorInterface $translator) {}
 
-    public function __invoke(int $id, string $filePath, string $originalFilename): Asset
+    public function __invoke(ReplaceAssetPayload $payload): Asset
     {
+        $id = $payload->id;
+        $filePath = $payload->filePath;
+        $originalFilename = $payload->originalFilename;
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
         $asset = Asset::getById($id) ?? throw new AssetNotFoundException($id);
 

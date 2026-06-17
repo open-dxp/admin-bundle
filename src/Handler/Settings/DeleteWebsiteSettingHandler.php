@@ -21,9 +21,9 @@ use OpenDxp\Model\WebsiteSetting;
 
 final class DeleteWebsiteSettingHandler
 {
-    public function __invoke(int $id): void
+    public function __invoke(WebsiteSettingPayload $payload): void
     {
-        $setting = WebsiteSetting::getById($id);
+        $setting = WebsiteSetting::getById((int) $payload->data['id']);
 
         if (!$setting instanceof WebsiteSetting) {
             return;

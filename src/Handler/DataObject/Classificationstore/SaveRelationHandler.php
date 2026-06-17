@@ -21,8 +21,9 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class SaveRelationHandler
 {
-    public function __invoke(array $data): SaveRelationResult
+    public function __invoke(SaveRelationPayload $payload): SaveRelationResult
     {
+        $data = $payload->data;
         $keyId = $data['keyId'];
         $groupId = $data['groupId'];
         $sorter = $data['sorter'];

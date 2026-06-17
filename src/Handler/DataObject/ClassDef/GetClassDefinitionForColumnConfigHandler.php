@@ -22,14 +22,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetClassDefinitionForColumnConfigHandler
 {
-    public function __invoke(string $id, int $objectId): GetClassDefinitionForColumnConfigResult
+    public function __invoke(GetClassDefinitionForColumnConfigPayload $payload): GetClassDefinitionForColumnConfigResult
     {
-        $class = DataObject\ClassDefinition::getById($id);
+        $class = DataObject\ClassDefinition::getById($payload->id);
         if (!$class) {
             throw new NotFoundHttpException('Class not found');
         }
 
-        $filteredDefinitions = DataObject\Service::getCustomLayoutDefinitionForGridColumnConfig($class, $objectId);
+        $filteredDefinitions = DataObject\Service::getCustomLayoutDefinitionForGridColumnConfig($class, $payload->objectId);
 
         /** @var DataObject\ClassDefinition\Layout $layoutDefinitions */
         $layoutDefinitions = $filteredDefinitions['layoutDefinition'] ?? false;

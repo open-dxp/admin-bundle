@@ -17,13 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection;
 
+use OpenDxp\Bundle\AdminBundle\Payload\Common\StringIdBodyPayload;
 use OpenDxp\Model\DataObject;
 
 final class DeleteFieldCollectionHandler
 {
-    public function __invoke(string $id): void
+    public function __invoke(StringIdBodyPayload $payload): void
     {
-        $fc = DataObject\Fieldcollection\Definition::getByKey($id);
+        $fc = DataObject\Fieldcollection\Definition::getByKey($payload->id);
         $fc->delete();
     }
 }

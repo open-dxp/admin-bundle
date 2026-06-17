@@ -18,14 +18,16 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue;
 
 use Exception;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\GetQuantityValueUnitList\GetQuantityValueUnitListPayload;
 use OpenDxp\Db;
 use OpenDxp\Model\DataObject\QuantityValue\Unit;
 use OpenDxp\Model\Translation;
 
 final class GetQuantityValueUnitListHandler
 {
-    public function __invoke(?string $filter): GetQuantityValueUnitListResult
+    public function __invoke(GetQuantityValueUnitListPayload $payload): GetQuantityValueUnitListResult
     {
+        $filter = $payload->filter;
         $list = new Unit\Listing();
         $list->setOrderKey(['baseunit', 'factor', 'abbreviation']);
         $list->setOrder(['ASC', 'ASC', 'ASC']);

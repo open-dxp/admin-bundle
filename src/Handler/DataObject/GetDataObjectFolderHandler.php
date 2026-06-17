@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizer;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Element;
@@ -35,13 +36,13 @@ final class GetDataObjectFolderHandler
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
-    public function __invoke(int $objectId): GetDataObjectFolderResult
+    public function __invoke(IdQueryPayload $payload): GetDataObjectFolderResult
     {
         $adminUser = $this->userContext->getAdminUser();
-        $object = DataObject::getById($objectId);
+        $object = DataObject::getById($payload->id);
 
         if (!$object) {
-            throw new NotFoundHttpException(sprintf('DataObject with id %d not found', $objectId));
+            throw new NotFoundHttpException(sprintf('DataObject with id %d not found', $payload->id));
         }
 
         if (!$object->isAllowed('view')) {

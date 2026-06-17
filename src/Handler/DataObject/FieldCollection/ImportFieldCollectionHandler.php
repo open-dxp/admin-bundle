@@ -17,17 +17,18 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ImportFieldCollection\ImportFieldCollectionPayload;
 use OpenDxp\Model\DataObject;
 use RuntimeException;
 
 final class ImportFieldCollectionHandler
 {
-    public function __invoke(string $id, string $jsonData): void
+    public function __invoke(ImportFieldCollectionPayload $payload): void
     {
-        $fieldCollection = DataObject\Fieldcollection\Definition::getByKey($id);
+        $fieldCollection = DataObject\Fieldcollection\Definition::getByKey($payload->id);
 
-        if (!DataObject\ClassDefinition\Service::importFieldCollectionFromJson($fieldCollection, $jsonData)) {
-            throw new RuntimeException('Failed to import field collection: ' . $id);
+        if (!DataObject\ClassDefinition\Service::importFieldCollectionFromJson($fieldCollection, $payload->json)) {
+            throw new RuntimeException('Failed to import field collection: ' . $payload->id);
         }
     }
 }

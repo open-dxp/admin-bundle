@@ -20,21 +20,25 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\AddCustomLayoutHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\AddCustomLayout\AddCustomLayoutPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\DeleteCustomLayoutHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ExportCustomLayoutHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ExportCustomLayout\ExportCustomLayoutPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetAllLayoutsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayoutDefinitionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayoutDefinitions\GetCustomLayoutDefinitionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayoutHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayout\GetCustomLayoutPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ImportCustomLayoutHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ImportCustomLayout\ImportCustomLayoutPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SaveCustomLayoutHandler;
-use OpenDxp\Model\DataObject;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SaveCustomLayout\SaveCustomLayoutPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SuggestCustomLayoutIdentifierHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SuggestCustomLayoutIdentifier\SuggestCustomLayoutIdentifierPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\StringIdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -46,9 +50,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class CustomLayoutController extends AdminAbstractController
 {
     #[Route('/get-custom-layout', name: 'getcustomlayout', methods: ['GET'])]
-    public function getCustomLayoutAction(GetCustomLayoutHandler $getCustomLayout, #[MapQueryParameter] string $id): JsonResponse
+    public function getCustomLayoutAction(GetCustomLayoutHandler $getCustomLayout, GetCustomLayoutPayload $payload): JsonResponse
     {
-        $result = $getCustomLayout($id);
+        $result = $getCustomLayout($payload);
         $data = $result->data;
         $data['isWriteable'] = $result->isWriteable;
 
@@ -56,13 +60,9 @@ class CustomLayoutController extends AdminAbstractController
     }
 
     #[Route('/add-custom-layout', name: 'addcustomlayout', methods: ['POST'])]
-    public function addCustomLayoutAction(AddCustomLayoutHandler $addCustomLayout, Request $request): JsonResponse
+    public function addCustomLayoutAction(AddCustomLayoutHandler $addCustomLayout, AddCustomLayoutPayload $payload): JsonResponse
     {
-        $customLayout = $addCustomLayout(
-            (string) $request->request->get('layoutIdentifier'),
-            (string) $request->request->get('layoutName'),
-            (string) $request->request->get('classId'),
-            );
+        $customLayout = $addCustomLayout($payload);
 
         $data = $customLayout->getObjectVars();
         $data['isWriteable'] = $customLayout->isWriteable();
@@ -71,21 +71,17 @@ class CustomLayoutController extends AdminAbstractController
     }
 
     #[Route('/save-custom-layout', name: 'savecustomlayout', methods: ['PUT'])]
-    public function saveCustomLayoutAction(SaveCustomLayoutHandler $saveCustomLayout, Request $request): JsonResponse
+    public function saveCustomLayoutAction(SaveCustomLayoutHandler $saveCustomLayout, SaveCustomLayoutPayload $payload): JsonResponse
     {
-        $customLayout = $saveCustomLayout(
-            (string) $request->request->get('id'),
-            $this->decodeJson($request->request->get('configuration')),
-            $this->decodeJson($request->request->get('values')),
-        );
+        $customLayout = $saveCustomLayout($payload);
 
         return $this->adminJson(ApiResponse::ok(['id' => $customLayout->getId(), 'data' => $customLayout->getObjectVars()]));
     }
 
     #[Route('/delete-custom-layout', name: 'deletecustomlayout', methods: ['DELETE'])]
-    public function deleteCustomLayoutAction(DeleteCustomLayoutHandler $deleteCustomLayout, Request $request): JsonResponse
+    public function deleteCustomLayoutAction(DeleteCustomLayoutHandler $deleteCustomLayout, StringIdBodyPayload $payload): JsonResponse
     {
-        $deleteCustomLayout((string) $request->request->get('id'));
+        $deleteCustomLayout($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -93,21 +89,16 @@ class CustomLayoutController extends AdminAbstractController
     #[Route('/import-custom-layout-definition', name: 'importcustomlayoutdefinition', methods: ['POST', 'PUT'])]
     public function importCustomLayoutDefinitionAction(
         ImportCustomLayoutHandler $importCustomLayout,
-        Request $request,
-        #[MapQueryParameter] ?string $id = null,
+        ImportCustomLayoutPayload $payload,
     ): Response {
-        /** @var UploadedFile $file */
-        $file = $request->files->get('Filedata');
-        $importData = $this->decodeJson(file_get_contents($file->getPathname()));
-
-        if (isset($importData['name']) && DataObject\ClassDefinition\CustomLayout::getByName($importData['name']) instanceof DataObject\ClassDefinition\CustomLayout) {
+        if ($payload->nameAlreadyInUse) {
             $response = $this->adminJson(ApiResponse::error(null, ['nameAlreadyInUse' => true]));
             $response->headers->set('Content-Type', 'text/html');
 
             return $response;
         }
 
-        $importCustomLayout($id, $importData);
+        $importCustomLayout($payload);
 
         $response = $this->adminJson(ApiResponse::ok());
         $response->headers->set('Content-Type', 'text/html');
@@ -116,9 +107,9 @@ class CustomLayoutController extends AdminAbstractController
     }
 
     #[Route('/export-custom-layout-definition', name: 'exportcustomlayoutdefinition', methods: ['GET'])]
-    public function exportCustomLayoutDefinitionAction(ExportCustomLayoutHandler $exportCustomLayout, #[MapQueryParameter] ?string $id = null): Response
+    public function exportCustomLayoutDefinitionAction(ExportCustomLayoutHandler $exportCustomLayout, ExportCustomLayoutPayload $payload): Response
     {
-        $result = $exportCustomLayout($id);
+        $result = $exportCustomLayout($payload);
 
         $response = new Response($result->json);
         $response->headers->set('Content-type', 'application/json');
@@ -128,9 +119,9 @@ class CustomLayoutController extends AdminAbstractController
     }
 
     #[Route('/get-custom-layout-definitions', name: 'getcustomlayoutdefinitions', methods: ['GET'])]
-    public function getCustomLayoutDefinitionsAction(GetCustomLayoutDefinitionsHandler $getDefinitions, #[MapQueryParameter] string $classId): JsonResponse
+    public function getCustomLayoutDefinitionsAction(GetCustomLayoutDefinitionsHandler $getDefinitions, GetCustomLayoutDefinitionsPayload $payload): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $getDefinitions($classId)->definitions]));
+        return $this->adminJson(ApiResponse::ok(['data' => $getDefinitions($payload)->definitions]));
     }
 
     #[Route('/get-all-layouts', name: 'getalllayouts', methods: ['GET'])]
@@ -140,9 +131,9 @@ class CustomLayoutController extends AdminAbstractController
     }
 
     #[Route('/suggest-custom-layout-identifier', name: 'suggestcustomlayoutidentifier', methods: ['GET'])]
-    public function suggestCustomLayoutIdentifierAction(SuggestCustomLayoutIdentifierHandler $suggestIdentifier, #[MapQueryParameter] string $classId): Response
+    public function suggestCustomLayoutIdentifierAction(SuggestCustomLayoutIdentifierHandler $suggestIdentifier, SuggestCustomLayoutIdentifierPayload $payload): Response
     {
-        $result = $suggestIdentifier($classId);
+        $result = $suggestIdentifier($payload);
 
         return $this->adminJson([
             'suggestedIdentifier' => $result->suggestedIdentifier,

@@ -29,43 +29,33 @@ final class GetCollectionsHandler
 {
     public function __construct(private readonly AdminSearchTermResolver $searchTermResolver) {}
 
-    public function __invoke(
-        array $queryAll,
-        int $limit,
-        int $start,
-        ?string $dir,
-        bool $overrideSort,
-        ?int $oid,
-        ?string $fieldname,
-        ?string $searchfilter,
-        ?int $storeId,
-        ?string $filter,
-    ): GetCollectionsResult {
+    public function __invoke(GetCollectionsPayload $payload): GetCollectionsResult
+    {
         $orderKey = 'name';
         $order = 'ASC';
 
-        if ($dir !== null) {
-            $order = $dir;
+        if ($payload->dir !== null) {
+            $order = $payload->dir;
         }
 
-        $sortingSettings = QueryParams::extractSortingSettings($queryAll);
+        $sortingSettings = QueryParams::extractSortingSettings($payload->queryAll);
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $sortingSettings['orderKey'];
             $order = $sortingSettings['order'];
         }
 
-        if ($overrideSort) {
+        if ($payload->overrideSort) {
             $orderKey = 'id';
             $order = 'DESC';
         }
 
         $storeIdFromDefinition = 0;
         $allowedCollectionIds = [];
-        if ($oid) {
-            $object = DataObject\Concrete::getById($oid);
+        if ($payload->oid) {
+            $object = DataObject\Concrete::getById($payload->oid);
             $class = $object->getClass();
             /** @var DataObject\ClassDefinition\Data\Classificationstore $fd */
-            $fd = $class->getFieldDefinition($fieldname);
+            $fd = $class->getFieldDefinition($payload->fieldname);
             $allowedGroupIds = $fd->getAllowedGroupIds();
 
             if ($allowedGroupIds) {
@@ -86,18 +76,18 @@ final class GetCollectionsHandler
 
         $list = new Classificationstore\CollectionConfig\Listing();
 
-        $list->setLimit($limit);
-        $list->setOffset($start);
+        $list->setLimit($payload->limit);
+        $list->setOffset($payload->start);
         $list->setOrder($order);
         $list->setOrderKey($orderKey);
 
         $conditionParts = [];
         $db = Db::get();
 
-        if ($searchfilter) {
+        if ($payload->searchfilter) {
             $searchFilterConditions = [];
 
-            $searchTerms = [$searchfilter, ...$this->searchTermResolver->resolve($searchfilter)];
+            $searchTerms = [$payload->searchfilter, ...$this->searchTermResolver->resolve($payload->searchfilter)];
             foreach ($searchTerms as $searchFilterTerm) {
                 $searchFilterConditions[] = 'name LIKE ' . $db->quote('%' . $searchFilterTerm . '%') . ' OR description LIKE ' . $db->quote('%' . $searchFilterTerm . '%');
             }
@@ -105,12 +95,12 @@ final class GetCollectionsHandler
             $conditionParts[] = '(' . implode(' OR ', $searchFilterConditions) . ')';
         }
 
-        $storeId = $storeId ?: $storeIdFromDefinition;
+        $storeId = $payload->storeId ?: $storeIdFromDefinition;
 
         $conditionParts[] = ' (storeId = ' . $db->quote($storeId) . ')';
 
-        if ($filter !== null) {
-            $filters = json_decode($filter);
+        if ($payload->filter !== null) {
+            $filters = json_decode($payload->filter);
             /** @var stdClass $f */
             foreach ($filters as $f) {
                 if (!isset($f->value)) {

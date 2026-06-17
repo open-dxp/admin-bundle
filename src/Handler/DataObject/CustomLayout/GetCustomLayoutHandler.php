@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayout\GetCustomLayoutPayload;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Exception\ConfigWriteException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class GetCustomLayoutHandler
 {
@@ -28,22 +29,22 @@ final class GetCustomLayoutHandler
     {
     }
 
-    public function __invoke(string $id): GetCustomLayoutResult
+    public function __invoke(GetCustomLayoutPayload $payload): GetCustomLayoutResult
     {
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
-        $customLayout = DataObject\ClassDefinition\CustomLayout::getById($id);
+        $customLayout = DataObject\ClassDefinition\CustomLayout::getById($payload->id);
 
         if (!$customLayout) {
-            $brickLayoutSeparator = strpos($id, '.brick.');
+            $brickLayoutSeparator = strpos($payload->id, '.brick.');
             if ($brickLayoutSeparator !== false) {
-                $parentLayout = DataObject\ClassDefinition\CustomLayout::getById(substr($id, 0, $brickLayoutSeparator));
+                $parentLayout = DataObject\ClassDefinition\CustomLayout::getById(substr($payload->id, 0, $brickLayoutSeparator));
                 if ($parentLayout instanceof DataObject\ClassDefinition\CustomLayout) {
                     $customLayout = DataObject\ClassDefinition\CustomLayout::create([
-                        'name' => $parentLayout->getName() . ' ' . substr($id, $brickLayoutSeparator + strlen('.brick.')),
+                        'name' => $parentLayout->getName() . ' ' . substr($payload->id, $brickLayoutSeparator + strlen('.brick.')),
                         'userOwner' => $userId,
                         'classId' => $parentLayout->getClassId(),
                     ]);
-                    $customLayout->setId($id);
+                    $customLayout->setId($payload->id);
                     if (!$customLayout->isWriteable()) {
                         throw new ConfigWriteException();
                     }

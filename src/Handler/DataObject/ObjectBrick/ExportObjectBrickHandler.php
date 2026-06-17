@@ -17,18 +17,19 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ExportObjectBrick\ExportObjectBrickPayload;
 use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ExportObjectBrickHandler
 {
-    public function __invoke(string $id): ExportObjectBrickResult
+    public function __invoke(ExportObjectBrickPayload $payload): ExportObjectBrickResult
     {
-        $objectBrick = DataObject\Objectbrick\Definition::getByKey($id);
+        $objectBrick = DataObject\Objectbrick\Definition::getByKey($payload->id);
 
         if (!$objectBrick instanceof DataObject\Objectbrick\Definition) {
-            $errorMessage = ': Object-Brick with id [ ' . $id . ' not found. ]';
+            $errorMessage = ': Object-Brick with id [ ' . $payload->id . ' not found. ]';
             Logger::error($errorMessage);
 
             throw new NotFoundHttpException($errorMessage);

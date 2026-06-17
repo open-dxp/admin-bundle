@@ -32,8 +32,9 @@ final class GetExportJobsHandler
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
-    public function __invoke(array $allParams, string $requestedLanguage): GetExportJobsResult
+    public function __invoke(GetExportJobsPayload $payload): GetExportJobsResult
     {
+        $allParams = $payload->allParams;
         $fieldnames = [];
         $fields = json_decode($allParams['fields'][0], true);
         foreach ($fields as $field) {
@@ -41,7 +42,7 @@ final class GetExportJobsHandler
         }
         $allParams['fields'] = $fieldnames;
 
-        $list = $this->gridHelperService->prepareListingForGrid($allParams, $requestedLanguage);
+        $list = $this->gridHelperService->prepareListingForGrid($allParams, $payload->requestedLanguage);
 
         $beforeListPrepareEvent = new GenericEvent($this, [
             'list' => $list,

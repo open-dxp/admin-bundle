@@ -22,9 +22,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetClassHandler
 {
-    public function __invoke(?string $id): GetClassResult
+    public function __invoke(GetClassPayload $payload): GetClassResult
     {
-        $class = DataObject\ClassDefinition::getById($id);
+        $class = DataObject\ClassDefinition::getById($payload->id);
         if (!$class) {
             throw new NotFoundHttpException('Class not found');
         }

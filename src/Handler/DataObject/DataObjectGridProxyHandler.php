@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Payload\DataObject\DataObjectGridProxyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
@@ -30,15 +31,16 @@ final class DataObjectGridProxyHandler
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
-    public function __invoke(array $allParams, string $fallbackLocale): DataObjectGridProxyResult
+    public function __invoke(DataObjectGridProxyPayload $payload): DataObjectGridProxyResult
     {
+        $allParams = $payload->allParams;
         $filterPrepareEvent = new GenericEvent($this, ['requestParams' => $allParams]);
         $this->eventDispatcher->dispatch($filterPrepareEvent, AdminEvents::OBJECT_LIST_BEFORE_FILTER_PREPARE);
         $allParams = $filterPrepareEvent->getArgument('requestParams');
 
         $requestedLanguage = $allParams['language'] ?? null;
         if (!$requestedLanguage) {
-            $requestedLanguage = $fallbackLocale;
+            $requestedLanguage = $payload->locale;
         }
 
         return new DataObjectGridProxyResult(

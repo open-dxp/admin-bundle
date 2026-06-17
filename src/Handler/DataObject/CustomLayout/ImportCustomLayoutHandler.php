@@ -17,18 +17,20 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ImportCustomLayout\ImportCustomLayoutPayload;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Exception\ConfigWriteException;
 
 final class ImportCustomLayoutHandler
 {
-    public function __invoke(?string $id, array $importData): void
+    public function __invoke(ImportCustomLayoutPayload $payload): void
     {
-        $customLayout = DataObject\ClassDefinition\CustomLayout::getById($id);
+        $customLayout = DataObject\ClassDefinition\CustomLayout::getById($payload->id);
         if (!$customLayout) {
             return;
         }
 
+        $importData = $payload->importData;
         $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($importData['layoutDefinitions'], true);
         $customLayout->setLayoutDefinitions($layout);
         if (isset($importData['name'])) {

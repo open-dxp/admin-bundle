@@ -28,16 +28,16 @@ final class SaveClassDefinitionHandler
     {
     }
 
-    public function __invoke(
-        string $id,
-        array $configuration,
-        array $values,
-    ): SaveClassDefinitionResult {
+    public function __invoke(SaveClassDefinitionPayload $payload): SaveClassDefinitionResult
+    {
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
-        $class = DataObject\ClassDefinition::getById($id);
+        $class = DataObject\ClassDefinition::getById($payload->id);
         if (!$class) {
             throw new NotFoundHttpException('Class not found');
         }
+
+        $values = $payload->values;
+        $configuration = $payload->configuration;
 
         if ($class->getModificationDate() != $values['modificationDate']) {
             throw new BadRequestHttpException('The class was modified during editing, please reload the class and make your changes again');

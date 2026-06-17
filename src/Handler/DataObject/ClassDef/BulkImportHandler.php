@@ -25,10 +25,10 @@ final class BulkImportHandler
 {
     public function __construct(private readonly RequestStack $requestStack) {}
 
-    public function __invoke(string $json): BulkImportResult
+    public function __invoke(BulkImportPayload $payload): BulkImportResult
     {
         $tmpName = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/bulk-import-' . uniqid('', false) . '.tmp';
-        file_put_contents($tmpName, $json);
+        file_put_contents($tmpName, $payload->json);
 
         Session::useBag(
             $this->requestStack->getCurrentRequest()->getSession(),
@@ -38,7 +38,7 @@ final class BulkImportHandler
             'opendxp_objects'
         );
 
-        $parsed = json_decode($json, true);
+        $parsed = json_decode($payload->json, true);
         $result = [];
 
         foreach ($parsed as $groupName => $group) {

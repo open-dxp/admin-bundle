@@ -18,12 +18,14 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\GetAssetChildIds\GetAssetChildIdsPayload;
 use OpenDxp\Model\Asset;
 
 final class GetAssetChildIdsHandler
 {
-    public function __invoke(int $sourceId): ChildIdsResult
+    public function __invoke(GetAssetChildIdsPayload $payload): ChildIdsResult
     {
+        $sourceId = $payload->sourceId;
         $asset = Asset::getById($sourceId) ?? throw new AssetNotFoundException($sourceId);
 
         if (!$asset->hasChildren()) {

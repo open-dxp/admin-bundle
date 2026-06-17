@@ -19,16 +19,22 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValuesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValues\ConvertAllQuantityValuesPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertQuantityValueHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertQuantityValue\ConvertQuantityValuePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\CreateQuantityValueUnit\CreateQuantityValueUnitHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\DeleteQuantityValueUnit\DeleteQuantityValueUnitHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ExportQuantityValueUnitsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\GetQuantityValueUnitListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\GetQuantityValueUnitList\GetQuantityValueUnitListPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\GetQuantityValueUnitsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\GetQuantityValueUnits\GetQuantityValueUnitsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ImportQuantityValueUnitsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ManageQuantityValueUnitHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ImportQuantityValueUnits\ImportQuantityValueUnitsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\QuantityValueUnitPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\UpdateQuantityValueUnit\UpdateQuantityValueUnitHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -42,12 +48,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class QuantityValueController extends AdminAbstractController
 {
     #[Route('/unit-import', name: 'unitimport', methods: ['POST', 'PUT'])]
-    public function unitImportAction(Request $request, ImportQuantityValueUnitsHandler $importUnits): JsonResponse
+    public function unitImportAction(ImportQuantityValueUnitsPayload $payload, ImportQuantityValueUnitsHandler $importUnits): JsonResponse
     {
-        /** @var UploadedFile $uploadFile */
-        $uploadFile = $request->files->get('Filedata');
-
-        $success = $importUnits(file_get_contents($uploadFile->getPathname()));
+        $success = $importUnits($payload);
         $response = $this->adminJson(ApiResponse::fromBool($success));
         $response->headers->set('Content-Type', 'text/html');
 
@@ -66,14 +69,9 @@ class QuantityValueController extends AdminAbstractController
 
     #[Route('/unit-proxy', name: 'unitproxyget', methods: ['GET'])]
     #[IsGranted(CorePermission::QuantityValueUnits->value)]
-    public function unitProxyGetAction(
-        GetQuantityValueUnitsHandler $getUnits,
-        Request $request,
-        #[MapQueryParameter] int $limit = 25,
-        #[MapQueryParameter] int $start = 0,
-        #[MapQueryParameter] ?string $filter = null,
-    ): JsonResponse {
-        $result = $getUnits($request->query->all(), $limit, $start, $filter);
+    public function unitProxyGetAction(GetQuantityValueUnitsHandler $getUnits, GetQuantityValueUnitsPayload $payload): JsonResponse
+    {
+        $result = $getUnits($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
@@ -81,51 +79,42 @@ class QuantityValueController extends AdminAbstractController
     #[Route('/unit-proxy', name: 'unitproxy', methods: ['POST', 'PUT'])]
     #[IsGranted(CorePermission::QuantityValueUnits->value)]
     public function unitProxyAction(
-        ManageQuantityValueUnitHandler $manageUnit,
-        Request $request,
+        QuantityValueUnitPayload $payload,
+        CreateQuantityValueUnitHandler $createUnit,
+        UpdateQuantityValueUnitHandler $updateUnit,
+        DeleteQuantityValueUnitHandler $deleteUnit,
         #[MapQueryParameter] ?string $xaction = null,
     ): JsonResponse {
-        if (!$request->request->has('data')) {
-            throw new BadRequestHttpException();
-        }
-
-        $data = json_decode($request->request->get('data'), true);
-        $result = $manageUnit((string) $xaction, $data);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data]));
+        return match ($xaction) {
+            'destroy' => $this->adminJson(ApiResponse::ok(['data' => $deleteUnit($payload)->data])),
+            'update'  => $this->adminJson(ApiResponse::ok(['data' => $updateUnit($payload)->data])),
+            'create'  => $this->adminJson(ApiResponse::ok(['data' => $createUnit($payload)->data])),
+            default   => throw new BadRequestHttpException(),
+        };
     }
 
     #[Route('/unit-list', name: 'unitlist', methods: ['GET'])]
-    public function unitListAction(
-        GetQuantityValueUnitListHandler $getUnitList,
-        #[MapQueryParameter] ?string $filter = null,
-    ): JsonResponse {
-        $result = $getUnitList($filter);
+    public function unitListAction(GetQuantityValueUnitListHandler $getUnitList, GetQuantityValueUnitListPayload $payload): JsonResponse
+    {
+        $result = $getUnitList($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
 
     #[Route('/convert', name: 'convert', methods: ['GET'])]
     #[IsGranted(CorePermission::Objects->value)]
-    public function convertAction(
-        ConvertQuantityValueHandler $convert,
-        #[MapQueryParameter] ?string $fromUnit = null,
-        #[MapQueryParameter] ?string $toUnit = null,
-        #[MapQueryParameter] ?string $value = null,
-    ): JsonResponse {
-        $result = $convert($fromUnit, $toUnit, $value);
+    public function convertAction(ConvertQuantityValueHandler $convert, ConvertQuantityValuePayload $payload): JsonResponse
+    {
+        $result = $convert($payload);
 
         return $this->adminJson(ApiResponse::ok(['value' => $result->value]));
     }
 
     #[Route('/convert-all', name: 'convertall', methods: ['GET'])]
     #[IsGranted(CorePermission::Objects->value)]
-    public function convertAllAction(
-        ConvertAllQuantityValuesHandler $convertAll,
-        #[MapQueryParameter] ?string $unit = null,
-        #[MapQueryParameter] ?string $value = null,
-    ): JsonResponse {
-        $result = $convertAll($unit, $value);
+    public function convertAllAction(ConvertAllQuantityValuesHandler $convertAll, ConvertAllQuantityValuesPayload $payload): JsonResponse
+    {
+        $result = $convertAll($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'value' => $result->value,

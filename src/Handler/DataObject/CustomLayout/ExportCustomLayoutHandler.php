@@ -17,16 +17,17 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ExportCustomLayout\ExportCustomLayoutPayload;
 use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ExportCustomLayoutHandler
 {
-    public function __invoke(?string $id): ExportCustomLayoutResult
+    public function __invoke(ExportCustomLayoutPayload $payload): ExportCustomLayoutResult
     {
-        if ($id) {
-            $customLayout = DataObject\ClassDefinition\CustomLayout::getById($id);
+        if ($payload->id) {
+            $customLayout = DataObject\ClassDefinition\CustomLayout::getById($payload->id);
             if ($customLayout) {
                 return new ExportCustomLayoutResult(
                     $customLayout->getName(),
@@ -35,7 +36,7 @@ final class ExportCustomLayoutHandler
             }
         }
 
-        $errorMessage = ': Custom Layout with id [ ' . $id . ' not found. ]';
+        $errorMessage = ': Custom Layout with id [ ' . $payload->id . ' not found. ]';
         Logger::error($errorMessage);
 
         throw new NotFoundHttpException($errorMessage);

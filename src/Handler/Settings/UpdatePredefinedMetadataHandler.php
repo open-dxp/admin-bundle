@@ -23,8 +23,9 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class UpdatePredefinedMetadataHandler
 {
-    public function __invoke(array $data): UpdatePredefinedMetadataResult
+    public function __invoke(PredefinedMetadataPayload $payload): UpdatePredefinedMetadataResult
     {
+        $data = $payload->data;
         $metadata = Metadata\Predefined::getById($data['id']);
 
         if (!$metadata->isWriteable()) {

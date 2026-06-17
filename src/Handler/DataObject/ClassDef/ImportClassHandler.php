@@ -23,14 +23,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ImportClassHandler
 {
-    public function __invoke(?string $id, string $json): void
+    public function __invoke(ImportClassPayload $payload): void
     {
-        $class = DataObject\ClassDefinition::getById($id);
+        $class = DataObject\ClassDefinition::getById($payload->id);
         if (!$class) {
             throw new NotFoundHttpException('Class not found');
         }
 
-        $success = DataObject\ClassDefinition\Service::importClassDefinitionFromJson($class, $json, false, true);
+        $success = DataObject\ClassDefinition\Service::importClassDefinitionFromJson($class, $payload->json, false, true);
         if (!$success) {
             throw new RuntimeException('Failed to import class definition');
         }

@@ -25,13 +25,13 @@ final class CreateStoreHandler
     /**
      * @throws Exception
      */
-    public function __invoke(string $name): CreateStoreResult
+    public function __invoke(CreateStorePayload $payload): CreateStoreResult
     {
-        $config = Classificationstore\StoreConfig::getByName($name);
+        $config = Classificationstore\StoreConfig::getByName($payload->name);
 
         if (!$config) {
             $config = new Classificationstore\StoreConfig();
-            $config->setName($name);
+            $config->setName($payload->name);
             $config->save();
         } else {
             throw new Exception('Store with the given name exists');

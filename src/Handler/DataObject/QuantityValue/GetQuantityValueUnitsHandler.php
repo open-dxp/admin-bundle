@@ -17,18 +17,19 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\GetQuantityValueUnits\GetQuantityValueUnitsPayload;
 use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
 use OpenDxp\Db;
 use OpenDxp\Model\DataObject\QuantityValue\Unit;
 
 final class GetQuantityValueUnitsHandler
 {
-    public function __invoke(
-        array $queryAll,
-        int $limit,
-        int $start,
-        ?string $filter,
-    ): GetQuantityValueUnitsResult {
+    public function __invoke(GetQuantityValueUnitsPayload $payload): GetQuantityValueUnitsResult
+    {
+        $queryAll = $payload->queryAll;
+        $limit = $payload->limit;
+        $start = $payload->start;
+        $filter = $payload->filter;
         $list = new Unit\Listing();
 
         $order = ['ASC', 'ASC', 'ASC'];

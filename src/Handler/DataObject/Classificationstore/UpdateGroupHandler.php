@@ -21,8 +21,9 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class UpdateGroupHandler
 {
-    public function __invoke(array $data): UpdateGroupResult
+    public function __invoke(UpdateGroupPayload $payload): UpdateGroupResult
     {
+        $data = $payload->data;
         $id = $data['id'];
         $config = Classificationstore\GroupConfig::getById($id);
 

@@ -18,24 +18,26 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickTree\GetObjectBrickTreePayload;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
-use OpenDxp\Model\User;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class GetObjectBrickTreeHandler
 {
     public function __construct(
-        private readonly AdminUserContextInterface $userContext,private readonly EventDispatcherInterface $eventDispatcher) {}
+        private readonly AdminUserContextInterface $userContext,
+        private readonly EventDispatcherInterface $eventDispatcher,
+    ) {}
 
-    public function __invoke(
-        bool $forObjectEditor,
-        int $objectId,
-        ?string $classId,
-        ?string $fieldName,
-        ?string $layoutId,
-    ): ObjectBrickTreeResult {
+    public function __invoke(GetObjectBrickTreePayload $payload): ObjectBrickTreeResult
+    {
+        $forObjectEditor = $payload->forObjectEditor;
+        $objectId = $payload->objectId;
+        $classId = $payload->classId;
+        $fieldName = $payload->fieldName;
+        $layoutId = $payload->layoutId;
         $adminUser = $this->userContext->getAdminUser();
         $list = (new DataObject\Objectbrick\Definition\Listing())->load();
 

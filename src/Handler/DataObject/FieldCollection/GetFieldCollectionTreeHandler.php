@@ -18,23 +18,25 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionTree\GetFieldCollectionTreePayload;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
-use OpenDxp\Model\User;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class GetFieldCollectionTreeHandler
 {
     public function __construct(
-        private readonly AdminUserContextInterface $userContext,private readonly EventDispatcherInterface $eventDispatcher) {}
+        private readonly AdminUserContextInterface $userContext,
+        private readonly EventDispatcherInterface $eventDispatcher,
+    ) {}
 
-    public function __invoke(
-        bool $forObjectEditor,
-        ?array $allowedTypes,
-        int $objectId,
-        ?string $layoutId,
-    ): FieldCollectionTreeResult {
+    public function __invoke(GetFieldCollectionTreePayload $payload): FieldCollectionTreeResult
+    {
+        $forObjectEditor = $payload->forObjectEditor;
+        $allowedTypes = $payload->allowedTypes;
+        $objectId = $payload->objectId;
+        $layoutId = $payload->layoutId;
         $adminUser = $this->userContext->getAdminUser();
         $list = (new DataObject\Fieldcollection\Definition\Listing())->load();
 

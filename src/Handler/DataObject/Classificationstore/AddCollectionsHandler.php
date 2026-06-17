@@ -25,8 +25,11 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class AddCollectionsHandler
 {
-    public function __invoke(array $ids, int $oid, string $fieldname): AddCollectionsResult
+    public function __invoke(AddCollectionsPayload $payload): AddCollectionsResult
     {
+        $ids = $payload->ids;
+        $oid = $payload->oid;
+        $fieldname = $payload->fieldname;
         $data = [];
 
         if (!$ids) {

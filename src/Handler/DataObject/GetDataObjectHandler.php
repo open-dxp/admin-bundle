@@ -36,6 +36,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Throwable;
+use OpenDxp\Bundle\AdminBundle\Payload\DataObject\GetDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class GetDataObjectHandler
@@ -48,8 +49,10 @@ final class GetDataObjectHandler
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
-    public function __invoke(int $id, ?int $layoutId): GetDataObjectResult
+    public function __invoke(GetDataObjectPayload $payload): GetDataObjectResult
     {
+        $id = $payload->id;
+        $layoutId = $payload->layoutId;
         $objectFromDatabase = DataObject\Concrete::getById($id);
         if (!$objectFromDatabase instanceof DataObject\Concrete) {
             throw new NotFoundHttpException('element_not_found');

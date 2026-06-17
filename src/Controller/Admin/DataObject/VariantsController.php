@@ -19,7 +19,9 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\GetVariantsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\GetVariants\GetVariantsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\UpdateObjectKeyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\UpdateObjectKey\UpdateObjectKeyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,12 +34,9 @@ use Symfony\Component\Routing\Attribute\Route;
 class VariantsController extends AdminAbstractController
 {
     #[Route('/update-key', name: 'updatekey', methods: ['PUT'])]
-    public function updateKeyAction(UpdateObjectKeyHandler $updateObjectKey, Request $request): JsonResponse
+    public function updateKeyAction(UpdateObjectKeyHandler $updateObjectKey, UpdateObjectKeyPayload $payload): JsonResponse
     {
-        $result = $updateObjectKey(
-            $request->request->getInt('id'),
-            $request->request->get('key'),
-        );
+        $result = $updateObjectKey($payload);
 
         return $this->adminJson($result->data);
     }
@@ -45,24 +44,17 @@ class VariantsController extends AdminAbstractController
     #[Route('/get-variants', name: 'getvariants', methods: ['POST'])]
     public function getVariantsAction(
         GetVariantsHandler $getVariants,
+        GetVariantsPayload $payload,
         Request $request,
         CsrfProtectionHandler $csrfProtection,
     ): JsonResponse {
         $csrfProtection->checkCsrfToken($request);
 
-        $allParams = [...$request->request->all(), ...$request->query->all()];
-        $requestedLanguage = $allParams['language'] ?? null;
-        if ($requestedLanguage && $requestedLanguage !== 'default') {
-            $request->setLocale($requestedLanguage);
-        } else {
-            $requestedLanguage = $request->getLocale();
+        if ($payload->requestedLanguage !== $request->getLocale()) {
+            $request->setLocale($payload->requestedLanguage);
         }
 
-        $result = $getVariants(
-            (int) $request->request->get('objectId'),
-            $allParams,
-            $requestedLanguage,
-        );
+        $result = $getVariants($payload);
 
         return $this->adminJson($result->data);
     }

@@ -18,18 +18,19 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadImageThumbnail\DownloadImageThumbnailPayload;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Process\Process;
 
 final class DownloadImageThumbnailHandler
 {
-    public function __invoke(
-        int $id,
-        ?string $thumbnailName,
-        ?string $config,
-        ?array $configData,
-    ): DownloadImageThumbnailResult {
+    public function __invoke(DownloadImageThumbnailPayload $payload): DownloadImageThumbnailResult
+    {
+        $id = $payload->id;
+        $thumbnailName = $payload->thumbnailName;
+        $config = $payload->config;
+        $configData = $payload->configData;
         $image = Asset\Image::getById($id) ?? throw new AssetNotFoundException($id);
 
         if (!$image->isAllowed('view')) {

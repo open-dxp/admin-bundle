@@ -17,18 +17,19 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionUsages\GetFieldCollectionUsagesPayload;
 use OpenDxp\Model\DataObject\ClassDefinition\Data\Fieldcollections;
 use OpenDxp\Model\DataObject\ClassDefinition\Listing;
 
 final class GetFieldCollectionUsagesHandler
 {
-    public function __invoke(string $key): array
+    public function __invoke(GetFieldCollectionUsagesPayload $payload): array
     {
         $result = [];
 
         foreach ((new Listing())->load() as $class) {
             foreach ($class->getFieldDefinitions() as $fieldDef) {
-                if ($fieldDef instanceof Fieldcollections && in_array($key, $fieldDef->getAllowedTypes())) {
+                if ($fieldDef instanceof Fieldcollections && in_array($payload->key, $fieldDef->getAllowedTypes())) {
                     $result[] = [
                         'class' => $class->getName(),
                         'field' => $fieldDef->getName(),

@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail\GetImageThumbnailPayload;
 use OpenDxp\Messenger\AssetPreviewImageMessage;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -27,20 +28,20 @@ final class GetImageThumbnailHandler
 {
     public function __construct(private readonly MessageBusInterface $messageBus) {}
 
-    public function __invoke(
-        int $id,
-        bool $hasFileinfo,
-        ?array $thumbnailParam,
-        ?array $configDecoded,
-        array $queryAll,
-        bool $hasThumbnailPreview,
-        ?string $origin,
-        bool $hasCropPercent,
-        ?string $cropWidth,
-        ?string $cropHeight,
-        ?string $cropTop,
-        ?string $cropLeft,
-    ): GetImageThumbnailResult {
+    public function __invoke(GetImageThumbnailPayload $payload): GetImageThumbnailResult
+    {
+        $id = $payload->id;
+        $hasFileinfo = $payload->hasFileinfo;
+        $thumbnailParam = $payload->thumbnailParam;
+        $configDecoded = $payload->configDecoded;
+        $queryAll = $payload->queryAll;
+        $hasThumbnailPreview = $payload->hasThumbnailPreview;
+        $origin = $payload->origin;
+        $hasCropPercent = $payload->hasCropPercent;
+        $cropWidth = $payload->cropWidth;
+        $cropHeight = $payload->cropHeight;
+        $cropTop = $payload->cropTop;
+        $cropLeft = $payload->cropLeft;
         $image = Asset\Image::getById($id) ?? throw new AssetNotFoundException($id);
 
         if (!$image->isAllowed('view')) {

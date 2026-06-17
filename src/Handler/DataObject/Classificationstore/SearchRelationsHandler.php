@@ -27,16 +27,8 @@ final class SearchRelationsHandler
 {
     public function __construct(private readonly AdminSearchTermResolver $searchTermResolver) {}
 
-    public function __invoke(
-        array $queryAll,
-        ?int $storeId,
-        int $limit,
-        int $start,
-        ?string $dir,
-        bool $overrideSort,
-        ?string $filter,
-        ?string $searchfilter,
-    ): SearchRelationsResult {
+    public function __invoke(SearchRelationsPayload $payload): SearchRelationsResult
+    {
         $db = Db::get();
 
         $mapping = [
@@ -48,11 +40,11 @@ final class SearchRelationsHandler
         $orderKey = 'name';
         $order = 'ASC';
 
-        if ($dir) {
-            $order = $dir;
+        if ($payload->dir) {
+            $order = $payload->dir;
         }
 
-        $sortingSettings = QueryParams::extractSortingSettings($queryAll);
+        $sortingSettings = QueryParams::extractSortingSettings($payload->queryAll);
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $sortingSettings['orderKey'];
             if ($orderKey === 'keyName') {
@@ -61,24 +53,24 @@ final class SearchRelationsHandler
             $order = $sortingSettings['order'];
         }
 
-        if ($overrideSort) {
+        if ($payload->overrideSort) {
             $orderKey = 'id';
             $order = 'DESC';
         }
 
         $list = new Classificationstore\KeyGroupRelation\Listing();
 
-        if ($limit > 0) {
-            $list->setLimit($limit);
+        if ($payload->limit > 0) {
+            $list->setLimit($payload->limit);
         }
-        $list->setOffset($start);
+        $list->setOffset($payload->start);
         $list->setOrder($order);
         $list->setOrderKey($orderKey);
 
         $conditionParts = [];
 
-        if ($filter !== null) {
-            $filters = json_decode($filter);
+        if ($payload->filter !== null) {
+            $filters = json_decode($payload->filter);
             /** @var stdClass $f */
             foreach ($filters as $f) {
                 if (!isset($f->value)) {
@@ -90,12 +82,12 @@ final class SearchRelationsHandler
             }
         }
 
-        $conditionParts[] = '  groupId IN (select id from classificationstore_groups where storeId = ' . $db->quote($storeId) . ')';
+        $conditionParts[] = '  groupId IN (select id from classificationstore_groups where storeId = ' . $db->quote($payload->storeId) . ')';
 
-        if ($searchfilter) {
+        if ($payload->searchfilter) {
             $searchFilterConditions = [];
 
-            $searchTerms = [$searchfilter, ...$this->searchTermResolver->resolve($searchfilter)];
+            $searchTerms = [$payload->searchfilter, ...$this->searchTermResolver->resolve($payload->searchfilter)];
             foreach ($searchTerms as $searchFilterTerm) {
                 $searchFilterConditions[] = Classificationstore\KeyConfig\Dao::TABLE_NAME_KEYS . '.name LIKE ' . $db->quote('%' . $searchFilterTerm . '%')
                     . ' OR ' . Classificationstore\GroupConfig\Dao::TABLE_NAME_GROUPS . '.name LIKE ' . $db->quote('%' . $searchFilterTerm . '%')

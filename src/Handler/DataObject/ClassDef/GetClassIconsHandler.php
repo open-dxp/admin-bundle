@@ -26,8 +26,11 @@ final class GetClassIconsHandler
 {
     public function __construct(private readonly EventDispatcherInterface $eventDispatcher) {}
 
-    public function __invoke(?string $type, ?string $classId): GetClassIconsResult
+    public function __invoke(GetClassIconsPayload $payload): GetClassIconsResult
     {
+        $type = $payload->type;
+        $classId = $payload->classId;
+
         if ($type === '') {
             return new GetClassIconsResult(icons: []);
         }

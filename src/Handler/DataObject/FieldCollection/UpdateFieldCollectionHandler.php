@@ -17,19 +17,21 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\UpdateFieldCollection\UpdateFieldCollectionPayload;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class UpdateFieldCollectionHandler
 {
-    public function __invoke(
-        string $key,
-        string $title,
-        string $group,
-        bool $isAdd,
-        ?array $values,
-        ?array $configuration,
-    ): DataObject\Fieldcollection\Definition {
+    public function __invoke(UpdateFieldCollectionPayload $payload): DataObject\Fieldcollection\Definition
+    {
+        $key = $payload->key;
+        $title = $payload->title;
+        $group = $payload->group;
+        $isAdd = $payload->isAdd;
+        $values = $payload->values;
+        $configuration = $payload->configuration;
+
         if ($isAdd) {
             $list = new DataObject\Fieldcollection\Definition\Listing();
             foreach ($list->loadNames() as $fcName) {

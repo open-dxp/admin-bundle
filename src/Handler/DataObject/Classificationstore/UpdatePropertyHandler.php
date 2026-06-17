@@ -21,8 +21,9 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class UpdatePropertyHandler
 {
-    public function __invoke(array $data): UpdatePropertyResult
+    public function __invoke(UpdatePropertyPayload $payload): UpdatePropertyResult
     {
+        $data = $payload->data;
         $id = $data['id'];
         $config = Classificationstore\KeyConfig::getById($id);
 

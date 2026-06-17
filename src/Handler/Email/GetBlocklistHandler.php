@@ -17,29 +17,24 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Email;
 
-use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
 use OpenDxp\Model\Tool;
 
 final class GetBlocklistHandler
 {
-    public function __invoke(
-        int $limit,
-        int $offset,
-        array $sortingSettings,
-        ?string $filter,
-    ): GetBlocklistResult {
+    public function __invoke(BlocklistPayload $payload): GetBlocklistResult
+    {
         $list = new Tool\Email\Blocklist\Listing();
 
-        $list->setLimit($limit);
-        $list->setOffset($offset);
+        $list->setLimit($payload->limit);
+        $list->setOffset($payload->offset);
 
-        if ($sortingSettings['orderKey']) {
-            $list->setOrderKey($sortingSettings['orderKey']);
-            $list->setOrder($sortingSettings['order']);
+        if ($payload->sortingSettings['orderKey']) {
+            $list->setOrderKey($payload->sortingSettings['orderKey']);
+            $list->setOrder($payload->sortingSettings['order']);
         }
 
-        if ($filter !== null) {
-            $list->setCondition('`address` LIKE ' . $list->quote('%' . $filter . '%'));
+        if ($payload->filter !== null) {
+            $list->setCondition('`address` LIKE ' . $list->quote('%' . $payload->filter . '%'));
         }
 
         $data = $list->load();

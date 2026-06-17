@@ -19,23 +19,28 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\CheckPrettyUrlHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GeneratePagePreviewsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GenerateQrCodeHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPageDataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPagePreviewImagePathHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmodeHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\ResetEditablesSessionHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePageHandler;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\PagePayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\RenderAreabrickIndexEditmodePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\CheckPrettyUrl\CheckPrettyUrlHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\CheckPrettyUrl\CheckPrettyUrlPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GeneratePagePreviews\GeneratePagePreviewsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GenerateQrCode\GenerateQrCodeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GenerateQrCode\GenerateQrCodePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPageData\GetPageDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPageData\GetPageDataPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPagePreviewImagePath\GetPagePreviewImagePathHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPagePreviewImagePath\GetPagePreviewImagePathPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmode\RenderAreabrickIndexEditmodeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\ResetEditablesSession\ResetEditablesSessionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\ResetEditablesSession\ResetEditablesSessionPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePagePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmode\RenderAreabrickIndexEditmodePayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Document\StaticPageGenerator;
 use OpenDxp\Http\Request\Resolver\DocumentResolver;
 use OpenDxp\Http\Request\Resolver\EditmodeResolver;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Twig\Environment;
@@ -49,11 +54,10 @@ class PageController extends DocumentControllerBase
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
         GetPageDataHandler $handler,
-        #[MapQueryParameter] int $id = 0,
-    ): JsonResponse
-    {
+        GetPageDataPayload $payload,
+    ): JsonResponse {
         try {
-            $result = $handler($id);
+            $result = $handler($payload);
         } catch (ElementLockedException $e) {
             return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
@@ -62,17 +66,17 @@ class PageController extends DocumentControllerBase
     }
 
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
-    public function saveAction(Request $request, StaticPageGenerator $staticPageGenerator, SavePageHandler $handler): JsonResponse
+    public function saveAction(SavePagePayload $payload, StaticPageGenerator $staticPageGenerator, SavePageHandler $handler): JsonResponse
     {
         try {
-            $result = $handler((int) $request->request->get('id'), PagePayload::fromRequest($request));
+            $result = $handler($payload);
         } catch (ElementLockedException $e) {
             return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
 
         if ($result->task === self::TASK_PUBLISH || $result->task === self::TASK_UNPUBLISH) {
             $data = [
-                'versionDate' => $result->page->getModificationDate(),
+                'versionDate'  => $result->page->getModificationDate(),
                 'versionCount' => $result->page->getVersionCount(),
             ];
             if ($staticGeneratorEnabled = $result->page->getStaticGeneratorEnabled()) {
@@ -86,9 +90,9 @@ class PageController extends DocumentControllerBase
         $draftData = [];
         if ($result->version) {
             $draftData = [
-                'id' => $result->version->getId(),
+                'id'               => $result->version->getId(),
                 'modificationDate' => $result->version->getDate(),
-                'isAutoSave' => $result->version->isAutoSave(),
+                'isAutoSave'       => $result->version->isAutoSave(),
             ];
         }
 
@@ -96,9 +100,9 @@ class PageController extends DocumentControllerBase
     }
 
     #[Route('/generate-previews', name: 'generatepreviews', methods: ['GET'])]
-    public function generatePreviewsAction(GeneratePagePreviewsHandler $handler): JsonResponse
+    public function generatePreviewsAction(GeneratePagePreviewsHandler $handler, EmptyPayload $payload): JsonResponse
     {
-        $handler();
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -106,10 +110,9 @@ class PageController extends DocumentControllerBase
     #[Route('/display-preview-image', name: 'display_preview_image', methods: ['GET'])]
     public function displayPreviewImageAction(
         GetPagePreviewImagePathHandler $handler,
-        #[MapQueryParameter] int $id = 0,
-    ): BinaryFileResponse
-    {
-        $filePath = $handler($id);
+        GetPagePreviewImagePathPayload $payload,
+    ): BinaryFileResponse {
+        $filePath = $handler($payload);
 
         return new BinaryFileResponse($filePath, 200, [
             'Content-Type' => 'image/jpg',
@@ -117,20 +120,17 @@ class PageController extends DocumentControllerBase
     }
 
     #[Route('/check-pretty-url', name: 'checkprettyurl', methods: ['POST'])]
-    public function checkPrettyUrlAction(Request $request, CheckPrettyUrlHandler $handler): JsonResponse
+    public function checkPrettyUrlAction(CheckPrettyUrlPayload $payload, CheckPrettyUrlHandler $handler): JsonResponse
     {
-        $docId = $request->request->getInt('id');
-        $path = trim($request->request->get('path', ''));
-
-        $result = $handler($docId, $path);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::fromBool($result->success, ['message' => implode('<br>', $result->messages)]));
     }
 
     #[Route('/clear-editable-data', name: 'cleareditabledata', methods: ['PUT'])]
-    public function clearEditableDataAction(Request $request, ResetEditablesSessionHandler $handler): JsonResponse
+    public function clearEditableDataAction(ResetEditablesSessionPayload $payload, ResetEditablesSessionHandler $handler): JsonResponse
     {
-        $handler($request->request->getInt('id'));
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -138,16 +138,14 @@ class PageController extends DocumentControllerBase
     #[Route('/qr-code', name: 'qrcode', methods: ['GET'])]
     public function qrCodeAction(
         GenerateQrCodeHandler $handler,
-        #[MapQueryParameter] int $id = 0,
-        #[MapQueryParameter] ?string $download = null,
-    ): BinaryFileResponse
-    {
-        $tmpFile = $handler($id, (bool) $download);
+        GenerateQrCodePayload $payload,
+    ): BinaryFileResponse {
+        $tmpFile = $handler($payload);
 
         $response = new BinaryFileResponse($tmpFile);
         $response->headers->set('Content-Type', 'image/png');
 
-        if ($download) {
+        if ($payload->download) {
             $response->setContentDisposition('attachment', 'qrcode-preview.png');
         }
 
@@ -162,13 +160,15 @@ class PageController extends DocumentControllerBase
     #[Route('/areabrick-render-index-editmode', name: 'areabrick-render-index-editmode', methods: ['POST'])]
     public function areabrickRenderIndexEditmode(
         Request $request,
-        RenderAreabrickIndexEditmodeHandler $renderAreabrickIndexEditmode,
+        RenderAreabrickIndexEditmodePayload $payload,
+        RenderAreabrickIndexEditmodeHandler $handler,
         DocumentResolver $documentResolver,
         Environment $twig,
     ): JsonResponse {
+
         $request->attributes->set(EditmodeResolver::ATTRIBUTE_EDITMODE, true);
 
-        $result = $renderAreabrickIndexEditmode(RenderAreabrickIndexEditmodePayload::fromRequest($request));
+        $result = $handler($payload);
 
         $documentResolver->setDocument($request, $result->document);
         $twig->addGlobal('document', $result->document);
@@ -176,7 +176,7 @@ class PageController extends DocumentControllerBase
 
         return new JsonResponse([
             'editableDefinitions' => $result->editableDefinitions,
-            'htmlCode' => $result->htmlCode,
+            'htmlCode'            => $result->htmlCode,
         ]);
     }
 }

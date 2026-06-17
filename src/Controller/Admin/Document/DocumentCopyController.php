@@ -19,9 +19,12 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\CopyDocumentHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\GetDocumentChildIdsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\RewriteDocumentIdsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\CopyDocument\CopyDocumentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\CopyDocument\CopyDocumentPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\GetDocumentChildIds\GetDocumentChildIdsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\GetDocumentChildIds\GetDocumentChildIdsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\RewriteDocumentIds\RewriteDocumentIdsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\RewriteDocumentIds\RewriteDocumentIdsPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Tool\Session;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -40,10 +43,10 @@ class DocumentCopyController extends AdminAbstractController
 {
     #[Route('/copy-info', name: 'opendxp_admin_document_document_copyinfo', methods: ['GET'])]
     public function copyInfoAction(
+        GetDocumentChildIdsPayload $getChildIdsPayload,
         GetDocumentChildIdsHandler $getChildIds,
         Request $request,
         #[MapQueryParameter] ?string $type = null,
-        #[MapQueryParameter] int $sourceId = 0,
         #[MapQueryParameter] ?string $targetId = null,
         #[MapQueryParameter] ?string $language = null,
         #[MapQueryParameter] ?string $enableInheritance = null,
@@ -54,6 +57,8 @@ class DocumentCopyController extends AdminAbstractController
         Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId): void {
             $session->set((string) $transactionId, ['idMapping' => []]);
         }, 'opendxp_copy');
+
+        $sourceId = $getChildIdsPayload->sourceId;
 
         if ($type === 'recursive' || $type === 'recursive-update-references') {
             $pasteJobs[] = [[
@@ -71,7 +76,7 @@ class DocumentCopyController extends AdminAbstractController
                 ],
             ]];
 
-            $childIds = $getChildIds($sourceId)->ids;
+            $childIds = $getChildIds($getChildIdsPayload)->ids;
 
             foreach ($childIds as $id) {
                 $pasteJobs[] = [[
@@ -122,66 +127,37 @@ class DocumentCopyController extends AdminAbstractController
     }
 
     #[Route('/copy-rewrite-ids', name: 'opendxp_admin_document_document_copyrewriteids', methods: ['PUT'])]
-    public function copyRewriteIdsAction(RewriteDocumentIdsHandler $rewriteIds, Request $request): JsonResponse
-    {
-        $transactionId = $request->request->get('transactionId');
+    public function copyRewriteIdsAction(
+        RewriteDocumentIdsPayload $payload,
+        RewriteDocumentIdsHandler $rewriteIds,
+        Request $request,
+    ): JsonResponse {
+        $rewriteIds($payload);
 
-        $idStore = Session::useBag($request->getSession(), static fn (AttributeBagInterface $session) => $session->get($transactionId), 'opendxp_copy');
-
-        if (!array_key_exists('rewrite-stack', $idStore)) {
-            $idStore['rewrite-stack'] = array_values($idStore['idMapping']);
-        }
-
-        $id = array_shift($idStore['rewrite-stack']);
-        $enableInheritance = $request->request->get('enableInheritance') === 'true';
-
-        $rewriteIds((int) $id, $idStore['idMapping'], $enableInheritance);
-
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId, $idStore): void {
-            $session->set($transactionId, $idStore);
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($payload): void {
+            $session->set($payload->transactionId, $payload->updatedIdStore);
         }, 'opendxp_copy');
 
-        return $this->adminJson(ApiResponse::ok(['id' => $id]));
+        return $this->adminJson(ApiResponse::ok(['id' => $payload->documentId]));
     }
 
     #[Route('/copy', name: 'opendxp_admin_document_document_copy', methods: ['POST'])]
-    public function copyAction(CopyDocumentHandler $copyDocument, Request $request): JsonResponse
-    {
-        $sourceId = (int) $request->request->get('sourceId');
-        $targetId = (int) $request->request->get('targetId');
-        $type = (string) $request->request->get('type');
-
-        $session = Session::getSessionBag($request->getSession(), 'opendxp_copy');
-        $sessionBag = $session->get($request->request->get('transactionId'));
-
-        $sourceParentId = $request->request->get('targetParentId') ? (int) $request->request->get('sourceParentId') : null;
-        $targetParentId = $request->request->get('targetParentId') ? (int) $request->request->get('targetParentId') : null;
-        $sessionParentId = !empty($sessionBag['parentId']) ? (int) $sessionBag['parentId'] : null;
-
-        $enableInheritance = $request->request->get('enableInheritance') === 'true';
-        $resetIndex = $request->request->get('resetIndex') === 'true';
-        $language = ($request->request->get('language') ?: null);
-
-        $result = $copyDocument(
-            $sourceId,
-            $targetId,
-            $type,
-            $sourceParentId,
-            $targetParentId,
-            $sessionParentId,
-            $enableInheritance,
-            $resetIndex,
-            $language,
-        );
+    public function copyAction(
+        CopyDocumentPayload $payload,
+        CopyDocumentHandler $copyDocument,
+        Request $request,
+    ): JsonResponse {
+        $result = $copyDocument($payload);
 
         if ($result->newDocument !== null) {
+            $sessionBag = $payload->sessionBag;
             $sessionBag['idMapping'][$result->sourceId] = $result->newDocument->getId();
 
-            if ($request->request->get('saveParentId')) {
+            if ($payload->saveParentId) {
                 $sessionBag['parentId'] = $result->newDocument->getId();
             }
 
-            $session->set($request->request->get('transactionId'), $sessionBag);
+            Session::getSessionBag($request->getSession(), 'opendxp_copy')->set($payload->transactionId, $sessionBag);
         }
 
         return $this->adminJson(ApiResponse::ok());

@@ -19,13 +19,13 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Payload\DataObject\UpdateDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Db;
 use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Element\Service;
-use OpenDxp\Model\User;
 use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -38,7 +38,17 @@ final class UpdateDataObjectHandler
         private readonly ElementServiceInterface $elementService,
     ) {}
 
-    public function __invoke(int $id, array $values): UpdateDataObjectResult
+    public function __invoke(UpdateDataObjectPayload $payload): UpdateDataObjectResult
+    {
+        $result = null;
+        foreach ($payload->ids as $id) {
+            $result = $this->processOne($id, $payload->values);
+        }
+
+        return $result ?? new UpdateDataObjectResult(treeData: []);
+    }
+
+    private function processOne(int $id, array $values): UpdateDataObjectResult
     {
         $object = DataObject::getById($id);
         if (!$object instanceof DataObject) {

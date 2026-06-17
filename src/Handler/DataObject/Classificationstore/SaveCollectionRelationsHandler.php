@@ -21,8 +21,9 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class SaveCollectionRelationsHandler
 {
-    public function __invoke(array $data): SaveCollectionRelationsResult
+    public function __invoke(SaveCollectionRelationsPayload $payload): SaveCollectionRelationsResult
     {
+        $data = $payload->data;
         if (count($data) === count($data, 1)) {
             $data = [$data];
         }

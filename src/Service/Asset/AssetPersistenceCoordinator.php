@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\Asset;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAssetResult;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetResult;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;

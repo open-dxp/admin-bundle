@@ -24,48 +24,41 @@ use stdClass;
 
 final class GetCollectionRelationsHandler
 {
-    public function __invoke(
-        array $queryAll,
-        int $limit,
-        int $start,
-        ?string $dir,
-        bool $overrideSort,
-        ?string $filter,
-        int $colId,
-    ): GetCollectionRelationsResult {
+    public function __invoke(GetCollectionRelationsPayload $payload): GetCollectionRelationsResult
+    {
         $mapping = ['groupName' => 'name', 'groupDescription' => 'description'];
 
         $orderKey = 'sorter';
         $order = 'ASC';
 
-        if ($dir !== null) {
-            $order = $dir;
+        if ($payload->dir !== null) {
+            $order = $payload->dir;
         }
 
-        $sortingSettings = QueryParams::extractSortingSettings($queryAll);
+        $sortingSettings = QueryParams::extractSortingSettings($payload->queryAll);
         if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
             $orderKey = $sortingSettings['orderKey'];
             $order = $sortingSettings['order'];
         }
 
-        if ($overrideSort) {
+        if ($payload->overrideSort) {
             $orderKey = 'id';
             $order = 'DESC';
         }
 
         $list = new Classificationstore\CollectionGroupRelation\Listing();
 
-        if ($limit > 0) {
-            $list->setLimit($limit);
+        if ($payload->limit > 0) {
+            $list->setLimit($payload->limit);
         }
-        $list->setOffset($start);
+        $list->setOffset($payload->start);
         $list->setOrder($order);
         $list->setOrderKey($mapping[$orderKey] ?? $orderKey);
         $condition = '';
 
-        if ($filter !== null) {
+        if ($payload->filter !== null) {
             $db = Db::get();
-            $filters = json_decode($filter);
+            $filters = json_decode($payload->filter);
 
             $count = 0;
             /** @var stdClass $f */
@@ -86,7 +79,7 @@ final class GetCollectionRelationsHandler
         if ($condition) {
             $condition = '( ' . $condition . ' ) AND';
         }
-        $condition .= ' colId = ' . $list->quote($colId);
+        $condition .= ' colId = ' . $list->quote($payload->colId);
 
         $list->setCondition($condition);
 

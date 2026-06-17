@@ -25,12 +25,12 @@ final class BulkExportPrepareHandler
 {
     public function __construct(private readonly RequestStack $requestStack) {}
 
-    public function __invoke(string $data): void
+    public function __invoke(BulkExportPreparePayload $payload): void
     {
         Session::useBag(
             $this->requestStack->getCurrentRequest()->getSession(),
-            static function (AttributeBagInterface $session) use ($data): void {
-                $session->set('class_bulk_export_settings', $data);
+            static function (AttributeBagInterface $session) use ($payload): void {
+                $session->set('class_bulk_export_settings', $payload->data);
             },
             'opendxp_objects'
         );

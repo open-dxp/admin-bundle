@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Media;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetDocumentPreview\GetDocumentPreviewPayload;
 use OpenDxp\Config;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Asset\Enum\PdfScanStatus;
@@ -28,8 +29,9 @@ final class GetDocumentPreviewHandler
 {
     private const string PDF_MIMETYPE = 'application/pdf';
 
-    public function __invoke(int $id): PreviewDocumentResult
+    public function __invoke(GetDocumentPreviewPayload $payload): PreviewDocumentResult
     {
+        $id = $payload->id;
         $asset = Asset\Document::getById($id);
         if (!$asset instanceof Asset\Document) {
             throw new AssetNotFoundException($id);

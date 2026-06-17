@@ -27,10 +27,10 @@ final class ExecuteBatchHandler
         private readonly GridBatchService $gridBatchService,
     ) {}
 
-    public function __invoke(array $params, string $locale): bool
+    public function __invoke(ExecuteBatchPayload $payload): bool
     {
         $adminUser = $this->userContext->getAdminUser();
 
-        return $this->gridBatchService->executeObjectBatch($params, $locale, $adminUser);
+        return $this->gridBatchService->executeObjectBatch($payload->params, $payload->locale, $adminUser);
     }
 }

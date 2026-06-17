@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Version;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetVersionNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\AssetResult;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersion\PublishVersionPayload;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -30,8 +31,9 @@ final class PublishVersionHandler
     {
     }
 
-    public function __invoke(int $versionId): AssetResult
+    public function __invoke(PublishVersionPayload $payload): AssetResult
     {
+        $versionId = $payload->versionId;
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
         $version = Version::getById($versionId)
             ?? throw new AssetVersionNotFoundException($versionId);

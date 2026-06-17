@@ -21,9 +21,9 @@ use OpenDxp\Model\Translation;
 
 final class DeleteTranslationHandler
 {
-    public function __invoke(string $key, string $domain): void
+    public function __invoke(TranslationPayload $payload): void
     {
-        $t = Translation::getByKey($key, $domain);
+        $t = Translation::getByKey($payload->data['key'], $payload->domain);
         if ($t instanceof Translation) {
             $t->delete();
         }

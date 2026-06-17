@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolder\CreateAssetFolderPayload;
 use OpenDxp\Model\Asset;
-use OpenDxp\Model\User;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -29,8 +29,10 @@ final class CreateAssetFolderHandler
     {
     }
 
-    public function __invoke(int $parentId, string $name): void
+    public function __invoke(CreateAssetFolderPayload $payload): void
     {
+        $parentId = $payload->parentId;
+        $name = $payload->name;
         $adminUser = $this->userContext->getAdminUser();
         $parentAsset = Asset::getById($parentId);
 

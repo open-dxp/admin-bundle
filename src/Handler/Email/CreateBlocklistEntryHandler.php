@@ -21,8 +21,9 @@ use OpenDxp\Model\Tool;
 
 final class CreateBlocklistEntryHandler
 {
-    public function __invoke(array $data): array
+    public function __invoke(BlocklistPayload $payload): array
     {
+        $data = $payload->data;
         unset($data['id']);
 
         $address = new Tool\Email\Blocklist();

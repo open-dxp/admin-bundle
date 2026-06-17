@@ -27,24 +27,18 @@ final class SaveSelectOptionsHandler
 {
     public function __construct(private readonly EventDispatcherInterface $eventDispatcher) {}
 
-    public function __invoke(
-        string $id,
-        string $task,
-        string $group,
-        string $useTraits,
-        string $implementsInterfaces,
-        array $selectOptionsData,
-    ): SaveSelectOptionsResult {
-        if ($task === 'add' && (new DataObject\SelectOptions\Config\Listing())->hasConfig($id)) {
+    public function __invoke(SaveSelectOptionsPayload $payload): SaveSelectOptionsResult
+    {
+        if ($payload->task === 'add' && (new DataObject\SelectOptions\Config\Listing())->hasConfig($payload->id)) {
             throw new BadRequestHttpException('Select options with the same ID already exists (lower/upper cases may be different)');
         }
 
         $selectOptionsConfiguration = DataObject\SelectOptions\Config::createFromData([
-            DataObject\SelectOptions\Config::PROPERTY_ID => $id,
-            DataObject\SelectOptions\Config::PROPERTY_GROUP => $group,
-            DataObject\SelectOptions\Config::PROPERTY_USE_TRAITS => $useTraits,
-            DataObject\SelectOptions\Config::PROPERTY_IMPLEMENTS_INTERFACES => $implementsInterfaces,
-            DataObject\SelectOptions\Config::PROPERTY_SELECT_OPTIONS => $selectOptionsData,
+            DataObject\SelectOptions\Config::PROPERTY_ID => $payload->id,
+            DataObject\SelectOptions\Config::PROPERTY_GROUP => $payload->group,
+            DataObject\SelectOptions\Config::PROPERTY_USE_TRAITS => $payload->useTraits,
+            DataObject\SelectOptions\Config::PROPERTY_IMPLEMENTS_INTERFACES => $payload->implementsInterfaces,
+            DataObject\SelectOptions\Config::PROPERTY_SELECT_OPTIONS => $payload->selectOptionsData,
         ]);
 
         $event = new GenericEvent(null, ['selectOptionsConfiguration' => $selectOptionsConfiguration]);

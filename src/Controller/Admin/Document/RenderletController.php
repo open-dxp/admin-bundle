@@ -18,9 +18,8 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Renderlet\RenderRenderletHandler;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\RenderRenderletPayload;
-use Symfony\Component\HttpFoundation\Request;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Renderlet\RenderRenderlet\RenderRenderletHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Renderlet\RenderRenderlet\RenderRenderletPayload;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -34,10 +33,10 @@ class RenderletController extends AdminAbstractController
      */
     #[Route('/document_tag/renderlet', name: 'opendxp_admin_document_renderlet_renderlet', methods: ['GET'])]
     public function renderletAction(
-        Request $request,
+        RenderRenderletPayload $payload,
         RenderRenderletHandler $handler,
     ): Response {
-        $result = $handler(RenderRenderletPayload::fromRequest($request));
+        $result = $handler($payload);
 
         return new Response($result->html);
     }

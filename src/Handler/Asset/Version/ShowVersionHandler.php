@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Version;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetVersionNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\ShowVersion\ShowVersionPayload;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -26,8 +27,9 @@ final class ShowVersionHandler
 {
     private const string PDF_MIMETYPE = 'application/pdf';
 
-    public function __invoke(int $versionId): ShowVersionResult
+    public function __invoke(ShowVersionPayload $payload): ShowVersionResult
     {
+        $versionId = $payload->versionId;
         $version = Version::getById($versionId)
             ?? throw new AssetVersionNotFoundException($versionId);
 

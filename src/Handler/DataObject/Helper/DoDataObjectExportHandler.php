@@ -41,24 +41,12 @@ final class DoDataObjectExportHandler
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
-    public function __invoke(
-        string $fileHandle,
-        array $ids,
-        string $classId,
-        string $delimiter,
-        string $header,
-        ?string $userTimezone,
-        array $allParams,
-        string $requestedLanguage,
-        array $fields,
-        bool $addTitles,
-        bool $enableInheritance,
-        array $context,
-    ): void {
-        UserTimezone::setUserTimezone($userTimezone);
-        DataObject\Concrete::setGetInheritedValues($enableInheritance);
+    public function __invoke(DoDataObjectExportPayload $payload): void
+    {
+        UserTimezone::setUserTimezone($payload->userTimezone);
+        DataObject\Concrete::setGetInheritedValues($payload->enableInheritance);
 
-        $class = DataObject\ClassDefinition::getById($classId);
+        $class = DataObject\ClassDefinition::getById($payload->classId);
         if (!$class) {
             throw new InvalidArgumentException('No class definition found');
         }
@@ -69,7 +57,7 @@ final class DoDataObjectExportHandler
         $list = new $listClass();
 
         $quotedIds = [];
-        foreach ($ids as $id) {
+        foreach ($payload->ids as $id) {
             $quotedIds[] = $list->quote($id);
         }
 
@@ -79,50 +67,50 @@ final class DoDataObjectExportHandler
 
         $beforeListExportEvent = new GenericEvent(null, [
             'list' => $list,
-            'context' => $allParams,
+            'context' => $payload->allParams,
         ]);
         $this->eventDispatcher->dispatch($beforeListExportEvent, AdminEvents::OBJECT_LIST_BEFORE_EXPORT);
         $list = $beforeListExportEvent->getArgument('list');
 
         $csv = DataObject\Service::getCsvData(
-            $requestedLanguage,
+            $payload->requestedLanguage,
             $this->localeService,
             $list,
-            $fields,
-            $header,
-            $addTitles,
-            $context
+            $payload->fields,
+            $payload->header,
+            $payload->addTitles,
+            $payload->context
         );
 
         $temp = tmpfile();
 
         try {
             $storage = Storage::get('temp');
-            $csvFile = $this->gridExportService->getCsvFile($fileHandle);
+            $csvFile = $this->gridExportService->getCsvFile($payload->fileHandle);
 
             $fileStream = $storage->readStream($csvFile);
             stream_copy_to_stream($fileStream, $temp, null, 0);
 
             $firstLine = true;
 
-            if ($addTitles && $header === 'no_header') {
+            if ($payload->addTitles && $payload->header === 'no_header') {
                 array_shift($csv);
                 $firstLine = false;
             }
 
             $lineCount = count($csv);
 
-            if (!$addTitles && $lineCount > 0) {
+            if (!$payload->addTitles && $lineCount > 0) {
                 fwrite($temp, "\r\n");
             }
 
             for ($i = 0; $i < $lineCount; $i++) {
                 $line = $csv[$i];
-                if ($addTitles && $firstLine) {
+                if ($payload->addTitles && $firstLine) {
                     $firstLine = false;
-                    fwrite($temp, implode($delimiter, $line));
+                    fwrite($temp, implode($payload->delimiter, $line));
                 } else {
-                    fwrite($temp, implode($delimiter, array_map($this->gridColumnConfigService->encode(...), $line)));
+                    fwrite($temp, implode($payload->delimiter, array_map($this->gridColumnConfigService->encode(...), $line)));
                 }
                 if ($i < $lineCount - 1) {
                     fwrite($temp, "\r\n");
@@ -132,7 +120,7 @@ final class DoDataObjectExportHandler
             $storage->writeStream($csvFile, $temp);
         } catch (UnableToReadFile $exception) {
             Logger::err($exception->getMessage());
-            throw new BadRequestHttpException(sprintf('export file not found: %s', $fileHandle));
+            throw new BadRequestHttpException(sprintf('export file not found: %s', $payload->fileHandle));
         } finally {
             if (is_resource($temp)) {
                 fclose($temp);

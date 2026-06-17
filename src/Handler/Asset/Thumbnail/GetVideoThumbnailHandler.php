@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetVideoThumbnail\GetVideoThumbnailPayload;
 use OpenDxp\Messenger\AssetPreviewImageMessage;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -28,18 +29,18 @@ final class GetVideoThumbnailHandler
 {
     public function __construct(private readonly MessageBusInterface $messageBus) {}
 
-    public function __invoke(
-        ?int $id,
-        ?string $path,
-        bool $hasThumbnailPreview,
-        bool $hasSetTime,
-        bool $hasSetImage,
-        bool $hasImage,
-        int $imageId,
-        ?string $time,
-        ?string $origin,
-        array $queryAll,
-    ): GetVideoThumbnailResult {
+    public function __invoke(GetVideoThumbnailPayload $payload): GetVideoThumbnailResult
+    {
+        $id = $payload->id;
+        $path = $payload->path;
+        $hasThumbnailPreview = $payload->hasThumbnailPreview;
+        $hasSetTime = $payload->hasSetTime;
+        $hasSetImage = $payload->hasSetImage;
+        $hasImage = $payload->hasImage;
+        $imageId = $payload->imageId;
+        $time = $payload->time;
+        $origin = $payload->origin;
+        $queryAll = $payload->queryAll;
         $video = null;
 
         if ($id !== null) {

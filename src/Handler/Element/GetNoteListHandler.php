@@ -22,23 +22,16 @@ use OpenDxp\Model\Element;
 
 final class GetNoteListHandler
 {
-    public function __invoke(
-        int $offset,
-        ?int $limit,
-        array $sortingSettings,
-        ?string $filterText,
-        ?string $filterJson,
-        ?string $cid,
-        ?string $ctype,
-    ): GetNoteListResult {
+    public function __invoke(NoteListPayload $payload): GetNoteListResult
+    {
         $list = new Element\Note\Listing();
 
-        $list->setLimit($limit);
-        $list->setOffset($offset);
+        $list->setLimit($payload->limit);
+        $list->setOffset($payload->offset);
 
-        if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
-            $list->setOrderKey($sortingSettings['orderKey']);
-            $list->setOrder($sortingSettings['order']);
+        if ($payload->sortingSettings['orderKey'] && $payload->sortingSettings['order']) {
+            $list->setOrderKey($payload->sortingSettings['orderKey']);
+            $list->setOrder($payload->sortingSettings['order']);
         } else {
             $list->setOrderKey(['date', 'id']);
             $list->setOrder(['DESC', 'DESC']);
@@ -46,19 +39,19 @@ final class GetNoteListHandler
 
         $conditions = [];
 
-        if ($filterText) {
+        if ($payload->filterText) {
             $conditions[] = '('
-                . '`title` LIKE ' . $list->quote('%' . $filterText . '%')
-                . ' OR `description` LIKE ' . $list->quote('%' . $filterText . '%')
-                . ' OR `type` LIKE ' . $list->quote('%' . $filterText . '%')
-                . ' OR `user` IN (SELECT `id` FROM `users` WHERE `name` LIKE ' . $list->quote('%' . $filterText . '%') . ')'
-                . " OR DATE_FORMAT(FROM_UNIXTIME(`date`), '%Y-%m-%d') LIKE " . $list->quote('%' . $filterText . '%')
+                . '`title` LIKE ' . $list->quote('%' . $payload->filterText . '%')
+                . ' OR `description` LIKE ' . $list->quote('%' . $payload->filterText . '%')
+                . ' OR `type` LIKE ' . $list->quote('%' . $payload->filterText . '%')
+                . ' OR `user` IN (SELECT `id` FROM `users` WHERE `name` LIKE ' . $list->quote('%' . $payload->filterText . '%') . ')'
+                . " OR DATE_FORMAT(FROM_UNIXTIME(`date`), '%Y-%m-%d') LIKE " . $list->quote('%' . $payload->filterText . '%')
                 . ')';
         }
 
-        if ($filterJson) {
+        if ($payload->filterJson) {
             $db = Db::get();
-            $filters = json_decode($filterJson, true) ?? [];
+            $filters = json_decode($payload->filterJson, true) ?? [];
             $propertyKey = 'property';
             $comparisonKey = 'operator';
 
@@ -103,8 +96,8 @@ final class GetNoteListHandler
             }
         }
 
-        if ($cid !== null && $ctype !== null) {
-            $conditions[] = '(cid = ' . $list->quote($cid) . ' AND ctype = ' . $list->quote($ctype) . ')';
+        if ($payload->cid !== null && $payload->ctype !== null) {
+            $conditions[] = '(cid = ' . $list->quote($payload->cid) . ' AND ctype = ' . $list->quote($payload->ctype) . ')';
         }
 
         if ($conditions !== []) {

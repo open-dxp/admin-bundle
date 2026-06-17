@@ -19,13 +19,13 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\LoadAssetForEditor\LoadAssetForEditorPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\LoadAssetForEditorHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\SaveImageEditor\SaveImageEditorPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\SaveImageEditorHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -37,20 +37,19 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class AssetEditorController extends AdminAbstractController
 {
     #[Route('/image-editor', name: 'opendxp_admin_asset_imageeditor', methods: ['GET'])]
-    public function imageEditorAction(LoadAssetForEditorHandler $loadForEditor, #[MapQueryParameter] int $id): Response
+    public function imageEditorAction(LoadAssetForEditorPayload $payload, LoadAssetForEditorHandler $loadForEditor): Response
     {
-        $result = $loadForEditor($id);
+        $result = $loadForEditor($payload);
 
         return $this->render('@OpenDxpAdmin/admin/asset/image_editor.html.twig', ['asset' => $result->asset]);
     }
 
     #[Route('/image-editor-save', name: 'opendxp_admin_asset_imageeditorsave', methods: ['PUT'])]
     public function imageEditorSaveAction(
-        Request $request,
+        SaveImageEditorPayload $payload,
         SaveImageEditorHandler $saveImageEditor,
-        #[MapQueryParameter] int $id,
     ): JsonResponse {
-        $saveImageEditor($id, (string) $request->request->get('dataUri'));
+        $saveImageEditor($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

@@ -21,14 +21,14 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class CreateCollectionHandler
 {
-    public function __invoke(string $name, int $storeId): CreateCollectionResult
+    public function __invoke(CreateCollectionPayload $payload): CreateCollectionResult
     {
-        $config = Classificationstore\CollectionConfig::getByName($name, $storeId);
+        $config = Classificationstore\CollectionConfig::getByName($payload->name, $payload->storeId);
 
         if (!$config) {
             $config = new Classificationstore\CollectionConfig();
-            $config->setName($name);
-            $config->setStoreId($storeId);
+            $config->setName($payload->name);
+            $config->setStoreId($payload->storeId);
             $config->save();
         }
 

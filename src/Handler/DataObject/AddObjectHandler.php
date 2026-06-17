@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Payload\DataObject\AddObjectPayload;
 use OpenDxp\Model;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -31,15 +32,15 @@ final class AddObjectHandler
         private readonly Model\FactoryInterface $modelFactory,
     ) {}
 
-    public function __invoke(
-        string $className,
-        string $classId,
-        int $parentId,
-        string $key,
-        string $objectType,
-        bool $variantViaTree,
-    ): AddObjectResult {
+    public function __invoke(AddObjectPayload $payload): AddObjectResult
+    {
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
+        $className = $payload->className;
+        $classId = $payload->classId;
+        $parentId = $payload->parentId;
+        $key = $payload->key;
+        $objectType = $payload->objectType;
+        $variantViaTree = $payload->variantViaTree;
         $parent = DataObject::getById($parentId);
         if ($parent === null) {
             throw new NotFoundHttpException("Parent object not found: $parentId");

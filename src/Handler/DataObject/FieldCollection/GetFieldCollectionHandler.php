@@ -17,13 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollection\GetFieldCollectionPayload;
 use OpenDxp\Model\DataObject;
 
 final class GetFieldCollectionHandler
 {
-    public function __invoke(string $id): GetFieldCollectionResult
+    public function __invoke(GetFieldCollectionPayload $payload): GetFieldCollectionResult
     {
-        $fc = DataObject\Fieldcollection\Definition::getByKey($id);
+        $fc = DataObject\Fieldcollection\Definition::getByKey($payload->id);
 
         return new GetFieldCollectionResult($fc->getObjectVars(), $fc->isWritable());
     }

@@ -17,18 +17,19 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ExportFieldCollection\ExportFieldCollectionPayload;
 use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ExportFieldCollectionHandler
 {
-    public function __invoke(string $id): ExportFieldCollectionResult
+    public function __invoke(ExportFieldCollectionPayload $payload): ExportFieldCollectionResult
     {
-        $fieldCollection = DataObject\Fieldcollection\Definition::getByKey($id);
+        $fieldCollection = DataObject\Fieldcollection\Definition::getByKey($payload->id);
 
         if (!$fieldCollection instanceof DataObject\Fieldcollection\Definition) {
-            $errorMessage = ': Field-Collection with id [ ' . $id . ' not found. ]';
+            $errorMessage = ': Field-Collection with id [ ' . $payload->id . ' not found. ]';
             Logger::error($errorMessage);
 
             throw new NotFoundHttpException($errorMessage);

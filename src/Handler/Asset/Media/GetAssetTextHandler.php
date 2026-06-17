@@ -18,13 +18,16 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Media;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetAssetText\GetAssetTextPayload;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 final class GetAssetTextHandler
 {
-    public function __invoke(int $id, ?int $page): AssetTextResult
+    public function __invoke(GetAssetTextPayload $payload): AssetTextResult
     {
+        $id = $payload->id;
+        $page = $payload->page;
         $asset = Asset::getById($id) ?? throw new AssetNotFoundException($id);
 
         if (!$asset->isAllowed('view')) {

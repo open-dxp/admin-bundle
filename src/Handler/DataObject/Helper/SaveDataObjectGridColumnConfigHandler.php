@@ -20,7 +20,6 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Model\DataObject;
-use OpenDxp\Model\User;
 use OpenDxp\Security\SecurityHelper;
 use OpenDxp\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -35,16 +34,10 @@ final class SaveDataObjectGridColumnConfigHandler
         private readonly GridColumnConfigService $gridColumnConfigService,
     ) {}
 
-    public function __invoke(
-        int $objectId,
-        ?string $classId,
-        ?string $context,
-        ?string $searchType,
-        array $gridConfigData,
-        ?array $metadata,
-    ): SaveDataObjectGridColumnConfigResult {
+    public function __invoke(SaveDataObjectGridColumnConfigPayload $payload): SaveDataObjectGridColumnConfigResult
+    {
         $adminUser = $this->userContext->getAdminUser();
-        $object = DataObject::getById($objectId);
+        $object = DataObject::getById($payload->objectId);
         if (!$object) {
             throw new NotFoundHttpException();
         }
@@ -53,9 +46,12 @@ final class SaveDataObjectGridColumnConfigHandler
             throw new AccessDeniedHttpException();
         }
 
+        $gridConfigData = $payload->gridConfigData;
+        $metadata = $payload->metadata;
+
         $gridConfigData['opendxp_version'] = Version::getVersion();
         $gridConfigData['opendxp_revision'] = Version::getRevision();
-        $gridConfigData['context'] = $context;
+        $gridConfigData['context'] = $payload->context;
         unset($gridConfigData['settings']['isShared']);
 
         $gridConfigId = $metadata['gridConfigId'] ?? null;
@@ -71,14 +67,14 @@ final class SaveDataObjectGridColumnConfigHandler
         $this->gridColumnConfigService->updateGridConfigShares($gridConfig, $metadata ?? [], $adminUser, adminCanEditAll: true);
 
         if (!empty($metadata['setAsFavourite']) && $adminUser->isAdmin()) {
-            $this->gridColumnConfigService->updateGridConfigFavourites($gridConfig, $metadata, $adminUser, $objectId);
+            $this->gridColumnConfigService->updateGridConfigFavourites($gridConfig, $metadata, $adminUser, $payload->objectId);
         }
 
         if (!$gridConfig) {
             $gridConfig = new GridConfig();
             $gridConfig->setName(date('c'));
-            $gridConfig->setClassId($classId);
-            $gridConfig->setSearchType($searchType);
+            $gridConfig->setClassId($payload->classId);
+            $gridConfig->setSearchType($payload->searchType);
             $gridConfig->setOwnerId($adminUser->getId());
         }
 
@@ -93,8 +89,8 @@ final class SaveDataObjectGridColumnConfigHandler
         $gridConfig->setConfig(json_encode($gridConfigData));
         $gridConfig->save();
 
-        $availableConfigs = $this->gridColumnConfigService->getMyOwnColumnConfigs($adminUser->getId(), $classId ?? '', $searchType);
-        $sharedConfigs = $this->gridColumnConfigService->getSharedColumnConfigs($adminUser, $classId ?? '', $searchType);
+        $availableConfigs = $this->gridColumnConfigService->getMyOwnColumnConfigs($adminUser->getId(), $payload->classId ?? '', $payload->searchType);
+        $sharedConfigs = $this->gridColumnConfigService->getSharedColumnConfigs($adminUser, $payload->classId ?? '', $payload->searchType);
 
         $settings = $this->gridColumnConfigService->getShareSettings($gridConfig->getId());
         $settings['gridConfigId'] = (int) $gridConfig->getId();

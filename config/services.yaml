@@ -25,7 +25,7 @@ services:
     OpenDxp\Maintenance\ExecutorInterface:
         alias: OpenDxp\Maintenance\Executor
 
-    OpenDxp\Bundle\AdminBundle\Handler\Admin\StatisticsActionHandler:
+    OpenDxp\Bundle\AdminBundle\Handler\Admin\Statistics\StatisticsHandler:
         arguments:
             $httpClient: '@opendxp.http_client'
 
@@ -166,12 +166,18 @@ services:
             $secret: '%secret%'
 
     #
+    # HTTP / Value Resolvers
+    #
+    OpenDxp\Bundle\AdminBundle\Http\:
+        resource: '../src/Http'
+
+    #
     # Handlers
     #
     OpenDxp\Bundle\AdminBundle\Handler\:
         resource: '../src/Handler'
 
-    OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocumentHandler:
+    OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentHandler:
         arguments:
             $documentClassResolver: '@opendxp.class.resolver.document'
             $defaultDocumentController: '%opendxp.documents.default_controller%'

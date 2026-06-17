@@ -23,8 +23,11 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class CreatePredefinedMetadataHandler
 {
-    public function __invoke(array $data): CreatePredefinedMetadataResult
+    public function __invoke(PredefinedMetadataPayload $payload): CreatePredefinedMetadataResult
     {
+        $data = $payload->data;
+        unset($data['id']);
+
         if (!(new Metadata\Predefined())->isWriteable()) {
             throw new ConfigWriteException();
         }

@@ -20,23 +20,19 @@ use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\ChangeMainDocumentHandler;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\EmailPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\FolderPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\HardlinkPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\LinkPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\PagePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\ChangeMainDocument\ChangeMainDocumentHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\ChangeMainDocument\ChangeMainDocumentPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\RemoveFromSession\RemoveFromSessionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Controller\Traits\ElementEditLockHelperTrait;
 use OpenDxp\Model;
-use OpenDxp\Model\Document;
 use OpenDxp\Model\Element\ElementInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -64,45 +60,24 @@ abstract class DocumentControllerBase extends AdminAbstractController
 
     public function __construct(
         protected ElementServiceInterface $elementService,
-        protected readonly SessionService $sessionService,
-        protected readonly DocumentPayloadMapper $mapper,
     ) {}
 
     #[Route('/save-to-session', name: 'savetosession', methods: ['POST'])]
-    public function saveToSessionAction(Request $request): JsonResponse
-    {
-        if (!($documentId = (int) $request->request->get('id'))) {
-            return $this->adminJson(ApiResponse::ok());
-        }
-
-        $document = $this->sessionService->getOrLoadDocument($documentId);
-        if (!$document) {
-            throw $this->createNotFoundException();
-        }
-
-        $document->setInDumpState(true);
-
-        if ($document instanceof Document\Email) {
-            $this->mapper->applyPagePayload(EmailPayload::fromRequest($request), $document);
-        } elseif ($document instanceof Document\PageSnippet) {
-            $this->mapper->applyPagePayload(PagePayload::fromRequest($request), $document);
-        } elseif ($document instanceof Document\Link) {
-            $this->mapper->applyLinkPayload(LinkPayload::fromRequest($request), $document);
-        } elseif ($document instanceof Document\Hardlink) {
-            $this->mapper->applyHardlinkPayload(HardlinkPayload::fromRequest($request), $document);
-        } elseif ($document instanceof Document\Folder) {
-            $this->mapper->applyFolderPayload(FolderPayload::fromRequest($request), $document);
-        }
-
-        $this->sessionService->saveDocument($document);
+    public function saveToSessionAction(
+        SaveToSessionPayload  $payload,
+        SaveToSessionHandler  $handler,
+    ): JsonResponse {
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/remove-from-session', name: 'removefromsession', methods: ['DELETE'])]
-    public function removeFromSessionAction(Request $request): JsonResponse
-    {
-        $this->sessionService->removeDocument((int) $request->request->get('id'));
+    public function removeFromSessionAction(
+        IdBodyPayload         $payload,
+        RemoveFromSessionHandler $handler,
+    ): JsonResponse {
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -111,12 +86,11 @@ abstract class DocumentControllerBase extends AdminAbstractController
      * This is used for pages and snippets to change the main document (which is not saved with the normal save button)
      */
     #[Route('/change-main-document', name: 'changemaindocument', methods: ['PUT'])]
-    public function changeMainDocumentAction(Request $request, ChangeMainDocumentHandler $changeMainDocument): JsonResponse
-    {
-        $changeMainDocument(
-            (int) $request->request->get('id'),
-            (string) $request->request->get('contentMainDocumentPath'),
-        );
+    public function changeMainDocumentAction(
+        ChangeMainDocumentPayload $payload,
+        ChangeMainDocumentHandler $changeMainDocument,
+    ): JsonResponse {
+        $changeMainDocument($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -135,6 +109,7 @@ abstract class DocumentControllerBase extends AdminAbstractController
             'data' => $data,
             'document' => $document,
         ]);
+
         OpenDxp::getEventDispatcher()->dispatch($event, AdminEvents::DOCUMENT_GET_PRE_SEND_DATA);
         $data = $event->getArgument('data');
 

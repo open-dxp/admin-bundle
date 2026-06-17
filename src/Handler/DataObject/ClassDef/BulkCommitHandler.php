@@ -32,8 +32,9 @@ final class BulkCommitHandler
         private readonly RequestStack $requestStack,
     ) {}
 
-    public function __invoke(array $data): void
+    public function __invoke(BulkCommitPayload $payload): void
     {
+        $data = $payload->data;
         $permissionMap = ['class' => 'classes', 'objectbrick' => 'objectbricks', 'fieldcollection' => 'fieldcollections', 'customlayout' => 'classes'];
         $type = $data['type'];
 

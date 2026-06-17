@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy;
 
 use OpenDxp\Bundle\AdminBundle\Factory\ElementServiceFactory;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset\CopyAssetPayload;
 use OpenDxp\Logger;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -27,14 +28,14 @@ final class CopyAssetHandler
 {
     public function __construct(private readonly ElementServiceFactory $serviceFactory) {}
 
-    public function __invoke(
-        int $sourceId,
-        int $targetId,
-        string $type,
-        ?int $sourceParentId,
-        ?int $targetParentId,
-        ?int $sessionParentId,
-    ): CopyAssetResult {
+    public function __invoke(CopyAssetPayload $payload): CopyAssetResult
+    {
+        $sourceId = $payload->sourceId;
+        $targetId = $payload->targetId;
+        $type = $payload->type;
+        $sourceParentId = $payload->sourceParentId;
+        $targetParentId = $payload->targetParentId;
+        $sessionParentId = $payload->sessionParentId;
         $source = Asset::getById($sourceId);
 
         if ($source === null) {

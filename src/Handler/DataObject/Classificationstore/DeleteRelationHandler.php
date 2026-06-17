@@ -21,11 +21,11 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class DeleteRelationHandler
 {
-    public function __invoke(int $keyId, int $groupId): void
+    public function __invoke(DeleteRelationPayload $payload): void
     {
         $config = new Classificationstore\KeyGroupRelation();
-        $config->setKeyId($keyId);
-        $config->setGroupId($groupId);
+        $config->setKeyId($payload->keyId);
+        $config->setGroupId($payload->groupId);
         $config->delete();
     }
 }

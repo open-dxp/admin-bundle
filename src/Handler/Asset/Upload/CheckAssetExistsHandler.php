@@ -17,14 +17,18 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\CheckAssetExists\CheckAssetExistsPayload;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class CheckAssetExistsHandler
 {
-    public function __invoke(int $parentId, string $filename, string $dir): bool
+    public function __invoke(CheckAssetExistsPayload $payload): bool
     {
+        $parentId = $payload->parentId;
+        $filename = $payload->filename;
+        $dir = $payload->dir;
         $parentAsset = Asset::getById($parentId);
         if (!$parentAsset) {
             throw new NotFoundHttpException('Parent asset not found');

@@ -22,8 +22,11 @@ use OpenDxp\Model\Property;
 
 final class CreatePredefinedPropertyHandler
 {
-    public function __invoke(array $data): CreatePredefinedPropertyResult
+    public function __invoke(PredefinedPropertyPayload $payload): CreatePredefinedPropertyResult
     {
+        $data = $payload->data;
+        unset($data['id']);
+
         if (!(new Property\Predefined())->isWriteable()) {
             throw new ConfigWriteException();
         }

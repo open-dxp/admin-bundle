@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef;
 
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Translation;
-use OpenDxp\Model\User;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class GetClassTreeHandler
@@ -30,12 +29,12 @@ final class GetClassTreeHandler
     {
     }
 
-    public function __invoke(
-        bool $createAllowed,
-        bool $withId,
-        bool $useTitle,
-        bool $grouped,
-    ): GetClassTreeResult {
+    public function __invoke(GetClassTreePayload $payload): GetClassTreeResult
+    {
+        $createAllowed = $payload->createAllowed;
+        $withId = $payload->withId;
+        $useTitle = $payload->useTitle;
+        $grouped = $payload->grouped;
         $adminUser = $this->userContext->getAdminUser();
         $classesList = new DataObject\ClassDefinition\Listing();
         $classesList->setOrderKey('name');

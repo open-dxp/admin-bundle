@@ -21,20 +21,20 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class AddPropertyHandler
 {
-    public function __invoke(string $name, int $storeId): AddPropertyResult
+    public function __invoke(AddPropertyPayload $payload): AddPropertyResult
     {
         $definition = [
             'fieldtype' => 'input',
-            'name' => $name,
-            'title' => $name,
+            'name' => $payload->name,
+            'title' => $payload->name,
             'datatype' => 'data',
         ];
 
         $config = new Classificationstore\KeyConfig();
-        $config->setName($name);
-        $config->setTitle($name);
+        $config->setName($payload->name);
+        $config->setTitle($payload->name);
         $config->setType('input');
-        $config->setStoreId($storeId);
+        $config->setStoreId($payload->storeId);
         $config->setEnabled(true);
         $config->setDefinition(json_encode($definition));
         $config->save();

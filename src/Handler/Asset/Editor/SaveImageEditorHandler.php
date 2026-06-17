@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\AssetResult;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\SaveImageEditor\SaveImageEditorPayload;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -29,8 +30,10 @@ final class SaveImageEditorHandler
     {
     }
 
-    public function __invoke(int $id, string $dataUri): AssetResult
+    public function __invoke(SaveImageEditorPayload $payload): AssetResult
     {
+        $id = $payload->id;
+        $dataUri = $payload->dataUri;
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
         $asset = Asset::getById($id) ?? throw new AssetNotFoundException($id);
 

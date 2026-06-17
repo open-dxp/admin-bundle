@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
 use OpenDxp\Model\User;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -29,8 +30,9 @@ final class DeleteGridColumnConfigHandler
     {
     }
 
-    public function __invoke(int $gridConfigId): void
+    public function __invoke(DeleteGridColumnConfigPayload $payload): void
     {
+        $gridConfigId = $payload->gridConfigId;
         $adminUser = $this->userContext->getAdminUser();
         $gridConfig = GridConfig::getById($gridConfigId);
         if (!$gridConfig) {

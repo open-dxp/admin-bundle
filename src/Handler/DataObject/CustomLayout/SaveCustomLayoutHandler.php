@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SaveCustomLayout\SaveCustomLayoutPayload;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Exception\ConfigWriteException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -24,8 +25,12 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class SaveCustomLayoutHandler
 {
-    public function __invoke(string $id, array $configuration, array $values): DataObject\ClassDefinition\CustomLayout
+    public function __invoke(SaveCustomLayoutPayload $payload): DataObject\ClassDefinition\CustomLayout
     {
+        $id = $payload->id;
+        $configuration = $payload->configuration;
+        $values = $payload->values;
+
         $customLayout = DataObject\ClassDefinition\CustomLayout::getById($id)
             ?? throw new NotFoundHttpException();
 

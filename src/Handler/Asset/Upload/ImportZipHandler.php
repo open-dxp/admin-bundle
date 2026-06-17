@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZip\ImportZipPayload;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -34,8 +35,11 @@ final class ImportZipHandler
         private readonly RouterInterface $router,
     ) {}
 
-    public function __invoke(int $parentId, string $uploadedFilePath, ?string $allowOverwrite): ImportZipResult
+    public function __invoke(ImportZipPayload $payload): ImportZipResult
     {
+        $parentId = $payload->parentId;
+        $uploadedFilePath = $payload->uploadedFilePath;
+        $allowOverwrite = $payload->allowOverwrite;
         $asset = Asset::getById($parentId) ?? throw new NotFoundHttpException('Parent asset not found');
 
         if (!$asset->isAllowed('create')) {

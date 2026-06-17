@@ -41,7 +41,8 @@ use OpenDxp\Tool\Admin;
 use OpenDxp\Tool\MaintenanceModeHelperInterface;
 use OpenDxp\Version;
 use OpenDxp\Video;
-use Symfony\Component\HttpFoundation\Request;
+use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsPayload;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 
@@ -56,11 +57,12 @@ final class AdminSettingsAssembler
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly Connection $db,
         private readonly KernelInterface $kernel,
+        private readonly RequestStack $requestStack,
         private readonly string $customAdminRouteName,
         private readonly string $secret,
     ) {}
 
-    public function createSettings(Request $request, User $user): AdminSettingsDto
+    public function createSettings(SettingsPayload $payload, User $user): AdminSettingsDto
     {
         $config = $this->config;
         $systemSettings = SystemSettingsConfig::get();
@@ -115,9 +117,9 @@ final class AdminSettingsAssembler
             devMode: OpenDxp::inDevMode(),
             disableMinifyJs: OpenDxp::disableMinifyJs(),
             environment: $this->kernel->getEnvironment(),
-            sessionId: htmlentities($request->getSession()->getId(), ENT_QUOTES, 'UTF-8'),
+            sessionId: htmlentities($payload->sessionId, ENT_QUOTES, 'UTF-8'),
 
-            language: $request->getLocale(),
+            language: $payload->locale,
             websiteLanguages: Admin::reorderWebsiteLanguages($user, $systemSettings['general']['valid_languages'], true),
             requiredLanguages: $requiredLanguages,
 
@@ -183,7 +185,7 @@ final class AdminSettingsAssembler
             checkNewNotificationEnabled: $notificationsEnabled && (bool) $config['notifications']['check_new_notification']['enabled'],
             checkNewNotificationInterval: $config['notifications']['check_new_notification']['interval'] * 1000,
 
-            csrfToken: $this->csrfProtection->getCsrfToken($request->getSession()),
+            csrfToken: $this->csrfProtection->getCsrfToken($this->requestStack->getSession()),
         );
     }
 

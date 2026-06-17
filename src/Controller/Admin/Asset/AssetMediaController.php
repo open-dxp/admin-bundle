@@ -21,17 +21,21 @@ use DateInterval;
 use DateTime;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadAsset\DownloadAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetAssetText\GetAssetTextPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetAssetTextHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetDocumentPreview\GetDocumentPreviewPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetDocumentPreviewHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetVideoPreview\GetVideoPreviewPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetVideoPreviewHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\ServeVideoPreview\ServeVideoPreviewPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\ServeVideoPreviewHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Model\Asset\Enum\PdfScanStatus;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -43,9 +47,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class AssetMediaController extends AdminAbstractController
 {
     #[Route('/get-asset', name: 'opendxp_admin_asset_getasset', methods: ['GET'])]
-    public function getAssetAction(DownloadAssetHandler $downloadAsset, #[MapQueryParameter] int $id): StreamedResponse
+    public function getAssetAction(DownloadAssetPayload $payload, DownloadAssetHandler $downloadAsset): StreamedResponse
     {
-        $result = $downloadAsset($id);
+        $result = $downloadAsset($payload);
         $asset = $result->asset;
         $stream = $asset->getStream();
 
@@ -65,9 +69,9 @@ class AssetMediaController extends AdminAbstractController
     }
 
     #[Route('/get-preview-document', name: 'opendxp_admin_asset_getpreviewdocument', methods: ['GET'])]
-    public function getPreviewDocumentAction(GetDocumentPreviewHandler $getDocumentPreview, #[MapQueryParameter] int $id): StreamedResponse|Response
+    public function getPreviewDocumentAction(GetDocumentPreviewPayload $payload, GetDocumentPreviewHandler $getDocumentPreview): StreamedResponse|Response
     {
-        $result = $getDocumentPreview($id);
+        $result = $getDocumentPreview($payload);
         $asset = $result->asset;
 
         if ($result->thumbnailPath !== null) {
@@ -98,11 +102,10 @@ class AssetMediaController extends AdminAbstractController
 
     #[Route('/get-preview-video', name: 'opendxp_admin_asset_getpreviewvideo', methods: ['GET'])]
     public function getPreviewVideoAction(
+        GetVideoPreviewPayload $payload,
         GetVideoPreviewHandler $getVideoPreview,
-        #[MapQueryParameter] int $id,
-        #[MapQueryParameter] ?string $config = null,
     ): Response {
-        $result = $getVideoPreview($id, $config);
+        $result = $getVideoPreview($payload);
         $previewData = [
             'asset' => $result->asset,
             'thumbnail' => $result->thumbnail,
@@ -118,11 +121,10 @@ class AssetMediaController extends AdminAbstractController
 
     #[Route('/serve-video-preview', name: 'opendxp_admin_asset_servevideopreview', methods: ['GET'])]
     public function serveVideoPreviewAction(
+        ServeVideoPreviewPayload $payload,
         ServeVideoPreviewHandler $serveVideoPreview,
-        #[MapQueryParameter] int $id,
-        #[MapQueryParameter] ?string $config = null,
     ): StreamedResponse {
-        $result = $serveVideoPreview($id, $config);
+        $result = $serveVideoPreview($payload);
 
         return new StreamedResponse(static function () use ($result): void {
             fpassthru($result->stream);
@@ -135,11 +137,10 @@ class AssetMediaController extends AdminAbstractController
 
     #[Route('/get-text', name: 'opendxp_admin_asset_gettext', methods: ['GET'])]
     public function getTextAction(
+        GetAssetTextPayload $payload,
         GetAssetTextHandler $getAssetText,
-        #[MapQueryParameter] int $id,
-        #[MapQueryParameter] ?int $page = null,
     ): JsonResponse {
-        $result = $getAssetText($id, $page);
+        $result = $getAssetText($payload);
 
         return $this->adminJson(ApiResponse::ok(['text' => $result->text]));
     }

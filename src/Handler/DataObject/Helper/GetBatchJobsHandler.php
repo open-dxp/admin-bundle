@@ -27,12 +27,12 @@ final class GetBatchJobsHandler
         private readonly GridBatchService $gridBatchService,
     ) {}
 
-    public function __invoke(array $allParams, string $locale): GetBatchJobsResult
+    public function __invoke(GetBatchJobsPayload $payload): GetBatchJobsResult
     {
         $adminUser = $this->userContext->getAdminUser();
 
         return new GetBatchJobsResult(
-            jobs: $this->gridBatchService->getObjectBatchJobIds($allParams, $locale, $adminUser),
+            jobs: $this->gridBatchService->getObjectBatchJobIds($payload->allParams, $payload->locale, $adminUser),
         );
     }
 }

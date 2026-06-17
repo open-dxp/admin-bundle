@@ -19,12 +19,11 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\GetFolderDataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\SaveFolderHandler;
-use OpenDxp\Bundle\AdminBundle\Payload\Document\FolderPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\GetFolderData\GetFolderDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\SaveFolder\SaveFolderHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\GetFolderData\GetFolderDataPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\SaveFolder\SaveFolderPayload;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -39,10 +38,11 @@ class FolderController extends DocumentControllerBase
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
         GetFolderDataHandler $handler,
-        #[MapQueryParameter] int $id = 0,
+        GetFolderDataPayload $payload,
     ): JsonResponse
     {
-        $result = $handler($id);
+        $result = $handler($payload);
+
         return $this->preSendDataActions($result->data, $result->folder);
     }
 
@@ -50,9 +50,9 @@ class FolderController extends DocumentControllerBase
      * @throws Exception
      */
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
-    public function saveAction(Request $request, SaveFolderHandler $handler): JsonResponse
+    public function saveAction(SaveFolderPayload $payload, SaveFolderHandler $handler): JsonResponse
     {
-        $result = $handler((int) $request->request->get('id'), FolderPayload::fromRequest($request));
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
     }

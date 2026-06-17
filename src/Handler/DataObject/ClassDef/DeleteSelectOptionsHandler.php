@@ -22,9 +22,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class DeleteSelectOptionsHandler
 {
-    public function __invoke(?string $id): void
+    public function __invoke(DeleteSelectOptionsPayload $payload): void
     {
-        $selectOptions = DataObject\SelectOptions\Config::getById($id);
+        $selectOptions = DataObject\SelectOptions\Config::getById($payload->id);
         if (!$selectOptions instanceof DataObject\SelectOptions\Config) {
             throw new NotFoundHttpException('Not Found', code: 1677133720896);
         }

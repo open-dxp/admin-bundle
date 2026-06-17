@@ -23,6 +23,7 @@ use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\CreateBlocklistEntryHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\DeleteBlocklistEntryHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\DeleteEmailLogHandler;
@@ -33,7 +34,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Email\GetEmailLogsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\ResendEmailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\SendTestEmailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\UpdateBlocklistEntryHandler;
-use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
 use OpenDxp\Http\RequestHelper;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -153,59 +153,31 @@ class EmailController extends AdminAbstractController
     #[IsGranted(CorePermission::Emails->value)]
     #[Route('/blocklist', name: 'opendxp_admin_email_blocklist', methods: ['POST'])]
     public function blocklistAction(
-        Request $request,
+        BlocklistPayload $payload,
         GetBlocklistHandler $getBlocklist,
         CreateBlocklistEntryHandler $createBlocklistEntry,
         UpdateBlocklistEntryHandler $updateBlocklistEntry,
         DeleteBlocklistEntryHandler $deleteBlocklistEntry,
         #[MapQueryParameter] ?string $xaction = null,
     ): JsonResponse {
-        if ($request->request->has('data')) {
-            $data = $this->decodeJson($request->request->get('data'));
-
-            if (is_array($data)) {
-                foreach ($data as $key => &$value) {
-                    if (is_string($value)) {
-                        if ($key === 'address') {
-                            $value = filter_var($value, FILTER_SANITIZE_EMAIL);
-                        }
-
-                        $value = trim($value);
-                    }
-                }
-                unset($value);
-            }
-
-            if ($xaction === 'destroy') {
-                $deleteBlocklistEntry(address: $data['address']);
-
-                return $this->adminJson(ApiResponse::ok(['data' => []]));
-            }
-
-            if ($xaction === 'update') {
-                $entryData = $updateBlocklistEntry(data: $data);
-
-                return $this->adminJson(ApiResponse::ok(['data' => $entryData]));
-            }
-
-            if ($xaction === 'create') {
-                $entryData = $createBlocklistEntry(data: $data);
-
-                return $this->adminJson(ApiResponse::ok(['data' => $entryData]));
-            }
-        } else {
-            $sortingSettings = QueryParams::extractSortingSettings($request->request->all());
-
-            $result = $getBlocklist(
-                limit: (int)$request->request->get('limit', 50),
-                offset: (int)$request->request->get('start', 0),
-                sortingSettings: $sortingSettings,
-                filter: $request->request->has('filter') ? $request->request->get('filter') : null,
-            );
-
-            return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        if ($payload->hasData) {
+            return match ($xaction) {
+                'destroy' => $this->destroyBlocklistEntry($deleteBlocklistEntry, $payload),
+                'update'  => $this->adminJson(ApiResponse::ok(['data' => $updateBlocklistEntry($payload)])),
+                'create'  => $this->adminJson(ApiResponse::ok(['data' => $createBlocklistEntry($payload)])),
+                default   => throw new BadRequestHttpException(),
+            };
         }
 
-        throw new BadRequestHttpException();
+        $result = $getBlocklist($payload);
+
+        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+    }
+
+    private function destroyBlocklistEntry(DeleteBlocklistEntryHandler $handler, BlocklistPayload $payload): JsonResponse
+    {
+        $handler($payload);
+
+        return $this->adminJson(ApiResponse::ok(['data' => []]));
     }
 }

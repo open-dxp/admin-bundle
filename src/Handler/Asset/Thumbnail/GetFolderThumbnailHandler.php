@@ -17,14 +17,16 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderThumbnail\GetFolderThumbnailPayload;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetFolderThumbnailHandler
 {
-    public function __invoke(?int $id): FolderThumbnailResult
+    public function __invoke(GetFolderThumbnailPayload $payload): FolderThumbnailResult
     {
+        $id = $payload->id;
         if ($id === null) {
             throw new NotFoundHttpException('could not load asset folder');
         }

@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Media;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\ServeVideoPreview\ServeVideoPreviewPayload;
 use OpenDxp\Model\Asset;
 use OpenDxp\Tool;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -25,8 +26,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ServeVideoPreviewHandler
 {
-    public function __invoke(int $id, ?string $configName): ServeVideoPreviewResult
+    public function __invoke(ServeVideoPreviewPayload $payload): ServeVideoPreviewResult
     {
+        $id = $payload->id;
+        $configName = $payload->configName;
         $asset = Asset\Video::getById($id) ?? throw new AssetNotFoundException($id);
 
         if (!$asset->isAllowed('view')) {

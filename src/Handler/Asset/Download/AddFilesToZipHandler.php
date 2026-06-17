@@ -18,9 +18,9 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZip\AddFilesToZipPayload;
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
-use OpenDxp\Model\User;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use ZipArchive;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -31,13 +31,13 @@ final class AddFilesToZipHandler
     {
     }
 
-    public function __invoke(
-        int $id,
-        ?string $selectedIds,
-        int $offset,
-        int $limit,
-        string $jobId,
-    ): void {
+    public function __invoke(AddFilesToZipPayload $payload): void
+    {
+        $id = $payload->id;
+        $selectedIds = $payload->selectedIds;
+        $offset = $payload->offset;
+        $limit = $payload->limit;
+        $jobId = $payload->jobId;
         $adminUser = $this->userContext->getAdminUser();
         $zipFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/download-zip-' . $jobId . '.zip';
         $asset = Asset::getById($id) ?? throw new AssetNotFoundException($id);

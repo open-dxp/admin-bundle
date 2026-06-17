@@ -17,9 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Normalizer\Document;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\GetEmailDataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPageDataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\GetSnippetDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\GetEmailData\GetEmailDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPageData\GetPageDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\GetSnippetData\GetSnippetDataHandler;
 use OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizerInterface;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Element\ElementInterface;

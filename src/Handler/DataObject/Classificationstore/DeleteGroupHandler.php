@@ -21,9 +21,9 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class DeleteGroupHandler
 {
-    public function __invoke(int $id): void
+    public function __invoke(DeleteGroupPayload $payload): void
     {
-        $config = Classificationstore\GroupConfig::getById($id);
+        $config = Classificationstore\GroupConfig::getById($payload->id);
         $config->delete();
     }
 }

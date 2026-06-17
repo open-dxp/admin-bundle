@@ -21,30 +21,25 @@ use OpenDxp\Model\DataObject;
 
 final class GetTextLayoutPreviewHandler
 {
-    public function __invoke(
-        string $objPath,
-        ?string $className,
-        ?string $renderingData,
-        ?string $renderingClass,
-        ?string $html,
-    ): GetTextLayoutPreviewResult {
-        $fqClassName = '\\OpenDxp\\Model\\DataObject\\' . $className;
-        $obj = DataObject::getByPath($objPath) ?? new $fqClassName();
+    public function __invoke(GetTextLayoutPreviewPayload $payload): GetTextLayoutPreviewResult
+    {
+        $fqClassName = '\\OpenDxp\\Model\\DataObject\\' . $payload->className;
+        $obj = DataObject::getByPath($payload->objPath) ?? new $fqClassName();
 
         $textLayout = new DataObject\ClassDefinition\Layout\Text();
-        $textLayout->setName('textLayoutPreview' . $className);
+        $textLayout->setName('textLayoutPreview' . $payload->className);
 
         $context = [
-            'data' => $renderingData,
+            'data' => $payload->renderingData,
         ];
 
-        if ($renderingClass) {
-            $textLayout->setRenderingClass($renderingClass);
-            $textLayout->setRenderingData($renderingData);
+        if ($payload->renderingClass) {
+            $textLayout->setRenderingClass($payload->renderingClass);
+            $textLayout->setRenderingData($payload->renderingData);
         }
 
-        if ($html) {
-            $textLayout->setHtml($html);
+        if ($payload->html) {
+            $textLayout->setHtml($payload->html);
         }
 
         $renderedHtml = $textLayout->enrichLayoutDefinition($obj, $context)->getHtml();

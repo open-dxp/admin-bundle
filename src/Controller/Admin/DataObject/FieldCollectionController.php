@@ -21,18 +21,23 @@ use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\DeleteFieldCollectionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ExportFieldCollectionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ExportFieldCollection\ExportFieldCollectionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollection\GetFieldCollectionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionList\GetFieldCollectionListPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionTreeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionTree\GetFieldCollectionTreePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionUsagesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionUsages\GetFieldCollectionUsagesPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ImportFieldCollectionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ImportFieldCollection\ImportFieldCollectionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\UpdateFieldCollectionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\UpdateFieldCollection\UpdateFieldCollectionPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\StringIdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -44,9 +49,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class FieldCollectionController extends AdminAbstractController
 {
     #[Route('/fieldcollection-get', name: 'fieldcollectionget', methods: ['GET'])]
-    public function fieldcollectionGetAction(GetFieldCollectionHandler $getFieldCollection, #[MapQueryParameter] string $id): JsonResponse
+    public function fieldcollectionGetAction(GetFieldCollectionHandler $getFieldCollection, GetFieldCollectionPayload $payload): JsonResponse
     {
-        $result = $getFieldCollection($id);
+        $result = $getFieldCollection($payload);
         $data = $result->data;
         $data['isWriteable'] = $result->isWriteable;
 
@@ -54,44 +59,27 @@ class FieldCollectionController extends AdminAbstractController
     }
 
     #[Route('/fieldcollection-update', name: 'fieldcollectionupdate', methods: ['PUT', 'POST'])]
-    public function fieldcollectionUpdateAction(UpdateFieldCollectionHandler $updateFieldCollection, Request $request): JsonResponse
+    public function fieldcollectionUpdateAction(UpdateFieldCollectionHandler $updateFieldCollection, UpdateFieldCollectionPayload $payload): JsonResponse
     {
-        $fcDef = $updateFieldCollection(
-            (string) $request->request->get('key'),
-            (string) $request->request->get('title'),
-            (string) $request->request->get('group'),
-            $request->request->get('task') === 'add',
-            $request->request->has('values') ? $this->decodeJson($request->request->get('values')) : null,
-            $request->request->has('configuration') ? $this->decodeJson($request->request->get('configuration')) : null,
-        );
+        $fcDef = $updateFieldCollection($payload);
 
         return $this->adminJson(ApiResponse::ok(['id' => $fcDef->getKey()]));
     }
 
     #[Route('/fieldcollection-delete', name: 'fieldcollectiondelete', methods: ['DELETE'])]
-    public function fieldcollectionDeleteAction(DeleteFieldCollectionHandler $deleteFieldCollection, Request $request): JsonResponse
+    public function fieldcollectionDeleteAction(DeleteFieldCollectionHandler $deleteFieldCollection, StringIdBodyPayload $payload): JsonResponse
     {
-        $deleteFieldCollection((string) $request->request->get('id'));
+        $deleteFieldCollection($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/fieldcollection-tree', name: 'fieldcollectiontree', methods: ['GET', 'POST'])]
-    public function fieldcollectionTreeAction(
-        GetFieldCollectionTreeHandler $getTree,
-        #[MapQueryParameter] ?string $forObjectEditor = null,
-        #[MapQueryParameter] ?string $allowedTypes = null,
-        #[MapQueryParameter(name: 'object_id')] int $objectId = 0,
-        #[MapQueryParameter] ?string $layoutId = null,
-    ): JsonResponse {
-        $result = $getTree(
-            $forObjectEditor !== null,
-            $allowedTypes !== null ? explode(',', $allowedTypes) : null,
-            $objectId,
-            $layoutId,
-            );
+    public function fieldcollectionTreeAction(GetFieldCollectionTreeHandler $getTree, GetFieldCollectionTreePayload $payload): JsonResponse
+    {
+        $result = $getTree($payload);
 
-        if ($forObjectEditor) {
+        if ($payload->forObjectEditor) {
             return $this->adminJson(['fieldcollections' => $result->definitions, 'layoutDefinitions' => $result->layoutDefinitions]);
         }
 
@@ -99,29 +87,17 @@ class FieldCollectionController extends AdminAbstractController
     }
 
     #[Route('/fieldcollection-list', name: 'fieldcollectionlist', methods: ['GET'])]
-    public function fieldcollectionListAction(
-        GetFieldCollectionListHandler $getList,
-        #[MapQueryParameter] ?string $layoutId = null,
-        #[MapQueryParameter] ?string $allowedTypes = null,
-        #[MapQueryParameter(name: 'field_name')] ?string $fieldName = null,
-        #[MapQueryParameter(name: 'object_id')] int $objectId = 0,
-    ): JsonResponse {
-        $result = $getList(
-            $allowedTypes !== null ? explode(',', $allowedTypes) : null,
-            $fieldName,
-            $objectId,
-            $layoutId,
-            );
+    public function fieldcollectionListAction(GetFieldCollectionListHandler $getList, GetFieldCollectionListPayload $payload): JsonResponse
+    {
+        $result = $getList($payload);
 
         return $this->adminJson(['fieldcollections' => $result->fieldcollections]);
     }
 
     #[Route('/import-fieldcollection', name: 'importfieldcollection', methods: ['POST'])]
-    public function importFieldcollectionAction(ImportFieldCollectionHandler $importFieldCollection, Request $request, #[MapQueryParameter] string $id): Response
+    public function importFieldcollectionAction(ImportFieldCollectionHandler $importFieldCollection, ImportFieldCollectionPayload $payload): Response
     {
-        /** @var UploadedFile $file */
-        $file = $request->files->get('Filedata');
-        $importFieldCollection($id, file_get_contents($file->getPathname()));
+        $importFieldCollection($payload);
 
         $response = $this->adminJson(ApiResponse::ok());
         $response->headers->set('Content-Type', 'text/html');
@@ -130,9 +106,9 @@ class FieldCollectionController extends AdminAbstractController
     }
 
     #[Route('/export-fieldcollection', name: 'exportfieldcollection', methods: ['GET'])]
-    public function exportFieldcollectionAction(ExportFieldCollectionHandler $exportFieldCollection, #[MapQueryParameter] string $id): Response
+    public function exportFieldcollectionAction(ExportFieldCollectionHandler $exportFieldCollection, ExportFieldCollectionPayload $payload): Response
     {
-        $result = $exportFieldCollection($id);
+        $result = $exportFieldCollection($payload);
 
         $response = new Response($result->json);
         $response->headers->set('Content-type', 'application/json');
@@ -142,10 +118,8 @@ class FieldCollectionController extends AdminAbstractController
     }
 
     #[Route('/get-fieldcollection-usages', name: 'getfieldcollectionusages', methods: ['GET'])]
-    public function getFieldcollectionUsagesAction(
-        GetFieldCollectionUsagesHandler $getUsages,
-        #[MapQueryParameter] string $key,
-    ): Response {
-        return $this->adminJson($getUsages($key));
+    public function getFieldcollectionUsagesAction(GetFieldCollectionUsagesHandler $getUsages, GetFieldCollectionUsagesPayload $payload): Response
+    {
+        return $this->adminJson($getUsages($payload));
     }
 }

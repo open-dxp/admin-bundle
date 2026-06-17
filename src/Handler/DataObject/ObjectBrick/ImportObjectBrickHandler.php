@@ -17,17 +17,18 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ImportObjectBrick\ImportObjectBrickPayload;
 use OpenDxp\Model\DataObject;
 use RuntimeException;
 
 final class ImportObjectBrickHandler
 {
-    public function __invoke(string $id, string $jsonData): void
+    public function __invoke(ImportObjectBrickPayload $payload): void
     {
-        $objectBrick = DataObject\Objectbrick\Definition::getByKey($id);
+        $objectBrick = DataObject\Objectbrick\Definition::getByKey($payload->id);
 
-        if (!DataObject\ClassDefinition\Service::importObjectBrickFromJson($objectBrick, $jsonData)) {
-            throw new RuntimeException('Failed to import objectbrick: ' . $id);
+        if (!DataObject\ClassDefinition\Service::importObjectBrickFromJson($objectBrick, $payload->json)) {
+            throw new RuntimeException('Failed to import objectbrick: ' . $payload->id);
         }
     }
 }

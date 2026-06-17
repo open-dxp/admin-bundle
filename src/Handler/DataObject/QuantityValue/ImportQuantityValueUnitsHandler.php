@@ -17,14 +17,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ImportQuantityValueUnits\ImportQuantityValueUnitsPayload;
 use OpenDxp\Model\DataObject\QuantityValue\Service as QuantityValueService;
 
 final class ImportQuantityValueUnitsHandler
 {
     public function __construct(private readonly QuantityValueService $service) {}
 
-    public function __invoke(string $json): bool
+    public function __invoke(ImportQuantityValueUnitsPayload $payload): bool
     {
-        return $this->service->importDefinitionFromJson($json);
+        return $this->service->importDefinitionFromJson($payload->json);
     }
 }

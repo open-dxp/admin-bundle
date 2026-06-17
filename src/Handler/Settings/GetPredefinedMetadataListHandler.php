@@ -21,14 +21,14 @@ use OpenDxp\Model\Metadata;
 
 final class GetPredefinedMetadataListHandler
 {
-    public function __invoke(?string $filter): GetPredefinedMetadataListResult
+    public function __invoke(PredefinedMetadataPayload $payload): GetPredefinedMetadataListResult
     {
         $list = new Metadata\Predefined\Listing();
 
-        if ($filter) {
-            $list->setFilter(function (Metadata\Predefined $predefined) use ($filter) {
+        if ($payload->filter) {
+            $list->setFilter(function (Metadata\Predefined $predefined) use ($payload) {
                 foreach ($predefined->getObjectVars() as $value) {
-                    if (stripos((string) $value, $filter) !== false) {
+                    if (stripos((string) $value, $payload->filter) !== false) {
                         return true;
                     }
                 }

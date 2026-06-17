@@ -20,15 +20,15 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper;
 final class PrepareHelperColumnConfigsHandler
 {
     /**
-     * @param \stdClass[] $columns
      * @return array{newData: \stdClass[], helperColumns: array<string, \stdClass>}
      */
-    public function __invoke(array $columns, array $existingHelperColumns): array
+    public function __invoke(PrepareHelperColumnConfigsPayload $payload): array
     {
         $helperColumns = [];
         $newData = [];
 
-        foreach ($columns as $item) {
+        foreach ($payload->columns as $item) {
+            $item = (object) $item;
             if (!empty($item->isOperator)) {
                 $itemKey = '#' . uniqid('', false);
                 $item->key = $itemKey;
@@ -39,7 +39,7 @@ final class PrepareHelperColumnConfigsHandler
 
         return [
             'newData'       => $newData,
-            'helperColumns' => [...$helperColumns, ...$existingHelperColumns],
+            'helperColumns' => [...$helperColumns, ...$payload->existingHelperColumns],
         ];
     }
 }

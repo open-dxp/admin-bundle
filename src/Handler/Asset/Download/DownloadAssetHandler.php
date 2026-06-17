@@ -19,13 +19,15 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\AssetResult;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadAsset\DownloadAssetPayload;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 final class DownloadAssetHandler
 {
-    public function __invoke(int $id): AssetResult
+    public function __invoke(DownloadAssetPayload $payload): AssetResult
     {
+        $id = $payload->id;
         $asset = Asset::getById($id) ?? throw new AssetNotFoundException($id);
 
         if (!$asset->isAllowed('view')) {

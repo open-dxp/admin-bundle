@@ -19,8 +19,10 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\Admin\IndexActionHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Admin\StatisticsActionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Admin\Statistics\StatisticsHandler;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Controller\KernelResponseEventInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -38,33 +40,38 @@ class IndexController extends AdminAbstractController implements KernelResponseE
     #[Route('/', name: 'opendxp_admin_index', methods: ['GET'])]
     public function indexAction(
         Request $request,
-        IndexActionHandler $indexAction,
+        SettingsHandler $settingsHandler,
+        SettingsPayload $payload,
         TranslatorInterface $translator,
     ): Response {
         $user = $this->getAdminUser();
+
+        if ($user->getTwoFactorAuthentication('required') && !$user->getTwoFactorAuthentication('enabled')) {
+            return $this->redirectToRoute('opendxp_admin_2fa_setup');
+        }
 
         $request->setLocale($user->getLanguage());
         if ($translator instanceof LocaleAwareInterface) {
             $translator->setLocale($user->getLanguage());
         }
 
-        if ($user->getTwoFactorAuthentication('required') && !$user->getTwoFactorAuthentication('enabled')) {
-            return $this->redirectToRoute('opendxp_admin_2fa_setup');
-        }
-
-        $result = $indexAction($request);
+        $result = $settingsHandler($payload);
 
         return $this->render($result->template ?? '@OpenDxpAdmin/admin/index/index.html.twig', $result->templateParams);
     }
 
     #[Route('/index/statistics', name: 'opendxp_admin_index_statistics', methods: ['GET'])]
-    public function statisticsAction(Request $request, StatisticsActionHandler $statisticsAction): JsonResponse
-    {
+    public function statisticsAction(
+        Request $request,
+        StatisticsHandler $statisticsHandler,
+        EmptyPayload $payload,
+    ): JsonResponse {
+
         if (!$request->isXmlHttpRequest()) {
             throw $this->createAccessDeniedHttpException();
         }
 
-        $statisticsAction();
+        $statisticsHandler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

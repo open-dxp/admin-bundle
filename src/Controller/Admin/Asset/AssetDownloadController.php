@@ -21,10 +21,15 @@ use DateInterval;
 use DateTime;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZip\AddFilesToZipPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZipHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadAsset\DownloadAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadImageThumbnail\DownloadImageThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadImageThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadZip\DownloadZipPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadZipHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\GetDownloadZipJobs\GetDownloadZipJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\GetDownloadZipJobsHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -32,7 +37,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -44,9 +48,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class AssetDownloadController extends AdminAbstractController
 {
     #[Route('/download', name: 'opendxp_admin_asset_download', methods: ['GET'])]
-    public function downloadAction(DownloadAssetHandler $downloadAsset, #[MapQueryParameter] int $id): StreamedResponse
+    public function downloadAction(DownloadAssetPayload $payload, DownloadAssetHandler $downloadAsset): StreamedResponse
     {
-        $result = $downloadAsset($id);
+        $result = $downloadAsset($payload);
         $asset = $result->asset;
         $stream = $asset->getStream();
 
@@ -65,25 +69,10 @@ class AssetDownloadController extends AdminAbstractController
 
     #[Route('/download-image-thumbnail', name: 'opendxp_admin_asset_downloadimagethumbnail', methods: ['GET'])]
     public function downloadImageThumbnailAction(
+        DownloadImageThumbnailPayload $payload,
         DownloadImageThumbnailHandler $downloadImageThumbnail,
-        #[MapQueryParameter] int $id = 0,
-        #[MapQueryParameter] ?string $thumbnail = null,
-        #[MapQueryParameter] ?string $config = null,
-        #[MapQueryParameter] ?string $type = null,
     ): BinaryFileResponse {
-        $configData = null;
-        if ($config !== null) {
-            $configData = $this->decodeJson($config);
-        } elseif ($type !== null) {
-            $predefined = [
-                'web'    => ['resize_mode' => 'scaleByWidth', 'width' => 3500, 'dpi' => 72,  'format' => 'JPEG', 'quality' => 85],
-                'print'  => ['resize_mode' => 'scaleByWidth', 'width' => 6000, 'dpi' => 300, 'format' => 'JPEG', 'quality' => 95],
-                'office' => ['resize_mode' => 'scaleByWidth', 'width' => 1190, 'dpi' => 144, 'format' => 'JPEG', 'quality' => 90],
-            ];
-            $configData = $predefined[$type];
-        }
-
-        $result = $downloadImageThumbnail($id, $thumbnail, $config, $configData);
+        $result = $downloadImageThumbnail($payload);
 
         $downloadFilename = preg_replace(
             '/\.' . preg_quote(pathinfo($result->image->getFilename(), PATHINFO_EXTENSION), '/') . '$/i',
@@ -104,25 +93,20 @@ class AssetDownloadController extends AdminAbstractController
 
     #[Route('/download-as-zip-jobs', name: 'opendxp_admin_asset_downloadaszipjobs', methods: ['GET'])]
     public function downloadAsZipJobsAction(
+        GetDownloadZipJobsPayload $payload,
         GetDownloadZipJobsHandler $getZipJobs,
-        #[MapQueryParameter] int $id = 0,
-        #[MapQueryParameter] string $selectedIds = '',
     ): JsonResponse {
-        $result = $getZipJobs($id, $selectedIds);
+        $result = $getZipJobs($payload);
 
         return $this->adminJson(ApiResponse::ok(['jobs' => $result->jobs, 'jobId' => $result->jobId]));
     }
 
     #[Route('/download-as-zip-add-files', name: 'opendxp_admin_asset_downloadaszipaddfiles', methods: ['GET'])]
     public function downloadAsZipAddFilesAction(
+        AddFilesToZipPayload $payload,
         AddFilesToZipHandler $addFilesToZip,
-        #[MapQueryParameter] ?string $jobId = null,
-        #[MapQueryParameter] int $id = 0,
-        #[MapQueryParameter] ?string $selectedIds = null,
-        #[MapQueryParameter] int $offset = 0,
-        #[MapQueryParameter] int $limit = 0,
     ): JsonResponse {
-        $addFilesToZip($id, $selectedIds, $offset, $limit, (string) $jobId);
+        $addFilesToZip($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -133,11 +117,10 @@ class AssetDownloadController extends AdminAbstractController
      */
     #[Route('/download-as-zip', name: 'opendxp_admin_asset_downloadaszip', methods: ['GET'])]
     public function downloadAsZipAction(
+        DownloadZipPayload $payload,
         DownloadZipHandler $downloadZip,
-        #[MapQueryParameter] int $id = 0,
-        #[MapQueryParameter] ?string $jobId = null,
     ): BinaryFileResponse {
-        $result = $downloadZip($id, (string) $jobId);
+        $result = $downloadZip($payload);
 
         $response = new BinaryFileResponse($result->zipFile);
         $response->headers->set('Content-Type', 'application/zip');

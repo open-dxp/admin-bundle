@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\UpdateAsset\UpdateAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Logger;
 use OpenDxp\Model\Asset;
-use OpenDxp\Model\User;
 use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -31,8 +31,10 @@ final class UpdateAssetHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,private readonly ElementServiceInterface $elementService) {}
 
-    public function __invoke(int $assetId, array $updateData): UpdateAssetResult
+    public function __invoke(UpdateAssetPayload $payload): UpdateAssetResult
     {
+        $assetId = $payload->assetId;
+        $updateData = $payload->updateData;
         $adminUser = $this->userContext->getAdminUser();
         $asset = Asset::getById($assetId);
         $allowUpdate = true;

@@ -21,9 +21,9 @@ use OpenDxp\Model\Element\Recyclebin;
 
 final class DeleteRecyclebinItemHandler
 {
-    public function __invoke(int $id): void
+    public function __invoke(RecyclebinPayload $payload): void
     {
-        $item = Recyclebin\Item::getById($id);
+        $item = Recyclebin\Item::getById($payload->id);
         if ($item) {
             $item->delete();
         }

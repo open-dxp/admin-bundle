@@ -17,12 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout;
 
+use OpenDxp\Bundle\AdminBundle\Payload\Common\StringIdBodyPayload;
 use OpenDxp\Model\DataObject;
 
 final class DeleteCustomLayoutHandler
 {
-    public function __invoke(string $id): void
+    public function __invoke(StringIdBodyPayload $payload): void
     {
+        $id = $payload->id;
         $customLayouts = new DataObject\ClassDefinition\CustomLayout\Listing();
         $customLayouts->setFilter(function (DataObject\ClassDefinition\CustomLayout $layout) use ($id) {
             $currentLayoutId = $layout->getId();
