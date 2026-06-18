@@ -24,13 +24,15 @@ final readonly class DiffVersionsPayload implements ExtJsPayloadInterface
     public function __construct(
         public readonly int $from,
         public readonly int $to,
+        public readonly ?string $userTimezone = null,
     ) {}
 
     public static function fromRequest(Request $request): static
     {
         return new static(
-            from: $request->attributes->getInt('from'),
-            to:   $request->attributes->getInt('to'),
+            from:         $request->attributes->getInt('from'),
+            to:           $request->attributes->getInt('to'),
+            userTimezone: $request->query->getString('userTimezone') ?: null,
         );
     }
 }

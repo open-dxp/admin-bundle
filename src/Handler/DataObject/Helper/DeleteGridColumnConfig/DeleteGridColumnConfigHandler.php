@@ -18,10 +18,14 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteGridColumnConfig;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\DataObjectGridColumnConfigResolver;
 use OpenDxp\Config;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class DeleteGridColumnConfigHandler
@@ -31,10 +35,23 @@ final class DeleteGridColumnConfigHandler
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly Config $config,
         private readonly RequestStack $requestStack,
+        private readonly AdminUserContextInterface $userContext,
     ) {}
 
     public function __invoke(DeleteGridColumnConfigPayload $payload): array
     {
+        if ($payload->gridConfigId !== null) {
+            $adminUser = $this->userContext->getAdminUser();
+            $gridConfig = GridConfig::getById($payload->gridConfigId);
+            if (!$gridConfig) {
+                throw new NotFoundHttpException('Grid config not found: ' . $payload->gridConfigId);
+            }
+            if ($gridConfig->getOwnerId() !== $adminUser->getId() && !$adminUser->isAdmin()) {
+                throw new BadRequestHttpException("don't mess with someone elses grid config");
+            }
+            $gridConfig->delete();
+        }
+
         $params = [
             'id'              => $payload->id,
             'objectId'        => $payload->objectId,

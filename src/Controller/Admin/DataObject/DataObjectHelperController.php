@@ -17,42 +17,42 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAllHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAllPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteDataObjectGridColumnConfigHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteDataObjectGridColumnConfigPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAll\ApplyGridConfigToAllHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAll\ApplyGridConfigToAllPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DoDataObjectExportHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DoDataObjectExportPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatchHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatchPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetAvailableVisibleFieldsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetAvailableVisibleFieldsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetBatchJobsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetBatchJobsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportConfigsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportConfigsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportJobsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportJobsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DoDataObjectExport\DoDataObjectExportHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DoDataObjectExport\DoDataObjectExportPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatch\ExecuteBatchHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatch\ExecuteBatchPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetAvailableVisibleFields\GetAvailableVisibleFieldsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetAvailableVisibleFields\GetAvailableVisibleFieldsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetBatchJobs\GetBatchJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetBatchJobs\GetBatchJobsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportConfigs\GetExportConfigsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportConfigs\GetExportConfigsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportJobs\GetExportJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportJobs\GetExportJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetGridColumnConfig\GetGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetGridColumnConfig\GetGridColumnConfigPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ImportUploadHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ImportUploadPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\LoadObjectDataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\LoadObjectDataPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\MarkDataObjectGridConfigFavouriteHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\MarkDataObjectGridConfigFavouritePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\PrepareHelperColumnConfigsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\PrepareHelperColumnConfigsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfigHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfigPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ImportUpload\ImportUploadHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ImportUpload\ImportUploadPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\LoadObjectData\LoadObjectDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\LoadObjectData\LoadObjectDataPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\MarkDataObjectGridConfigFavourite\MarkDataObjectGridConfigFavouriteHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\MarkDataObjectGridConfigFavourite\MarkDataObjectGridConfigFavouritePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfig\SaveDataObjectGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfig\SaveDataObjectGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Tool\Session;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -84,10 +84,7 @@ class DataObjectHelperController extends AdminAbstractController
     public function gridDeleteColumnConfigAction(
         DeleteGridColumnConfigPayload $payload,
         DeleteGridColumnConfigHandler $handler,
-        DeleteDataObjectGridColumnConfigHandler $deleteGridColumnConfig,
     ): JsonResponse {
-        $deleteGridColumnConfig(new DeleteDataObjectGridColumnConfigPayload(gridConfigId: (int) $payload->gridConfigId));
-
         return $this->adminJson($handler($payload));
     }
 
@@ -103,10 +100,14 @@ class DataObjectHelperController extends AdminAbstractController
     public function prepareHelperColumnConfigs(
         PrepareHelperColumnConfigsPayload $payload,
         PrepareHelperColumnConfigsHandler $prepareHelperColumns,
+        Request $request,
     ): JsonResponse {
         $result = $prepareHelperColumns($payload);
 
-        $payload->helperColumnsBag->set('helpercolumns', $result['helperColumns']);
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
+            $existingColumns = $session->get('helpercolumns', []);
+            $session->set('helpercolumns', [...$result['helperColumns'], ...$existingColumns]);
+        }, 'opendxp_gridconfig');
 
         return $this->adminJson(ApiResponse::ok(['columns' => $result['newData']]));
     }

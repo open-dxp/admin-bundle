@@ -20,17 +20,21 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetModalCustomHtmlHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowDetailsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowFormHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowSvgHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitGlobalActionHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitWorkflowTransitionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetModalCustomHtml\GetModalCustomHtmlHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetModalCustomHtml\GetModalCustomHtmlPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowDetails\GetWorkflowDetailsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowDetails\GetWorkflowDetailsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowForm\GetWorkflowFormHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowForm\GetWorkflowFormPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\ShowGraph\GetWorkflowSvg\GetWorkflowSvgHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\ShowGraph\ShowGraphPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitGlobalAction\SubmitGlobalActionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitGlobalAction\SubmitGlobalActionPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitWorkflowTransition\SubmitWorkflowTransitionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitWorkflowTransition\SubmitWorkflowTransitionPayload;
 use OpenDxp\Model\Element\ValidationException;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -40,16 +44,13 @@ use Symfony\Component\Routing\Attribute\Route;
 class WorkflowController extends AdminAbstractController
 {
     #[Route('/get-workflow-form', name: 'opendxp_admin_workflow_getworkflowform', methods: ['POST'])]
-    public function getWorkflowFormAction(Request $request, GetWorkflowFormHandler $getWorkflowForm): JsonResponse
+    public function getWorkflowFormAction(
+        GetWorkflowFormPayload $payload,
+        GetWorkflowFormHandler $getWorkflowForm,
+    ): JsonResponse
     {
         try {
-            [$ctype, $cid] = $this->resolveCtypeAndCid($request);
-            $result = $getWorkflowForm(
-                ctype: $ctype,
-                cid: $cid,
-                workflowName: $request->request->getString('workflowName'),
-                transitionName: $request->request->getString('transitionName'),
-            );
+            $result = $getWorkflowForm($payload);
 
             $wfConfig = [
                 'message' => $result->message,
@@ -66,18 +67,11 @@ class WorkflowController extends AdminAbstractController
 
     #[Route('/submit-workflow-transition', name: 'opendxp_admin_workflow_submitworkflowtransition', methods: ['POST'])]
     public function submitWorkflowTransitionAction(
-        Request $request,
+        SubmitWorkflowTransitionPayload $payload,
         SubmitWorkflowTransitionHandler $submitWorkflowTransition,
     ): JsonResponse {
         try {
-            [$ctype, $cid] = $this->resolveCtypeAndCid($request);
-            $result = $submitWorkflowTransition(
-                ctype: $ctype,
-                cid: $cid,
-                workflowName: $request->request->getString('workflowName'),
-                transition: $request->request->getString('transition'),
-                workflowOptions: $request->request->all('workflow'),
-            );
+            $result = $submitWorkflowTransition($payload);
 
             if ($result->blocked) {
                 return $this->adminJson(ApiResponse::error('transition failed', ['reasons' => $result->blockerReasons]));
@@ -98,18 +92,11 @@ class WorkflowController extends AdminAbstractController
 
     #[Route('/submit-global-action', name: 'opendxp_admin_workflow_submitglobal', methods: ['POST'])]
     public function submitGlobalAction(
-        Request $request,
+        SubmitGlobalActionPayload $payload,
         SubmitGlobalActionHandler $submitGlobalAction,
     ): JsonResponse {
         try {
-            [$ctype, $cid] = $this->resolveCtypeAndCid($request);
-            $submitGlobalAction(
-                ctype: $ctype,
-                cid: $cid,
-                workflowName: $request->request->getString('workflowName'),
-                transition: $request->request->getString('transition'),
-                workflowOptions: $request->request->all('workflow'),
-            );
+            $submitGlobalAction($payload);
 
             return $this->adminJson(ApiResponse::ok(['callback' => 'reloadObject']));
         } catch (ValidationException $e) {
@@ -126,23 +113,20 @@ class WorkflowController extends AdminAbstractController
 
     #[Route('/get-workflow-details', name: 'opendxp_admin_workflow_getworkflowdetailsstore')]
     public function getWorkflowDetailsStore(
+        GetWorkflowDetailsPayload $payload,
         GetWorkflowDetailsHandler $getWorkflowDetails,
-        #[MapQueryParameter] string $ctype,
-        #[MapQueryParameter] int $cid,
     ): JsonResponse {
-        $result = $getWorkflowDetails(ctype: $ctype, cid: $cid);
+        $result = $getWorkflowDetails($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => count($result->data)]));
     }
 
     #[Route('/show-graph', name: 'opendxp_admin_workflow_show_graph', methods: ['GET'])]
     public function showGraph(
+        ShowGraphPayload $payload,
         GetWorkflowSvgHandler $getWorkflowSvg,
-        #[MapQueryParameter] string $ctype,
-        #[MapQueryParameter] int $cid,
-        #[MapQueryParameter] ?string $workflowName = null,
     ): Response {
-        $svg = $getWorkflowSvg(ctype: $ctype, cid: $cid, workflowName: $workflowName);
+        $svg = $getWorkflowSvg($payload);
 
         $response = new Response($svg);
         $response->headers->set('Content-Type', 'image/svg+xml');
@@ -151,30 +135,17 @@ class WorkflowController extends AdminAbstractController
     }
 
     #[Route('/modal-custom-html', name: 'opendxp_admin_workflow_modal_custom_html', methods: ['POST'])]
-    public function getModalCustomHtml(Request $request, GetModalCustomHtmlHandler $getModalCustomHtml): JsonResponse
+    public function getModalCustomHtml(
+        GetModalCustomHtmlPayload $payload,
+        GetModalCustomHtmlHandler $getModalCustomHtml,
+    ): JsonResponse
     {
         try {
-            [$ctype, $cid] = $this->resolveCtypeAndCid($request);
-            $result = $getModalCustomHtml(
-                ctype: $ctype,
-                cid: $cid,
-                workflowName: $request->request->getString('workflowName'),
-                transition: $request->request->getString('transition'),
-                isGlobalAction: $request->request->getString('isGlobalAction') === 'true',
-            );
+            $result = $getModalCustomHtml($payload);
 
             return $this->adminJson(ApiResponse::ok(['customHtml' => $result->customHtml]));
         } catch (Exception $e) {
             return $this->adminJson(ApiResponse::error($e->getMessage()));
         }
-    }
-
-    /** @return array{string, int} */
-    private function resolveCtypeAndCid(Request $request): array
-    {
-        $ctype = $request->request->get('ctype') ?? $request->query->get('ctype');
-        $cid = (int) ($request->request->get('cid') ?? $request->query->get('cid'));
-
-        return [$ctype, $cid];
     }
 }

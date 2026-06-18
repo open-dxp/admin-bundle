@@ -22,14 +22,13 @@ use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\DiffVersions\DiffVersionsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\DiffVersions\DiffVersionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PreviewVersion\PreviewVersionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PreviewVersion\PreviewVersionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PublishVersion\PublishVersionHandler;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Tool;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
@@ -57,13 +56,12 @@ class DataObjectVersionController extends AdminAbstractController
     public function previewVersionAction(
         Environment $twig,
         PreviewVersionHandler $previewVersion,
-        IdQueryPayload $payload,
-        #[MapQueryParameter] ?string $userTimezone = null,
+        PreviewVersionPayload $payload,
     ): Response
     {
         $result = $previewVersion($payload);
 
-        Tool\UserTimezone::setUserTimezone($userTimezone);
+        Tool\UserTimezone::setUserTimezone($payload->userTimezone);
         if ($timezone = Tool\UserTimezone::getUserTimezone()) {
             $twig->getExtension(CoreExtension::class)->setTimezone($timezone);
         }
@@ -80,12 +78,11 @@ class DataObjectVersionController extends AdminAbstractController
         Environment $twig,
         DiffVersionsHandler $diffVersions,
         DiffVersionsPayload $payload,
-        #[MapQueryParameter] ?string $userTimezone = null,
     ): Response
     {
         $result = $diffVersions($payload);
 
-        Tool\UserTimezone::setUserTimezone($userTimezone);
+        Tool\UserTimezone::setUserTimezone($payload->userTimezone);
         if ($timezone = Tool\UserTimezone::getUserTimezone()) {
             $twig->getExtension(CoreExtension::class)->setTimezone($timezone);
         }

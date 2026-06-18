@@ -19,20 +19,28 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\AddAdminTranslationKeysHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\BuildContentExportJobsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\CleanupTranslationsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\CreateTranslationHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\DeleteTranslationHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\ExportTranslationsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\GetTranslationDomainsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\GetTranslationsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\GetWebsiteTranslationLanguagesHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\ImportTranslationsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\MergeTranslationItemsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\AddAdminTranslationKeys\AddAdminTranslationKeysHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\AddAdminTranslationKeys\AddAdminTranslationKeysPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\BuildContentExportJobs\BuildContentExportJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\BuildContentExportJobs\BuildContentExportJobsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\CleanupTranslations\CleanupTranslationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\CleanupTranslations\CleanupTranslationsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\CreateTranslation\CreateTranslationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\DeleteTranslation\DeleteTranslationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\ExportTranslations\ExportTranslationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\ExportTranslations\ExportTranslationsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\GetTranslationDomains\GetTranslationDomainsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\GetTranslations\GetTranslationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\GetWebsiteTranslationLanguages\GetWebsiteTranslationLanguagesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\ImportTranslations\ImportTranslationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\ImportTranslations\ImportTranslationsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\MergeTranslationItems\MergeTranslationItemsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\MergeTranslationItems\MergeTranslationItemsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\TranslationPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\UpdateTranslationHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\UploadTranslationImportFileHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\UpdateTranslation\UpdateTranslationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\UploadTranslationImportFile\UploadTranslationImportFileHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\UploadTranslationImportFile\UploadTranslationImportFilePayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Model\Translation;
 use OpenDxp\Tool\Session;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -51,39 +59,15 @@ class TranslationController extends AdminAbstractController
 {
     #[Route('/import', name: 'opendxp_admin_translation_import', methods: ['POST'])]
     public function importAction(
-        Request $request,
         ImportTranslationsHandler $importTranslations,
-        #[MapQueryParameter] ?string $merge = null,
+        ImportTranslationsPayload $payload,
     ): JsonResponse {
-        $domain = $request->request->get('domain', Translation::DOMAIN_DEFAULT);
-        $admin = $domain === Translation::DOMAIN_ADMIN;
+        $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
 
-        $dialect = $request->request->get('csvSettings');
-        $session = Session::getSessionBag($request->getSession(), 'opendxp_importconfig');
-        $tmpFile = $session->get('translation_import_file');
-
-        if ($dialect) {
-            $dialect = json_decode($dialect);
-        }
-
-        $this->checkPermission(($admin ? 'admin_' : '') . 'translations');
-
-        $overwrite = !$merge;
-
-        $flagUrlTemplate = $this->generateUrl('opendxp_admin_misc_getlanguageflag', ['language' => '{language}']);
-        $flagUrlTemplate = str_replace('%7Blanguage%7D', '{language}', $flagUrlTemplate);
-
-        $result = $importTranslations(
-            tmpFile: $tmpFile,
-            domain: $domain,
-            overwrite: $overwrite,
-            dialect: $dialect,
-            enrichDelta: (bool) $merge,
-            flagUrlTemplate: $flagUrlTemplate,
-        );
+        $result = $importTranslations($payload);
 
         $extra = [];
-        if ($merge) {
+        if ($payload->enrichDelta) {
             $extra['delta'] = base64_encode(json_encode($result->delta));
         }
 
@@ -99,10 +83,9 @@ class TranslationController extends AdminAbstractController
     public function uploadImportFileAction(
         Request $request,
         UploadTranslationImportFileHandler $uploadTranslationImportFile,
+        UploadTranslationImportFilePayload $payload,
     ): JsonResponse {
-        $file = $request->files->get('Filedata');
-
-        $result = $uploadTranslationImportFile($file);
+        $result = $uploadTranslationImportFile($payload);
 
         Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
             $session->set('translation_import_file', $result->importFile);
@@ -116,20 +99,11 @@ class TranslationController extends AdminAbstractController
     #[Route('/export', name: 'opendxp_admin_translation_export', methods: ['GET'])]
     public function exportAction(
         ExportTranslationsHandler $exportTranslations,
-        #[MapQueryParameter] ?string $domain = null,
-        #[MapQueryParameter] ?string $filter = null,
-        #[MapQueryParameter] ?string $searchString = null,
+        ExportTranslationsPayload $payload,
     ): Response {
-        $admin = $domain === Translation::DOMAIN_ADMIN;
+        $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
 
-        $this->checkPermission(($admin ? 'admin_' : '') . 'translations');
-
-        $result = $exportTranslations(
-            domain: $domain,
-            filter: $filter,
-            searchString: $searchString,
-            admin: $admin,
-        );
+        $result = $exportTranslations($payload);
 
         $response = new Response("\xEF\xBB\xBF" . $result->csv);
         $response->headers->set('Content-Encoding', 'UTF-8');
@@ -142,15 +116,10 @@ class TranslationController extends AdminAbstractController
 
     #[Route('/add-admin-translation-keys', name: 'opendxp_admin_translation_addadmintranslationkeys', methods: ['POST'])]
     public function addAdminTranslationKeysAction(
-        Request $request,
         AddAdminTranslationKeysHandler $addAdminTranslationKeys,
+        AddAdminTranslationKeysPayload $payload,
     ): JsonResponse {
-        $keys = $request->request->get('keys');
-
-        if ($keys) {
-            $data = $this->decodeJson($keys);
-            $addAdminTranslationKeys($data);
-        }
+        $addAdminTranslationKeys($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -225,12 +194,10 @@ class TranslationController extends AdminAbstractController
 
     #[Route('/cleanup', name: 'opendxp_admin_translation_cleanup', methods: ['DELETE'])]
     public function cleanupAction(
-        Request $request,
         CleanupTranslationsHandler $cleanupTranslations,
+        CleanupTranslationsPayload $payload,
     ): JsonResponse {
-        $domain = $request->request->get('domain', Translation::DOMAIN_DEFAULT);
-
-        $cleanupTranslations($domain);
+        $cleanupTranslations($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -243,45 +210,30 @@ class TranslationController extends AdminAbstractController
      */
     #[Route('/content-export-jobs', name: 'opendxp_admin_translation_contentexportjobs', methods: ['POST'])]
     public function contentExportJobsAction(
-        Request $request,
         BuildContentExportJobsHandler $buildContentExportJobs,
+        BuildContentExportJobsPayload $payload,
     ): JsonResponse {
-        $data = $this->decodeJson($request->request->get('data'));
-        $source = str_replace('_', '-', $request->request->get('source', ''));
-        $target = str_replace('_', '-', $request->request->get('target', ''));
-        $type = $request->request->get('type');
-        $jobUrl = $request->request->get('job_url', $request->getBaseUrl() . '/admin/translation/' . $type . '-export');
-
-        $elementsPerJob = max(1, (int) $request->request->get('elements_per_job', 10));
-
-        $result = $buildContentExportJobs(
-            data: $data && is_array($data) ? $data : [],
-            source: $source,
-            target: $target,
-            jobUrl: $jobUrl,
-            elementsPerJob: $elementsPerJob,
-        );
+        $result = $buildContentExportJobs($payload);
 
         return $this->adminJson(ApiResponse::ok(['jobs' => $result->jobs, 'id' => $result->exportId]));
     }
 
     #[Route('/merge-item', name: 'opendxp_admin_translation_mergeitem', methods: ['PUT'])]
     public function mergeItemAction(
-        Request $request,
         MergeTranslationItemsHandler $mergeTranslationItems,
+        MergeTranslationItemsPayload $payload,
     ): JsonResponse {
-        $domain = $request->request->get('domain', Translation::DOMAIN_DEFAULT);
-        $dataList = json_decode($request->request->get('data'), true);
-
-        $mergeTranslationItems($dataList, $domain);
+        $mergeTranslationItems($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/get-website-translation-languages', name: 'opendxp_admin_translation_getwebsitetranslationlanguages', methods: ['GET'])]
-    public function getWebsiteTranslationLanguagesAction(GetWebsiteTranslationLanguagesHandler $getWebsiteTranslationLanguages): JsonResponse
-    {
-        $result = $getWebsiteTranslationLanguages();
+    public function getWebsiteTranslationLanguagesAction(
+        GetWebsiteTranslationLanguagesHandler $getWebsiteTranslationLanguages,
+        EmptyPayload $payload,
+    ): JsonResponse {
+        $result = $getWebsiteTranslationLanguages($payload);
 
         return $this->adminJson([
             'view' => $result->view,
@@ -292,9 +244,11 @@ class TranslationController extends AdminAbstractController
     }
 
     #[Route('/get-translation-domains', name: 'opendxp_admin_translation_gettranslationdomains', methods: ['GET'])]
-    public function getTranslationDomainsAction(GetTranslationDomainsHandler $getTranslationDomains): JsonResponse
-    {
-        $result = $getTranslationDomains();
+    public function getTranslationDomainsAction(
+        GetTranslationDomainsHandler $getTranslationDomains,
+        EmptyPayload $payload,
+    ): JsonResponse {
+        $result = $getTranslationDomains($payload);
 
         return $this->adminJson(['domains' => $result->domains]);
     }

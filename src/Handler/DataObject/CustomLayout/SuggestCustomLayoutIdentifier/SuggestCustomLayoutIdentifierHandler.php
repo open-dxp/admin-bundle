@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) Pimcore GmbH (https://pimcore.com)
+ * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
+declare(strict_types=1);
+
+namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SuggestCustomLayoutIdentifier;
+
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SuggestCustomLayoutIdentifier\SuggestCustomLayoutIdentifierPayload;
+use OpenDxp\Model\DataObject;
+
+final class SuggestCustomLayoutIdentifierHandler
+{
+    public function __invoke(SuggestCustomLayoutIdentifierPayload $payload): SuggestCustomLayoutIdentifierResult
+    {
+        $identifier = DataObject\ClassDefinition\CustomLayout::getIdentifier($payload->classId);
+
+        $existingIds = [];
+        $existingNames = [];
+
+        foreach ((new DataObject\ClassDefinition\CustomLayout\Listing())->load() as $item) {
+            $existingIds[] = $item->getId();
+            if ($item->getClassId() == $payload->classId) {
+                $existingNames[] = $item->getName();
+            }
+        }
+
+        return new SuggestCustomLayoutIdentifierResult($identifier, $existingIds, $existingNames);
+    }
+}

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /**
  * OpenDXP
@@ -13,34 +14,37 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use Symfony\Component\ExpressionLanguage\Expression;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\CreateBlocklistEntry\CreateBlocklistEntryHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\DeleteBlocklistEntry\DeleteBlocklistEntryHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\UpdateBlocklistEntry\UpdateBlocklistEntryHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\DeleteEmailLog\DeleteEmailLogHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\GetBlocklist\GetBlocklistHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\GetEmailLogs\GetEmailLogsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\GetEmailLogs\GetEmailLogsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\ResendEmail\ResendEmailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\ResendEmail\ResendEmailPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\SendTestEmail\SendTestEmailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\SendTestEmail\SendTestEmailPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogParams\GetEmailLogParamsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\ShowEmailLogHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\ShowEmailLogPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\CreateBlocklistEntryHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\DeleteBlocklistEntryHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\DeleteEmailLogHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\GetBlocklistHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\GetEmailLogHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\GetEmailLogParamsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\GetEmailLogsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\ResendEmailHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\SendTestEmailHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\UpdateBlocklistEntryHandler;
+use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Http\RequestHelper;
+use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
@@ -50,102 +54,74 @@ class EmailController extends AdminAbstractController
 {
     #[IsGranted(new Expression('is_granted("emails") or is_granted("gdpr_data_extractor")'))]
     #[Route('/email-logs', name: 'opendxp_admin_email_emaillogs', methods: ['GET', 'POST'])]
-    public function emailLogsAction(Request $request, GetEmailLogsHandler $getEmailLogs): JsonResponse
-    {
-        $result = $getEmailLogs(
-            documentId: $request->request->has('documentId') ? (int)$request->request->get('documentId') : null,
-            limit: (int)$request->request->get('limit', 50),
-            offset: (int)$request->request->get('start', 0),
-            filter: $request->request->has('filter') ? $request->request->get('filter') : null,
-        );
+    public function emailLogsAction(
+        GetEmailLogsHandler $getEmailLogs,
+        GetEmailLogsPayload $payload,
+    ): JsonResponse {
+        $result = $getEmailLogs($payload);
 
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->adminJson(ApiResponse::ok([
+            'data' => $result->data,
+            'total' => $result->total,
+        ]));
     }
 
     #[IsGranted(CorePermission::Emails->value)]
     #[Route('/show-email-log', name: 'opendxp_admin_email_showemaillog', methods: ['GET'])]
     public function showEmailLogAction(
-        GetEmailLogHandler $getEmailLog,
+        ShowEmailLogHandler $showEmailLog,
         GetEmailLogParamsHandler $getEmailLogParams,
+        ShowEmailLogPayload $payload,
         ?Profiler $profiler,
-        #[MapQueryParameter] ?string $type = null,
-        #[MapQueryParameter] int $id = 0,
     ): JsonResponse|Response {
         if ($profiler) {
             $profiler->disable();
         }
 
-        if ($type === 'params') {
-            return $this->adminJson($getEmailLogParams(id: $id));
-        }
-
-        $result = $getEmailLog($id);
-
-        if ($type === 'text') {
-            return $this->render('@OpenDxpAdmin/admin/email/text.html.twig', ['log' => $result->textLog]);
-        }
-
-        if ($type === 'html') {
-            return new Response($result->htmlLog, 200, [
+        return match ($payload->type) {
+            'params' => $this->adminJson($getEmailLogParams($payload->id)),
+            'text' => $this->render('@OpenDxpAdmin/admin/email/text.html.twig', ['log' => $showEmailLog($payload->id)->textLog]),
+            'html' => new Response($showEmailLog($payload->id)->htmlLog, 200, [
                 'Content-Security-Policy' => "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:",
-            ]);
-        }
-
-        if ($type === 'details') {
-            return $this->adminJson($result->objectVars);
-        }
-
-        return new Response('No Type specified');
+            ]),
+            'details' => $this->adminJson($showEmailLog($payload->id)->objectVars),
+            default => new Response('No Type specified'),
+        };
     }
 
     #[IsGranted(CorePermission::Emails->value)]
     #[Route('/delete-email-log', name: 'opendxp_admin_email_deleteemaillog', methods: ['DELETE'])]
-    public function deleteEmailLogAction(Request $request, DeleteEmailLogHandler $deleteEmailLog): JsonResponse
-    {
-        $deleteEmailLog(id: (int)$request->request->get('id'));
+    public function deleteEmailLogAction(
+        DeleteEmailLogHandler $deleteEmailLog,
+        IdBodyPayload $payload,
+    ): JsonResponse {
+        $deleteEmailLog($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[IsGranted(CorePermission::Emails->value)]
     #[Route('/resend-email', name: 'opendxp_admin_email_resendemail', methods: ['POST'])]
-    public function resendEmailAction(Request $request, ResendEmailHandler $resendEmail): JsonResponse
-    {
-        $resendEmail(
-            id: (int)$request->request->get('id'),
-            fieldOverrides: [
-                'from' => $request->request->get('from') ?: null,
-                'to' => $request->request->get('to') ?: null,
-                'cc' => $request->request->get('cc') ?: null,
-                'bcc' => $request->request->get('bcc') ?: null,
-                'replyto' => $request->request->get('replyto') ?: null,
-            ],
-        );
+    public function resendEmailAction(
+        ResendEmailHandler $resendEmail,
+        ResendEmailPayload $payload,
+    ): JsonResponse {
+        $resendEmail($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[IsGranted(CorePermission::Emails->value)]
     #[Route('/send-test-email', name: 'opendxp_admin_email_sendtestemail', methods: ['POST'])]
-    public function sendTestEmailAction(Request $request, SendTestEmailHandler $sendTestEmail): JsonResponse
-    {
+    public function sendTestEmailAction(
+        Request $request,
+        SendTestEmailHandler $sendTestEmail,
+        SendTestEmailPayload $payload,
+    ): JsonResponse {
         // Simulate a frontend request to prefix assets
         $request->attributes->set(RequestHelper::ATTRIBUTE_FRONTEND_REQUEST, true);
 
-        $mailParamsArray = null;
-        if ($request->request->has('mailParamaters')) {
-            $mailParamsArray = json_decode($request->request->get('mailParamaters'), true) ?: null;
-        }
-
-        $sendTestEmail(
-            emailType: (string)$request->request->get('emailType'),
-            content: $request->request->get('content'),
-            documentPath: $request->request->get('documentPath'),
-            mailParameters: $mailParamsArray,
-            from: $request->request->get('from'),
-            to: (string)$request->request->get('to'),
-            subject: (string)$request->request->get('subject'),
-        );
+        $sendTestEmail($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -171,7 +147,10 @@ class EmailController extends AdminAbstractController
 
         $result = $getBlocklist($payload);
 
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->adminJson(ApiResponse::ok([
+            'data' => $result->data,
+            'total' => $result->total,
+        ]));
     }
 
     private function destroyBlocklistEntry(DeleteBlocklistEntryHandler $handler, BlocklistPayload $payload): JsonResponse

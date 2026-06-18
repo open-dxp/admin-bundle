@@ -16,14 +16,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
-use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\DataObjects;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\DataObject\ExportDataObject\ExportDataObjectHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\DataObject\SearchDataObjects\SearchDataObjectsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\SearchDataPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
-use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -35,48 +34,20 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class DataObjectController extends AdminAbstractController
 {
     #[Route('/search-data-objects', name: 'opendxp_admin_gdpr_dataobject_searchdataobjects', methods: ['GET'])]
-    public function searchDataObjectsAction(Request $request, DataObjects $service): JsonResponse
+    public function searchDataObjectsAction(SearchDataObjectsHandler $handler, SearchDataPayload $payload): JsonResponse
     {
-        $allParams = $request->query->all();
-
-        $result = $service->searchData(
-            (int)$allParams['id'],
-            strip_tags($allParams['firstname']),
-            strip_tags($allParams['lastname']),
-            strip_tags($allParams['email']),
-            (int)$allParams['start'],
-            (int)$allParams['limit'],
-            $allParams['sort'] ?? null
-        );
-
-        return $this->adminJson($result);
+        return $this->adminJson($handler($payload)->data);
     }
 
-    /**
-     * @throws Exception
-     */
     #[Route('/export', name: 'opendxp_admin_gdpr_dataobject_exportdataobject', methods: ['GET'])]
-    public function exportDataObjectAction(
-        DataObjects $service,
-        #[MapQueryParameter] int $id = 0,
-    ): JsonResponse
+    public function exportDataObjectAction(ExportDataObjectHandler $handler, IdQueryPayload $payload): JsonResponse
     {
-        $object = DataObject::getById($id);
+        $result = $handler($payload);
 
-        if (!$object) {
-            throw $this->createNotFoundException('Object not found');
-        }
-
-        if (!$object->isAllowed('view')) {
-            throw $this->createAccessDeniedException('Export denied');
-        }
-
-        $exportResult = $service->doExportData($object);
-
-        $json = $this->encodeJson($exportResult, [], JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_PRETTY_PRINT);
+        $json = $this->encodeJson($result->data, [], JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_PRETTY_PRINT);
 
         return new JsonResponse($json, 200, [
-            'Content-Disposition' => 'attachment; filename="export-data-object-' . $object->getId() . '.json"',
+            'Content-Disposition' => 'attachment; filename="export-data-object-' . $result->objectId . '.json"',
         ], true);
     }
 }

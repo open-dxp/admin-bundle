@@ -21,8 +21,8 @@ use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject\CopyDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject\CopyDataObjectPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\GetDataObjectChildIds\GetDataObjectChildIdsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\GetDataObjectChildIds\GetDataObjectChildIdsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyInfo\CopyInfoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyInfo\CopyInfoPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\RewriteDataObjectIds\RewriteDataObjectIdsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\RewriteDataObjectIds\RewriteDataObjectIdsPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
@@ -30,7 +30,6 @@ use OpenDxp\Tool\Session;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -43,76 +42,17 @@ class DataObjectCopyController extends AdminAbstractController
 {
     #[Route('/copy-info', name: 'copyinfo', methods: ['GET'])]
     public function copyInfoAction(
-        GetDataObjectChildIdsPayload $getChildIdsPayload,
-        GetDataObjectChildIdsHandler $getChildIds,
+        CopyInfoPayload $payload,
+        CopyInfoHandler $handler,
         Request $request,
-        #[MapQueryParameter] ?string $type = null,
-        #[MapQueryParameter(flags: \FILTER_NULL_ON_FAILURE)] ?int $targetId = null,
     ): JsonResponse {
-        $transactionId = time();
-        $pasteJobs = [];
+        $result = $handler($payload);
 
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId): void {
-            $session->set((string) $transactionId, ['idMapping' => []]);
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
+            $session->set((string) $result->transactionId, ['idMapping' => []]);
         }, 'opendxp_copy');
 
-        $sourceId = $getChildIdsPayload->sourceId;
-
-        if ($type === 'recursive' || $type === 'recursive-update-references') {
-            $pasteJobs[] = [[
-                'url' => $this->generateUrl('opendxp_admin_dataobject_dataobject_copy'),
-                'method' => 'POST',
-                'params' => [
-                    'sourceId' => $sourceId,
-                    'targetId' => $targetId,
-                    'type' => 'child',
-                    'transactionId' => $transactionId,
-                    'saveParentId' => true,
-                ],
-            ]];
-
-            $childIds = $getChildIds($getChildIdsPayload)->ids;
-
-            foreach ($childIds as $id) {
-                $pasteJobs[] = [[
-                    'url' => $this->generateUrl('opendxp_admin_dataobject_dataobject_copy'),
-                    'method' => 'POST',
-                    'params' => [
-                        'sourceId' => $id,
-                        'targetParentId' => $targetId,
-                        'sourceParentId' => $sourceId,
-                        'type' => 'child',
-                        'transactionId' => $transactionId,
-                    ],
-                ]];
-            }
-
-            if ($type === 'recursive-update-references' && count($childIds) > 0) {
-                for ($i = 0; $i < (count($childIds) + 1); $i++) {
-                    $pasteJobs[] = [[
-                        'url' => $this->generateUrl('opendxp_admin_dataobject_dataobject_copyrewriteids'),
-                        'method' => 'PUT',
-                        'params' => [
-                            'transactionId' => $transactionId,
-                            '_dc' => uniqid('', false),
-                        ],
-                    ]];
-                }
-            }
-        } elseif ($type === 'child' || $type === 'replace') {
-            $pasteJobs[] = [[
-                'url' => $this->generateUrl('opendxp_admin_dataobject_dataobject_copy'),
-                'method' => 'POST',
-                'params' => [
-                    'sourceId' => $sourceId,
-                    'targetId' => $targetId,
-                    'type' => $type,
-                    'transactionId' => $transactionId,
-                ],
-            ]];
-        }
-
-        return $this->adminJson(['pastejobs' => $pasteJobs]);
+        return $this->adminJson(['pastejobs' => $result->pasteJobs]);
     }
 
     #[Route('/copy-rewrite-ids', name: 'copyrewriteids', methods: ['PUT'])]

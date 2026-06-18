@@ -18,14 +18,13 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PreviewVersion;
 
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 final class PreviewVersionHandler
 {
-    public function __invoke(IdQueryPayload $payload): PreviewVersionResult
+    public function __invoke(PreviewVersionPayload $payload): PreviewVersionResult
     {
         DataObject::setDoNotRestoreKeyAndPath(true);
 

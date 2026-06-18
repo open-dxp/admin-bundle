@@ -17,12 +17,21 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl;
 
-use OpenDxp\Model\DataObject\Concrete;
+use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
+use Symfony\Component\HttpFoundation\Request;
 
-final readonly class GetDataObjectPreviewUrlPayload
+final readonly class GetDataObjectPreviewUrlPayload implements ExtJsPayloadInterface
 {
     public function __construct(
-        public readonly Concrete $object,
+        public readonly int $id = 0,
         public readonly array $queryParams = [],
     ) {}
+
+    public static function fromRequest(Request $request): static
+    {
+        return new static(
+            id:          $request->query->getInt('id'),
+            queryParams: $request->query->all(),
+        );
+    }
 }

@@ -17,11 +17,12 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\OpenDxpUsers;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\OpenDxpUsers\ExportUserData\ExportUserDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\OpenDxpUsers\SearchUsers\SearchUsersHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\SearchDataPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -35,36 +36,21 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class OpenDxpUsersController extends AdminAbstractController
 {
     #[Route('/search-users', name: 'opendxp_admin_gdpr_opendxpusers_searchusers', methods: ['GET'])]
-    public function searchUsersAction(Request $request, OpenDxpUsers $openDxpUsers): JsonResponse
+    public function searchUsersAction(SearchUsersHandler $handler, SearchDataPayload $payload): JsonResponse
     {
-        $allParams = $request->query->all();
-
-        $result = $openDxpUsers->searchData(
-            (int)$allParams['id'],
-            strip_tags($allParams['firstname']),
-            strip_tags($allParams['lastname']),
-            strip_tags($allParams['email']),
-            (int)$allParams['start'],
-            (int)$allParams['limit'],
-            $allParams['sort'] ?? null
-        );
-
-        return $this->adminJson($result);
+        return $this->adminJson($handler($payload)->data);
     }
 
     #[Route('/export-user-data', name: 'opendxp_admin_gdpr_opendxpusers_exportuserdata', methods: ['GET'])]
-    public function exportUserDataAction(
-        OpenDxpUsers $openDxpUsers,
-        #[MapQueryParameter] int $id = 0,
-    ): JsonResponse
+    public function exportUserDataAction(ExportUserDataHandler $handler, IdQueryPayload $payload): JsonResponse
     {
         $this->checkPermission('users');
-        $userData = $openDxpUsers->getExportData($id);
+        $result = $handler($payload);
 
-        $json = $this->encodeJson($userData, [], JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_PRETTY_PRINT);
+        $json = $this->encodeJson($result->data, [], JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_PRETTY_PRINT);
 
         return new JsonResponse($json, 200, [
-            'Content-Disposition' => 'attachment; filename="export-userdata-' . $userData['id'] . '.json"',
+            'Content-Disposition' => 'attachment; filename="export-userdata-' . $result->data['id'] . '.json"',
         ], true);
     }
 }

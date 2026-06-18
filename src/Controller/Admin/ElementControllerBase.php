@@ -17,13 +17,13 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoPayload;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Element\Service;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 
@@ -47,7 +47,7 @@ abstract class ElementControllerBase extends AdminAbstractController
     #[Route('/tree-get-root', name: 'treegetroot', methods: ['GET'])]
     public function treeGetRootAction(
         #[MapQueryParameter] ?string $elementType = null,
-        #[MapQueryParameter(flags: \FILTER_NULL_ON_FAILURE)] ?int $id = null,
+        #[MapQueryParameter(flags: FILTER_NULL_ON_FAILURE)] ?int $id = null,
     ): JsonResponse
     {
         $type = $elementType;
@@ -70,11 +70,9 @@ abstract class ElementControllerBase extends AdminAbstractController
     #[Route('/delete-info', name: 'deleteinfo', methods: ['GET'])]
     public function deleteInfoAction(
         GetDeleteInfoHandler $handler,
-        Request $request,
-        #[MapQueryParameter] ?string $id = null,
-        #[MapQueryParameter] ?string $type = null,
+        GetDeleteInfoPayload $payload,
     ): JsonResponse
     {
-        return $this->adminJson($handler($id, $type, $request->getBaseUrl()));
+        return $this->adminJson($handler($payload));
     }
 }

@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Version\PublishVersion;
 
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
 use OpenDxp\Bundle\AdminBundle\Exception\Document\DocumentNotFoundException;
-use OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizer;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
@@ -31,7 +31,7 @@ final class PublishVersionHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly SessionService $sessionService,
-        private readonly ElementResponseNormalizer $normalizer,
+        private readonly AdminStyleEnricher $adminStyleEnricher,
     ) {}
 
     public function __invoke(IdBodyPayload $payload): PublishVersionResult
@@ -58,7 +58,7 @@ final class PublishVersionHandler
         $document->save();
 
         $treeData = [];
-        $this->normalizer->normalize($document, $treeData, self::class);
+        $this->adminStyleEnricher->forEditor($document, $treeData);
 
         return new PublishVersionResult(treeData: $treeData);
     }

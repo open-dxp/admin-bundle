@@ -20,15 +20,14 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset\CopyAssetPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAssetHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\GetAssetChildIds\GetAssetChildIdsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\GetAssetChildIdsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset\CopyAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyInfo\CopyInfoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyInfo\CopyInfoPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Tool;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -41,82 +40,32 @@ class AssetCopyController extends AdminAbstractController
 {
     #[Route('/copy-info', name: 'opendxp_admin_asset_copyinfo', methods: ['GET'])]
     public function copyInfoAction(
-        GetAssetChildIdsPayload $childIdsPayload,
-        GetAssetChildIdsHandler $getChildIds,
+        CopyInfoPayload $payload,
+        CopyInfoHandler $handler,
         Request $request,
-        #[MapQueryParameter] ?string $type = null,
-        #[MapQueryParameter] int $sourceId = 0,
-        #[MapQueryParameter] ?string $targetId = null,
     ): JsonResponse {
-        $transactionId = time();
-        $pasteJobs = [];
+        $result = $handler($payload);
 
-        Tool\Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($transactionId): void {
-            $session->set((string) $transactionId, []);
+        Tool\Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
+            $session->set((string) $result->transactionId, []);
         }, 'opendxp_copy');
 
-        if ($type === 'recursive') {
-            $pasteJobs[] = [[
-                'url' => $this->generateUrl('opendxp_admin_asset_copy'),
-                'method' => 'POST',
-                'params' => [
-                    'sourceId' => $sourceId,
-                    'targetId' => $targetId,
-                    'type' => 'child',
-                    'transactionId' => $transactionId,
-                    'saveParentId' => true,
-                ],
-            ]];
-
-            $childIds = $getChildIds($childIdsPayload)->ids;
-            foreach ($childIds as $id) {
-                $pasteJobs[] = [[
-                    'url' => $this->generateUrl('opendxp_admin_asset_copy'),
-                    'method' => 'POST',
-                    'params' => [
-                        'sourceId' => $id,
-                        'targetParentId' => $targetId,
-                        'sourceParentId' => $sourceId,
-                        'type' => 'child',
-                        'transactionId' => $transactionId,
-                    ],
-                ]];
-            }
-        } elseif ($type === 'child' || $type === 'replace') {
-            $pasteJobs[] = [[
-                'url' => $this->generateUrl('opendxp_admin_asset_copy'),
-                'method' => 'POST',
-                'params' => [
-                    'sourceId' => $sourceId,
-                    'targetId' => $targetId,
-                    'type' => $type,
-                    'transactionId' => $transactionId,
-                ],
-            ]];
-        }
-
-        return $this->adminJson(['pastejobs' => $pasteJobs]);
+        return $this->adminJson(['pastejobs' => $result->pasteJobs]);
     }
 
     #[Route('/copy', name: 'opendxp_admin_asset_copy', methods: ['POST'])]
-    public function copyAction(CopyAssetHandler $copyAsset, Request $request): JsonResponse
-    {
-        $sourceId = (int) $request->request->get('sourceId');
-        $targetId = (int) $request->request->get('targetId');
-        $type = (string) $request->request->get('type');
+    public function copyAction(
+        CopyAssetPayload $payload,
+        CopyAssetHandler $copyAsset,
+        Request $request,
+    ): JsonResponse {
+        $result = $copyAsset($payload);
 
-        $session = Tool\Session::getSessionBag($request->getSession(), 'opendxp_copy');
-        $sessionBag = $session->get($request->request->get('transactionId'));
-
-        $sourceParentId = $request->request->has('targetParentId') ? (int) $request->request->get('sourceParentId') : null;
-        $targetParentId = $request->request->has('targetParentId') ? (int) $request->request->get('targetParentId') : null;
-        $sessionParentId = $sessionBag['parentId'] ? (int) $sessionBag['parentId'] : null;
-
-        $result = $copyAsset(new CopyAssetPayload($sourceId, $targetId, $type, $sourceParentId, $targetParentId, $sessionParentId));
-
-        if ($result->newAsset !== null && $request->request->get('saveParentId')) {
+        if ($result->newAsset !== null && $payload->saveParentId) {
+            $session = Tool\Session::getSessionBag($request->getSession(), 'opendxp_copy');
+            $sessionBag = $session->get($payload->transactionId);
             $sessionBag['parentId'] = $result->newAsset->getId();
-            $session->set($request->request->get('transactionId'), $sessionBag);
+            $session->set($payload->transactionId, $sessionBag);
         }
 
         return $this->adminJson(ApiResponse::ok());

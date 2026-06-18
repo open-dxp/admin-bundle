@@ -21,15 +21,14 @@ use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersion\PublishVersionPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersion\PublishVersionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\ShowVersion\ShowVersionPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\ShowVersionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\ShowVersion\ShowVersionHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Tool;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
@@ -61,7 +60,6 @@ class AssetVersionController extends AdminAbstractController
         Environment $twig,
         ShowVersionPayload $payload,
         ShowVersionHandler $showVersion,
-        #[MapQueryParameter] ?string $userTimezone = null,
     ): Response {
         $result = $showVersion($payload);
 
@@ -75,7 +73,7 @@ class AssetVersionController extends AdminAbstractController
             );
         }
 
-        Tool\UserTimezone::setUserTimezone($userTimezone);
+        Tool\UserTimezone::setUserTimezone($payload->userTimezone);
         if ($timezone = Tool\UserTimezone::getUserTimezone()) {
             $twig->getExtension(CoreExtension::class)->setTimezone($timezone);
         }

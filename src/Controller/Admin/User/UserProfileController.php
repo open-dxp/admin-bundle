@@ -19,17 +19,18 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\User;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetCurrentUserHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\ResetMy2FaSecretHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUserHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetCurrentUser\GetCurrentUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetCurrentUser\GetCurrentUserPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\ResetMy2FaSecret\ResetMy2FaSecretHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUser\UpdateCurrentUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUser\UpdateCurrentUserPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImagePayload;
 use OpenDxp\Bundle\AdminBundle\Helper\User as UserHelper;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -39,14 +40,10 @@ class UserProfileController extends AdminAbstractController
 {
     #[Route('/user/upload-current-user-image', name: 'opendxp_admin_user_uploadcurrentuserimage', methods: ['POST'])]
     public function uploadCurrentUserImageAction(
-        Request $request,
+        UploadUserImagePayload $payload,
         UploadUserImageHandler $uploadUserImage,
-        #[MapQueryParameter] int $id,
     ): JsonResponse {
-        /** @var UploadedFile $avatarFile */
-        $avatarFile = $request->files->get('Filedata');
-
-        $uploadUserImage($id, $avatarFile);
+        $uploadUserImage($payload);
 
         $response = $this->adminJson(ApiResponse::ok());
         $response->headers->set('Content-Type', 'text/html');
@@ -55,36 +52,26 @@ class UserProfileController extends AdminAbstractController
     }
 
     #[Route('/user/update-current-user', name: 'opendxp_admin_user_updatecurrentuser', methods: ['PUT'])]
-    public function updateCurrentUserAction(Request $request, UpdateCurrentUserHandler $updateCurrentUser): JsonResponse
-    {
+    public function updateCurrentUserAction(
+        Request $request,
+        UpdateCurrentUserPayload $payload,
+        UpdateCurrentUserHandler $updateCurrentUser,
+    ): JsonResponse {
         if (!$request->request->has('id')) {
             return $this->adminJson(false);
         }
 
-        $isPasswordReset = \OpenDxp\Tool\Session::useBag($request->getSession(), static fn (AttributeBagInterface $adminSession) => (bool) $adminSession->get('password_reset'));
-
-        $values = $this->decodeJson($request->request->get('data'), true);
-
-        $keyBindingsJson = $request->request->has('keyBindings')
-            ? $request->request->get('keyBindings')
-            : null;
-
-        $updateCurrentUser(
-            requestedUserId: (int) $request->request->get('id'),
-            values: $values,
-            isPasswordReset: $isPasswordReset,
-            keyBindingsJson: $keyBindingsJson,
-        );
+        $updateCurrentUser($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/user/get-current-user', name: 'opendxp_admin_user_getcurrentuser', methods: ['GET'])]
-    public function getCurrentUserAction(Request $request, GetCurrentUserHandler $getCurrentUser): Response
-    {
-        $isPasswordReset = (bool) \OpenDxp\Tool\Session::useBag($request->getSession(), fn (AttributeBagInterface $adminSession) => $adminSession->get('password_reset'));
-
-        $result = $getCurrentUser($isPasswordReset);
+    public function getCurrentUserAction(
+        GetCurrentUserPayload $payload,
+        GetCurrentUserHandler $getCurrentUser,
+    ): Response {
+        $result = $getCurrentUser($payload);
 
         $response = new Response('opendxp.currentuser = ' . $this->encodeJson($result->userData));
         $response->headers->set('Content-Type', 'text/javascript');
@@ -93,9 +80,12 @@ class UserProfileController extends AdminAbstractController
     }
 
     #[Route('/user/reset-my-2fa-secret', name: 'opendxp_admin_user_reset_my_2fa_secret', methods: ['PUT'])]
-    public function resetMy2FaSecretAction(ResetMy2FaSecretHandler $resetMy2FaSecret): JsonResponse
-    {
-        $resetMy2FaSecret();
+    public function resetMy2FaSecretAction(
+        EmptyPayload $payload,
+        ResetMy2FaSecretHandler $resetMy2FaSecret,
+    ): JsonResponse {
+
+        $resetMy2FaSecret($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

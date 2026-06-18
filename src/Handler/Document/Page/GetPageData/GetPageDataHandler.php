@@ -17,9 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPageData;
 
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\DocumentMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\DraftEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\PropertiesEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\TranslationEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\DocumentVersionHelper;
-use OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizer;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPageData\GetPageDataPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
@@ -34,8 +39,13 @@ final class GetPageDataHandler
     public function __construct(
         private readonly StaticPageGenerator $staticPageGenerator,
         private readonly EditLockService $editLockService,
-        private readonly ElementResponseNormalizer $normalizer,
         private readonly AdminUserContextInterface $userContext,
+        private readonly DocumentMetaEnricher $documentMetaEnricher,
+        private readonly AdminStyleEnricher $adminStyleEnricher,
+        private readonly UserNamesEnricher $userNamesEnricher,
+        private readonly PropertiesEnricher $propertiesEnricher,
+        private readonly TranslationEnricher $translationEnricher,
+        private readonly DraftEnricher $draftEnricher,
     ) {}
 
     public function __invoke(GetPageDataPayload $payload): GetPageDataResult
@@ -78,7 +88,12 @@ final class GetPageDataHandler
             $page->getScheduledTasks()
         );
 
-        $this->normalizer->normalize($page, $data, self::class, ['draftVersion' => $draftVersion]);
+        $this->documentMetaEnricher->enrich($page, $data);
+        $this->adminStyleEnricher->forEditor($page, $data);
+        $this->userNamesEnricher->enrich($page, $data);
+        $this->propertiesEnricher->enrich($page, $data);
+        $this->translationEnricher->enrich($page, $data);
+        $this->draftEnricher->enrich($page, $data, $draftVersion);
 
         return new GetPageDataResult(page: $page, data: $data, draftVersion: $draftVersion);
     }

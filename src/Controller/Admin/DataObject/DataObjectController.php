@@ -18,53 +18,49 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectFolderHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ChangeChildrenSortByHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DeleteDataObjectHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxyHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetChildrenByIdHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectFolderHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectFolder\AddObjectFolderHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectFolder\AddObjectFolderPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObject\AddObjectHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObject\AddObjectPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ChangeChildrenSortBy\ChangeChildrenSortByHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ChangeChildrenSortBy\ChangeChildrenSortByPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxy\DataObjectGridProxyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxy\DataObjectGridProxyPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DeleteDataObject\DeleteDataObjectHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DeleteDataObject\DeleteDataObjectPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObject\GetDataObjectHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObject\GetDataObjectPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions\GetSelectOptionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions\GetSelectOptionsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObjectFolder\SaveDataObjectFolderHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObjectFolder\SaveDataObjectFolderPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetChildrenById\TreeGetChildrenByIdHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetChildrenById\TreeGetChildrenByIdPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\UpdateDataObject\UpdateDataObjectHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\UpdateDataObject\UpdateDataObjectPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectFolder\GetDataObjectFolderHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo\GetIdPathPagingInfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo\GetIdPathPagingInfoPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptionsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrlHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl\GetDataObjectPreviewUrlHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl\GetDataObjectPreviewUrlPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObjectFolderHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\UpdateDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\DataObject\AddObjectFolderPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\DataObject\AddObjectPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\DataObject\ChangeChildrenSortByPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\DataObject\DataObjectGridProxyPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\DataObject\DeleteDataObjectPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\DataObject\GetDataObjectPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\DataObject\GetSelectOptionsPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\DataObject\SaveDataObjectFolderPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\DataObject\TreeGetChildrenByIdPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\DataObject\UpdateDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
-use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use OpenDxp\Controller\Traits\ElementEditLockHelperTrait;
-use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Element\ElementInterface;
 use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 
 /**
  * @internal
@@ -95,7 +91,6 @@ class DataObjectController extends ElementControllerBase
     public function treeGetChildrenByIdAction(
         TreeGetChildrenByIdPayload $payload,
         TreeGetChildrenByIdHandler $handler,
-        #[MapQueryParameter] int $inSearch = 0,
     ): JsonResponse {
         $result = $handler($payload);
 
@@ -108,7 +103,7 @@ class DataObjectController extends ElementControllerBase
                 'nodes'      => $result->objects,
                 'fromPaging' => $result->fromPaging,
                 'filter'     => $result->filter ?: '',
-                'inSearch'   => $inSearch,
+                'inSearch'   => $payload->inSearch,
             ]);
         }
 
@@ -295,19 +290,9 @@ class DataObjectController extends ElementControllerBase
 
     #[Route('/preview', name: 'preview', methods: ['GET'])]
     public function previewAction(
-        Request $request,
+        GetDataObjectPreviewUrlPayload $payload,
         GetDataObjectPreviewUrlHandler $handler,
-        #[MapQueryParameter] int $id = 0,
-    ): RedirectResponse|Response {
-        $object = $this->sessionService->getObject('object', $id);
-
-        if ($object instanceof DataObject\Concrete) {
-            $payload = new GetDataObjectPreviewUrlPayload($object, ['context' => $this, ...$request->query->all()]);
-            $redirectUrl = $handler($payload);
-
-            return $this->redirect($redirectUrl);
-        }
-
-        throw new NotFoundHttpException(sprintf('Expected an object of type "%s", got "%s"', DataObject\Concrete::class, get_debug_type($object)));
+    ): RedirectResponse {
+        return $this->redirect($handler($payload));
     }
 }

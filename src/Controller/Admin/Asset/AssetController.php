@@ -22,34 +22,33 @@ use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail\ClearAssetThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnailHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolder\CreateAssetFolderPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolderHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolder\CreateAssetFolderHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAsset\DeleteAssetPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAsset\DeleteAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildren\GetAssetChildrenPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildren\GetAssetChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetData\GetAssetDataPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetData\GetAssetDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\GridProxy\GridProxyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\GridProxy\GridProxyPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\UpdateAsset\UpdateAssetPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\UpdateAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\UpdateAsset\UpdateAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
-use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Controller\Traits\ElementEditLockHelperTrait;
 use OpenDxp\Model\Element\ElementInterface;
 use Override;
-use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @internal
@@ -62,7 +61,6 @@ class AssetController extends ElementControllerBase
 
     public function __construct(
         ElementServiceInterface $elementService,
-        private readonly AssetGridService $assetGridService,
     ) {
         parent::__construct($elementService);
     }
@@ -70,24 +68,15 @@ class AssetController extends ElementControllerBase
     #[Route('/grid-proxy', name: 'opendxp_admin_asset_gridproxy', methods: ['GET', 'POST', 'PUT'])]
     public function gridProxyAction(
         Request $request,
-        EventDispatcherInterface $eventDispatcher,
+        GridProxyHandler $handler,
+        GridProxyPayload $payload,
         CsrfProtectionHandler $csrfProtection,
-        #[MapQueryParameter] ?string $language = null,
     ): JsonResponse {
-        $allParams = [...$request->request->all(), ...$request->query->all()];
-        $effectiveLanguage = $language !== 'default' ? $language : null;
-
-        $filterPrepareEvent = new GenericEvent(null, ['requestParams' => $allParams]);
-        $eventDispatcher->dispatch($filterPrepareEvent, AdminEvents::ASSET_LIST_BEFORE_FILTER_PREPARE);
-        $allParams = $filterPrepareEvent->getArgument('requestParams');
-
-        if (isset($allParams['data']) && $allParams['data']) {
+        if (isset($payload->params['data']) && $payload->params['data']) {
             $csrfProtection->checkCsrfToken($request);
         }
 
-        return $this->adminJson(
-            $this->assetGridService->gridProxy($allParams, $effectiveLanguage)
-        );
+        return $this->adminJson($handler($payload)->data);
     }
 
     #[Override]
@@ -103,11 +92,9 @@ class AssetController extends ElementControllerBase
     #[Route('/delete-info', name: 'opendxp_admin_asset_deleteinfo', methods: ['GET'])]
     public function deleteInfoAction(
         GetDeleteInfoHandler $handler,
-        Request $request,
-        #[MapQueryParameter] ?string $id = null,
-        #[MapQueryParameter] ?string $type = null,
+        GetDeleteInfoPayload $payload,
     ): JsonResponse {
-        return parent::deleteInfoAction($handler, $request, $id, $type);
+        return parent::deleteInfoAction($handler, $payload);
     }
 
     #[Route('/get-data-by-id', name: 'opendxp_admin_asset_getdatabyid', methods: ['GET'])]
@@ -128,12 +115,10 @@ class AssetController extends ElementControllerBase
     public function treeGetChildrenByIdAction(
         GetAssetChildrenPayload $payload,
         GetAssetChildrenHandler $getChildren,
-        Request $request,
-        #[MapQueryParameter] int $inSearch = 0,
     ): JsonResponse {
         $result = $getChildren($payload);
 
-        if ($request->query->has('limit')) {
+        if ($payload->hasLimit) {
             return $this->adminJson([
                 'offset'   => $result->offset,
                 'limit'    => $result->limit,
@@ -141,7 +126,7 @@ class AssetController extends ElementControllerBase
                 'overflow' => $payload->filter !== null && ($result->filteredTotalCount > $result->limit),
                 'nodes'    => $result->assets,
                 'filter'   => $result->filter ?: '',
-                'inSearch' => $inSearch,
+                'inSearch' => $payload->inSearch,
             ]);
         }
 

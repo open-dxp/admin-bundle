@@ -19,24 +19,25 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExportHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatchHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetMetadataForColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetMetadataForColumnConfig\GetAssetMetadataForColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\MarkGridConfigFavouritePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavouriteHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\MarkGridConfigFavouriteHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\AssetGridColumnConfigResolver;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Tool\Session;
-use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -61,15 +62,14 @@ class AssetHelperController extends AdminAbstractController
         DeleteGridColumnConfigPayload $deletePayload,
         DeleteGridColumnConfigHandler $deleteGridColumnConfig,
         Request $request,
-        #[MapQueryParameter(name: 'no_system_columns')] bool $noSystemColumns = false,
     ): JsonResponse {
         $params = [
-            'id'              => $request->request->get('id'),
-            'type'            => $request->request->get('type'),
-            'types'           => $request->request->get('types'),
-            'gridConfigId'    => $request->request->get('gridConfigId'),
-            'searchType'      => $request->request->get('searchType'),
-            'noSystemColumns' => $noSystemColumns,
+            'id'              => $request->request->getString('id'),
+            'type'            => $request->request->getString('type'),
+            'types'           => $request->request->getString('types'),
+            'gridConfigId'    => $request->request->getString('gridConfigId'),
+            'searchType'      => $request->request->getString('searchType'),
+            'noSystemColumns' => $deletePayload->noSystemColumns,
         ];
 
         $deleteGridColumnConfig($deletePayload);
@@ -101,32 +101,20 @@ class AssetHelperController extends AdminAbstractController
     }
 
     #[Route('/prepare-helper-column-configs', name: 'opendxp_admin_asset_assethelper_preparehelpercolumnconfigs', methods: ['POST'])]
-    public function prepareHelperColumnConfigs(Request $request): JsonResponse
-    {
-        $helperColumns = [];
-        $newData = [];
-        $data = json_decode($request->request->get('columns'));
+    public function prepareHelperColumnConfigs(
+        PrepareHelperColumnConfigsPayload $payload,
+        PrepareHelperColumnConfigsHandler $prepareHelperColumnConfigs,
+        Request $request,
+    ): JsonResponse {
+        $result = $prepareHelperColumnConfigs($payload);
 
-        /** @var stdClass $item */
-        foreach ($data as $item) {
-            if (!empty($item->isOperator)) {
-                $itemKey = '#' . uniqid('', false);
-
-                $item->key = $itemKey;
-                $newData[] = $item;
-                $helperColumns[$itemKey] = $item;
-            } else {
-                $newData[] = $item;
-            }
-        }
-
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($helperColumns): void {
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
             $existingColumns = $session->get('helpercolumns', []);
-            $helperColumns = [...$helperColumns, ...$existingColumns];
+            $helperColumns = [...$result->helperColumns, ...$existingColumns];
             $session->set('helpercolumns', $helperColumns);
         }, 'opendxp_gridconfig');
 
-        return $this->adminJson(ApiResponse::ok(['columns' => $newData]));
+        return $this->adminJson(ApiResponse::ok(['columns' => $result->newData]));
     }
 
     #[Route('/grid-mark-favourite-column-config', name: 'opendxp_admin_asset_assethelper_gridmarkfavouritecolumnconfig', methods: ['POST'])]

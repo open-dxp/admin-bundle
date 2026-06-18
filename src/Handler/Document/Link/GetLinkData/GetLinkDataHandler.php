@@ -17,8 +17,12 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Link\GetLinkData;
 
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\DocumentMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\PropertiesEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\TranslationEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizer;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
 use OpenDxp\Model\Document\Link;
@@ -31,7 +35,11 @@ final class GetLinkDataHandler
     public function __construct(
         private readonly SerializerInterface $serializer,
         private readonly EditLockService $editLockService,
-        private readonly ElementResponseNormalizer $normalizer,
+        private readonly DocumentMetaEnricher $documentMetaEnricher,
+        private readonly AdminStyleEnricher $adminStyleEnricher,
+        private readonly UserNamesEnricher $userNamesEnricher,
+        private readonly PropertiesEnricher $propertiesEnricher,
+        private readonly TranslationEnricher $translationEnricher,
     ) {}
 
     public function __invoke(IdQueryPayload $payload): GetLinkDataResult
@@ -58,7 +66,11 @@ final class GetLinkDataHandler
             $cloned->getScheduledTasks()
         );
 
-        $this->normalizer->normalize($cloned, $data, self::class);
+        $this->documentMetaEnricher->enrich($cloned, $data);
+        $this->adminStyleEnricher->forEditor($cloned, $data);
+        $this->userNamesEnricher->enrich($cloned, $data);
+        $this->propertiesEnricher->enrich($cloned, $data);
+        $this->translationEnricher->enrich($cloned, $data);
 
         return new GetLinkDataResult(original: $link, link: $cloned, data: $data);
     }

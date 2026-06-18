@@ -17,21 +17,22 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\Login\LoginRedirectEvent;
-use OpenDxp\Bundle\AdminBundle\Handler\Login\GenerateTwoFactorSetupHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Login\LostPasswordHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetupHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\Deeplink\DeeplinkHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\Deeplink\DeeplinkPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\GenerateTwoFactorSetup\GenerateTwoFactorSetupHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\GenerateTwoFactorSetup\GenerateTwoFactorSetupPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\LostPassword\LostPasswordHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\LostPassword\LostPasswordPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetup\SaveTwoFactorSetupHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetup\SaveTwoFactorSetupPayload;
 use OpenDxp\Bundle\AdminBundle\Factory\LoginPageFactory;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use OpenDxp\Controller\KernelResponseEventInterface;
-use OpenDxp\Http\Request\Host\GeneralHostResolver;
 use OpenDxp\Http\ResponseHelper;
-use OpenDxp\Logger;
-use OpenDxp\Security\SecurityHelper;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -57,7 +58,8 @@ class LoginController extends AdminAbstractController implements KernelControlle
         protected TranslatorInterface $translator,
         protected EventDispatcherInterface $eventDispatcher,
         private readonly LoginPageFactory $loginPageFactory,
-    ) {}
+    ) {
+    }
 
     public function onKernelControllerEvent(ControllerEvent $event): void
     {
@@ -89,7 +91,8 @@ class LoginController extends AdminAbstractController implements KernelControlle
         Request $request,
         CsrfProtectionHandler $csrfProtection,
         #[MapQueryParameter(name: 'too_many_attempts')] ?string $tooManyAttempts = null,
-    ): RedirectResponse|Response {
+    ): Response {
+
         $queryParams = $request->query->all();
 
         if ($request->attributes->get('_route') === 'opendxp_admin_login_fallback') {
@@ -152,26 +155,15 @@ class LoginController extends AdminAbstractController implements KernelControlle
     public function lostpasswordAction(
         Request $request,
         CsrfProtectionHandler $csrfProtection,
+        LostPasswordPayload $payload,
         LostPasswordHandler $lostPassword,
-        GeneralHostResolver $generalHostResolver,
     ): Response {
         $params = $this->loginPageFactory->create($request)->base();
 
-        if ($request->getMethod() === 'POST' && $request->request->has('username')) {
-            $result = $lostPassword(
-                username: (string) $request->request->get('username'),
-                clientIp: (string) $request->getClientIp(),
-                domain: $generalHostResolver->resolve(['source' => $request]) ?? '',
-            );
+        $result = $lostPassword($payload);
 
-            if ($result->eventResponse !== null) {
-                return $result->eventResponse;
-            }
-
-            if ($result->error !== null) {
-                Logger::error('Lost password service: ' . $result->error);
-                usleep(random_int(50, 200));
-            }
+        if ($result->eventResponse !== null) {
+            return $result->eventResponse;
         }
 
         $csrfProtection->regenerateCsrfToken($request->getSession());
@@ -181,36 +173,16 @@ class LoginController extends AdminAbstractController implements KernelControlle
 
     #[Route('/login/deeplink', name: 'opendxp_admin_login_deeplink')]
     public function deeplinkAction(
-        Request $request,
-        #[MapQueryParameter] string $perspective = '',
+        DeeplinkHandler $handler,
+        DeeplinkPayload $payload,
     ): Response {
-        $queryString = $request->server->get('QUERY_STRING');
+        $result = $handler($payload);
 
-        if (preg_match('/(document|asset|object)_(\d+)_([a-z]+)/', $queryString, $deeplink)) {
-            $deeplink = $deeplink[0];
-            $perspective = strip_tags($perspective);
-
-            if (strpos($queryString, 'token')) {
-                $url = $this->dispatchLoginRedirect([
-                    'deeplink' => $deeplink,
-                    'perspective' => $perspective,
-                ]);
-
-                return $this->redirect($url . '&' . $queryString);
-            }
-
-            if ($queryString) {
-                return $this->render('@OpenDxpAdmin/admin/login/deeplink.html.twig', [
-                    'tab' => $deeplink,
-                    'redirect' => $this->dispatchLoginRedirect([
-                        'deeplink' => 'true',
-                        'perspective' => $perspective,
-                    ]),
-                ]);
-            }
+        if ($result->redirectUrl) {
+            return $this->redirect($result->redirectUrl);
         }
 
-        throw $this->createNotFoundException();
+        return $this->render($result->template, $result->params);
     }
 
     #[Route('/login/2fa', name: 'opendxp_admin_2fa')]
@@ -234,35 +206,47 @@ class LoginController extends AdminAbstractController implements KernelControlle
     }
 
     #[Route('/login/2fa-setup', name: 'opendxp_admin_2fa_setup')]
-    public function twoFactorSetupAuthenticationAction(
-        Request $request,
-        GenerateTwoFactorSetupHandler $generateSetup,
+    public function twoFactorSetupAuthenticationAction(Request $request): Response|RedirectResponse
+    {
+        if ($request->isMethod('post')) {
+            return $this->forward(self::class . '::twoFactorSetupSaveAction');
+        }
+
+        return $this->forward(self::class . '::twoFactorSetupGenerateAction', [], $request->query->all());
+    }
+
+    #[Route('/login/2fa-setup-save', name: 'opendxp_admin_2fa_setup_save')]
+    public function twoFactorSetupSaveAction(
+        SaveTwoFactorSetupPayload $payload,
         SaveTwoFactorSetupHandler $saveSetup,
-        #[MapQueryParameter] ?string $error = null,
+    ): RedirectResponse {
+        try {
+            $saveSetup($payload);
+        } catch (\Throwable) {
+            return new RedirectResponse($this->generateUrl('opendxp_admin_2fa_setup', ['error' => '2fa_wrong']));
+        }
+
+        return new RedirectResponse($this->generateUrl('opendxp_admin_login'));
+    }
+
+    #[Route('/login/2fa-setup-generate', name: 'opendxp_admin_2fa_setup_generate')]
+    public function twoFactorSetupGenerateAction(
+        Request $request,
+        GenerateTwoFactorSetupPayload $payload,
+        GenerateTwoFactorSetupHandler $generateSetup,
     ): Response {
+
         $params = $this->loginPageFactory->create($request)->base();
         $params['setup'] = true;
 
-        if ($error) {
-            $params['error'] = $error;
-        }
-
-        if ($request->isMethod('post')) {
-            try {
-                $saveSetup(
-                    secret: (string) $request->getSession()->get('2fa_secret'),
-                    authCode: (string) $request->request->get('_auth_code'),
-                );
-            } catch (\Throwable) {
-                return new RedirectResponse($this->generateUrl('opendxp_admin_2fa_setup', ['error' => '2fa_wrong']));
-            }
-
-            return new RedirectResponse($this->generateUrl('opendxp_admin_login'));
+        if ($payload->error) {
+            $params['error'] = $payload->error;
         }
 
         $result = $generateSetup();
-        $request->getSession()->set('2fa_secret', $result->secret);
         $params['image'] = $result->qrDataUri;
+
+        $request->getSession()->set('2fa_secret', $result->secret);
 
         return $this->render('@OpenDxpAdmin/admin/login/two_factor_setup.html.twig', $params);
     }

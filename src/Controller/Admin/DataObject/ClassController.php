@@ -18,52 +18,54 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\AddClassHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\AddClassPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkCommitHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkCommitPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkExportPrepareHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkExportPreparePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkImportHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkImportPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DeleteClassHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DeleteClassPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DeleteSelectOptionsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DeleteSelectOptionsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DoBulkExportHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ExportClassHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ExportClassPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetAssetTypesHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassBulkExportListHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassDefinitionForColumnConfigHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassDefinitionForColumnConfigPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassIconsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassIconsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassTreeHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassTreePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetDocumentTypesHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsTreeHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsTreePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsUsagesHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsUsagesPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetTextLayoutPreviewHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetTextLayoutPreviewPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetVideoAllowedTypesHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ImportClassHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ImportClassPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveClassDefinitionHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveClassDefinitionPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptionsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptionsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SuggestClassIdentifierHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\AddClass\AddClassHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\AddClass\AddClassPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkCommit\BulkCommitHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkCommit\BulkCommitPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkExportPrepare\BulkExportPreparePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkImport\BulkImportHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkImport\BulkImportPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DeleteClass\DeleteClassHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DeleteClass\DeleteClassPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DeleteSelectOptions\DeleteSelectOptionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DeleteSelectOptions\DeleteSelectOptionsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DoBulkExport\DoBulkExportHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ExportClass\ExportClassHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ExportClass\ExportClassPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetAssetTypes\GetAssetTypesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassBulkExportList\GetClassBulkExportListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassDefinitionForColumnConfig\GetClassDefinitionForColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassDefinitionForColumnConfig\GetClassDefinitionForColumnConfigPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClass\GetClassHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassIcons\GetClassIconsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassIcons\GetClassIconsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClass\GetClassPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassTree\GetClassTreeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassTree\GetClassTreePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetDocumentTypes\GetDocumentTypesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptions\GetSelectOptionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptions\GetSelectOptionsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsTree\GetSelectOptionsTreeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsTree\GetSelectOptionsTreePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsUsages\GetSelectOptionsUsagesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsUsages\GetSelectOptionsUsagesPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetTextLayoutPreview\GetTextLayoutPreviewHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetTextLayoutPreview\GetTextLayoutPreviewPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetVideoAllowedTypes\GetVideoAllowedTypesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ImportClass\ImportClassHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ImportClass\ImportClassPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveClassDefinition\SaveClassDefinitionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveClassDefinition\SaveClassDefinitionPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptions\SaveSelectOptionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptions\SaveSelectOptionsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SuggestClassIdentifier\SuggestClassIdentifierHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Logger;
+use OpenDxp\Tool\Session;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -173,9 +175,15 @@ class ClassController extends AdminAbstractController
      */
     #[IsGranted(CorePermission::Classes->value)]
     #[Route('/bulk-import', name: 'bulkimport', methods: ['POST'])]
-    public function bulkImportAction(BulkImportPayload $payload, BulkImportHandler $handler): JsonResponse
+    public function bulkImportAction(BulkImportPayload $payload, BulkImportHandler $handler, Request $request): JsonResponse
     {
-        $response = $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->items]));
+        $result = $handler($payload);
+
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
+            $session->set('class_bulk_import_file', $result->tmpFile);
+        }, 'opendxp_objects');
+
+        $response = $this->adminJson(ApiResponse::ok(['data' => $result->items]));
         $response->headers->set('Content-Type', 'text/html');
 
         return $response;
@@ -197,9 +205,11 @@ class ClassController extends AdminAbstractController
      */
     #[IsGranted(CorePermission::Classes->value)]
     #[Route('/bulk-export-prepare', name: 'bulkexportprepare', methods: ['POST'])]
-    public function bulkExportPrepareAction(BulkExportPreparePayload $payload, BulkExportPrepareHandler $handler): Response
+    public function bulkExportPrepareAction(BulkExportPreparePayload $payload, Request $request): Response
     {
-        $handler($payload);
+        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($payload): void {
+            $session->set('class_bulk_export_settings', $payload->data);
+        }, 'opendxp_objects');
 
         return $this->adminJson(ApiResponse::ok());
     }

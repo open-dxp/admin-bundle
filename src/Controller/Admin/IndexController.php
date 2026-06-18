@@ -40,8 +40,8 @@ class IndexController extends AdminAbstractController implements KernelResponseE
     #[Route('/', name: 'opendxp_admin_index', methods: ['GET'])]
     public function indexAction(
         Request $request,
-        SettingsHandler $settingsHandler,
         SettingsPayload $payload,
+        SettingsHandler $settingsHandler,
         TranslatorInterface $translator,
     ): Response {
         $user = $this->getAdminUser();
@@ -63,8 +63,8 @@ class IndexController extends AdminAbstractController implements KernelResponseE
     #[Route('/index/statistics', name: 'opendxp_admin_index_statistics', methods: ['GET'])]
     public function statisticsAction(
         Request $request,
-        StatisticsHandler $statisticsHandler,
         EmptyPayload $payload,
+        StatisticsHandler $statisticsHandler,
     ): JsonResponse {
 
         if (!$request->isXmlHttpRequest()) {

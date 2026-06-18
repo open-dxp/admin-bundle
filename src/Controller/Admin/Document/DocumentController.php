@@ -60,7 +60,8 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren\TreeGetD
 use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren\TreeGetDocumentChildrenPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateDocument\UpdateDocumentHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateDocument\UpdateDocumentPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoPayload;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Model\Element\ElementInterface;
 use Override;
@@ -88,7 +89,7 @@ class DocumentController extends ElementControllerBase
     #[Route('/tree-get-root', name: 'opendxp_admin_document_document_treegetroot', methods: ['GET'])]
     public function treeGetRootAction(
         #[MapQueryParameter] ?string $elementType = null,
-        #[MapQueryParameter(flags: \FILTER_NULL_ON_FAILURE)] ?int $id = null,
+        #[MapQueryParameter(flags: FILTER_NULL_ON_FAILURE)] ?int $id = null,
     ): JsonResponse {
         return parent::treeGetRootAction($elementType, $id);
     }
@@ -98,11 +99,9 @@ class DocumentController extends ElementControllerBase
     #[Route('/delete-info', name: 'opendxp_admin_document_document_deleteinfo', methods: ['GET'])]
     public function deleteInfoAction(
         GetDeleteInfoHandler $handler,
-        Request $request,
-        #[MapQueryParameter] ?string $id = null,
-        #[MapQueryParameter] ?string $type = null,
+        GetDeleteInfoPayload $payload,
     ): JsonResponse {
-        return parent::deleteInfoAction($handler, $request, $id, $type);
+        return parent::deleteInfoAction($handler, $payload);
     }
 
     #[IsGranted(CorePermission::Documents->value)]

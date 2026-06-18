@@ -17,9 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Email\GetEmailData;
 
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\DocumentMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\DraftEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\PropertiesEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\TranslationEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\DocumentVersionHelper;
-use OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizer;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
@@ -31,8 +36,13 @@ final class GetEmailDataHandler
 {
     public function __construct(
         private readonly EditLockService $editLockService,
-        private readonly ElementResponseNormalizer $normalizer,
         private readonly AdminUserContextInterface $userContext,
+        private readonly DocumentMetaEnricher $documentMetaEnricher,
+        private readonly AdminStyleEnricher $adminStyleEnricher,
+        private readonly UserNamesEnricher $userNamesEnricher,
+        private readonly PropertiesEnricher $propertiesEnricher,
+        private readonly TranslationEnricher $translationEnricher,
+        private readonly DraftEnricher $draftEnricher,
     ) {}
 
     public function __invoke(IdQueryPayload $payload): GetEmailDataResult
@@ -62,7 +72,12 @@ final class GetEmailDataHandler
         $data['locked'] = $email->isLocked();
         $data['url'] = $email->getUrl();
 
-        $this->normalizer->normalize($email, $data, self::class, ['draftVersion' => $draftVersion]);
+        $this->documentMetaEnricher->enrich($email, $data);
+        $this->adminStyleEnricher->forEditor($email, $data);
+        $this->userNamesEnricher->enrich($email, $data);
+        $this->propertiesEnricher->enrich($email, $data);
+        $this->translationEnricher->enrich($email, $data);
+        $this->draftEnricher->enrich($email, $data, $draftVersion);
 
         return new GetEmailDataResult(email: $email, data: $data, draftVersion: $draftVersion);
     }

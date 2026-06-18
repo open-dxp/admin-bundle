@@ -18,8 +18,3 @@ parameters:
 			count: 1
 			path: src/DependencyInjection/OpenDxpAdminExtension.php
 
-		-
-			message: '#^Trait OpenDxp\\Bundle\\AdminBundle\\EventListener\\Traits\\ControllerTypeTrait is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/EventListener/Traits/ControllerTypeTrait.php

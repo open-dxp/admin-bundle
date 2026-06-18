@@ -18,9 +18,9 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\GetVariantsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\GetVariants\GetVariantsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\GetVariants\GetVariantsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\UpdateObjectKeyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\UpdateObjectKey\UpdateObjectKeyHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\UpdateObjectKey\UpdateObjectKeyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use Symfony\Component\HttpFoundation\JsonResponse;

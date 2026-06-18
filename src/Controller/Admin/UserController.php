@@ -19,28 +19,39 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\User\AddUserHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUserHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUserImageHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\Disable2FaHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetMinimalUserHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLinkHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserImageHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserTreeChildrenHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetUsersHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\Reset2FaSecretHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\SearchUsersHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\SendInvitationLinkHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateUserHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\AddUser\AddUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\AddUser\AddUserPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUser\DeleteUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUser\DeleteUserPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUserImage\DeleteUserImageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUserImage\DeleteUserImagePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\Disable2Fa\Disable2FaHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\Disable2Fa\Disable2FaPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetMinimalUser\GetMinimalUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetMinimalUser\GetMinimalUserPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLink\GetTokenLoginLinkHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLink\GetTokenLoginLinkPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUser\GetUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUser\GetUserPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserImage\GetUserImageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserImage\GetUserImagePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserTreeChildren\GetUserTreeChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserTreeChildren\GetUserTreeChildrenPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUsers\GetUsersHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUsers\GetUsersPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\Reset2FaSecret\Reset2FaSecretHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\Reset2FaSecret\Reset2FaSecretPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\SearchUsers\SearchUsersHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\SearchUsers\SearchUsersPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\SendInvitationLink\SendInvitationLinkHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\SendInvitationLink\SendInvitationLinkPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateUser\UpdateUserHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateUser\UpdateUserPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImagePayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Http\Request\Host\GeneralHostResolver;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -53,54 +64,40 @@ class UserController extends AdminAbstractController
     #[Route('/user/tree-get-children-by-id', name: 'opendxp_admin_user_treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(
         GetUserTreeChildrenHandler $getUserTreeChildren,
-        #[MapQueryParameter] int $node = 0,
+        GetUserTreeChildrenPayload $payload,
     ): JsonResponse {
-        return $this->adminJson($getUserTreeChildren($node));
+        return $this->adminJson($getUserTreeChildren($payload));
     }
 
     #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/add', name: 'opendxp_admin_user_add', methods: ['POST'])]
-    public function addAction(Request $request, AddUserHandler $addUser): JsonResponse
-    {
-        $referenceId = $request->request->has('rid') ? (int) $request->request->get('rid') : null;
-
-        $result = $addUser(
-            type: $request->request->get('type'),
-            parentId: $request->request->getInt('parentId'),
-            name: trim($request->request->get('name', '')),
-            active: $request->request->getBoolean('active'),
-            referenceId: $referenceId,
-        );
+    public function addAction(
+        AddUserHandler $addUser,
+        AddUserPayload $payload,
+    ): JsonResponse {
+        $result = $addUser($payload);
 
         return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
 
     #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/delete', name: 'opendxp_admin_user_delete', methods: ['DELETE'])]
-    public function deleteAction(Request $request, DeleteUserHandler $deleteUser): JsonResponse
-    {
-        $deleteUser($request->request->getInt('id'));
+    public function deleteAction(
+        DeleteUserHandler $deleteUser,
+        DeleteUserPayload $payload,
+    ): JsonResponse {
+        $deleteUser($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/update', name: 'opendxp_admin_user_update', methods: ['PUT'])]
-    public function updateAction(Request $request, UpdateUserHandler $updateUser): JsonResponse
-    {
-        $values = $request->request->has('data')
-            ? $this->decodeJson($request->request->get('data'), true)
-            : null;
-
-        $workspaces = $request->request->has('workspaces')
-            ? $this->decodeJson($request->request->get('workspaces'), true)
-            : null;
-
-        $keyBindingsJson = $request->request->has('keyBindings')
-            ? $request->request->get('keyBindings')
-            : null;
-
-        $updateUser($request->request->getInt('id'), $values, $workspaces, $keyBindingsJson);
+    public function updateAction(
+        UpdateUserHandler $updateUser,
+        UpdateUserPayload $payload,
+    ): JsonResponse {
+        $updateUser($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -109,9 +106,9 @@ class UserController extends AdminAbstractController
     #[Route('/user/get', name: 'opendxp_admin_user_get', methods: ['GET'])]
     public function getAction(
         GetUserHandler $getUser,
-        #[MapQueryParameter] int $id = 0,
+        GetUserPayload $payload,
     ): JsonResponse {
-        $result = $getUser($id);
+        $result = $getUser($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'user' => $result->userData,
@@ -128,9 +125,9 @@ class UserController extends AdminAbstractController
     #[Route('/user/get-minimal', name: 'opendxp_admin_user_getminimal', methods: ['GET'])]
     public function getMinimalAction(
         GetMinimalUserHandler $getMinimalUser,
-        #[MapQueryParameter] int $id = 0,
+        GetMinimalUserPayload $payload,
     ): JsonResponse {
-        $result = $getMinimalUser($id);
+        $result = $getMinimalUser($payload);
 
         return $this->adminJson([
             'id' => $result->id,
@@ -143,16 +140,10 @@ class UserController extends AdminAbstractController
     #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/upload-image', name: 'opendxp_admin_user_uploadimage', methods: ['POST'])]
     public function uploadImageAction(
-        Request $request,
         UploadUserImageHandler $uploadUserImage,
-        #[MapQueryParameter] int $id = 0,
+        UploadUserImagePayload $payload,
     ): JsonResponse {
-        $targetUserId = $request->query->has('id') ? $id : null;
-
-        /** @var UploadedFile $avatarFile */
-        $avatarFile = $request->files->get('Filedata');
-
-        $uploadUserImage($targetUserId, $avatarFile);
+        $uploadUserImage($payload);
 
         // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
         // Ext.form.Action.Submit and mark the submission as failed
@@ -164,21 +155,21 @@ class UserController extends AdminAbstractController
 
     #[Route('/user/delete-image', name: 'opendxp_admin_user_deleteimage', methods: ['DELETE'])]
     public function deleteImageAction(
-        Request $request,
         DeleteUserImageHandler $deleteUserImage,
-        #[MapQueryParameter] int $id = 0,
+        DeleteUserImagePayload $payload,
     ): JsonResponse {
-        $targetUserId = $request->query->has('id') ? $id : null;
-        $deleteUserImage($targetUserId);
+        $deleteUserImage($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/user/disable-2fa', name: 'opendxp_admin_user_disable2fasecret', methods: ['DELETE'])]
-    public function disable2FaSecretAction(Disable2FaHandler $disable2Fa): JsonResponse
-    {
+    public function disable2FaSecretAction(
+        Disable2FaHandler $disable2Fa,
+        Disable2FaPayload $payload,
+    ): JsonResponse {
         try {
-            $disable2Fa();
+            $disable2Fa($payload);
         } catch (\Throwable $e) {
             return $this->adminJson(ApiResponse::error($e->getMessage()));
         }
@@ -188,24 +179,24 @@ class UserController extends AdminAbstractController
 
     #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/reset-2fa-secret', name: 'opendxp_admin_user_reset2fasecret', methods: ['PUT'])]
-    public function reset2FaSecretAction(Request $request, Reset2FaSecretHandler $reset2FaSecret): JsonResponse
-    {
-        $reset2FaSecret($request->request->getInt('id'));
+    public function reset2FaSecretAction(
+        Reset2FaSecretHandler $reset2FaSecret,
+        Reset2FaSecretPayload $payload,
+    ): JsonResponse {
+        $reset2FaSecret($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/user/get-image', name: 'opendxp_admin_user_getimage', methods: ['GET'])]
     public function getImageAction(
-        Request $request,
-        GetUserImageHandler $getUserImage,
-        #[MapQueryParameter] int $id = 0,
+        GetUserImageHandler $handler,
+        GetUserImagePayload $payload,
     ): StreamedResponse {
-        $targetUserId = $request->query->has('id') ? $id : null;
-        $stream = $getUserImage($targetUserId);
+        $result = $handler($payload);
 
-        return new StreamedResponse(function () use ($stream): void {
-            fpassthru($stream);
+        return new StreamedResponse(function () use ($result): void {
+            fpassthru($result->image);
         }, 200, [
             'Content-Type' => 'image/png',
         ]);
@@ -215,10 +206,10 @@ class UserController extends AdminAbstractController
     #[Route('/user/get-token-login-link', name: 'opendxp_admin_user_gettokenloginlink', methods: ['GET'])]
     public function getTokenLoginLinkAction(
         GetTokenLoginLinkHandler $getTokenLoginLink,
-        #[MapQueryParameter] int $id = 0,
+        GetTokenLoginLinkPayload $payload,
     ): JsonResponse {
         try {
-            $result = $getTokenLoginLink($id);
+            $result = $getTokenLoginLink($payload);
         } catch (\Throwable $e) {
             return $this->adminJson(ApiResponse::error($e->getMessage()));
         }
@@ -230,32 +221,27 @@ class UserController extends AdminAbstractController
     #[Route('/user/search', name: 'opendxp_admin_user_search', methods: ['GET'])]
     public function searchAction(
         SearchUsersHandler $searchUsers,
-        #[MapQueryParameter] ?string $query = null,
+        SearchUsersPayload $payload,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['users' => $searchUsers($query)]));
+        return $this->adminJson(ApiResponse::ok(['users' => $searchUsers($payload)]));
     }
 
     #[IsGranted(CorePermission::ShareConfigurations->value)]
     #[Route('/user/get-users-for-sharing', name: 'opendxp_admin_user_getusersforsharing', methods: ['GET'])]
     public function getUsersForSharingAction(
         GetUsersHandler $getUsers,
-        #[MapQueryParameter(name: 'include_current_user')] ?string $includeCurrentUser = null,
-        #[MapQueryParameter] ?string $permission = null,
+        GetUsersPayload $payload,
     ): JsonResponse {
-        return $this->getUsersAction($getUsers, $includeCurrentUser, $permission);
+        return $this->getUsersAction($getUsers, $payload);
     }
 
     #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/get-users', name: 'opendxp_admin_user_getusers', methods: ['GET'])]
     public function getUsersAction(
         GetUsersHandler $getUsers,
-        #[MapQueryParameter(name: 'include_current_user')] ?string $includeCurrentUser = null,
-        #[MapQueryParameter] ?string $permission = null,
+        GetUsersPayload $payload,
     ): JsonResponse {
-        $users = $getUsers(
-            includeCurrentUser: (bool) $includeCurrentUser,
-            permission: $permission,
-        );
+        $users = $getUsers($payload);
 
         return $this->adminJson(ApiResponse::ok(['total' => count($users), 'data' => $users]));
     }
@@ -263,13 +249,10 @@ class UserController extends AdminAbstractController
     #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/invitationlink', name: 'opendxp_admin_user_invitationlink', methods: ['POST'])]
     public function invitationLinkAction(
-        Request $request,
         SendInvitationLinkHandler $sendInvitationLink,
-        GeneralHostResolver $generalHostResolver,
+        SendInvitationLinkPayload $payload,
     ): JsonResponse {
-        $username = (string) $request->request->get('username', '');
-        $domain = $generalHostResolver->resolve(['source' => $request]) ?? '';
-        $result = $sendInvitationLink($username, $domain);
+        $result = $sendInvitationLink($payload);
 
         return $this->adminJson(ApiResponse::fromBool($result->success, ['message' => $result->message]));
     }

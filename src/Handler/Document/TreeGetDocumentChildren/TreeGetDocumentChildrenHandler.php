@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentChildren\GetDocumentChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Db;

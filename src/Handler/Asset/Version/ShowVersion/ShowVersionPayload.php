@@ -24,12 +24,14 @@ final readonly class ShowVersionPayload implements ExtJsPayloadInterface
 {
     public function __construct(
         public readonly int $versionId = 0,
+        public readonly ?string $userTimezone = null,
     ) {}
 
     public static function fromRequest(Request $request): static
     {
         return new static(
-            versionId: $request->query->getInt('id'),
+            versionId:    $request->query->getInt('id'),
+            userTimezone: $request->query->getString('userTimezone') ?: null,
         );
     }
 }

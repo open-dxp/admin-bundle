@@ -19,16 +19,18 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\AddToRecyclebinHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\DeleteRecyclebinItemHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\ListRecyclebinHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\AddToRecyclebin\AddToRecyclebinHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\AddToRecyclebin\AddToRecyclebinPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\DeleteRecyclebinItem\DeleteRecyclebinItemHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\FlushRecyclebin\FlushRecyclebinHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\ListRecyclebin\ListRecyclebinHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RecyclebinPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RestoreRecyclebinItemHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RestoreRecyclebinItem\RestoreRecyclebinItemHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RestoreRecyclebinItem\RestoreRecyclebinItemPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Controller\KernelControllerEventInterface;
-use OpenDxp\Model\Element;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -70,33 +72,31 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     #[IsGranted(CorePermission::Recyclebin->value)]
     #[Route('/recyclebin/restore', name: 'opendxp_admin_recyclebin_restore', methods: ['POST'])]
     public function restoreAction(
+        RestoreRecyclebinItemPayload $payload,
         RestoreRecyclebinItemHandler $restoreRecyclebinItem,
-        Request $request,
     ): JsonResponse {
-        $restoreRecyclebinItem((int) $request->request->get('id'));
+        $restoreRecyclebinItem($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[IsGranted(CorePermission::Recyclebin->value)]
     #[Route('/recyclebin/flush', name: 'opendxp_admin_recyclebin_flush', methods: ['DELETE'])]
-    public function flushAction(): JsonResponse
-    {
-        $bin = new Element\Recyclebin();
-        $bin->flush();
+    public function flushAction(
+        EmptyPayload $payload,
+        FlushRecyclebinHandler $flushRecyclebin,
+    ): JsonResponse {
+        $flushRecyclebin($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/recyclebin/add', name: 'opendxp_admin_recyclebin_add', methods: ['POST'])]
     public function addAction(
+        AddToRecyclebinPayload $payload,
         AddToRecyclebinHandler $addToRecyclebin,
-        Request $request,
     ): JsonResponse {
-        $addToRecyclebin(
-            type: $request->request->get('type'),
-            id: $request->request->getInt('id'),
-        );
+        $addToRecyclebin($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

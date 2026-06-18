@@ -60,12 +60,13 @@ abstract class DocumentControllerBase extends AdminAbstractController
 
     public function __construct(
         protected ElementServiceInterface $elementService,
-    ) {}
+    ) {
+    }
 
     #[Route('/save-to-session', name: 'savetosession', methods: ['POST'])]
     public function saveToSessionAction(
-        SaveToSessionPayload  $payload,
-        SaveToSessionHandler  $handler,
+        SaveToSessionPayload $payload,
+        SaveToSessionHandler $handler,
     ): JsonResponse {
         $handler($payload);
 
@@ -74,7 +75,7 @@ abstract class DocumentControllerBase extends AdminAbstractController
 
     #[Route('/remove-from-session', name: 'removefromsession', methods: ['DELETE'])]
     public function removeFromSessionAction(
-        IdBodyPayload         $payload,
+        IdBodyPayload $payload,
         RemoveFromSessionHandler $handler,
     ): JsonResponse {
         $handler($payload);
@@ -106,7 +107,7 @@ abstract class DocumentControllerBase extends AdminAbstractController
     protected function preSendDataActions(array $data, Model\Document $document): JsonResponse
     {
         $event = new GenericEvent($this, [
-            'data' => $data,
+            'data'     => $data,
             'document' => $document,
         ]);
 

@@ -19,38 +19,39 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearOpenDxpCacheHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearOutputCacheHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearSymfonyCacheHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearTemporaryFilesHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\CreatePredefinedMetadataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\CreatePredefinedPropertyHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\CreateWebsiteSettingHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteCustomLogoHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeletePredefinedMetadataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeletePredefinedPropertyHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteWebsiteSettingHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearCache\ClearCachePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearCache\ClearCacheHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearOutputCache\ClearOutputCacheHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearTemporaryFiles\ClearTemporaryFilesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\CreatePredefinedMetadata\CreatePredefinedMetadataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\CreatePredefinedProperty\CreatePredefinedPropertyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\CreateWebsiteSetting\CreateWebsiteSettingHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteCustomLogo\DeleteCustomLogoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeletePredefinedMetadata\DeletePredefinedMetadataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeletePredefinedProperty\DeletePredefinedPropertyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteWebsiteSetting\DeleteWebsiteSettingHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\PredefinedMetadataPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\PredefinedPropertyPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\WebsiteSettingPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\DisplayCustomLogoHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAppearanceSettingsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAdminLanguagesHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAlgorithmsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableCountriesHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableSitesHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetFilteredPredefinedMetadataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetPredefinedMetadataListHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetPredefinedPropertiesListHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetSystemSettingsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetWebsiteSettingsListHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\SaveAppearanceSettingsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\SaveSystemSettingsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\ThumbnailAdapterCheckHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdatePredefinedMetadataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdatePredefinedPropertyHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateWebsiteSettingHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\UploadCustomLogoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DisplayCustomLogo\DisplayCustomLogoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAppearanceSettings\GetAppearanceSettingsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAdminLanguages\GetAvailableAdminLanguagesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAlgorithms\GetAvailableAlgorithmsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableCountries\GetAvailableCountriesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableSites\GetAvailableSitesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetFilteredPredefinedMetadata\GetFilteredPredefinedMetadataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetPredefinedMetadataList\GetPredefinedMetadataListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetPredefinedPropertiesList\GetPredefinedPropertiesListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetSystemSettings\GetSystemSettingsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetWebsiteSettingsList\GetWebsiteSettingsListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\SaveAppearanceSettings\SaveAppearanceSettingsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\SaveSettingsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\SaveSystemSettings\SaveSystemSettingsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\ThumbnailAdapterCheck\ThumbnailAdapterCheckHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdatePredefinedMetadata\UpdatePredefinedMetadataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdatePredefinedProperty\UpdatePredefinedPropertyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateWebsiteSetting\UpdateWebsiteSettingHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UploadCustomLogo\UploadCustomLogoHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Logger;
@@ -63,7 +64,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -81,7 +81,7 @@ class SettingsController extends AdminAbstractController
         return new StreamedResponse(static function () use ($result): void {
             fpassthru($result->stream);
         }, 200, [
-            'Content-Type' => $result->mime,
+            'Content-Type'            => $result->mime,
             'Content-Security-Policy' => "script-src 'none'",
         ]);
     }
@@ -125,9 +125,9 @@ class SettingsController extends AdminAbstractController
         if ($payload->hasData) {
             return match ($xaction) {
                 'destroy' => $this->destroyPredefinedMetadata($deletePredefinedMetadata, $payload),
-                'update'  => $this->adminJson(ApiResponse::ok(['data' => $updatePredefinedMetadata($payload)->data])),
-                'create'  => $this->adminJson(ApiResponse::ok(['data' => $createPredefinedMetadata($payload)->data])),
-                default   => throw new BadRequestHttpException(),
+                'update' => $this->adminJson(ApiResponse::ok(['data' => $updatePredefinedMetadata($payload)->data])),
+                'create' => $this->adminJson(ApiResponse::ok(['data' => $createPredefinedMetadata($payload)->data])),
+                default => throw new BadRequestHttpException(),
             };
         }
 
@@ -165,10 +165,10 @@ class SettingsController extends AdminAbstractController
     ): JsonResponse {
         if ($payload->hasData) {
             return match ($xaction) {
-                'destroy' => $this->destroyPredefinedProperty($deletePredefinedProperty, $payload),
-                'update'  => $this->adminJson(ApiResponse::ok(['data' => $updatePredefinedProperty($payload)->data])),
-                'create'  => $this->adminJson(ApiResponse::ok(['data' => $createPredefinedProperty($payload)->data])),
-                default   => throw new BadRequestHttpException(),
+                'destroy' => $this->destroyPredefinedProperty($payload, $deletePredefinedProperty),
+                'update' => $this->adminJson(ApiResponse::ok(['data' => $updatePredefinedProperty($payload)->data])),
+                'create' => $this->adminJson(ApiResponse::ok(['data' => $createPredefinedProperty($payload)->data])),
+                default => throw new BadRequestHttpException(),
             };
         }
 
@@ -177,8 +177,11 @@ class SettingsController extends AdminAbstractController
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
 
-    private function destroyPredefinedProperty(DeletePredefinedPropertyHandler $handler, PredefinedPropertyPayload $payload): JsonResponse
-    {
+    private function destroyPredefinedProperty(
+        PredefinedPropertyPayload $payload,
+        DeletePredefinedPropertyHandler $handler,
+    ): JsonResponse {
+
         $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
@@ -206,14 +209,10 @@ class SettingsController extends AdminAbstractController
     #[IsGranted(AdminPermission::SystemAppearance->value)]
     #[Route('/set-appearance', name: 'opendxp_admin_settings_appearance_set', methods: ['PUT'])]
     public function setAppearanceSystemAction(
-        Request $request,
-        KernelInterface $kernel,
+        SaveSettingsPayload $payload,
         SaveAppearanceSettingsHandler $handler,
     ): JsonResponse {
-        $handler(
-            values: $this->decodeJson($request->request->get('data')),
-            env: $request->request->get('env', $kernel->getEnvironment()),
-        );
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -221,14 +220,10 @@ class SettingsController extends AdminAbstractController
     #[IsGranted(CorePermission::SystemSettings->value)]
     #[Route('/set-system', name: 'opendxp_admin_settings_setsystem', methods: ['PUT'])]
     public function setSystemAction(
-        Request $request,
-        KernelInterface $kernel,
+        SaveSettingsPayload $payload,
         SaveSystemSettingsHandler $handler,
     ): JsonResponse {
-        $handler(
-            values: $this->decodeJson($request->request->get('data')),
-            env: $request->request->get('env', $kernel->getEnvironment()),
-        );
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -236,25 +231,14 @@ class SettingsController extends AdminAbstractController
     #[IsGranted(new Expression('is_granted("clear_cache") or is_granted("system_settings")'))]
     #[Route('/clear-cache', name: 'opendxp_admin_settings_clearcache', methods: ['DELETE'])]
     public function clearCacheAction(
-        Request $request,
-        KernelInterface $kernel,
-        ClearOpenDxpCacheHandler $clearOpenDxpCache,
-        ClearSymfonyCacheHandler $clearSymfonyCache,
+        ClearCachePayload $payload,
+        ClearCacheHandler $clearCache,
     ): JsonResponse {
-        $shouldClearOpenDxp = !(bool) $request->request->get('only_symfony_cache');
-        $shouldClearSymfony = !(bool) $request->request->get('only_opendxp_cache');
-
-        if ($shouldClearOpenDxp) {
-            $clearOpenDxpCache();
-        }
-
-        if ($shouldClearSymfony) {
-            $clearSymfonyCache($request->request->get('env', $kernel->getEnvironment()));
-        }
+        $clearCache($payload);
 
         $response = new JsonResponse(ApiResponse::ok());
 
-        if ($shouldClearSymfony) {
+        if (!$payload->onlyOpendxpCache) {
             // send response before exit so the client gets a reply before the process terminates
             $response->sendHeaders();
             $response->sendContent();
@@ -331,9 +315,9 @@ class SettingsController extends AdminAbstractController
         if ($payload->hasData) {
             return match ($xaction) {
                 'destroy' => $this->destroyWebsiteSetting($deleteWebsiteSetting, $payload),
-                'update'  => $this->adminJson(ApiResponse::ok(['data' => $updateWebsiteSetting($payload)->data])),
-                'create'  => $this->adminJson(ApiResponse::ok(['data' => $createWebsiteSetting($payload)->data])),
-                default   => throw new BadRequestHttpException(),
+                'update' => $this->adminJson(ApiResponse::ok(['data' => $updateWebsiteSetting($payload)->data])),
+                'create' => $this->adminJson(ApiResponse::ok(['data' => $createWebsiteSetting($payload)->data])),
+                default => throw new BadRequestHttpException(),
             };
         }
 

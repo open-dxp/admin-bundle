@@ -3,10 +3,6 @@ services:
         autowire: true
         autoconfigure: true
 
-    _instanceof:
-        OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizerInterface:
-            tags: ['opendxp.admin.normalizer.element_response']
-
     OpenDxp\Bundle\AdminBundle\Installer:
         public: true
         arguments:
@@ -108,6 +104,8 @@ services:
     OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface:
         class: OpenDxp\Bundle\AdminBundle\Service\ElementService
 
+    OpenDxp\Bundle\AdminBundle\Service\CustomLoginUrlGenerator: ~
+
     OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface:
         class: OpenDxp\Bundle\AdminBundle\Service\AdminUserContext
 
@@ -116,13 +114,6 @@ services:
     OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService: ~
 
     OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper: ~
-
-    OpenDxp\Bundle\AdminBundle\Normalizer\:
-        resource: '../src/Normalizer'
-
-    OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizer:
-        arguments:
-            $normalizers: !tagged_iterator opendxp.admin.normalizer.element_response
 
     OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator: ~
 
@@ -161,9 +152,6 @@ services:
     #
     OpenDxp\Bundle\AdminBundle\Builder\:
         resource: '../src/Builder'
-        bind:
-            $customAdminRouteName: '%opendxp_admin.custom_admin_route_name%'
-            $secret: '%secret%'
 
     #
     # HTTP / Value Resolvers
@@ -172,10 +160,20 @@ services:
         resource: '../src/Http'
 
     #
+    # Enrichers
+    #
+    OpenDxp\Bundle\AdminBundle\Enricher\:
+        resource: '../src/Enricher'
+
+    #
     # Handlers
     #
     OpenDxp\Bundle\AdminBundle\Handler\:
         resource: '../src/Handler'
+        bind:
+            $documentNoteTypes: '%opendxp_admin.dataObjects.notes_events.types%'
+            $assetNoteTypes: '%opendxp_admin.assets.notes_events.types%'
+            $objectNoteTypes: '%opendxp_admin.documents.notes_events.types%'
 
     OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentHandler:
         arguments:

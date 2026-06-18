@@ -17,10 +17,10 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\SentMail\ExportSentMail\ExportSentMailHandler;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
-use OpenDxp\Model\Tool\Email\Log;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -32,25 +32,15 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class SentMailController extends AdminAbstractController
 {
     #[Route('/export', name: 'opendxp_admin_gdpr_sentmail_exportdataobject', methods: ['GET'])]
-    public function exportDataObjectAction(
-        #[MapQueryParameter] int $id = 0,
-    ): JsonResponse
+    public function exportDataObjectAction(ExportSentMailHandler $handler, IdQueryPayload $payload): JsonResponse
     {
         $this->checkPermission('emails');
+        $result = $handler($payload);
 
-        $sentMail = Log::getById($id);
-        if (!$sentMail) {
-            throw $this->createNotFoundException();
-        }
-
-        $sentMailArray = (array)$sentMail;
-        $sentMailArray['htmlBody'] = $sentMail->getHtmlLog();
-        $sentMailArray['textBody'] = $sentMail->getTextLog();
-
-        $json = $this->encodeJson($sentMailArray, [], JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_PRETTY_PRINT);
+        $json = $this->encodeJson($result->data, [], JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_PRETTY_PRINT);
 
         return new JsonResponse($json, 200, [
-            'Content-Disposition' => 'attachment; filename="export-mail-' . $sentMail->getId() . '.json"',
+            'Content-Disposition' => 'attachment; filename="export-mail-' . $result->mailId . '.json"',
         ], true);
     }
 }

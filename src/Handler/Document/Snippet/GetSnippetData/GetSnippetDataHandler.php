@@ -17,9 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\GetSnippetData;
 
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\DocumentMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\DraftEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\PropertiesEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Document\TranslationEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\DocumentVersionHelper;
-use OpenDxp\Bundle\AdminBundle\Normalizer\ElementResponseNormalizer;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
@@ -32,8 +37,13 @@ final class GetSnippetDataHandler
 {
     public function __construct(
         private readonly EditLockService $editLockService,
-        private readonly ElementResponseNormalizer $normalizer,
         private readonly AdminUserContextInterface $userContext,
+        private readonly DocumentMetaEnricher $documentMetaEnricher,
+        private readonly AdminStyleEnricher $adminStyleEnricher,
+        private readonly UserNamesEnricher $userNamesEnricher,
+        private readonly PropertiesEnricher $propertiesEnricher,
+        private readonly TranslationEnricher $translationEnricher,
+        private readonly DraftEnricher $draftEnricher,
     ) {}
 
     public function __invoke(IdQueryPayload $payload): GetSnippetDataResult
@@ -68,7 +78,12 @@ final class GetSnippetDataHandler
             $data['contentMainDocumentPath'] = $snippet->getContentMainDocument()->getRealFullPath();
         }
 
-        $this->normalizer->normalize($snippet, $data, self::class, ['draftVersion' => $draftVersion]);
+        $this->documentMetaEnricher->enrich($snippet, $data);
+        $this->adminStyleEnricher->forEditor($snippet, $data);
+        $this->userNamesEnricher->enrich($snippet, $data);
+        $this->propertiesEnricher->enrich($snippet, $data);
+        $this->translationEnricher->enrich($snippet, $data);
+        $this->draftEnricher->enrich($snippet, $data, $draftVersion);
 
         return new GetSnippetDataResult(snippet: $snippet, data: $data, draftVersion: $draftVersion);
     }

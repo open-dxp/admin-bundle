@@ -17,7 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset;
 
-final readonly class CopyAssetPayload
+use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
+use OpenDxp\Tool;
+use Symfony\Component\HttpFoundation\Request;
+
+final readonly class CopyAssetPayload implements ExtJsPayloadInterface
 {
     public function __construct(
         public readonly int $sourceId,
@@ -26,5 +30,24 @@ final readonly class CopyAssetPayload
         public readonly ?int $sourceParentId,
         public readonly ?int $targetParentId,
         public readonly ?int $sessionParentId,
+        public readonly string $transactionId,
+        public readonly string $saveParentId,
     ) {}
+
+    public static function fromRequest(Request $request): static
+    {
+        $session = Tool\Session::getSessionBag($request->getSession(), 'opendxp_copy');
+        $sessionBag = $session->get($request->request->getString('transactionId'));
+
+        return new static(
+            sourceId:       (int) $request->request->getString('sourceId'),
+            targetId:       (int) $request->request->getString('targetId'),
+            type:           $request->request->getString('type'),
+            sourceParentId: $request->request->has('targetParentId') ? (int) $request->request->getString('sourceParentId') : null,
+            targetParentId: $request->request->has('targetParentId') ? (int) $request->request->getString('targetParentId') : null,
+            sessionParentId: isset($sessionBag['parentId']) ? (int) $sessionBag['parentId'] : null,
+            transactionId:  $request->request->getString('transactionId'),
+            saveParentId:   $request->request->getString('saveParentId'),
+        );
+    }
 }

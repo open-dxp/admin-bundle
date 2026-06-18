@@ -18,15 +18,17 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Settings;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\AddThumbnailHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteThumbnailHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetDownloadableThumbnailsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetThumbnailHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetThumbnailTreeHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\AddThumbnail\AddThumbnailPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\AddThumbnail\AddThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteThumbnail\DeleteThumbnailPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteThumbnail\DeleteThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetDownloadableThumbnails\GetDownloadableThumbnailsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetThumbnail\GetThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetThumbnailTree\GetThumbnailTreeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateThumbnail\UpdateThumbnailPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateThumbnail\UpdateThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -54,17 +56,17 @@ class ThumbnailController extends AdminAbstractController
     }
 
     #[Route('/settings/thumbnail-add', name: 'opendxp_admin_settings_thumbnailadd', methods: ['POST'])]
-    public function thumbnailAddAction(Request $request, AddThumbnailHandler $addThumbnail): JsonResponse
+    public function thumbnailAddAction(AddThumbnailPayload $payload, AddThumbnailHandler $addThumbnail): JsonResponse
     {
-        $result = $addThumbnail($request->request->get('name'));
+        $result = $addThumbnail($payload);
 
         return $this->adminJson(ApiResponse::fromBool($result->created, ['id' => $result->id]));
     }
 
     #[Route('/settings/thumbnail-delete', name: 'opendxp_admin_settings_thumbnaildelete', methods: ['DELETE'])]
-    public function thumbnailDeleteAction(Request $request, DeleteThumbnailHandler $deleteThumbnail): JsonResponse
+    public function thumbnailDeleteAction(DeleteThumbnailPayload $payload, DeleteThumbnailHandler $deleteThumbnail): JsonResponse
     {
-        $deleteThumbnail($request->request->get('name'));
+        $deleteThumbnail($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -80,14 +82,9 @@ class ThumbnailController extends AdminAbstractController
     }
 
     #[Route('/settings/thumbnail-update', name: 'opendxp_admin_settings_thumbnailupdate', methods: ['PUT'])]
-    public function thumbnailUpdateAction(Request $request, UpdateThumbnailHandler $updateThumbnail): JsonResponse
+    public function thumbnailUpdateAction(UpdateThumbnailPayload $payload, UpdateThumbnailHandler $updateThumbnail): JsonResponse
     {
-        $updateThumbnail(
-            name: $request->request->get('name'),
-            settingsData: $this->decodeJson($request->request->get('settings')),
-            mediaData: $this->decodeJson($request->request->get('medias')),
-            mediaOrder: $this->decodeJson($request->request->get('mediaOrder')),
-        );
+        $updateThumbnail($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

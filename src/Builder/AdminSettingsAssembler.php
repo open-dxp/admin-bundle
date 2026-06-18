@@ -42,6 +42,7 @@ use OpenDxp\Tool\MaintenanceModeHelperInterface;
 use OpenDxp\Version;
 use OpenDxp\Video;
 use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsPayload;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
@@ -58,7 +59,9 @@ final class AdminSettingsAssembler
         private readonly Connection $db,
         private readonly KernelInterface $kernel,
         private readonly RequestStack $requestStack,
+        #[Autowire('%opendxp_admin.custom_admin_route_name%')]
         private readonly string $customAdminRouteName,
+        #[Autowire('%secret%')]
         private readonly string $secret,
     ) {}
 
