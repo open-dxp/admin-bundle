@@ -84,7 +84,7 @@ final class AssetPayloadMapper
 
     private function applyScheduler(?array $schedulerData, Asset $asset): void
     {
-        if ($schedulerData === null || !$asset->isAllowed('settings') || !method_exists($asset, 'setScheduledTasks')) {
+        if ($schedulerData === null || !$asset->isAllowed('settings')) {
             return;
         }
 

@@ -47,11 +47,11 @@ final class SessionService
         return $sessionDoc ?: null;
     }
 
-    public function getOrLoadDocument(int $id): ?Document\PageSnippet
+    public function getOrLoadDocument(int $id): ?Document
     {
         $sessionId = $this->sessionId();
         $doc = DocumentService::getElementFromSession('document', $id, $sessionId);
-        if ($doc) {
+        if ($doc instanceof Document) {
             return $doc;
         }
 

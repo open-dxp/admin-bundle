@@ -10,9 +10,9 @@ use Symfony\Component\HttpFoundation\Request;
 final readonly class AnalyzePermissionsPayload implements ExtJsPayloadInterface
 {
     public function __construct(
+        public readonly int $elementId,
         public readonly ?int $userId = null,
         public readonly ?string $elementType = null,
-        public readonly int $elementId,
     ) {}
 
     public static function fromRequest(Request $request): static

@@ -20,7 +20,6 @@ namespace OpenDxp\Bundle\AdminBundle\Service\Workflow;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\Asset;
-use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\Concrete as ConcreteObject;
 use OpenDxp\Model\Document;
 
@@ -52,7 +51,6 @@ final class WorkflowElementResolver
         if (
             $element instanceof Document\Folder
             || $element instanceof Asset\Folder
-            || $element instanceof DataObject\Folder
             || $element instanceof Document\Hardlink
             || $element instanceof Document\Link
         ) {

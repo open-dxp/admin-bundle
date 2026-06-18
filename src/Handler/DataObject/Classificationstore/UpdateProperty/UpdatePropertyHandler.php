@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProperty;
 
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetProperties\GetPropertiesHandler;
 use OpenDxp\Model\DataObject\Classificationstore;
 
 final class UpdatePropertyHandler

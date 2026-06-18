@@ -14,7 +14,6 @@ use Symfony\Component\Mime\Address;
 
 final class ResendEmailHandler
 {
-    /** @param array<string, string|null> $fieldOverrides Keys: 'from', 'to', 'cc', 'bcc', 'replyto' */
     public function __invoke(ResendEmailPayload $payload): void
     {
         $emailLog = Tool\Email\Log::getById($payload->id);

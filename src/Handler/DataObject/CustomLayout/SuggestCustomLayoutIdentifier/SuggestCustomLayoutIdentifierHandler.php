@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SuggestCustomLayoutIdentifier;
 
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SuggestCustomLayoutIdentifier\SuggestCustomLayoutIdentifierPayload;
 use OpenDxp\Model\DataObject;
 
 final class SuggestCustomLayoutIdentifierHandler
@@ -36,6 +35,6 @@ final class SuggestCustomLayoutIdentifierHandler
             }
         }
 
-        return new SuggestCustomLayoutIdentifierResult($identifier, $existingIds, $existingNames);
+        return new SuggestCustomLayoutIdentifierResult($identifier !== null ? (string) $identifier : '', $existingIds, $existingNames);
     }
 }

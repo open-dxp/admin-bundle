@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearOpenDxpCache;
 
+use OpenDxp\Service\Cache\OpenDxpCacheClearingService;
+
 final class ClearOpenDxpCacheHandler
 {
     public function __construct(

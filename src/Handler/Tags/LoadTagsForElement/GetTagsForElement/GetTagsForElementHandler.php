@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Tags\LoadTagsForElement\GetTagsForElement;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\LoadTagsForElement\LoadTagsForElementPayload;
 use OpenDxp\Model\Element\Tag;
 
 final class GetTagsForElementHandler

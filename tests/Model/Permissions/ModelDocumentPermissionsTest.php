@@ -18,8 +18,9 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\Document\DocumentController;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentChildrenHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentChildren\GetDocumentChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren\TreeGetDocumentChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren\TreeGetDocumentChildrenPayload;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Document\Page;
 use OpenDxp\Model\User;
@@ -177,7 +178,7 @@ class ModelDocumentPermissionsTest extends AbstractPermissionTest
             'view' => 0,
         ]);
 
-        $responseData = $controller->treeGetChildrenByIdAction($handler, $request);
+        $responseData = $controller->treeGetChildrenByIdAction($handler, TreeGetDocumentChildrenPayload::fromRequest($request));
 
         $responsePaths = [];
         $responseData = json_decode($responseData->getContent(), true);

@@ -42,14 +42,14 @@ final class DiffVersionsHandler
         $versionFrom = Version::getById($payload->from);
         $docFrom = $versionFrom?->loadData();
 
-        if (!$docFrom instanceof Document) {
+        if (!$docFrom instanceof Document\PageSnippet) {
             throw new DocumentNotFoundException($payload->from);
         }
 
         $versionTo = Version::getById($payload->to);
         $docTo = $versionTo?->loadData();
 
-        if (!$docTo instanceof Document) {
+        if (!$docTo instanceof Document\PageSnippet) {
             throw new DocumentNotFoundException($payload->to);
         }
 

@@ -32,6 +32,7 @@ final class SearchUsersHandler
 
         $users = [];
         foreach ($list->getUsers() as $user) {
+            /** @phpstan-ignore instanceof.alwaysTrue */
             if ($user instanceof User && $user->getName() !== 'system') {
                 $users[] = [
                     'id' => $user->getId(),

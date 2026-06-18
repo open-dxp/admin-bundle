@@ -39,11 +39,11 @@ final class UpdateDocumentHandler
     {
         $document = Document::getById($payload->id);
         if (!$document instanceof Document) {
-            throw new DocumentNotFoundException($id);
+            throw new DocumentNotFoundException($payload->id);
         }
 
         $oldPath = (string) $document->getDao()->getCurrentFullPath();
-        $oldDocument = Document::getById($id, ['force' => true]);
+        $oldDocument = Document::getById($payload->id, ['force' => true]);
 
         $adminUser = $this->userContext->getAdminUser();
         $allowUpdate = true;
@@ -59,8 +59,8 @@ final class UpdateDocumentHandler
         }
 
         if ($document->isAllowed('settings')) {
-            if (isset($updateData['parentId'])) {
-                $parentDocument = Document::getById((int) $updateData['parentId']);
+            if (isset($payload->updateData['parentId'])) {
+                $parentDocument = Document::getById((int) $payload->updateData['parentId']);
 
                 if ($document->getParentId() !== $parentDocument->getId()) {
                     if (!$parentDocument->isAllowed('create')) {
@@ -88,12 +88,12 @@ final class UpdateDocumentHandler
             if ($allowUpdate) {
                 $blockedVars = ['id', 'controller', 'action', 'module'];
 
-                if (!$document->isAllowed('rename') && isset($updateData['key'])) {
+                if (!$document->isAllowed('rename') && isset($payload->updateData['key'])) {
                     $blockedVars[] = 'key';
                     Logger::debug('prevented renaming document because of missing permissions ');
                 }
 
-                foreach ($updateData as $key => $value) {
+                foreach ($payload->updateData as $key => $value) {
                     if (!in_array($key, $blockedVars)) {
                         $document->setValue($key, $value);
                     }
@@ -102,8 +102,8 @@ final class UpdateDocumentHandler
                 $document->setUserModification($adminUser->getId());
                 $document->save();
 
-                if (isset($updateData['index'])) {
-                    $this->updateIndexesOfDocumentSiblings($document, (int) $updateData['index']);
+                if (isset($payload->updateData['index'])) {
+                    $this->updateIndexesOfDocumentSiblings($document, (int) $payload->updateData['index']);
                 }
 
                 if ($oldPath && $oldPath != $document->getRealFullPath()) {
@@ -122,8 +122,8 @@ final class UpdateDocumentHandler
             throw new BadRequestHttpException($msg);
         }
 
-        if ($document->isAllowed('rename') && isset($updateData['key'])) {
-            $document->setKey($updateData['key']);
+        if ($document->isAllowed('rename') && isset($payload->updateData['key'])) {
+            $document->setKey($payload->updateData['key']);
             $document->setUserModification($adminUser->getId());
             $document->save();
 

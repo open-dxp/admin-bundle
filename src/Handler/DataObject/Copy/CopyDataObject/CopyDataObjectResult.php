@@ -23,6 +23,6 @@ final readonly class CopyDataObjectResult
 {
     public function __construct(
         public int $sourceId,
-        public ?DataObject $newObject = null,
+        public ?DataObject\AbstractObject $newObject = null,
     ) {}
 }

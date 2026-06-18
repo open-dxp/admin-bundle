@@ -18,7 +18,8 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset\AssetController;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildren\GetAssetChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildren\GetAssetChildrenPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Property;
@@ -306,7 +307,7 @@ class ModelAssetPermissionsTest extends AbstractPermissionTest
             'view' => 0,
         ]);
 
-        $responseData = $controller->treeGetChildrenByIdAction($handler, $request);
+        $responseData = $controller->treeGetChildrenByIdAction(GetAssetChildrenPayload::fromRequest($request), $handler);
         $responsePaths = [];
         $responseData = json_decode($responseData->getContent(), true);
         foreach ($responseData['nodes'] as $node) {

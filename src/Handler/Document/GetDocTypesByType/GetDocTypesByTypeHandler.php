@@ -27,10 +27,10 @@ final class GetDocTypesByTypeHandler
     {
         $list = new DocType\Listing();
         if ($payload->type) {
-            if (!Document\Service::isValidType($type)) {
-                throw new BadRequestHttpException('Invalid type: ' . $type);
+            if (!Document\Service::isValidType($payload->type)) {
+                throw new BadRequestHttpException('Invalid type: ' . $payload->type);
             }
-            $list->setFilter(static fn (DocType $docType) => $docType->getType() === $type);
+            $list->setFilter(static fn (DocType $docType) => $docType->getType() === $payload->type);
         }
 
         $docTypes = [];

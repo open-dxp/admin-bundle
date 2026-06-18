@@ -34,6 +34,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Settings\PredefinedMetadataPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\PredefinedPropertyPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\WebsiteSettingPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\DisplayCustomLogo\DisplayCustomLogoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DisplayCustomLogo\DisplayCustomLogoPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAppearanceSettings\GetAppearanceSettingsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAdminLanguages\GetAvailableAdminLanguagesHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAlgorithms\GetAvailableAlgorithmsHandler;
@@ -74,9 +75,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class SettingsController extends AdminAbstractController
 {
     #[Route('/display-custom-logo', name: 'opendxp_settings_display_custom_logo', methods: ['GET'])]
-    public function displayCustomLogoAction(Request $request, DisplayCustomLogoHandler $handler): StreamedResponse
+    public function displayCustomLogoAction(DisplayCustomLogoPayload $payload, DisplayCustomLogoHandler $handler): StreamedResponse
     {
-        $result = $handler(white: $request->query->has('white'));
+        $result = $handler($payload);
 
         return new StreamedResponse(static function () use ($result): void {
             fpassthru($result->stream);
@@ -89,7 +90,6 @@ class SettingsController extends AdminAbstractController
     #[Route('/upload-custom-logo', name: 'opendxp_admin_settings_uploadcustomlogo', methods: ['POST'])]
     public function uploadCustomLogoAction(Request $request, UploadCustomLogoHandler $handler): JsonResponse
     {
-        /** @var UploadedFile $logoFile */
         $logoFile = $request->files->get('Filedata');
 
         if (!$logoFile instanceof UploadedFile) {

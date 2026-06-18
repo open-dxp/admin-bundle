@@ -26,7 +26,7 @@ final class RestoreRecyclebinItemHandler
     {
         $item = Recyclebin\Item::getById($payload->id);
         if (!$item) {
-            throw new NotFoundHttpException(sprintf('Recyclebin item with id %d not found', $id));
+            throw new NotFoundHttpException(sprintf('Recyclebin item with id %d not found', $payload->id));
         }
 
         $item->restore();

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * OpenDXP
  *
@@ -15,18 +13,13 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearSymfonyCache;
+declare(strict_types=1);
 
-use OpenDxp\Service\Cache\SymfonyCacheClearingService;
+namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLink;
 
-final class ClearSymfonyCacheHandler
+final readonly class GetTokenLoginLinkResult
 {
     public function __construct(
-        private readonly SymfonyCacheClearingService $service,
+        public readonly string $link,
     ) {}
-
-    public function __invoke(string $environment): void
-    {
-        $this->service->clear($environment);
-    }
 }

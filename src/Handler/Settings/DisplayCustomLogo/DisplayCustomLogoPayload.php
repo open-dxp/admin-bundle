@@ -15,18 +15,21 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearSymfonyCache;
+namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\DisplayCustomLogo;
 
-use OpenDxp\Service\Cache\SymfonyCacheClearingService;
+use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
+use Symfony\Component\HttpFoundation\Request;
 
-final class ClearSymfonyCacheHandler
+final readonly class DisplayCustomLogoPayload implements ExtJsPayloadInterface
 {
     public function __construct(
-        private readonly SymfonyCacheClearingService $service,
+        public readonly bool $white,
     ) {}
 
-    public function __invoke(string $environment): void
+    public static function fromRequest(Request $request): static
     {
-        $this->service->clear($environment);
+        return new static(
+            white: $request->query->has('white'),
+        );
     }
 }

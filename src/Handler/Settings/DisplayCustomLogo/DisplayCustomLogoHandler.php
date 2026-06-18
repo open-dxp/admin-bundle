@@ -24,10 +24,10 @@ final class DisplayCustomLogoHandler
 {
     private const string LOGO_PATH = 'custom-logo.image';
 
-    public function __invoke(bool $white): DisplayCustomLogoResult
+    public function __invoke(DisplayCustomLogoPayload $payload): DisplayCustomLogoResult
     {
         $mime = 'image/svg+xml';
-        $logoFile = OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/' . ($white ? 'logo-claim-white.svg' : 'logo-claim-gray.svg');
+        $logoFile = OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/' . ($payload->white ? 'logo-claim-white.svg' : 'logo-claim-gray.svg');
         $stream = fopen($logoFile, 'rb');
 
         $storage = Tool\Storage::get('admin');

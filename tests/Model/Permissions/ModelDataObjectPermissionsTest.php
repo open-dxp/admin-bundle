@@ -19,8 +19,9 @@ namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject\DataObjectController;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectChildrenHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetChildrenByIdHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectChildren\GetDataObjectChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetChildrenById\TreeGetChildrenByIdHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetChildrenById\TreeGetChildrenByIdPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
@@ -233,9 +234,8 @@ class ModelDataObjectPermissionsTest extends AbstractPermissionTest
         try {
             TestHelper::callMethod($controller, 'checkPermission', ['objects']);
             $responseData = $controller->treeGetChildrenByIdAction(
+                TreeGetChildrenByIdPayload::fromRequest($request),
                 $handler,
-                $request,
-                node: (int) $element->getId(),
             );
         } catch (Exception $e) {
             if (is_null($expectedChildren)) {

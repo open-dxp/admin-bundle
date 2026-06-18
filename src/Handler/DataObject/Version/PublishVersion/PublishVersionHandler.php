@@ -38,7 +38,7 @@ final class PublishVersionHandler
         $version = Version::getById($payload->id);
         $object = $version?->loadData();
 
-        if (!$object instanceof DataObject\AbstractObject) {
+        if (!$object instanceof DataObject\Concrete) {
             throw new DataObjectNotFoundException($payload->id);
         }
 

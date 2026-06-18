@@ -23,7 +23,7 @@ final readonly class DownloadImageThumbnailResult
 {
     public function __construct(
         public Image $image,
-        public Image\Thumbnail $thumbnail,
+        public Image\ThumbnailInterface $thumbnail,
         public string $localFile,
         public bool $deleteThumbnail,
     ) {}

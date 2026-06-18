@@ -21,7 +21,7 @@ use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail\ClearAssetThumbnailPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail\ClearAssetThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolder\CreateAssetFolderPayload;

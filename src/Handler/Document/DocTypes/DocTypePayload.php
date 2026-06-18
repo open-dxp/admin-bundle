@@ -10,14 +10,14 @@ use Symfony\Component\HttpFoundation\Request;
 final readonly class DocTypePayload implements ExtJsPayloadInterface
 {
     public function __construct(
-        public int $id,
+        public string $id,
         public array $data,
     ) {}
 
     public static function fromRequest(Request $request): static
     {
         $data = json_decode($request->request->get('data', ''), true) ?? [];
-        $id = (int) ($data['id'] ?? 0);
+        $id = (string) ($data['id'] ?? '');
         unset($data['id']);
 
         return new static(id: $id, data: $data);

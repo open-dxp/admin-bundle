@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element\DeleteDraft;
 
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Model\Version;
 
 final class DeleteDraftHandler

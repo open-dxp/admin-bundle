@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Page;
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
 use Symfony\Component\HttpFoundation\Request;
 
+/** @phpstan-consistent-constructor */
 readonly class PagePayload implements ExtJsPayloadInterface
 {
     public function __construct(

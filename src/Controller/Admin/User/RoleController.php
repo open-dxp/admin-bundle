@@ -20,11 +20,11 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\User;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRole\GetRoleHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetRole\GetRolePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRoles\GetRolesHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRoles\GetRolesPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRoleTreeChildren\GetRoleTreeChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRoleTreeChildren\GetRoleTreeChildrenPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -47,7 +47,7 @@ class RoleController extends AdminAbstractController
     #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/role-get', name: 'opendxp_admin_user_roleget', methods: ['GET'])]
     public function roleGetAction(
-        IdQueryPayload $payload,
+        GetRolePayload $payload,
         GetRoleHandler $getRole,
     ): JsonResponse {
         $result = $getRole($payload);

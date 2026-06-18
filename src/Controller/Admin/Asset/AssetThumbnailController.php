@@ -60,7 +60,7 @@ class AssetThumbnailController extends AdminAbstractController
         }
 
         if ($result->thumbnailResult === null) {
-            throw $this->createNotFoundException(sprintf('Tree preview thumbnail not available for asset %s', $id));
+            throw $this->createNotFoundException(sprintf('Tree preview thumbnail not available for asset %s', $payload->id));
         }
 
         if ($result->returnFileinfo) {
