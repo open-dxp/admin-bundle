@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearOpenDxpCache;
 
-use OpenDxp\Service\Cache\OpenDxpCacheClearingService;
+use OpenDxp\Bundle\AdminBundle\Service\Cache\OpenDxpCacheClearingService;
 
 final class ClearOpenDxpCacheHandler
 {

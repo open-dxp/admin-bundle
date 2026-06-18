@@ -18,10 +18,10 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\SaveAppearanceSettings;
 
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\SaveSettingsPayload;
+use OpenDxp\Bundle\AdminBundle\Service\Cache\OpenDxpCacheClearingService;
+use OpenDxp\Bundle\AdminBundle\Service\Cache\SymfonyCacheClearingService;
 use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
 use OpenDxp\Helper\StopMessengerWorkersTrait;
-use OpenDxp\Service\Cache\OpenDxpCacheClearingService;
-use OpenDxp\Service\Cache\SymfonyCacheClearingService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Component\HttpKernel\KernelEvents;

@@ -16,8 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearCache;
 
-use OpenDxp\Service\Cache\OpenDxpCacheClearingService;
-use OpenDxp\Service\Cache\SymfonyCacheClearingService;
+use OpenDxp\Bundle\AdminBundle\Service\Cache\OpenDxpCacheClearingService;
+use OpenDxp\Bundle\AdminBundle\Service\Cache\SymfonyCacheClearingService;
 use Symfony\Component\HttpKernel\KernelInterface;
 
 final class ClearCacheHandler

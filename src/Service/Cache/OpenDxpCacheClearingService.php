@@ -14,7 +14,7 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-namespace OpenDxp\Service\Cache;
+namespace OpenDxp\Bundle\AdminBundle\Service\Cache;
 
 use OpenDxp\Cache\Core\CoreCacheHandler;
 use OpenDxp\Event\SystemEvents;

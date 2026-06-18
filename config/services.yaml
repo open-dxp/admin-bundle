@@ -110,36 +110,28 @@ services:
         class: OpenDxp\Bundle\AdminBundle\Service\AdminUserContext
 
     OpenDxp\Bundle\AdminBundle\Service\Element\SessionService: ~
-
     OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService: ~
 
     OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper: ~
-
     OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator: ~
 
     OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPayloadMapper: ~
-
     OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPersistenceCoordinator: ~
-
-    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetPayloadMapper: ~
-
-    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetPersistenceCoordinator: ~
-
-    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService: ~
-
-    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService: ~
-
     OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService: ~
 
+    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetPayloadMapper: ~
+    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetPersistenceCoordinator: ~
+    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService: ~
+
     OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService: ~
-
     OpenDxp\Bundle\AdminBundle\Service\Grid\AssetGridColumnConfigResolver: ~
-
     OpenDxp\Bundle\AdminBundle\Service\Grid\DataObjectGridColumnConfigResolver: ~
-
     OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService: ~
-
     OpenDxp\Bundle\AdminBundle\Service\Grid\GridBatchService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Cache\OpenDxpCacheClearingService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Cache\SymfonyCacheClearingService: ~
 
     #
     # Factories
