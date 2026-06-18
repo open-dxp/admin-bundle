@@ -92,6 +92,7 @@ services:
     #
     
     OpenDxp\Bundle\AdminBundle\Service\Workflow\ActionsButtonService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Workflow\WorkflowElementResolver: ~
 
     #
     # Admin Config Services
@@ -132,6 +133,8 @@ services:
 
     OpenDxp\Bundle\AdminBundle\Service\Cache\OpenDxpCacheClearingService: ~
     OpenDxp\Bundle\AdminBundle\Service\Cache\SymfonyCacheClearingService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Translation\AdminSearchTermResolver: ~
 
     #
     # Factories
