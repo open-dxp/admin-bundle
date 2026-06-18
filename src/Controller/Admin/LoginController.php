@@ -24,6 +24,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Login\Deeplink\DeeplinkHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\Deeplink\DeeplinkPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\GenerateTwoFactorSetup\GenerateTwoFactorSetupHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\GenerateTwoFactorSetup\GenerateTwoFactorSetupPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Login\LoginCheck\LoginCheckPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\LostPassword\LostPasswordHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\LostPassword\LostPasswordPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetup\SaveTwoFactorSetupHandler;
@@ -140,12 +141,11 @@ class LoginController extends AdminAbstractController implements KernelControlle
      * Dummy route used to check authentication
      */
     #[Route('/login/login', name: 'opendxp_admin_login_check')]
-    public function loginCheckAction(
-        #[MapQueryParameter] ?string $perspective = null,
-    ): RedirectResponse {
+    public function loginCheckAction(LoginCheckPayload $payload): RedirectResponse
+    {
         $params = [];
-        if ($perspective !== null) {
-            $params['perspective'] = strip_tags($perspective);
+        if ($payload->perspective !== null) {
+            $params['perspective'] = $payload->perspective;
         }
 
         return new RedirectResponse($this->generateUrl('opendxp_admin_login', $params));
