@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\DeleteTranslation;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\TranslationPayload;
 use OpenDxp\Model\Translation;
 
 final class DeleteTranslationHandler

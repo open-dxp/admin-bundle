@@ -67,6 +67,7 @@ use OpenDxp\Model\Element\ElementInterface;
 use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -201,19 +202,49 @@ class DocumentController extends ElementControllerBase
     #[IsGranted(CorePermission::DocumentTypes->value)]
     #[Route('/doc-types', name: 'opendxp_admin_document_document_doctypes', methods: ['PUT', 'POST', 'DELETE'])]
     public function docTypesAction(
-        DocTypePayload $payload,
-        DeleteDocTypeHandler $delete,
-        UpdateDocTypeHandler $update,
-        CreateDocTypeHandler $create,
+        Request $request,
         #[MapQueryParameter] ?string $xaction = null,
-    ): JsonResponse
+    ): Response
     {
         return match ($xaction) {
-            'destroy' => $this->adminJson(ApiResponse::ok(['data' => $delete($payload)->data])),
-            'update'  => $this->adminJson(ApiResponse::ok(['data' => $update($payload)->data])),
-            'create'  => $this->adminJson(ApiResponse::ok(['data' => $create($payload)->data])),
+            'destroy' => $this->forward(self::class . '::docTypesDestroyAction', [], $request->query->all()),
+            'update'  => $this->forward(self::class . '::docTypesUpdateAction', [], $request->query->all()),
+            'create'  => $this->forward(self::class . '::docTypesCreateAction', [], $request->query->all()),
             default   => $this->adminJson(false),
         };
+    }
+
+    #[IsGranted(CorePermission::Documents->value)]
+    #[IsGranted(CorePermission::DocumentTypes->value)]
+    #[Route('/doc-types-destroy', name: 'opendxp_admin_document_document_doctypes_destroy', methods: ['PUT', 'POST', 'DELETE'])]
+    public function docTypesDestroyAction(
+        DocTypePayload $payload,
+        DeleteDocTypeHandler $delete,
+    ): JsonResponse
+    {
+        return $this->adminJson(ApiResponse::ok(['data' => $delete($payload)->data]));
+    }
+
+    #[IsGranted(CorePermission::Documents->value)]
+    #[IsGranted(CorePermission::DocumentTypes->value)]
+    #[Route('/doc-types-update', name: 'opendxp_admin_document_document_doctypes_update', methods: ['PUT', 'POST', 'DELETE'])]
+    public function docTypesUpdateAction(
+        DocTypePayload $payload,
+        UpdateDocTypeHandler $update,
+    ): JsonResponse
+    {
+        return $this->adminJson(ApiResponse::ok(['data' => $update($payload)->data]));
+    }
+
+    #[IsGranted(CorePermission::Documents->value)]
+    #[IsGranted(CorePermission::DocumentTypes->value)]
+    #[Route('/doc-types-create', name: 'opendxp_admin_document_document_doctypes_create', methods: ['PUT', 'POST', 'DELETE'])]
+    public function docTypesCreateAction(
+        DocTypePayload $payload,
+        CreateDocTypeHandler $create,
+    ): JsonResponse
+    {
+        return $this->adminJson(ApiResponse::ok(['data' => $create($payload)->data]));
     }
 
     #[IsGranted(CorePermission::Documents->value)]

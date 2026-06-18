@@ -126,20 +126,18 @@ class TranslationController extends AdminAbstractController
 
     #[Route('/translations', name: 'opendxp_admin_translation_translations', methods: ['POST'])]
     public function translationsAction(
+        Request $request,
         TranslationPayload $payload,
-        DeleteTranslationHandler $deleteTranslation,
-        UpdateTranslationHandler $updateTranslation,
-        CreateTranslationHandler $createTranslation,
         GetTranslationsHandler $getTranslations,
         #[MapQueryParameter] ?string $xaction = null,
-    ): JsonResponse {
+    ): Response {
         $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
 
         if ($payload->hasData) {
             return match ($xaction) {
-                'destroy' => $this->handleDestroyTranslation($deleteTranslation, $payload),
-                'update'  => $this->handleUpdateTranslation($updateTranslation, $payload),
-                'create'  => $this->handleCreateTranslation($createTranslation, $payload),
+                'destroy' => $this->forward(self::class . '::translationsDestroyAction', [], $request->query->all()),
+                'update'  => $this->forward(self::class . '::translationsUpdateAction', [], $request->query->all()),
+                'create'  => $this->forward(self::class . '::translationsCreateAction', [], $request->query->all()),
                 default   => throw new BadRequestHttpException(),
             };
         }
@@ -149,16 +147,26 @@ class TranslationController extends AdminAbstractController
         return $this->adminJson(ApiResponse::ok(['data' => $result->translations, 'total' => $result->total]));
     }
 
-    private function handleDestroyTranslation(DeleteTranslationHandler $handler, TranslationPayload $payload): JsonResponse
-    {
-        $handler($payload);
+    #[Route('/translations-destroy', name: 'opendxp_admin_translation_translations_destroy', methods: ['POST'])]
+    public function translationsDestroyAction(
+        TranslationPayload $payload,
+        DeleteTranslationHandler $deleteTranslation,
+    ): JsonResponse {
+        $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
+
+        $deleteTranslation($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
     }
 
-    private function handleUpdateTranslation(UpdateTranslationHandler $handler, TranslationPayload $payload): JsonResponse
-    {
-        $result = $handler($payload);
+    #[Route('/translations-update', name: 'opendxp_admin_translation_translations_update', methods: ['POST'])]
+    public function translationsUpdateAction(
+        TranslationPayload $payload,
+        UpdateTranslationHandler $updateTranslation,
+    ): JsonResponse {
+        $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
+
+        $result = $updateTranslation($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => [
             'key'              => $result->key,
@@ -169,9 +177,14 @@ class TranslationController extends AdminAbstractController
         ]]));
     }
 
-    private function handleCreateTranslation(CreateTranslationHandler $handler, TranslationPayload $payload): JsonResponse
-    {
-        $result = $handler($payload);
+    #[Route('/translations-create', name: 'opendxp_admin_translation_translations_create', methods: ['POST'])]
+    public function translationsCreateAction(
+        TranslationPayload $payload,
+        CreateTranslationHandler $createTranslation,
+    ): JsonResponse {
+        $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
+
+        $result = $createTranslation($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => [
             'key'              => $result->key,

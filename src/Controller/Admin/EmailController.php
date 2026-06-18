@@ -129,18 +129,16 @@ class EmailController extends AdminAbstractController
     #[IsGranted(CorePermission::Emails->value)]
     #[Route('/blocklist', name: 'opendxp_admin_email_blocklist', methods: ['POST'])]
     public function blocklistAction(
+        Request $request,
         BlocklistPayload $payload,
         GetBlocklistHandler $getBlocklist,
-        CreateBlocklistEntryHandler $createBlocklistEntry,
-        UpdateBlocklistEntryHandler $updateBlocklistEntry,
-        DeleteBlocklistEntryHandler $deleteBlocklistEntry,
         #[MapQueryParameter] ?string $xaction = null,
-    ): JsonResponse {
+    ): Response {
         if ($payload->hasData) {
             return match ($xaction) {
-                'destroy' => $this->destroyBlocklistEntry($deleteBlocklistEntry, $payload),
-                'update'  => $this->adminJson(ApiResponse::ok(['data' => $updateBlocklistEntry($payload)])),
-                'create'  => $this->adminJson(ApiResponse::ok(['data' => $createBlocklistEntry($payload)])),
+                'destroy' => $this->forward(self::class . '::blocklistDestroyAction', [], $request->query->all()),
+                'update'  => $this->forward(self::class . '::blocklistUpdateAction', [], $request->query->all()),
+                'create'  => $this->forward(self::class . '::blocklistCreateAction', [], $request->query->all()),
                 default   => throw new BadRequestHttpException(),
             };
         }
@@ -153,10 +151,32 @@ class EmailController extends AdminAbstractController
         ]));
     }
 
-    private function destroyBlocklistEntry(DeleteBlocklistEntryHandler $handler, BlocklistPayload $payload): JsonResponse
-    {
-        $handler($payload);
+    #[IsGranted(CorePermission::Emails->value)]
+    #[Route('/blocklist-destroy', name: 'opendxp_admin_email_blocklist_destroy', methods: ['POST'])]
+    public function blocklistDestroyAction(
+        BlocklistPayload $payload,
+        DeleteBlocklistEntryHandler $deleteBlocklistEntry,
+    ): JsonResponse {
+        $deleteBlocklistEntry($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
+    }
+
+    #[IsGranted(CorePermission::Emails->value)]
+    #[Route('/blocklist-update', name: 'opendxp_admin_email_blocklist_update', methods: ['POST'])]
+    public function blocklistUpdateAction(
+        BlocklistPayload $payload,
+        UpdateBlocklistEntryHandler $updateBlocklistEntry,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['data' => $updateBlocklistEntry($payload)]));
+    }
+
+    #[IsGranted(CorePermission::Emails->value)]
+    #[Route('/blocklist-create', name: 'opendxp_admin_email_blocklist_create', methods: ['POST'])]
+    public function blocklistCreateAction(
+        BlocklistPayload $payload,
+        CreateBlocklistEntryHandler $createBlocklistEntry,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['data' => $createBlocklistEntry($payload)]));
     }
 }

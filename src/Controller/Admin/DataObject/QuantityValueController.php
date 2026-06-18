@@ -35,6 +35,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\QuantityValueUni
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\UpdateQuantityValueUnit\UpdateQuantityValueUnitHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -79,18 +80,42 @@ class QuantityValueController extends AdminAbstractController
     #[Route('/unit-proxy', name: 'unitproxy', methods: ['POST', 'PUT'])]
     #[IsGranted(CorePermission::QuantityValueUnits->value)]
     public function unitProxyAction(
-        QuantityValueUnitPayload $payload,
-        CreateQuantityValueUnitHandler $createUnit,
-        UpdateQuantityValueUnitHandler $updateUnit,
-        DeleteQuantityValueUnitHandler $deleteUnit,
+        Request $request,
         #[MapQueryParameter] ?string $xaction = null,
-    ): JsonResponse {
+    ): Response {
         return match ($xaction) {
-            'destroy' => $this->adminJson(ApiResponse::ok(['data' => $deleteUnit($payload)->data])),
-            'update'  => $this->adminJson(ApiResponse::ok(['data' => $updateUnit($payload)->data])),
-            'create'  => $this->adminJson(ApiResponse::ok(['data' => $createUnit($payload)->data])),
+            'destroy' => $this->forward(self::class . '::unitProxyDestroyAction', [], $request->query->all()),
+            'update'  => $this->forward(self::class . '::unitProxyUpdateAction', [], $request->query->all()),
+            'create'  => $this->forward(self::class . '::unitProxyCreateAction', [], $request->query->all()),
             default   => throw new BadRequestHttpException(),
         };
+    }
+
+    #[Route('/unit-proxy-destroy', name: 'unitproxy_destroy', methods: ['POST', 'PUT'])]
+    #[IsGranted(CorePermission::QuantityValueUnits->value)]
+    public function unitProxyDestroyAction(
+        QuantityValueUnitPayload $payload,
+        DeleteQuantityValueUnitHandler $deleteUnit,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['data' => $deleteUnit($payload)->data]));
+    }
+
+    #[Route('/unit-proxy-update', name: 'unitproxy_update', methods: ['POST', 'PUT'])]
+    #[IsGranted(CorePermission::QuantityValueUnits->value)]
+    public function unitProxyUpdateAction(
+        QuantityValueUnitPayload $payload,
+        UpdateQuantityValueUnitHandler $updateUnit,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['data' => $updateUnit($payload)->data]));
+    }
+
+    #[Route('/unit-proxy-create', name: 'unitproxy_create', methods: ['POST', 'PUT'])]
+    #[IsGranted(CorePermission::QuantityValueUnits->value)]
+    public function unitProxyCreateAction(
+        QuantityValueUnitPayload $payload,
+        CreateQuantityValueUnitHandler $createUnit,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['data' => $createUnit($payload)->data]));
     }
 
     #[Route('/unit-list', name: 'unitlist', methods: ['GET'])]

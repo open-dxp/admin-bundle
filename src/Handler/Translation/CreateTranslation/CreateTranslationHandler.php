@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\CreateTranslation;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\Translation;
 use OpenDxp\Tool;
+use OpenDxp\Bundle\AdminBundle\Handler\Translation\TranslationPayload;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class CreateTranslationHandler

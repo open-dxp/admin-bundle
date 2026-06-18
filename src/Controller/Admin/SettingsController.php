@@ -115,19 +115,17 @@ class SettingsController extends AdminAbstractController
     #[IsGranted(CorePermission::AssetMetadata->value)]
     #[Route('/predefined-metadata', name: 'opendxp_admin_settings_metadata', methods: ['POST'])]
     public function metadataAction(
+        Request $request,
         PredefinedMetadataPayload $payload,
         GetPredefinedMetadataListHandler $getPredefinedMetadataList,
-        CreatePredefinedMetadataHandler $createPredefinedMetadata,
-        UpdatePredefinedMetadataHandler $updatePredefinedMetadata,
-        DeletePredefinedMetadataHandler $deletePredefinedMetadata,
         #[MapQueryParameter] ?string $xaction = null,
-    ): JsonResponse {
+    ): Response {
         if ($payload->hasData) {
             return match ($xaction) {
-                'destroy' => $this->destroyPredefinedMetadata($deletePredefinedMetadata, $payload),
-                'update' => $this->adminJson(ApiResponse::ok(['data' => $updatePredefinedMetadata($payload)->data])),
-                'create' => $this->adminJson(ApiResponse::ok(['data' => $createPredefinedMetadata($payload)->data])),
-                default => throw new BadRequestHttpException(),
+                'destroy' => $this->forward(self::class . '::metadataDestroyAction', [], $request->query->all()),
+                'update'  => $this->forward(self::class . '::metadataUpdateAction', [], $request->query->all()),
+                'create'  => $this->forward(self::class . '::metadataCreateAction', [], $request->query->all()),
+                default   => throw new BadRequestHttpException(),
             };
         }
 
@@ -136,11 +134,33 @@ class SettingsController extends AdminAbstractController
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
 
-    private function destroyPredefinedMetadata(DeletePredefinedMetadataHandler $handler, PredefinedMetadataPayload $payload): JsonResponse
-    {
-        $handler($payload);
+    #[IsGranted(CorePermission::AssetMetadata->value)]
+    #[Route('/predefined-metadata-destroy', name: 'opendxp_admin_settings_metadata_destroy', methods: ['POST'])]
+    public function metadataDestroyAction(
+        PredefinedMetadataPayload $payload,
+        DeletePredefinedMetadataHandler $deletePredefinedMetadata,
+    ): JsonResponse {
+        $deletePredefinedMetadata($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
+    }
+
+    #[IsGranted(CorePermission::AssetMetadata->value)]
+    #[Route('/predefined-metadata-update', name: 'opendxp_admin_settings_metadata_update', methods: ['POST'])]
+    public function metadataUpdateAction(
+        PredefinedMetadataPayload $payload,
+        UpdatePredefinedMetadataHandler $updatePredefinedMetadata,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['data' => $updatePredefinedMetadata($payload)->data]));
+    }
+
+    #[IsGranted(CorePermission::AssetMetadata->value)]
+    #[Route('/predefined-metadata-create', name: 'opendxp_admin_settings_metadata_create', methods: ['POST'])]
+    public function metadataCreateAction(
+        PredefinedMetadataPayload $payload,
+        CreatePredefinedMetadataHandler $createPredefinedMetadata,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['data' => $createPredefinedMetadata($payload)->data]));
     }
 
     #[Route('/get-predefined-metadata', name: 'opendxp_admin_settings_getpredefinedmetadata', methods: ['GET'])]
@@ -156,19 +176,17 @@ class SettingsController extends AdminAbstractController
     #[IsGranted(CorePermission::PredefinedProperties->value)]
     #[Route('/properties', name: 'opendxp_admin_settings_properties', methods: ['POST'])]
     public function propertiesAction(
+        Request $request,
         PredefinedPropertyPayload $payload,
         GetPredefinedPropertiesListHandler $getPredefinedPropertiesList,
-        CreatePredefinedPropertyHandler $createPredefinedProperty,
-        UpdatePredefinedPropertyHandler $updatePredefinedProperty,
-        DeletePredefinedPropertyHandler $deletePredefinedProperty,
         #[MapQueryParameter] ?string $xaction = null,
-    ): JsonResponse {
+    ): Response {
         if ($payload->hasData) {
             return match ($xaction) {
-                'destroy' => $this->destroyPredefinedProperty($payload, $deletePredefinedProperty),
-                'update' => $this->adminJson(ApiResponse::ok(['data' => $updatePredefinedProperty($payload)->data])),
-                'create' => $this->adminJson(ApiResponse::ok(['data' => $createPredefinedProperty($payload)->data])),
-                default => throw new BadRequestHttpException(),
+                'destroy' => $this->forward(self::class . '::propertiesDestroyAction', [], $request->query->all()),
+                'update'  => $this->forward(self::class . '::propertiesUpdateAction', [], $request->query->all()),
+                'create'  => $this->forward(self::class . '::propertiesCreateAction', [], $request->query->all()),
+                default   => throw new BadRequestHttpException(),
             };
         }
 
@@ -177,14 +195,33 @@ class SettingsController extends AdminAbstractController
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
 
-    private function destroyPredefinedProperty(
+    #[IsGranted(CorePermission::PredefinedProperties->value)]
+    #[Route('/properties-destroy', name: 'opendxp_admin_settings_properties_destroy', methods: ['POST'])]
+    public function propertiesDestroyAction(
         PredefinedPropertyPayload $payload,
-        DeletePredefinedPropertyHandler $handler,
+        DeletePredefinedPropertyHandler $deletePredefinedProperty,
     ): JsonResponse {
-
-        $handler($payload);
+        $deletePredefinedProperty($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
+    }
+
+    #[IsGranted(CorePermission::PredefinedProperties->value)]
+    #[Route('/properties-update', name: 'opendxp_admin_settings_properties_update', methods: ['POST'])]
+    public function propertiesUpdateAction(
+        PredefinedPropertyPayload $payload,
+        UpdatePredefinedPropertyHandler $updatePredefinedProperty,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['data' => $updatePredefinedProperty($payload)->data]));
+    }
+
+    #[IsGranted(CorePermission::PredefinedProperties->value)]
+    #[Route('/properties-create', name: 'opendxp_admin_settings_properties_create', methods: ['POST'])]
+    public function propertiesCreateAction(
+        PredefinedPropertyPayload $payload,
+        CreatePredefinedPropertyHandler $createPredefinedProperty,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['data' => $createPredefinedProperty($payload)->data]));
     }
 
     #[IsGranted(AdminPermission::SystemAppearance->value)]
@@ -305,19 +342,17 @@ class SettingsController extends AdminAbstractController
     #[IsGranted(CorePermission::WebsiteSettings->value)]
     #[Route('/website-settings', name: 'opendxp_admin_settings_websitesettings', methods: ['POST'])]
     public function websiteSettingsAction(
+        Request $request,
         WebsiteSettingPayload $payload,
         GetWebsiteSettingsListHandler $getWebsiteSettingsList,
-        CreateWebsiteSettingHandler $createWebsiteSetting,
-        UpdateWebsiteSettingHandler $updateWebsiteSetting,
-        DeleteWebsiteSettingHandler $deleteWebsiteSetting,
         #[MapQueryParameter] ?string $xaction = null,
-    ): JsonResponse {
+    ): Response {
         if ($payload->hasData) {
             return match ($xaction) {
-                'destroy' => $this->destroyWebsiteSetting($deleteWebsiteSetting, $payload),
-                'update' => $this->adminJson(ApiResponse::ok(['data' => $updateWebsiteSetting($payload)->data])),
-                'create' => $this->adminJson(ApiResponse::ok(['data' => $createWebsiteSetting($payload)->data])),
-                default => throw new BadRequestHttpException(),
+                'destroy' => $this->forward(self::class . '::websiteSettingsDestroyAction', [], $request->query->all()),
+                'update'  => $this->forward(self::class . '::websiteSettingsUpdateAction', [], $request->query->all()),
+                'create'  => $this->forward(self::class . '::websiteSettingsCreateAction', [], $request->query->all()),
+                default   => throw new BadRequestHttpException(),
             };
         }
 
@@ -326,11 +361,33 @@ class SettingsController extends AdminAbstractController
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
 
-    private function destroyWebsiteSetting(DeleteWebsiteSettingHandler $handler, WebsiteSettingPayload $payload): JsonResponse
-    {
-        $handler($payload);
+    #[IsGranted(CorePermission::WebsiteSettings->value)]
+    #[Route('/website-settings-destroy', name: 'opendxp_admin_settings_websitesettings_destroy', methods: ['POST'])]
+    public function websiteSettingsDestroyAction(
+        WebsiteSettingPayload $payload,
+        DeleteWebsiteSettingHandler $deleteWebsiteSetting,
+    ): JsonResponse {
+        $deleteWebsiteSetting($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
+    }
+
+    #[IsGranted(CorePermission::WebsiteSettings->value)]
+    #[Route('/website-settings-update', name: 'opendxp_admin_settings_websitesettings_update', methods: ['POST'])]
+    public function websiteSettingsUpdateAction(
+        WebsiteSettingPayload $payload,
+        UpdateWebsiteSettingHandler $updateWebsiteSetting,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['data' => $updateWebsiteSetting($payload)->data]));
+    }
+
+    #[IsGranted(CorePermission::WebsiteSettings->value)]
+    #[Route('/website-settings-create', name: 'opendxp_admin_settings_websitesettings_create', methods: ['POST'])]
+    public function websiteSettingsCreateAction(
+        WebsiteSettingPayload $payload,
+        CreateWebsiteSettingHandler $createWebsiteSetting,
+    ): JsonResponse {
+        return $this->adminJson(ApiResponse::ok(['data' => $createWebsiteSetting($payload)->data]));
     }
 
     #[Route('/get-available-algorithms', name: 'opendxp_admin_settings_getavailablealgorithms', methods: ['GET'])]

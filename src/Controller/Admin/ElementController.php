@@ -63,6 +63,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDependenciesPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\NoteListPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -131,15 +132,15 @@ class ElementController extends AdminAbstractController
     #[Route('/note-list', name: 'opendxp_admin_element_notelist', methods: ['POST'])]
     #[IsGranted(CorePermission::NotesEvents->value)]
     public function noteListAction(
+        Request $request,
         NoteListPayload $payload,
         GetNoteListHandler $getNoteList,
-        DeleteNoteHandler $deleteNote,
         #[MapQueryParameter] ?string $xaction = null,
-    ): JsonResponse {
+    ): Response {
         if ($payload->hasData) {
             return match ($xaction) {
-                'destroy' => $this->handleDeleteNote($deleteNote, $payload),
-                default => throw new BadRequestHttpException(),
+                'destroy' => $this->forward(self::class . '::noteListDestroyAction', [], $request->query->all()),
+                default   => throw new BadRequestHttpException(),
             };
         }
 
@@ -151,9 +152,13 @@ class ElementController extends AdminAbstractController
         ]));
     }
 
-    private function handleDeleteNote(DeleteNoteHandler $handler, NoteListPayload $payload): JsonResponse
-    {
-        $handler($payload);
+    #[Route('/note-list-destroy', name: 'opendxp_admin_element_notelist_destroy', methods: ['POST'])]
+    #[IsGranted(CorePermission::NotesEvents->value)]
+    public function noteListDestroyAction(
+        NoteListPayload $payload,
+        DeleteNoteHandler $deleteNote,
+    ): JsonResponse {
+        $deleteNote($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
     }

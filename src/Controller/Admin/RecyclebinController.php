@@ -31,6 +31,8 @@ use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -45,14 +47,14 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     #[IsGranted(CorePermission::Recyclebin->value)]
     #[Route('/recyclebin/list', name: 'opendxp_admin_recyclebin_list', methods: ['POST'])]
     public function listAction(
+        Request $request,
         RecyclebinPayload $payload,
         ListRecyclebinHandler $listRecyclebin,
-        DeleteRecyclebinItemHandler $deleteRecyclebinItem,
         #[MapQueryParameter] ?string $xaction = null,
-    ): JsonResponse {
+    ): Response {
         if ($payload->hasData) {
             return match ($xaction) {
-                'destroy' => $this->destroyRecyclebinItem($deleteRecyclebinItem, $payload),
+                'destroy' => $this->forward(self::class . '::listDestroyAction', [], $request->query->all()),
                 default   => throw new BadRequestHttpException(),
             };
         }
@@ -62,9 +64,13 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
 
-    private function destroyRecyclebinItem(DeleteRecyclebinItemHandler $handler, RecyclebinPayload $payload): JsonResponse
-    {
-        $handler($payload);
+    #[IsGranted(CorePermission::Recyclebin->value)]
+    #[Route('/recyclebin/list-destroy', name: 'opendxp_admin_recyclebin_list_destroy', methods: ['POST'])]
+    public function listDestroyAction(
+        RecyclebinPayload $payload,
+        DeleteRecyclebinItemHandler $deleteRecyclebinItem,
+    ): JsonResponse {
+        $deleteRecyclebinItem($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
     }
