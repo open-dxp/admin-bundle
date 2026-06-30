@@ -59,7 +59,7 @@ class QuantityValueController extends AdminAbstractController
         $result = $this->service->generateDefinitionJson();
         $response = new Response($result);
         $response->headers->set('Content-Type', 'application/json');
-        $response->headers->set('Content-Disposition', 'attachment;filename: "quantityvalue_unit_export.json"');
+        $response->headers->set('Content-Disposition', 'attachment; filename="quantityvalue_unit_export.json"');
 
         return $response;
     }

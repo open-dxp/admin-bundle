@@ -988,7 +988,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             fpassthru($stream);
         }, 200, [
             'Content-Type' => $asset->getMimeType(),
-            'Content-Disposition' => sprintf('attachment; filename: "%s"', $asset->getFilename()),
+            'Content-Disposition' => sprintf('attachment; filename="%s"', $asset->getFilename()),
             'Content-Length' => $asset->getFileSize(),
         ]);
     }
