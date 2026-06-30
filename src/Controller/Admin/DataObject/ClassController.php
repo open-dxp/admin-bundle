@@ -643,7 +643,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
         $response = new Response($json);
         $response->headers->set('Content-type', 'application/json');
-        $response->headers->set('Content-Disposition', 'attachment; filename: "class_' . $class->getName() . '_export.json"');
+        $response->headers->set('Content-Disposition', 'attachment; filename="class_' . $class->getName() . '_export.json"');
 
         return $response;
     }
@@ -661,7 +661,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
 
                 $response = new Response($json);
                 $response->headers->set('Content-type', 'application/json');
-                $response->headers->set('Content-Disposition', 'attachment; filename: "custom_definition_' . $name . '_export.json"');
+                $response->headers->set('Content-Disposition', 'attachment; filename="custom_definition_' . $name . '_export.json"');
 
                 return $response;
             }
