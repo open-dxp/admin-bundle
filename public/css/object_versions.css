@@ -16,38 +16,38 @@ body {
 	font-weight: normal;
 	font-family: Tahoma, Arial, Verdana;
 	font-size: 11px;
-	color: var(--color-black);
+	color: var(--color-opendxp-black);
 	margin: 0;
 	padding: 20px;
 }
 
 
 .preview {
-	border-left: 1px solid var(--color-neutral-g);
+	border-left: 1px solid var(--color-opendxp-neutral-g);
 	width: 100%;
 }
 
 .preview td, .preview th {
-	border-bottom: 1px solid var(--color-neutral-g);
-	border-right: 1px solid var(--color-neutral-g);
+	border-bottom: 1px solid var(--color-opendxp-neutral-g);
+	border-right: 1px solid var(--color-opendxp-neutral-g);
 	padding: 4px;
 }
 
 .preview th {
-	color:var(--color-white);
-	background: var(--color-neutral-d);
+	color:var(--color-opendxp-white);
+	background: var(--color-opendxp-neutral-d);
 }
 
 .preview .odd {
-	background: var(--color-neutral-i);
+	background: var(--color-opendxp-neutral-i);
 }
 
 .preview .modified {
-	background: var(--color-red-c);
+	background: var(--color-opendxp-red-c);
 }
 
 .preview .preview-metadata {
-	color: var(--color-neutral-f);
+	color: var(--color-opendxp-neutral-f);
 }
 
 .system {
