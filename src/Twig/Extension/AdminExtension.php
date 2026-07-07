@@ -135,7 +135,14 @@ class AdminExtension
     #[\Twig\Attribute\AsTwigFilter('opendxp_inline_icon')]
     public function inlineIcon(string $icon): string
     {
+        if (!is_file($icon)) {
+            return '<!-- Icon file not found: ' . htmlspecialchars($icon) . ' -->';
+        }
+
         $content = file_get_contents($icon);
+        if ($content === false) {
+            return '<!-- Failed to read icon file: ' . htmlspecialchars($icon) . ' -->';
+        }
 
         return sprintf(
             '<img src="data:%s;base64,%s" title="%s" data-imgpath="%s" />',

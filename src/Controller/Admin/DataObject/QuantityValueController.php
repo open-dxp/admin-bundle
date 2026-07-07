@@ -27,6 +27,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -46,6 +47,9 @@ class QuantityValueController extends AdminAbstractController
         $uploadFile = $request->files->get('Filedata');
 
         $json = file_get_contents($uploadFile->getPathname());
+        if ($json === false) {
+            throw new BadRequestHttpException('Failed to read file');
+        }
         $success = $this->service->importDefinitionFromJson($json);
         $response = $this->adminJson(['success' => $success]);
         $response->headers->set('Content-Type', 'text/html');
@@ -126,10 +130,14 @@ class QuantityValueController extends AdminAbstractController
         $this->checkPermission('quantityValueUnits');
 
         if ($request->request->has('data')) {
+            $data = json_decode($request->request->get('data'), true);
+            if (!is_array($data)) {
+                throw new BadRequestHttpException('Invalid data format');
+            }
+            $id = $data['id'];
+            $unit = Unit::getById($id);
+
             if ($request->query->get('xaction') === 'destroy') {
-                $data = json_decode($request->request->get('data'), true);
-                $id = $data['id'];
-                $unit = \OpenDxp\Model\DataObject\QuantityValue\Unit::getById($id);
                 if (!empty($unit)) {
                     $unit->delete();
 
@@ -139,8 +147,6 @@ class QuantityValueController extends AdminAbstractController
                 throw new Exception('Unit with id ' . $id . ' not found.');
             }
             if ($request->query->get('xaction') === 'update') {
-                $data = json_decode($request->request->get('data'), true);
-                $unit = Unit::getById($data['id']);
                 if (!empty($unit)) {
                     if (($data['baseunit'] ?? null) == -1) {
                         $data['baseunit'] = null;
@@ -151,15 +157,14 @@ class QuantityValueController extends AdminAbstractController
                     return $this->adminJson(['data' => $unit->getObjectVars(), 'success' => true]);
                 }
 
-                throw new Exception('Unit with id ' . $data['id'] . ' not found.');
+                throw new Exception('Unit with id ' . $id . ' not found.');
             }
             if ($request->query->get('xaction') === 'create') {
-                $data = json_decode($request->request->get('data'), true);
                 if (isset($data['baseunit']) && $data['baseunit'] === -1) {
                     $data['baseunit'] = null;
                 }
-                $id = $data['id'];
-                if (Unit::getById($id)) {
+
+                if ($unit instanceof Unit) {
                     throw new Exception('unit with ID [' . $id . '] already exists');
                 }
                 if (mb_strlen($id) > 50) {
