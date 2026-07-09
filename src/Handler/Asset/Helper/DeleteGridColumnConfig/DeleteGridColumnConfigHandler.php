@@ -17,11 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
 use OpenDxp\Model\User;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class DeleteGridColumnConfigHandler
@@ -36,7 +36,7 @@ final class DeleteGridColumnConfigHandler
         $adminUser = $this->userContext->getAdminUser();
         $gridConfig = GridConfig::getById($gridConfigId);
         if (!$gridConfig) {
-            throw new NotFoundHttpException('Grid config not found: ' . $gridConfigId);
+            throw new AdminOperationFailedException('Grid config not found: ' . $gridConfigId);
         }
 
         if ($gridConfig->getOwnerId() !== $adminUser->getId()) {

@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\Element;
 
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Document;
@@ -25,7 +26,10 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 final class SessionService
 {
-    public function __construct(private readonly RequestStack $requestStack) {}
+    public function __construct(
+        private readonly RequestStack $requestStack,
+        private readonly AdminUserContextInterface $userContext,
+    ) {}
 
     public function saveDocument(Document $doc, bool $useForSave = false): void
     {
@@ -60,7 +64,7 @@ final class SessionService
             return null;
         }
 
-        $latestVersion = $doc->getLatestVersion();
+        $latestVersion = $doc->getLatestVersion($this->userContext->getAdminUser()?->getId());
         if ($latestVersion && ($latestDoc = $latestVersion->loadData()) instanceof Document\PageSnippet) {
             return $latestDoc;
         }

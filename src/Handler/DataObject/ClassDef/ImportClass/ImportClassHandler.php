@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ImportClass;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject;
-use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ImportClassHandler
@@ -30,9 +30,8 @@ final class ImportClassHandler
             throw new NotFoundHttpException('Class not found');
         }
 
-        $success = DataObject\ClassDefinition\Service::importClassDefinitionFromJson($class, $payload->json, false, true);
-        if (!$success) {
-            throw new RuntimeException('Failed to import class definition');
+        if (!DataObject\ClassDefinition\Service::importClassDefinitionFromJson($class, $payload->json, false, true)) {
+            throw new AdminOperationFailedException('Failed to import class definition');
         }
     }
 }

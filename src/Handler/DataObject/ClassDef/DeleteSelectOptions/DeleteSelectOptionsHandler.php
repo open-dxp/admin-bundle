@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DeleteSelectOptions;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class DeleteSelectOptionsHandler
 {
@@ -26,7 +26,7 @@ final class DeleteSelectOptionsHandler
     {
         $selectOptions = DataObject\SelectOptions\Config::getById($payload->id);
         if (!$selectOptions instanceof DataObject\SelectOptions\Config) {
-            throw new NotFoundHttpException('Not Found', code: 1677133720896);
+            throw new AdminOperationFailedException('Not Found');
         }
 
         $selectOptions->delete();

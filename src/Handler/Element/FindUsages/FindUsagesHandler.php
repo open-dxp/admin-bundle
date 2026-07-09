@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element\FindUsages;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\Element;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class FindUsagesHandler
 {
@@ -19,7 +19,7 @@ final class FindUsagesHandler
         }
 
         if (!$element instanceof Element\ElementInterface) {
-            throw new NotFoundHttpException('Element not found');
+            throw new AdminOperationFailedException('Element not found');
         }
 
         $total = $element->getDependencies()->getRequiredByTotalCount();

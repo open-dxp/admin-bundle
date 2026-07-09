@@ -17,11 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAsset;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAsset\DeleteAssetPayload;
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class DeleteAssetHandler
@@ -59,7 +59,7 @@ final class DeleteAssetHandler
         $asset = Asset::getById($id);
         if ($asset && $asset->isAllowed('delete')) {
             if ($asset->isLocked()) {
-                throw new BadRequestHttpException('prevented deleting asset, because it is locked: ID: ' . $asset->getId());
+                throw new AdminOperationFailedException('prevented deleting asset, because it is locked: ID: ' . $asset->getId());
             }
 
             $asset->delete();

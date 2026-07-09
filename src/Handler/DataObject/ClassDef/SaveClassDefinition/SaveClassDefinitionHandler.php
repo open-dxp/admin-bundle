@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveClassDefinition;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -69,26 +70,30 @@ final class SaveClassDefinitionHandler
 
         $class->setValues($values);
 
-        $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($configuration, true);
-        $class->setLayoutDefinitions($layout);
-        $class->setUserModification($userId);
-        $class->setModificationDate(time());
+        try {
+            $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($configuration, true);
+            $class->setLayoutDefinitions($layout);
+            $class->setUserModification($userId);
+            $class->setModificationDate(time());
 
-        $propertyVisibility = [];
-        foreach ($values as $key => $value) {
-            if (false !== stripos($key, 'propertyVisibility')) {
-                if (preg_match("/\.grid\./i", $key)) {
-                    $propertyVisibility['grid'][preg_replace("/propertyVisibility\.grid\./i", '', $key)] = (bool) $value;
-                } elseif (preg_match("/\.search\./i", $key)) {
-                    $propertyVisibility['search'][preg_replace("/propertyVisibility\.search\./i", '', $key)] = (bool) $value;
+            $propertyVisibility = [];
+            foreach ($values as $key => $value) {
+                if (false !== stripos($key, 'propertyVisibility')) {
+                    if (preg_match("/\.grid\./i", $key)) {
+                        $propertyVisibility['grid'][preg_replace("/propertyVisibility\.grid\./i", '', $key)] = (bool) $value;
+                    } elseif (preg_match("/\.search\./i", $key)) {
+                        $propertyVisibility['search'][preg_replace("/propertyVisibility\.search\./i", '', $key)] = (bool) $value;
+                    }
                 }
             }
-        }
-        if (!empty($propertyVisibility)) {
-            $class->setPropertyVisibility($propertyVisibility);
-        }
+            if (!empty($propertyVisibility)) {
+                $class->setPropertyVisibility($propertyVisibility);
+            }
 
-        $class->save();
+            $class->save();
+        } catch (\Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
 
         $class->setFieldDefinitions([]);
 

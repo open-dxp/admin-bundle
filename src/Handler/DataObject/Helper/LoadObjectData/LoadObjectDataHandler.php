@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\LoadObjectData;
 
-use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\GridData;
 use OpenDxp\Model\DataObject;
 
@@ -26,7 +26,7 @@ final class LoadObjectDataHandler
     {
         $object = DataObject::getById($payload->id);
         if (!$object instanceof DataObject) {
-            throw new DataObjectNotFoundException($payload->id);
+            throw new AdminOperationFailedException(sprintf('DataObject with id %d not found', $payload->id));
         }
 
         return GridData\DataObject::getData($object, $payload->fields);

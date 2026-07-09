@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SaveCustomLayout;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SaveCustomLayout\SaveCustomLayoutPayload;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Exception\ConfigWriteException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class SaveCustomLayoutHandler
@@ -36,7 +36,7 @@ final class SaveCustomLayoutHandler
 
         $modificationDate = (int) $values['modificationDate'];
         if ($modificationDate < $customLayout->getModificationDate()) {
-            throw new BadRequestHttpException('custom_layout_changed');
+            throw new AdminOperationFailedException('custom_layout_changed');
         }
 
         $configuration['datatype'] = 'layout';

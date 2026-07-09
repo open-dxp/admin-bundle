@@ -16,13 +16,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRoot;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Factory\ElementServiceFactory;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetLanguageTreeRootHandler
 {
@@ -37,7 +37,7 @@ final class GetLanguageTreeRootHandler
         $document = Document::getById($payload->id);
 
         if (!$document) {
-            throw new NotFoundHttpException('Document not found');
+            throw new AdminOperationFailedException();
         }
 
         $service = $this->serviceFactory->createDocumentService();

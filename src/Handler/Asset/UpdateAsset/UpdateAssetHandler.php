@@ -17,13 +17,12 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\UpdateAsset;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\UpdateAsset\UpdateAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Logger;
 use OpenDxp\Model\Asset;
 use RuntimeException;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class UpdateAssetHandler
@@ -80,7 +79,7 @@ final class UpdateAssetHandler
 
             $msg = 'prevented moving asset, asset with same path+key already exists at target location or the asset is locked. ID: ' . $asset->getId();
             Logger::debug($msg);
-            throw new BadRequestHttpException($msg);
+            throw new AdminOperationFailedException($msg);
         }
 
         if ($asset->isAllowed('rename') && isset($updateData['filename'])) {
@@ -91,6 +90,6 @@ final class UpdateAssetHandler
         }
 
         Logger::debug('prevented update asset because of missing permissions');
-        throw new AccessDeniedHttpException('prevented update asset because of missing permissions');
+        throw new AdminOperationFailedException('prevented update asset because of missing permissions');
     }
 }

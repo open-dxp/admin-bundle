@@ -16,9 +16,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\DeleteDocument;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Logger;
 use OpenDxp\Model\Document;
-use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -63,7 +63,7 @@ final class DeleteDocumentHandler
         }
 
         if ($document->isLocked()) {
-            throw new RuntimeException('Prevented deleting document, because it is locked: ID: ' . $document->getId());
+            throw new AdminOperationFailedException('Prevented deleting document, because it is locked: ID: ' . $document->getId());
         }
 
         $document->delete();

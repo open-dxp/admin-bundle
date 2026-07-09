@@ -70,7 +70,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProp
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProperty\UpdatePropertyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -120,13 +119,7 @@ class ClassificationstoreController extends AdminAbstractController
     #[Route('/create-group', name: 'creategroup', methods: ['POST'])]
     public function createGroupAction(CreateGroupPayload $payload, CreateGroupHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        if ($result->alreadyExists) {
-            throw new BadRequestHttpException('classificationstore_error_group_exists_msg');
-        }
-
-        return $this->adminJson(ApiResponse::ok(['id' => $result->name]));
+        return $this->adminJson(ApiResponse::ok(['id' => $handler($payload)->name]));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
@@ -156,10 +149,6 @@ class ClassificationstoreController extends AdminAbstractController
     #[Route('/collections', name: 'collections', methods: ['POST', 'PUT'])]
     public function collectionsAction(UpdateCollectionPayload $payload, UpdateCollectionHandler $handler): JsonResponse
     {
-        if (!$payload->hasData) {
-            throw new BadRequestHttpException();
-        }
-
         return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->item]));
     }
 
@@ -176,10 +165,6 @@ class ClassificationstoreController extends AdminAbstractController
     #[Route('/groups', name: 'groupsaction', methods: ['POST', 'PUT'])]
     public function groupsAction(UpdateGroupPayload $payload, UpdateGroupHandler $handler): JsonResponse
     {
-        if (!$payload->hasData) {
-            throw new BadRequestHttpException();
-        }
-
         return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->item]));
     }
 
@@ -196,10 +181,6 @@ class ClassificationstoreController extends AdminAbstractController
     #[Route('/collection-relations', name: 'collectionrelations', methods: ['POST', 'PUT'])]
     public function collectionRelationsAction(SaveCollectionRelationsPayload $payload, SaveCollectionRelationsHandler $handler): JsonResponse
     {
-        if (!$payload->hasData) {
-            throw new BadRequestHttpException();
-        }
-
         return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
@@ -230,10 +211,6 @@ class ClassificationstoreController extends AdminAbstractController
     #[Route('/relations', name: 'relations', methods: ['POST', 'PUT'])]
     public function relationsAction(SaveRelationPayload $payload, SaveRelationHandler $handler): JsonResponse
     {
-        if (!$payload->hasData) {
-            throw new BadRequestHttpException();
-        }
-
         return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
@@ -264,10 +241,6 @@ class ClassificationstoreController extends AdminAbstractController
     #[Route('/properties', name: 'properties', methods: ['POST', 'PUT'])]
     public function propertiesAction(UpdatePropertyPayload $payload, UpdatePropertyHandler $handler): JsonResponse
     {
-        if (!$payload->hasData) {
-            throw new BadRequestHttpException();
-        }
-
         return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->item]));
     }
 

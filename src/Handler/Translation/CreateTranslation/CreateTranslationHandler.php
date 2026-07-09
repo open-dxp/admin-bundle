@@ -17,11 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\CreateTranslation;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\Translation;
 use OpenDxp\Tool;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\TranslationPayload;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class CreateTranslationHandler
 {
@@ -35,7 +35,7 @@ final class CreateTranslationHandler
             ? Tool\Admin::getLanguages()
             : $this->userContext->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations();
         if (Translation::getByKey($data['key'], $payload->domain)) {
-            throw new BadRequestHttpException('identifier_already_exists');
+            throw new AdminOperationFailedException('identifier_already_exists');
         }
 
         $t = new Translation();

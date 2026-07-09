@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\UpdateObjectKey;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\UpdateObjectKey\UpdateObjectKeyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService;
 use OpenDxp\Model\DataObject;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class UpdateObjectKeyHandler
 {
@@ -36,7 +36,7 @@ final class UpdateObjectKeyHandler
         $object = DataObject\Concrete::getById($id);
 
         if (!$object) {
-            throw new NotFoundHttpException('No Object found for given id.');
+            throw new AdminOperationFailedException('No Object found for given id.');
         }
 
         return new UpdateObjectKeyResult(

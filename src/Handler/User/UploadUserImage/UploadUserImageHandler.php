@@ -34,20 +34,22 @@ final class UploadUserImageHandler
     public function __invoke(UploadUserImagePayload $payload): void
     {
         $adminUser = $this->userContext->getAdminUser();
-        $targetUserId = $payload->targetUserId ?? (int) $adminUser?->getId();
+        $currentUserId = $adminUser?->getId();
+
+        // matches the old getUserId() helper: a differing target id requires the 'users' permission
+        if ($payload->targetUserId !== null && $payload->targetUserId !== $currentUserId && !$adminUser?->isAllowed('users')) {
+            throw new AccessDeniedHttpException();
+        }
+
+        $targetUserId = $payload->targetUserId ?? (int) $currentUserId;
 
         $userObj = User::getById($targetUserId);
         if (!$userObj) {
             throw new NotFoundHttpException('User not found');
         }
 
-        if (!$adminUser?->isAdmin()) {
-            if ($userObj->isAdmin()) {
-                throw new AccessDeniedHttpException('Only admin users are allowed to modify admin users');
-            }
-            if ($adminUser?->getId() !== $userObj->getId()) {
-                throw new AccessDeniedHttpException('Only admin users are allowed to modify users other than themselves');
-            }
+        if ($userObj->isAdmin() && !$adminUser?->isAdmin()) {
+            throw new AccessDeniedHttpException('Only admin users are allowed to modify admin users');
         }
 
         $assetType = Asset::getTypeFromMimeMapping($payload->avatarFile->getMimeType(), $payload->avatarFile->getFileName());

@@ -38,7 +38,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * @internal
  */
-#[IsGranted(CorePermission::Thumbnails->value)]
 class VideoThumbnailController extends AdminAbstractController
 {
     #[Route('/settings/video-thumbnail-adapter-check', name: 'opendxp_admin_settings_videothumbnailadaptercheck', methods: ['GET'])]
@@ -55,6 +54,7 @@ class VideoThumbnailController extends AdminAbstractController
         return new Response($content);
     }
 
+    #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/video-thumbnail-tree', name: 'opendxp_admin_settings_videothumbnailtree', methods: ['GET', 'POST'])]
     public function videoThumbnailTreeAction(GetVideoThumbnailTreeHandler $getVideoThumbnailTree): JsonResponse
     {
@@ -71,6 +71,7 @@ class VideoThumbnailController extends AdminAbstractController
         return $this->adminJson($result->thumbnails);
     }
 
+    #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/video-thumbnail-add', name: 'opendxp_admin_settings_videothumbnailadd', methods: ['POST'])]
     public function videoThumbnailAddAction(AddVideoThumbnailPayload $payload, AddVideoThumbnailHandler $addVideoThumbnail): JsonResponse
     {
@@ -79,6 +80,7 @@ class VideoThumbnailController extends AdminAbstractController
         return $this->adminJson(ApiResponse::fromBool($result->created, ['id' => $result->id]));
     }
 
+    #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/video-thumbnail-delete', name: 'opendxp_admin_settings_videothumbnaildelete', methods: ['DELETE'])]
     public function videoThumbnailDeleteAction(DeleteVideoThumbnailPayload $payload, DeleteVideoThumbnailHandler $deleteVideoThumbnail): JsonResponse
     {
@@ -87,6 +89,7 @@ class VideoThumbnailController extends AdminAbstractController
         return $this->adminJson(ApiResponse::ok());
     }
 
+    #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/video-thumbnail-get', name: 'opendxp_admin_settings_videothumbnailget', methods: ['GET'])]
     public function videoThumbnailGetAction(
         #[MapQueryParameter] string $name,
@@ -97,6 +100,7 @@ class VideoThumbnailController extends AdminAbstractController
         return $this->adminJson($result->data);
     }
 
+    #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/video-thumbnail-update', name: 'opendxp_admin_settings_videothumbnailupdate', methods: ['PUT'])]
     public function videoThumbnailUpdateAction(UpdateVideoThumbnailPayload $payload, UpdateVideoThumbnailHandler $updateVideoThumbnail): JsonResponse
     {

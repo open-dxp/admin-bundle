@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZip;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,8 +32,11 @@ final readonly class ImportZipPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
-        /** @var UploadedFile $file */
+        /** @var ?UploadedFile $file */
         $file = $request->files->get('Filedata');
+        if (!$file instanceof UploadedFile || !is_file($file->getPathname())) {
+            throw new AdminOperationFailedException('Something went wrong, please check upload_max_filesize and post_max_size in your php.ini as well as the write permissions on the file system');
+        }
 
         return new static(
             parentId:         $request->query->getInt('parentId'),

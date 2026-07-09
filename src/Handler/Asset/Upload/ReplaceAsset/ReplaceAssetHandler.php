@@ -18,11 +18,11 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ReplaceAsset;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ReplaceAsset\ReplaceAssetPayload;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Mime\MimeTypes;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -45,7 +45,7 @@ final class ReplaceAssetHandler
         $newType = Asset::getTypeFromMimeMapping($mimetype, $newFilename);
 
         if ($newType !== $asset->getType()) {
-            throw new BadRequestHttpException(sprintf(
+            throw new AdminOperationFailedException(sprintf(
                 $this->translator->trans('asset_type_change_not_allowed', [], 'admin'),
                 $newType,
                 $asset->getType(),

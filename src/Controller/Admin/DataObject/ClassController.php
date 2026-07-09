@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\AddClass\AddClassHandler;
@@ -135,18 +136,13 @@ class ClassController extends AdminAbstractController
     }
 
     #[IsGranted(CorePermission::Classes->value)]
+    #[AsHtmlContentTypeResponse]
     #[Route('/import-class', name: 'importclass', methods: ['POST', 'PUT'])]
     public function importClassAction(ImportClassPayload $payload, ImportClassHandler $handler): Response
     {
         $handler($payload);
 
-        $response = $this->adminJson(ApiResponse::ok());
-
-        // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
-        // Ext.form.Action.Submit and mark the submission as failed
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[IsGranted(CorePermission::Classes->value)]
@@ -174,6 +170,7 @@ class ClassController extends AdminAbstractController
      * Add option to export/import all class definitions/brick definitions etc. at once
      */
     #[IsGranted(CorePermission::Classes->value)]
+    #[AsHtmlContentTypeResponse]
     #[Route('/bulk-import', name: 'bulkimport', methods: ['POST'])]
     public function bulkImportAction(BulkImportPayload $payload, BulkImportHandler $handler, Request $request): JsonResponse
     {
@@ -183,10 +180,7 @@ class ClassController extends AdminAbstractController
             $session->set('class_bulk_import_file', $result->tmpFile);
         }, 'opendxp_objects');
 
-        $response = $this->adminJson(ApiResponse::ok(['data' => $result->items]));
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->adminJson(ApiResponse::ok(['data' => $result->items]));
     }
 
     /**

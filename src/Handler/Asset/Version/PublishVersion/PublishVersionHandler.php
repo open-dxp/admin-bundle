@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersion;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetVersionNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\AssetResult;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersion\PublishVersionPayload;
@@ -49,7 +50,12 @@ final class PublishVersionHandler
         }
 
         $asset->setUserModification($userId);
-        $asset->save();
+
+        try {
+            $asset->save();
+        } catch (\Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
 
         return new AssetResult($asset);
     }

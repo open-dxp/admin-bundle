@@ -17,8 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
+use Exception;
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\CheckAssetExists\CheckAssetExistsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\CheckAssetExists\CheckAssetExistsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles\ImportZipFilesPayload;
@@ -32,7 +35,6 @@ use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -50,35 +52,37 @@ class AssetUploadController extends AdminAbstractController
     #[Route('/add-asset', name: 'opendxp_admin_asset_addasset', methods: ['POST'])]
     public function addAssetAction(Request $request): JsonResponse
     {
-        $res = $this->assetUploadService->addAsset($request);
-
-        if ($res['success']) {
-            return $this->adminJson(ApiResponse::ok([
-                'asset' => [
-                    'id' => $res['asset']->getId(),
-                    'path' => $res['asset']->getFullPath(),
-                    'type' => $res['asset']->getType(),
-                ],
-            ]));
+        try {
+            $res = $this->assetUploadService->addAsset($request);
+        } catch (Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
         }
 
-        throw new BadRequestHttpException();
+        return $this->adminJson(ApiResponse::ok([
+            'asset' => [
+                'id' => $res['asset']->getId(),
+                'path' => $res['asset']->getFullPath(),
+                'type' => $res['asset']->getType(),
+            ],
+        ]));
     }
 
+    #[AsHtmlContentTypeResponse]
     #[Route('/add-asset-compatibility', name: 'opendxp_admin_asset_addassetcompatibility', methods: ['POST'])]
     public function addAssetCompatibilityAction(Request $request): JsonResponse
     {
-        $res = $this->assetUploadService->addAsset($request);
+        try {
+            $res = $this->assetUploadService->addAsset($request);
+        } catch (Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
 
-        $response = $this->adminJson(ApiResponse::fromBool($res['success'], [
+        return $this->adminJson(ApiResponse::fromBool($res['success'], [
             'msg' => $res['success'] ? 'Success' : 'Error',
             'id' => $res['asset'] ? $res['asset']->getId() : null,
             'fullpath' => $res['asset'] ? $res['asset']->getRealFullPath() : null,
             'type' => $res['asset'] ? $res['asset']->getType() : null,
         ]));
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
     }
 
     #[Route('/exists', name: 'opendxp_admin_asset_exists', methods: ['GET'])]
@@ -91,27 +95,20 @@ class AssetUploadController extends AdminAbstractController
         ]);
     }
 
+    #[AsHtmlContentTypeResponse]
     #[Route('/replace-asset', name: 'opendxp_admin_asset_replaceasset', methods: ['POST', 'PUT'])]
     public function replaceAssetAction(ReplaceAssetPayload $payload, ReplaceAssetHandler $replaceAsset): JsonResponse
     {
         $asset = $replaceAsset($payload);
 
-        $response = $this->adminJson(ApiResponse::ok(['id' => $asset->getId(), 'path' => $asset->getRealFullPath()]));
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->adminJson(ApiResponse::ok(['id' => $asset->getId(), 'path' => $asset->getRealFullPath()]));
     }
 
     #[Route('/import-zip', name: 'opendxp_admin_asset_importzip', methods: ['POST'])]
     public function importZipAction(
         ImportZipPayload $payload,
         ImportZipHandler $importZip,
-        Request $request,
     ): Response {
-        if (!$request->files->has('Filedata')) {
-            throw new BadRequestHttpException('Something went wrong, please check upload_max_filesize and post_max_size in your php.ini as well as the write permissions on the file system');
-        }
-
         $importResult = $importZip($payload);
 
         return new Response($this->encodeJson(ApiResponse::ok(['jobs' => $importResult->jobs, 'jobId' => $importResult->jobId])));

@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\User\AddUser\AddUserHandler;
@@ -137,7 +138,7 @@ class UserController extends AdminAbstractController
         ]);
     }
 
-    #[IsGranted(CorePermission::Users->value)]
+    #[AsHtmlContentTypeResponse]
     #[Route('/user/upload-image', name: 'opendxp_admin_user_uploadimage', methods: ['POST'])]
     public function uploadImageAction(
         UploadUserImageHandler $uploadUserImage,
@@ -145,12 +146,7 @@ class UserController extends AdminAbstractController
     ): JsonResponse {
         $uploadUserImage($payload);
 
-        // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
-        // Ext.form.Action.Submit and mark the submission as failed
-        $response = $this->adminJson(ApiResponse::ok());
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/user/delete-image', name: 'opendxp_admin_user_deleteimage', methods: ['DELETE'])]

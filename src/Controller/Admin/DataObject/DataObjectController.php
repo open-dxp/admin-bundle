@@ -59,7 +59,6 @@ use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -192,10 +191,6 @@ class DataObjectController extends ElementControllerBase
         DeleteDataObjectPayload $payload,
         DeleteDataObjectHandler $handler,
     ): JsonResponse {
-        if ($payload->type !== 'children' && !$payload->id) {
-            throw new NotFoundHttpException();
-        }
-
         $result = $handler($payload);
 
         if ($payload->type === 'children') {
@@ -221,11 +216,7 @@ class DataObjectController extends ElementControllerBase
         UpdateDataObjectPayload $payload,
         UpdateDataObjectHandler $handler,
     ): JsonResponse {
-        try {
-            $result = $handler($payload);
-        } catch (\Throwable $e) {
-            return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-        }
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
     }

@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\DeleteDataObject;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject;
-use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 final class DeleteDataObjectHandler
@@ -28,6 +28,11 @@ final class DeleteDataObjectHandler
         $type = $payload->type;
         $id = $payload->id;
         $amount = $payload->amount;
+
+        if ($type !== 'children' && !$id) {
+            throw new AdminOperationFailedException();
+        }
+
         if ($type === 'children') {
             $parentObject = DataObject::getById($id);
 
@@ -56,7 +61,7 @@ final class DeleteDataObjectHandler
             }
 
             if ($object->isLocked()) {
-                throw new RuntimeException('prevented deleting object, because it is locked: ID: ' . $object->getId());
+                throw new AdminOperationFailedException('prevented deleting object, because it is locked: ID: ' . $object->getId());
             }
 
             $object->delete();

@@ -17,13 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfig;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Security\SecurityHelper;
 use OpenDxp\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
@@ -61,13 +61,21 @@ final class SaveDataObjectGridColumnConfigHandler
         }
 
         if ($gridConfig && $gridConfig->getOwnerId() !== $adminUser->getId() && !$adminUser->isAdmin()) {
-            throw new BadRequestHttpException("don't mess around with somebody elses configuration");
+            throw new AdminOperationFailedException("don't mess around with somebody elses configuration");
         }
 
-        $this->gridColumnConfigService->updateGridConfigShares($gridConfig, $metadata ?? [], $adminUser, adminCanEditAll: true);
+        try {
+            $this->gridColumnConfigService->updateGridConfigShares($gridConfig, $metadata ?? [], $adminUser, adminCanEditAll: true);
+        } catch (\Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
 
         if (!empty($metadata['setAsFavourite']) && $adminUser->isAdmin()) {
-            $this->gridColumnConfigService->updateGridConfigFavourites($gridConfig, $metadata, $adminUser, $payload->objectId);
+            try {
+                $this->gridColumnConfigService->updateGridConfigFavourites($gridConfig, $metadata, $adminUser, $payload->objectId);
+            } catch (\Exception $e) {
+                throw new AdminOperationFailedException($e->getMessage());
+            }
         }
 
         if (!$gridConfig) {

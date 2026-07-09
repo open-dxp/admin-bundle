@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\AddAdminTranslationKeys\AddAdminTranslationKeysHandler;
@@ -57,6 +58,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/translation')]
 class TranslationController extends AdminAbstractController
 {
+    #[AsHtmlContentTypeResponse]
     #[Route('/import', name: 'opendxp_admin_translation_import', methods: ['POST'])]
     public function importAction(
         ImportTranslationsHandler $importTranslations,
@@ -71,12 +73,7 @@ class TranslationController extends AdminAbstractController
             $extra['delta'] = base64_encode(json_encode($result->delta));
         }
 
-        $response = $this->adminJson(ApiResponse::ok($extra));
-        // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
-        // Ext.form.Action.Submit and mark the submission as failed
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->adminJson(ApiResponse::ok($extra));
     }
 
     #[Route('/upload-import', name: 'opendxp_admin_translation_uploadimportfile', methods: ['POST'])]

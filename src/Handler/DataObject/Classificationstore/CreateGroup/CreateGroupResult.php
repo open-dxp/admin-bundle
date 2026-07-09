@@ -21,6 +21,5 @@ final readonly class CreateGroupResult
 {
     public function __construct(
         public string $name,
-        public bool $alreadyExists,
     ) {}
 }

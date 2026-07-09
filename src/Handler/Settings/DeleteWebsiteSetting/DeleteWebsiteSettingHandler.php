@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteWebsiteSetting;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\WebsiteSettingPayload;
 use OpenDxp\Model\WebsiteSetting;
 
@@ -27,7 +28,7 @@ final class DeleteWebsiteSettingHandler
         $setting = WebsiteSetting::getById((int) $payload->data['id']);
 
         if (!$setting instanceof WebsiteSetting) {
-            return;
+            throw new AdminOperationFailedException('Website setting not found');
         }
 
         $setting->delete();

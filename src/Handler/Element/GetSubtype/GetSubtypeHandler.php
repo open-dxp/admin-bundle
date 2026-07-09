@@ -6,12 +6,12 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Element\GetSubtype;
 
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Event\Model\ResolveElementEvent;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Element;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetSubtypeHandler
 {
@@ -33,7 +33,7 @@ final class GetSubtypeHandler
         }
 
         if (!$el) {
-            throw new NotFoundHttpException('Element not found');
+            throw new AdminOperationFailedException('Element not found');
         }
 
         $subtype = null;

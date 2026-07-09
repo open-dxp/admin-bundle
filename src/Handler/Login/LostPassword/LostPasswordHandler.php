@@ -31,66 +31,75 @@ final class LostPasswordHandler
             return new LostPasswordResult(error: null);
         }
 
-        if (!$payload->username) {
-            return new LostPasswordResult(error: 'user_unknown');
-        }
+        $error = null;
 
         $user = User::getByName($payload->username);
         if (!$user instanceof User) {
-            return new LostPasswordResult(error: 'user_unknown');
+            $error = 'user_unknown';
         }
 
+        // consumed unconditionally, even for an unknown username, so enumeration attempts are rate-limited too
         $limiter = $this->resetPasswordLimiter->create($payload->clientIp);
         if (false === $limiter->consume(1)->isAccepted()) {
-            return new LostPasswordResult(error: 'user_reset_password_too_many_attempts');
+            $error = 'user_reset_password_too_many_attempts';
         }
 
-        if (!$user->isActive()) {
-            return new LostPasswordResult(error: 'user_inactive');
-        }
-
-        if (!$user->getEmail()) {
-            return new LostPasswordResult(error: 'user_no_email_address');
-        }
-
-        if (!$user->getPassword()) {
-            return new LostPasswordResult(error: 'user_no_password');
-        }
-
-        $token = Authentication::generateTokenByUser($user);
-
-        try {
-            $domain = $this->hostResolver->resolve($payload->resolverContext ?? []) ?? '';
-            if (!$domain) {
-                throw new \Exception('No main domain set in system settings, unable to generate reset password link');
+        if (!$error) {
+            if (!$user->isActive()) {
+                $error = 'user_inactive';
             }
-
-            $context = $this->router->getContext();
-            $context->setHost($domain);
-
-            $loginUrl = $this->router->generate('opendxp_admin_login_check', [
-                'token' => $token,
-                'reset' => 'true',
-            ], UrlGeneratorInterface::ABSOLUTE_URL);
-
-            $event = new LostPasswordEvent($user, $loginUrl);
-            $this->eventDispatcher->dispatch($event, AdminEvents::LOGIN_LOSTPASSWORD);
-
-            if ($event->getSendMail()) {
-                $mail = Tool::getMail([$user->getEmail()], 'OpenDXP lost password service');
-                $mail->setIgnoreDebugMode(true);
-                $mail->text("Login to OpenDXP and change your password using the following link. This temporary login link will expire in 24 hours: \r\n\r\n" . $loginUrl);
-                $mail->send();
+            if (!$user->getEmail()) {
+                $error = 'user_no_email_address';
             }
-
-            return new LostPasswordResult(
-                error: null,
-                eventResponse: $event->hasResponse() ? $event->getResponse() : null,
-            );
-        } catch (\Exception $e) {
-            Logger::error('Error sending password recovery email: ' . $e->getMessage());
-
-            return new LostPasswordResult(error: 'lost_password_email_error');
+            if (!$user->getPassword()) {
+                $error = 'user_no_password';
+            }
         }
+
+        $eventResponse = null;
+
+        if (!$error) {
+            $token = Authentication::generateTokenByUser($user);
+
+            try {
+                $domain = $this->hostResolver->resolve($payload->resolverContext ?? []) ?? '';
+                if (!$domain) {
+                    throw new \Exception('No main domain set in system settings, unable to generate reset password link');
+                }
+
+                $context = $this->router->getContext();
+                $context->setHost($domain);
+
+                $loginUrl = $this->router->generate('opendxp_admin_login_check', [
+                    'token' => $token,
+                    'reset' => 'true',
+                ], UrlGeneratorInterface::ABSOLUTE_URL);
+
+                $event = new LostPasswordEvent($user, $loginUrl);
+                $this->eventDispatcher->dispatch($event, AdminEvents::LOGIN_LOSTPASSWORD);
+
+                if ($event->getSendMail()) {
+                    $mail = Tool::getMail([$user->getEmail()], 'OpenDXP lost password service');
+                    $mail->setIgnoreDebugMode(true);
+                    $mail->text("Login to OpenDXP and change your password using the following link. This temporary login link will expire in 24 hours: \r\n\r\n" . $loginUrl);
+                    $mail->send();
+                }
+
+                if ($event->hasResponse()) {
+                    $eventResponse = $event->getResponse();
+                }
+            } catch (\Exception $e) {
+                Logger::error('Error sending password recovery email: ' . $e->getMessage());
+                $error = 'lost_password_email_error';
+            }
+        }
+
+        if ($error) {
+            Logger::error('Lost password service: ' . $error);
+            // to avoid timing based enumeration
+            usleep(random_int(50, 200));
+        }
+
+        return new LostPasswordResult(error: $error, eventResponse: $eventResponse);
     }
 }

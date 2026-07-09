@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZip;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZip\ImportZipPayload;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -52,7 +52,7 @@ final class ImportZipHandler
 
         $zip = new ZipArchive();
         if ($zip->open($zipFile) !== true) {
-            throw new BadRequestHttpException($this->translator->trans('could_not_open_zip_file', [], 'admin'));
+            throw new AdminOperationFailedException($this->translator->trans('could_not_open_zip_file', [], 'admin'));
         }
 
         $numFiles = $zip->numFiles;

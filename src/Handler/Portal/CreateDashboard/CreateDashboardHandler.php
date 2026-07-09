@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\CreateDashboard;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Factory\DashboardFactory;
 
 final class CreateDashboardHandler
@@ -27,14 +28,14 @@ final class CreateDashboardHandler
     public function __invoke(CreateDashboardPayload $payload): void
     {
         if (empty($payload->key)) {
-            throw new \InvalidArgumentException('empty');
+            throw new AdminOperationFailedException('empty');
         }
 
         $dashboard = $this->dashboardFactory->create();
 
         $dashboards = $dashboard->getAllDashboards();
         if (isset($dashboards[$payload->key])) {
-            throw new \InvalidArgumentException('name_already_in_use');
+            throw new AdminOperationFailedException('name_already_in_use');
         }
 
         $dashboard->saveDashboard($payload->key);

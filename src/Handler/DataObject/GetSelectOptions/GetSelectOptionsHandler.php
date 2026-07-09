@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPayloadMapper;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\ClassDefinition\Helper\OptionsProviderResolver;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetSelectOptionsHandler
 {
@@ -30,7 +30,7 @@ final class GetSelectOptionsHandler
     {
         $object = DataObject\Concrete::getById($payload->objectId);
         if (!$object instanceof DataObject\Concrete) {
-            throw new NotFoundHttpException('Object not found.');
+            throw new AdminOperationFailedException('Object not found.');
         }
 
         if ($payload->changedData !== null) {

@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObjectFolder;
 
 use Exception;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Logger;
 use OpenDxp\Model;
 use OpenDxp\Model\DataObject;
@@ -48,12 +49,16 @@ final class SaveDataObjectFolderHandler
             throw new AccessDeniedHttpException('Missing permission to publish object');
         }
 
-        $object->setValues($general);
-        $object->setUserModification($adminUser->getId());
+        try {
+            $object->setValues($general);
+            $object->setUserModification($adminUser->getId());
 
-        $this->applyProperties($object, $propertiesData);
+            $this->applyProperties($object, $propertiesData);
 
-        $object->save();
+            $object->save();
+        } catch (Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
     }
 
     private function applyProperties(DataObject\AbstractObject $object, ?array $propertiesData): void

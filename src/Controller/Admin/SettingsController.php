@@ -17,8 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearCache\ClearCachePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearCache\ClearCacheHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearOutputCache\ClearOutputCacheHandler;
@@ -87,6 +89,7 @@ class SettingsController extends AdminAbstractController
         ]);
     }
 
+    #[AsHtmlContentTypeResponse]
     #[Route('/upload-custom-logo', name: 'opendxp_admin_settings_uploadcustomlogo', methods: ['POST'])]
     public function uploadCustomLogoAction(Request $request, UploadCustomLogoHandler $handler): JsonResponse
     {
@@ -98,10 +101,7 @@ class SettingsController extends AdminAbstractController
 
         $handler($logoFile->getPathname(), $logoFile->guessExtension() ?? '');
 
-        $response = $this->adminJson(ApiResponse::ok());
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/delete-custom-logo', name: 'opendxp_admin_settings_deletecustomlogo', methods: ['DELETE'])]
@@ -125,7 +125,7 @@ class SettingsController extends AdminAbstractController
                 'destroy' => $this->forward(self::class . '::metadataDestroyAction', [], $request->query->all()),
                 'update'  => $this->forward(self::class . '::metadataUpdateAction', [], $request->query->all()),
                 'create'  => $this->forward(self::class . '::metadataCreateAction', [], $request->query->all()),
-                default   => throw new BadRequestHttpException(),
+                default   => throw new AdminOperationFailedException(''),
             };
         }
 
@@ -186,7 +186,7 @@ class SettingsController extends AdminAbstractController
                 'destroy' => $this->forward(self::class . '::propertiesDestroyAction', [], $request->query->all()),
                 'update'  => $this->forward(self::class . '::propertiesUpdateAction', [], $request->query->all()),
                 'create'  => $this->forward(self::class . '::propertiesCreateAction', [], $request->query->all()),
-                default   => throw new BadRequestHttpException(),
+                default   => throw new AdminOperationFailedException(''),
             };
         }
 
@@ -352,7 +352,7 @@ class SettingsController extends AdminAbstractController
                 'destroy' => $this->forward(self::class . '::websiteSettingsDestroyAction', [], $request->query->all()),
                 'update'  => $this->forward(self::class . '::websiteSettingsUpdateAction', [], $request->query->all()),
                 'create'  => $this->forward(self::class . '::websiteSettingsCreateAction', [], $request->query->all()),
-                default   => throw new BadRequestHttpException(),
+                default   => throw new AdminOperationFailedException(''),
             };
         }
 

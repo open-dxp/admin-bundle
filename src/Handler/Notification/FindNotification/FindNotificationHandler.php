@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Notification\FindNotification;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\Notification\Service\NotificationService;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use UnexpectedValueException;
 
 final class FindNotificationHandler
@@ -36,7 +36,7 @@ final class FindNotificationHandler
         try {
             $notification = $this->notificationService->findAndMarkAsRead($payload->id, $userId);
         } catch (UnexpectedValueException $e) {
-            throw new NotFoundHttpException(sprintf('Notification with id %d not found', $payload->id), $e);
+            throw new AdminOperationFailedException(sprintf('Notification with id %d not found', $payload->id));
         }
 
         $data = $this->notificationService->format($notification);

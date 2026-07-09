@@ -18,10 +18,10 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZip;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZip\AddFilesToZipPayload;
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use ZipArchive;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
@@ -43,14 +43,14 @@ final class AddFilesToZipHandler
         $asset = Asset::getById($id) ?? throw new AssetNotFoundException($id);
 
         if (!$asset->isAllowed('view')) {
-            throw new AccessDeniedHttpException();
+            throw new AdminOperationFailedException('');
         }
 
         $zip = new ZipArchive();
         $zipState = is_file($zipFile) ? $zip->open($zipFile) : $zip->open($zipFile, ZipArchive::CREATE);
 
         if ($zipState !== true) {
-            throw new \RuntimeException('Failed to open zip archive: ' . $zipFile);
+            throw new AdminOperationFailedException('Failed to open zip archive: ' . $zipFile);
         }
 
         $parentPath = $asset->getRealFullPath();

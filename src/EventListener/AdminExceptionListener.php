@@ -21,6 +21,7 @@ use Doctrine\DBAL\Exception as DBALException;
 use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\CoreBundle\EventListener\Traits\OpenDxpContextAwareTrait;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Http\Request\Resolver\OpenDxpContextResolver;
 use OpenDxp\Model\Element\ValidationException;
 use OpenDxp\Model\Exception\ConfigWriteException;
@@ -51,46 +52,59 @@ class AdminExceptionListener implements EventSubscriberInterface
         $request = $event->getRequest();
         $ex = $event->getThrowable();
 
-        if ($this->matchesOpenDxpContext($request, OpenDxpContextResolver::CONTEXT_ADMIN)) {
-            // only return JSON error for XHR requests
-            if (!$request->isXmlHttpRequest()) {
-                return;
-            }
-
-            [$code, $headers, $message] = $this->getResponseData($ex);
-
-            $data = [
-                'success' => false,
-                'traceString' => '',
-            ];
-
-            // DBAL exceptions do include SQL statements, we don't want to expose them
-            if (!OpenDxp::inDebugMode() && $ex instanceof DBALException) {
-                $message = 'Database error, see logs for details';
-            }
-
-            if (OpenDxp::inDebugMode()) {
-                $data['trace'] = $ex->getTrace();
-                $data['traceString'] = 'in ' . $ex->getFile() . ':' . $ex->getLine() . "\n" . $ex->getTraceAsString();
-            }
-
-            if ($ex instanceof ValidationException) {
-                $data['type'] = 'ValidationException';
-                $code = 422;
-
-                $this->recursiveAddValidationExceptionSubItems($ex->getSubItems(), $message, $data['traceString']);
-            }
-
-            if ($ex instanceof ConfigWriteException) {
-                $data['type'] = 'ConfigWriteException';
-                $code = 422;
-            }
-
-            $data['message'] = $message;
-
-            $response = new JsonResponse($data, $code, $headers);
-            $event->setResponse($response);
+        if (!$this->matchesOpenDxpContext($request, OpenDxpContextResolver::CONTEXT_ADMIN)) {
+            return;
         }
+
+        // only return JSON error for XHR requests
+        if (!$request->isXmlHttpRequest()) {
+            return;
+        }
+
+        [$code, $headers, $message] = $this->getResponseData($ex);
+
+        $data = [
+            'success' => false,
+            'traceString' => '',
+        ];
+
+        // DBAL exceptions do include SQL statements, we don't want to expose them
+        if (!OpenDxp::inDebugMode() && $ex instanceof DBALException) {
+            $message = 'Database error, see logs for details';
+        }
+
+        if (OpenDxp::inDebugMode()) {
+            $data['trace'] = $ex->getTrace();
+            $data['traceString'] = 'in ' . $ex->getFile() . ':' . $ex->getLine() . "\n" . $ex->getTraceAsString();
+        }
+
+        if ($ex instanceof ValidationException) {
+            $data['type'] = 'ValidationException';
+            $code = 422;
+
+            $this->recursiveAddValidationExceptionSubItems($ex->getSubItems(), $message, $data['traceString']);
+        }
+
+        if ($ex instanceof ConfigWriteException) {
+            $data['type'] = 'ConfigWriteException';
+            $code = 422;
+        }
+
+        // expected, recoverable business-rule failure - the ExtJS admin UI's success/failure
+        // handling for this call site expects a 200 with success:false, not a real HTTP error
+        if ($ex instanceof AdminOperationFailedException) {
+            $code = 200;
+            $data = array_merge($data, $ex->getExtra());
+
+            // without this, HttpKernel::handleThrowable() forces non-error response codes
+            // from an exception listener back to 500, since it assumes that's a mistake
+            $event->allowCustomResponseCode();
+        }
+
+        $data['message'] = $message;
+
+        $response = new JsonResponse($data, $code, $headers);
+        $event->setResponse($response);
     }
 
     private function getResponseData(Throwable $ex, int $defaultStatusCode = 500): array

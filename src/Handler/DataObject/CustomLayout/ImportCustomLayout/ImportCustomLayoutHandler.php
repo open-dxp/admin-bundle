@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ImportCustomLayout;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ImportCustomLayout\ImportCustomLayoutPayload;
+use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Exception\ConfigWriteException;
 
@@ -27,21 +29,27 @@ final class ImportCustomLayoutHandler
     {
         $customLayout = DataObject\ClassDefinition\CustomLayout::getById($payload->id);
         if (!$customLayout) {
-            return;
+            throw new AdminOperationFailedException('Custom layout not found');
         }
 
-        $importData = $payload->importData;
-        $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($importData['layoutDefinitions'], true);
-        $customLayout->setLayoutDefinitions($layout);
-        if (isset($importData['name'])) {
-            $customLayout->setName($importData['name']);
-        }
-        $customLayout->setDescription($importData['description']);
+        try {
+            $importData = $payload->importData;
+            $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($importData['layoutDefinitions'], true);
+            $customLayout->setLayoutDefinitions($layout);
+            if (isset($importData['name'])) {
+                $customLayout->setName($importData['name']);
+            }
+            $customLayout->setDescription($importData['description']);
 
-        if (!$customLayout->isWriteable()) {
-            throw new ConfigWriteException();
-        }
+            if (!$customLayout->isWriteable()) {
+                throw new ConfigWriteException();
+            }
 
-        $customLayout->save();
+            $customLayout->save();
+        } catch (\Exception $e) {
+            Logger::error($e->getMessage());
+
+            throw new AdminOperationFailedException($e->getMessage());
+        }
     }
 }

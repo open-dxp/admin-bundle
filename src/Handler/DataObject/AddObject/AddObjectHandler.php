@@ -19,9 +19,9 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObject;
 
 use OpenDxp\Model;
 use OpenDxp\Model\DataObject;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class AddObjectHandler
@@ -46,11 +46,11 @@ final class AddObjectHandler
         }
 
         if (!$parent->isAllowed('create')) {
-            throw new AccessDeniedHttpException('prevented adding object because of missing permissions');
+            throw new AdminOperationFailedException('prevented adding object because of missing permissions');
         }
 
         if (DataObject\Service::pathExists($parent->getRealFullPath() . '/' . $key)) {
-            throw new BadRequestHttpException('prevented creating object because object with same path+key already exists');
+            throw new AdminOperationFailedException('prevented creating object because object with same path+key already exists');
         }
 
         if ($variantViaTree) {

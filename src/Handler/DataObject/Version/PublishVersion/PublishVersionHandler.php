@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PublishVersion;
 
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -49,7 +50,12 @@ final class PublishVersionHandler
 
         $object->setPublished(true);
         $object->setUserModification($userId);
-        $object->save();
+
+        try {
+            $object->save();
+        } catch (\Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
 
         $treeData = [];
         $this->adminStyleEnricher->forTree($object, $treeData);

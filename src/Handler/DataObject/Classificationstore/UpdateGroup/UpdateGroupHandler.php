@@ -17,12 +17,17 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateGroup;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject\Classificationstore;
 
 final class UpdateGroupHandler
 {
     public function __invoke(UpdateGroupPayload $payload): UpdateGroupResult
     {
+        if (!$payload->hasData) {
+            throw new AdminOperationFailedException();
+        }
+
         $data = $payload->data;
         $id = $data['id'];
         $config = Classificationstore\GroupConfig::getById($id);

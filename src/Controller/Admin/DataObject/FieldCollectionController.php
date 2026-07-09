@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\DeleteFieldCollection\DeleteFieldCollectionHandler;
@@ -45,7 +46,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * @internal
  */
 #[Route('/class', name: 'opendxp_admin_dataobject_class_')]
-#[IsGranted(CorePermission::Fieldcollections->value)]
 class FieldCollectionController extends AdminAbstractController
 {
     #[Route('/fieldcollection-get', name: 'fieldcollectionget', methods: ['GET'])]
@@ -58,6 +58,7 @@ class FieldCollectionController extends AdminAbstractController
         return $this->adminJson($data);
     }
 
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/fieldcollection-update', name: 'fieldcollectionupdate', methods: ['PUT', 'POST'])]
     public function fieldcollectionUpdateAction(UpdateFieldCollectionHandler $updateFieldCollection, UpdateFieldCollectionPayload $payload): JsonResponse
     {
@@ -66,6 +67,8 @@ class FieldCollectionController extends AdminAbstractController
         return $this->adminJson(ApiResponse::ok(['id' => $fcDef->getKey()]));
     }
 
+    #[IsGranted(CorePermission::Classes->value)]
+    #[IsGranted(CorePermission::Fieldcollections->value)]
     #[Route('/fieldcollection-delete', name: 'fieldcollectiondelete', methods: ['DELETE'])]
     public function fieldcollectionDeleteAction(DeleteFieldCollectionHandler $deleteFieldCollection, StringIdBodyPayload $payload): JsonResponse
     {
@@ -94,17 +97,17 @@ class FieldCollectionController extends AdminAbstractController
         return $this->adminJson(['fieldcollections' => $result->fieldcollections]);
     }
 
+    #[IsGranted(CorePermission::Fieldcollections->value)]
+    #[AsHtmlContentTypeResponse]
     #[Route('/import-fieldcollection', name: 'importfieldcollection', methods: ['POST'])]
     public function importFieldcollectionAction(ImportFieldCollectionHandler $importFieldCollection, ImportFieldCollectionPayload $payload): Response
     {
         $importFieldCollection($payload);
 
-        $response = $this->adminJson(ApiResponse::ok());
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->adminJson(ApiResponse::ok());
     }
 
+    #[IsGranted(CorePermission::Fieldcollections->value)]
     #[Route('/export-fieldcollection', name: 'exportfieldcollection', methods: ['GET'])]
     public function exportFieldcollectionAction(ExportFieldCollectionHandler $exportFieldCollection, ExportFieldCollectionPayload $payload): Response
     {
@@ -117,6 +120,7 @@ class FieldCollectionController extends AdminAbstractController
         return $response;
     }
 
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/get-fieldcollection-usages', name: 'getfieldcollectionusages', methods: ['GET'])]
     public function getFieldcollectionUsagesAction(GetFieldCollectionUsagesHandler $getUsages, GetFieldCollectionUsagesPayload $payload): Response
     {

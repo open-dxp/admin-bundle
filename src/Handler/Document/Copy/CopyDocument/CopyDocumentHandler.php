@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\CopyDocument;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Factory\ElementServiceFactory;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Logger;
@@ -49,7 +50,7 @@ final class CopyDocumentHandler
         }
 
         if (!$target instanceof Document) {
-            throw new NotFoundHttpException('Target document not found');
+            throw new AdminOperationFailedException('Target document not found');
         }
 
         if (!$target->isAllowed('create')) {
@@ -58,7 +59,7 @@ final class CopyDocumentHandler
         }
 
         if ($source === null) {
-            throw new NotFoundHttpException('Source document not found');
+            throw new AdminOperationFailedException('Source document not found');
         }
 
         if ($source instanceof Document\PageSnippet && $latestVersion = $source->getLatestVersion()) {

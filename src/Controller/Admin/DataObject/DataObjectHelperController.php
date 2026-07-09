@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAll\ApplyGridConfigToAllHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAll\ApplyGridConfigToAllPayload;
@@ -149,6 +150,7 @@ class DataObjectHelperController extends AdminAbstractController
     /**
      * IMPORTER
      */
+    #[AsHtmlContentTypeResponse]
     #[Route('/import-upload', name: 'importupload', methods: ['POST'])]
     public function importUploadAction(
         ImportUploadPayload $payload,
@@ -156,13 +158,7 @@ class DataObjectHelperController extends AdminAbstractController
     ): JsonResponse {
         $importUpload($payload);
 
-        $response = $this->adminJson(ApiResponse::ok());
-
-        // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
-        // Ext.form.Action.Submit and mark the submission as failed
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/get-export-jobs', name: 'getexportjobs', methods: ['POST'])]

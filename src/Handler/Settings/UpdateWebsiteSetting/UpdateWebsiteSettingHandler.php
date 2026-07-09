@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateWebsiteSetting;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\WebsiteSettingPayload;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\WebsiteSetting;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class UpdateWebsiteSettingHandler
 {
@@ -30,7 +30,7 @@ final class UpdateWebsiteSettingHandler
         $setting = WebsiteSetting::getById($data['id']);
 
         if (!$setting instanceof WebsiteSetting) {
-            throw new NotFoundHttpException(sprintf('WebsiteSetting with id %d not found', $data['id']));
+            throw new AdminOperationFailedException(sprintf('WebsiteSetting with id %d not found', $data['id']));
         }
 
         switch ($setting->getType()) {

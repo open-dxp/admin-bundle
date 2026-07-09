@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\Disable2Fa;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\User;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -33,7 +34,7 @@ final class Disable2FaHandler
         }
 
         if ($user->getTwoFactorAuthentication('required')) {
-            throw new BadRequestHttpException('Two-factor authentication is required and cannot be disabled.');
+            throw new AdminOperationFailedException('Two-factor authentication is required and cannot be disabled.');
         }
 
         $user->setTwoFactorAuthentication([]);

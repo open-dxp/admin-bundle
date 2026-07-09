@@ -17,23 +17,22 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateGroup;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject\Classificationstore;
 
 final class CreateGroupHandler
 {
     public function __invoke(CreateGroupPayload $payload): CreateGroupResult
     {
-        $config = Classificationstore\GroupConfig::getByName($payload->name, $payload->storeId);
-
-        if (!$config) {
-            $config = new Classificationstore\GroupConfig();
-            $config->setStoreId($payload->storeId);
-            $config->setName($payload->name);
-            $config->save();
-
-            return new CreateGroupResult(name: $config->getName(), alreadyExists: false);
+        if (Classificationstore\GroupConfig::getByName($payload->name, $payload->storeId)) {
+            throw new AdminOperationFailedException('classificationstore_error_group_exists_msg');
         }
 
-        return new CreateGroupResult(name: $config->getName(), alreadyExists: true);
+        $config = new Classificationstore\GroupConfig();
+        $config->setStoreId($payload->storeId);
+        $config->setName($payload->name);
+        $config->save();
+
+        return new CreateGroupResult(name: $config->getName());
     }
 }

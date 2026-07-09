@@ -18,9 +18,8 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectFolder;
 
 use OpenDxp\Model\DataObject;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class AddObjectFolderHandler
@@ -40,11 +39,11 @@ final class AddObjectFolderHandler
         }
 
         if (!$parent->isAllowed('create')) {
-            throw new AccessDeniedHttpException('prevented creating folder because of missing permissions');
+            throw new AdminOperationFailedException('prevented creating folder because of missing permissions');
         }
 
         if (DataObject\Service::pathExists($parent->getRealFullPath() . '/' . $key)) {
-            throw new BadRequestHttpException('folder with same path+key already exists');
+            throw new AdminOperationFailedException('folder with same path+key already exists');
         }
 
         $folder = DataObject\Folder::create([

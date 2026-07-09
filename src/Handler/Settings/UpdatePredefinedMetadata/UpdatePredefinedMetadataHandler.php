@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdatePredefinedMetadata;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\PredefinedMetadataPayload;
 use OpenDxp\Model\Exception\ConfigWriteException;
 use OpenDxp\Model\Metadata;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class UpdatePredefinedMetadataHandler
 {
@@ -42,7 +42,7 @@ final class UpdatePredefinedMetadataHandler
         );
 
         if ($existingItem && $existingItem->getId() !== $metadata->getId()) {
-            throw new BadRequestHttpException('predefined_metadata_definitions_error_name_exists_msg');
+            throw new AdminOperationFailedException('predefined_metadata_definitions_error_name_exists_msg');
         }
 
         $metadata->minimize();

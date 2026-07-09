@@ -9,9 +9,7 @@ use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\User;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class ReplaceAssignmentsHandler
@@ -28,15 +26,15 @@ final class ReplaceAssignmentsHandler
         $targetEl = Element\Service::getElementById($payload->targetType, $payload->targetId);
 
         if (!$element || !$sourceEl || !$targetEl) {
-            throw new NotFoundHttpException('One or more elements not found');
+            throw new AdminOperationFailedException('One or more elements not found');
         }
 
         if ($payload->sourceType !== $payload->targetType || $sourceEl->getType() !== $targetEl->getType()) {
-            throw new BadRequestHttpException('source-type and target-type do not match');
+            throw new AdminOperationFailedException('source-type and target-type do not match');
         }
 
         if (!$element->isAllowed('save')) {
-            throw new AccessDeniedHttpException();
+            throw new AdminOperationFailedException('');
         }
 
         $rewriteConfig = [

@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ImportQuantityValueUnits;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ImportQuantityValueUnits\ImportQuantityValueUnitsPayload;
 use OpenDxp\Model\DataObject\QuantityValue\Service as QuantityValueService;
 
@@ -24,8 +25,10 @@ final class ImportQuantityValueUnitsHandler
 {
     public function __construct(private readonly QuantityValueService $service) {}
 
-    public function __invoke(ImportQuantityValueUnitsPayload $payload): bool
+    public function __invoke(ImportQuantityValueUnitsPayload $payload): void
     {
-        return $this->service->importDefinitionFromJson($payload->json);
+        if (!$this->service->importDefinitionFromJson($payload->json)) {
+            throw new AdminOperationFailedException('Failed to import quantity value units');
+        }
     }
 }

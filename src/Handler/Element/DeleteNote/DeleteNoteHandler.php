@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element\DeleteNote;
 
 use OpenDxp\Model\Element\Note;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\NoteListPayload;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class DeleteNoteHandler
 {
@@ -19,7 +19,7 @@ final class DeleteNoteHandler
         }
 
         if ($note->getLocked()) {
-            throw new BadRequestHttpException('note_is_locked');
+            throw new AdminOperationFailedException('note_is_locked');
         }
 
         $note->delete();

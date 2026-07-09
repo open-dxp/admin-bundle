@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument;
 
 use Exception;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Factory\ElementServiceFactory;
 use OpenDxp\Logger;
 use OpenDxp\Model\Document;
@@ -24,8 +25,6 @@ use OpenDxp\Model\Element\Service;
 use OpenDxp\Model\User;
 use OpenDxp\Resolver\ResolverInterface;
 use OpenDxp\Tool;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class AddDocumentHandler
@@ -42,13 +41,13 @@ final class AddDocumentHandler
         $parentDocument = Document::getById($payload->parentId);
 
         if (!$parentDocument || !$parentDocument->isAllowed('create')) {
-            throw new AccessDeniedHttpException('Prevented adding a document because of missing permissions');
+            throw new AdminOperationFailedException('Prevented adding a document because of missing permissions');
         }
 
         $intendedPath = $parentDocument->getRealFullPath() . '/' . $payload->key;
 
         if (Document\Service::pathExists($intendedPath)) {
-            throw new BadRequestHttpException(
+            throw new AdminOperationFailedException(
                 sprintf('Prevented adding a document because document with same path+key [%s] already exists', $intendedPath)
             );
         }
@@ -142,6 +141,6 @@ final class AddDocumentHandler
 
         Logger::debug("Unknown document type, can't add [ $type ] ");
 
-        throw new BadRequestHttpException(sprintf("Unknown document type '%s'", $type));
+        throw new AdminOperationFailedException(sprintf("Unknown document type '%s'", $type));
     }
 }

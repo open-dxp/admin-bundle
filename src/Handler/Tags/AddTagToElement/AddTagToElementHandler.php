@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTagToElement;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\Element\Tag;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class AddTagToElementHandler
 {
@@ -26,7 +26,7 @@ final class AddTagToElementHandler
     {
         $tag = Tag::getById($payload->tagId);
         if (!$tag) {
-            throw new NotFoundHttpException('Tag with ID ' . $payload->tagId . ' not found.');
+            throw new AdminOperationFailedException('Tag with ID ' . $payload->tagId . ' not found.');
         }
 
         Tag::addTagToElement($payload->elementType, $payload->elementId, $tag);

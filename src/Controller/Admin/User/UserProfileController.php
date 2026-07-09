@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\User;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetCurrentUser\GetCurrentUserHandler;
@@ -28,6 +29,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImageHandl
 use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImagePayload;
 use OpenDxp\Bundle\AdminBundle\Helper\User as UserHelper;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
+use OpenDxp\Logger;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,17 +40,24 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 class UserProfileController extends AdminAbstractController
 {
+    #[AsHtmlContentTypeResponse]
     #[Route('/user/upload-current-user-image', name: 'opendxp_admin_user_uploadcurrentuserimage', methods: ['POST'])]
     public function uploadCurrentUserImageAction(
         UploadUserImagePayload $payload,
         UploadUserImageHandler $uploadUserImage,
     ): JsonResponse {
+        $user = $this->getAdminUser();
+
+        // this endpoint is for the caller's own avatar only; unlike upload-image, this must hold even for admins
+        if ($user === null || $payload->targetUserId !== $user->getId()) {
+            Logger::warn('prevented save current user, because ids do not match. ');
+
+            return $this->adminJson(ApiResponse::error());
+        }
+
         $uploadUserImage($payload);
 
-        $response = $this->adminJson(ApiResponse::ok());
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/user/update-current-user', name: 'opendxp_admin_user_updatecurrentuser', methods: ['PUT'])]

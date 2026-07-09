@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProperty;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetProperties\GetPropertiesHandler;
 use OpenDxp\Model\DataObject\Classificationstore;
 
@@ -24,6 +25,10 @@ final class UpdatePropertyHandler
 {
     public function __invoke(UpdatePropertyPayload $payload): UpdatePropertyResult
     {
+        if (!$payload->hasData) {
+            throw new AdminOperationFailedException();
+        }
+
         $data = $payload->data;
         $id = $data['id'];
         $config = Classificationstore\KeyConfig::getById($id);

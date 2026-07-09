@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Helper\DataObjectVersionHelper;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPayloadMapper;
@@ -25,7 +26,6 @@ use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\ClassDefinition\Data\EqualComparisonInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class SaveDataObjectHandler
 {
@@ -40,7 +40,7 @@ final class SaveDataObjectHandler
     {
         $objectFromDatabase = DataObject\Concrete::getById($payload->id);
         if (!$objectFromDatabase instanceof DataObject\Concrete) {
-            throw new NotFoundHttpException('Could not find object');
+            throw new AdminOperationFailedException('Could not find object');
         }
 
         $adminUser = $this->userContext->getAdminUser();

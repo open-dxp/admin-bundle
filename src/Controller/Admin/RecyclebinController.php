@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\AddToRecyclebin\AddToRecyclebinHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\AddToRecyclebin\AddToRecyclebinPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\DeleteRecyclebinItem\DeleteRecyclebinItemHandler;
@@ -35,7 +36,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -55,7 +55,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
         if ($payload->hasData) {
             return match ($xaction) {
                 'destroy' => $this->forward(self::class . '::listDestroyAction', [], $request->query->all()),
-                default   => throw new BadRequestHttpException(),
+                default   => throw new AdminOperationFailedException(),
             };
         }
 

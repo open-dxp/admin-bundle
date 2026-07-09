@@ -17,9 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ImportFieldCollection;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ImportFieldCollection\ImportFieldCollectionPayload;
 use OpenDxp\Model\DataObject;
-use RuntimeException;
 
 final class ImportFieldCollectionHandler
 {
@@ -28,7 +28,7 @@ final class ImportFieldCollectionHandler
         $fieldCollection = DataObject\Fieldcollection\Definition::getByKey($payload->id);
 
         if (!DataObject\ClassDefinition\Service::importFieldCollectionFromJson($fieldCollection, $payload->json)) {
-            throw new RuntimeException('Failed to import field collection: ' . $payload->id);
+            throw new AdminOperationFailedException('Failed to import field collection: ' . $payload->id);
         }
     }
 }

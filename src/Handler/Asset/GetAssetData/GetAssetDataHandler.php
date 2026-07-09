@@ -22,8 +22,8 @@ use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetData\GetAssetDataPayload;
-use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
@@ -54,7 +54,7 @@ final class GetAssetDataHandler
         $requestSchemeAndHost = $payload->requestSchemeAndHost;
         $asset = Asset::getById($id);
         if (!$asset instanceof Asset) {
-            throw new AssetNotFoundException($id);
+            throw new AdminOperationFailedException(sprintf('Asset with id %d not found', $id));
         }
 
         $adminUser = $this->userContext->getAdminUser();

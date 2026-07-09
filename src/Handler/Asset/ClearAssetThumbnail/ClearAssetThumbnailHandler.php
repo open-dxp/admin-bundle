@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail\ClearAssetThumbnailPayload;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ClearAssetThumbnailHandler
 {
@@ -29,7 +29,7 @@ final class ClearAssetThumbnailHandler
         $asset = Asset::getById($payload->assetId);
 
         if (!$asset) {
-            throw new NotFoundHttpException('Asset not found: ' . $payload->assetId);
+            throw new AdminOperationFailedException('Asset not found: ' . $payload->assetId);
         }
 
         if (!$asset->isAllowed('publish')) {

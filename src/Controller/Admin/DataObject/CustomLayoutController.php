@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\AddCustomLayout\AddCustomLayoutHandler;
@@ -86,24 +87,19 @@ class CustomLayoutController extends AdminAbstractController
         return $this->adminJson(ApiResponse::ok());
     }
 
+    #[AsHtmlContentTypeResponse]
     #[Route('/import-custom-layout-definition', name: 'importcustomlayoutdefinition', methods: ['POST', 'PUT'])]
     public function importCustomLayoutDefinitionAction(
         ImportCustomLayoutHandler $importCustomLayout,
         ImportCustomLayoutPayload $payload,
     ): Response {
         if ($payload->nameAlreadyInUse) {
-            $response = $this->adminJson(ApiResponse::error(null, ['nameAlreadyInUse' => true]));
-            $response->headers->set('Content-Type', 'text/html');
-
-            return $response;
+            return $this->adminJson(ApiResponse::error(null, ['nameAlreadyInUse' => true]));
         }
 
         $importCustomLayout($payload);
 
-        $response = $this->adminJson(ApiResponse::ok());
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/export-custom-layout-definition', name: 'exportcustomlayoutdefinition', methods: ['GET'])]

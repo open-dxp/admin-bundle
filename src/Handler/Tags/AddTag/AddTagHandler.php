@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTag;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\Element\Tag;
 
 final class AddTagHandler
@@ -26,7 +27,12 @@ final class AddTagHandler
         $tag = new Tag();
         $tag->setName($payload->text);
         $tag->setParentId($payload->parentId);
-        $tag->save();
+
+        try {
+            $tag->save();
+        } catch (\Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
 
         return new AddTagResult(id: $tag->getId());
     }

@@ -32,7 +32,7 @@ final readonly class ShowGraphPayload implements ExtJsPayloadInterface
         return new static(
             ctype: $request->query->getString('ctype'),
             cid: $request->query->getInt('cid'),
-            workflowName: $request->query->has('workflowName') ? $request->query->getString('workflowName') : null,
+            workflowName: $request->query->has('workflow') ? $request->query->getString('workflow') : null,
         );
     }
 }

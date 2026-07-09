@@ -17,11 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValues;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValues\ConvertAllQuantityValuesPayload;
 use OpenDxp\Model\DataObject\Data\QuantityValue;
 use OpenDxp\Model\DataObject\QuantityValue\Unit;
 use OpenDxp\Model\DataObject\QuantityValue\UnitConversionService;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class ConvertAllQuantityValuesHandler
 {
@@ -33,7 +33,7 @@ final class ConvertAllQuantityValuesHandler
     {
         $fromUnit = Unit::getById($payload->unitId);
         if (!$fromUnit instanceof Unit) {
-            throw new BadRequestHttpException('Invalid unit ID provided');
+            throw new AdminOperationFailedException('Invalid unit ID provided');
         }
 
         $baseUnit = $fromUnit->getBaseunit() ?? $fromUnit;

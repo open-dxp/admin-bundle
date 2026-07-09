@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\UpdateDataObject;
 
 use Exception;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
@@ -25,7 +26,6 @@ use OpenDxp\Db;
 use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Element\Service;
-use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
@@ -64,7 +64,7 @@ final class UpdateDataObjectHandler
         if ($object instanceof DataObject\Concrete) {
             $latestVersion = $object->getLatestVersion();
             if ($latestVersion && $latestVersion->getData()->getModificationDate() != $object->getModificationDate()) {
-                throw new RuntimeException("You can't rename or relocate if there's a newer not published version");
+                throw new AdminOperationFailedException("You can't rename or relocate if there's a newer not published version");
             }
         }
 
@@ -94,11 +94,11 @@ final class UpdateDataObjectHandler
                     $objectWithSamePath = DataObject::getByPath($parent->getRealFullPath() . '/' . $object->getKey());
 
                     if ($objectWithSamePath != null) {
-                        throw new RuntimeException('prevented creating object because object with same path+key already exists');
+                        throw new AdminOperationFailedException('prevented creating object because object with same path+key already exists');
                     }
 
                     if ($object->isLocked()) {
-                        throw new RuntimeException('prevented moving object, because it is locked: ID: ' . $object->getId());
+                        throw new AdminOperationFailedException('prevented moving object, because it is locked: ID: ' . $object->getId());
                     }
 
                     $object->setParentId($values['parentId']);
@@ -134,7 +134,7 @@ final class UpdateDataObjectHandler
         if ($key && $object->isAllowed('rename')) {
             $result = $this->dataObjectGridService->renameObject($object, $key);
             if (!$result['success']) {
-                throw new RuntimeException($result['message'] ?? 'Failed to rename object');
+                throw new AdminOperationFailedException($result['message'] ?? 'Failed to rename object');
             }
 
             return new UpdateDataObjectResult(

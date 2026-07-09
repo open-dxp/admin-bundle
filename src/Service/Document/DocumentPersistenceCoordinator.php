@@ -62,7 +62,7 @@ final class DocumentPersistenceCoordinator
         }
 
         if ($document instanceof Document\PageSnippet && in_array($task, ['publish', 'version'], true)) {
-            $document->deleteAutoSaveVersions();
+            $document->deleteAutoSaveVersions($this->userContext->getAdminUser()->getId());
         }
 
         return new DocumentSaveResult(

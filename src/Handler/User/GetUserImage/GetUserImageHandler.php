@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetUserImage;
 
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\User;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetUserImageHandler
@@ -27,7 +28,15 @@ final class GetUserImageHandler
 
     public function __invoke(GetUserImagePayload $payload): GetUserImageResult
     {
-        $targetUserId = $payload->targetUserId ?? (int) $this->userContext->getAdminUser()?->getId();
+        $adminUser = $this->userContext->getAdminUser();
+        $currentUserId = $adminUser?->getId();
+
+        // matches the old getUserId() helper: a differing target id requires the 'users' permission
+        if ($payload->targetUserId !== null && $payload->targetUserId !== $currentUserId && !$adminUser?->isAllowed('users')) {
+            throw new AccessDeniedHttpException();
+        }
+
+        $targetUserId = $payload->targetUserId ?? (int) $currentUserId;
 
         $userObj = User::getById($targetUserId);
 

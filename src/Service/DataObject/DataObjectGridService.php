@@ -89,8 +89,6 @@ final class DataObjectGridService
                     'success' => true,
                     'data' => GridData\DataObject::getData($object, $allParams['fields'], $requestedLanguage),
                 ];
-            } catch (NotFoundHttpException|AccessDeniedHttpException $e) {
-                throw $e;
             } catch (Exception $e) {
                 return [
                     'success' => false,

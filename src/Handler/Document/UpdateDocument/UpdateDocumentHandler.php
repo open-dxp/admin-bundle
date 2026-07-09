@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateDocument;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\Document\DocumentNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Event\DocumentEvents;
@@ -23,7 +24,6 @@ use OpenDxp\Event\Model\DocumentEvent;
 use OpenDxp\Logger;
 use OpenDxp\Model\Document;
 use RuntimeException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
@@ -54,7 +54,7 @@ final class UpdateDocumentHandler
             if ($latestVersion &&
                 $latestVersion->getData()->getModificationDate() != $document->getModificationDate()
             ) {
-                throw new BadRequestHttpException("You can't rename or relocate if there's a newer not published version");
+                throw new AdminOperationFailedException("You can't rename or relocate if there's a newer not published version");
             }
         }
 
@@ -119,7 +119,7 @@ final class UpdateDocumentHandler
                 ' or the document is locked. ID: ' . $document->getId();
             Logger::debug($msg);
 
-            throw new BadRequestHttpException($msg);
+            throw new AdminOperationFailedException($msg);
         }
 
         if ($document->isAllowed('rename') && isset($payload->updateData['key'])) {
@@ -138,7 +138,7 @@ final class UpdateDocumentHandler
 
         Logger::debug('Prevented update document, because of missing permissions.');
 
-        throw new BadRequestHttpException('Prevented update document, because of missing permissions.');
+        throw new AdminOperationFailedException('Prevented update document, because of missing permissions.');
     }
 
     private function firePostMoveEvent(Document $document, Document $oldDocument, string $oldPath): void

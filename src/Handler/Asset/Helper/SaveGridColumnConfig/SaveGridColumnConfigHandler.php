@@ -17,13 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Model\Asset;
 use OpenDxp\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
@@ -65,10 +65,14 @@ final class SaveGridColumnConfigHandler
         }
 
         if ($gridConfig && $gridConfig->getOwnerId() !== $adminUser->getId()) {
-            throw new BadRequestHttpException("don't mess around with somebody else's configuration");
+            throw new AdminOperationFailedException("don't mess around with somebody else's configuration");
         }
 
-        $this->gridColumnConfigService->updateGridConfigShares($gridConfig, $metadata ?? [], $adminUser);
+        try {
+            $this->gridColumnConfigService->updateGridConfigShares($gridConfig, $metadata ?? [], $adminUser);
+        } catch (\Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
 
         if (!$gridConfig) {
             $gridConfig = new GridConfig();
@@ -90,7 +94,11 @@ final class SaveGridColumnConfigHandler
         $gridConfig->save();
 
         if (!empty($metadata['setAsFavourite']) && $adminUser->isAdmin()) {
-            $this->gridColumnConfigService->updateGridConfigFavourites($gridConfig, $metadata, $adminUser);
+            try {
+                $this->gridColumnConfigService->updateGridConfigFavourites($gridConfig, $metadata, $adminUser);
+            } catch (\Exception $e) {
+                throw new AdminOperationFailedException($e->getMessage());
+            }
         }
 
         $availableConfigs = $this->gridColumnConfigService->getMyOwnColumnConfigs($adminUser->getId(), $classId ?? '', $searchType);

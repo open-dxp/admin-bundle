@@ -18,10 +18,10 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\UpdateObjectBrick;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\UpdateObjectBrick\UpdateObjectBrickPayload;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class UpdateObjectBrickHandler
@@ -41,7 +41,7 @@ final class UpdateObjectBrickHandler
             $list = new DataObject\Objectbrick\Definition\Listing();
             foreach ($list->loadNames() as $brickName) {
                 if (strtolower($key) === strtolower($brickName)) {
-                    throw new BadRequestHttpException('Brick with the same name already exists (lower/upper cases may be different)');
+                    throw new AdminOperationFailedException('Brick with the same name already exists (lower/upper cases may be different)');
                 }
             }
         }

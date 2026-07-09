@@ -36,9 +36,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * @internal
  */
-#[IsGranted(CorePermission::Thumbnails->value)]
 class ThumbnailController extends AdminAbstractController
 {
+    #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/thumbnail-tree', name: 'opendxp_admin_settings_thumbnailtree', methods: ['GET', 'POST'])]
     public function thumbnailTreeAction(GetThumbnailTreeHandler $getThumbnailTree): JsonResponse
     {
@@ -55,6 +55,7 @@ class ThumbnailController extends AdminAbstractController
         return $this->adminJson($result->thumbnails);
     }
 
+    #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/thumbnail-add', name: 'opendxp_admin_settings_thumbnailadd', methods: ['POST'])]
     public function thumbnailAddAction(AddThumbnailPayload $payload, AddThumbnailHandler $addThumbnail): JsonResponse
     {
@@ -63,6 +64,7 @@ class ThumbnailController extends AdminAbstractController
         return $this->adminJson(ApiResponse::fromBool($result->created, ['id' => $result->id]));
     }
 
+    #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/thumbnail-delete', name: 'opendxp_admin_settings_thumbnaildelete', methods: ['DELETE'])]
     public function thumbnailDeleteAction(DeleteThumbnailPayload $payload, DeleteThumbnailHandler $deleteThumbnail): JsonResponse
     {
@@ -71,6 +73,7 @@ class ThumbnailController extends AdminAbstractController
         return $this->adminJson(ApiResponse::ok());
     }
 
+    #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/thumbnail-get', name: 'opendxp_admin_settings_thumbnailget', methods: ['GET'])]
     public function thumbnailGetAction(
         #[MapQueryParameter] string $name,
@@ -81,6 +84,7 @@ class ThumbnailController extends AdminAbstractController
         return $this->adminJson($result->data);
     }
 
+    #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/thumbnail-update', name: 'opendxp_admin_settings_thumbnailupdate', methods: ['PUT'])]
     public function thumbnailUpdateAction(UpdateThumbnailPayload $payload, UpdateThumbnailHandler $updateThumbnail): JsonResponse
     {

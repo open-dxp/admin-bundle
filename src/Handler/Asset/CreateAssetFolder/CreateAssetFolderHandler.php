@@ -17,10 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolder;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolder\CreateAssetFolderPayload;
 use OpenDxp\Model\Asset;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class CreateAssetFolderHandler
@@ -37,11 +36,11 @@ final class CreateAssetFolderHandler
         $parentAsset = Asset::getById($parentId);
 
         if (!$parentAsset->isAllowed('create')) {
-            throw new AccessDeniedHttpException('prevented creating asset because of missing permissions');
+            throw new AdminOperationFailedException('prevented creating asset because of missing permissions');
         }
 
         if (Asset::getByPath($parentAsset->getRealFullPath() . '/' . $name)) {
-            throw new BadRequestHttpException('Asset with same path+key already exists');
+            throw new AdminOperationFailedException('Asset with same path+key already exists');
         }
 
         Asset::create($parentId, [

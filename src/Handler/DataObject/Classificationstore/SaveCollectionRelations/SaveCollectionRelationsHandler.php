@@ -17,12 +17,17 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\SaveCollectionRelations;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject\Classificationstore;
 
 final class SaveCollectionRelationsHandler
 {
     public function __invoke(SaveCollectionRelationsPayload $payload): SaveCollectionRelationsResult
     {
+        if (!$payload->hasData) {
+            throw new AdminOperationFailedException();
+        }
+
         $data = $payload->data;
         if (count($data) === count($data, 1)) {
             $data = [$data];

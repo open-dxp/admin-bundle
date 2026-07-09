@@ -16,8 +16,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValues\ConvertAllQuantityValuesHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValues\ConvertAllQuantityValuesPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertQuantityValue\ConvertQuantityValueHandler;
@@ -38,7 +40,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -48,14 +49,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/quantity-value', name: 'opendxp_admin_dataobject_quantityvalue_')]
 class QuantityValueController extends AdminAbstractController
 {
+    #[AsHtmlContentTypeResponse]
     #[Route('/unit-import', name: 'unitimport', methods: ['POST', 'PUT'])]
     public function unitImportAction(ImportQuantityValueUnitsPayload $payload, ImportQuantityValueUnitsHandler $importUnits): JsonResponse
     {
-        $success = $importUnits($payload);
-        $response = $this->adminJson(ApiResponse::fromBool($success));
-        $response->headers->set('Content-Type', 'text/html');
+        $importUnits($payload);
 
-        return $response;
+        return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/unit-export', name: 'unitexport', methods: ['GET'])]
@@ -87,7 +87,7 @@ class QuantityValueController extends AdminAbstractController
             'destroy' => $this->forward(self::class . '::unitProxyDestroyAction', [], $request->query->all()),
             'update'  => $this->forward(self::class . '::unitProxyUpdateAction', [], $request->query->all()),
             'create'  => $this->forward(self::class . '::unitProxyCreateAction', [], $request->query->all()),
-            default   => throw new BadRequestHttpException(),
+            default   => throw new AdminOperationFailedException(),
         };
     }
 

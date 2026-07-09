@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkCommit;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Tool\Session;
-use RuntimeException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -64,7 +64,7 @@ final class BulkCommitHandler
                     $class->setName($name);
                 }
                 if (!DataObject\ClassDefinition\Service::importClassDefinitionFromJson($class, json_encode($item), true)) {
-                    throw new RuntimeException('Failed to import class definition: ' . $name);
+                    throw new AdminOperationFailedException('Failed to import class definition: ' . $name);
                 }
 
                 return;
@@ -76,7 +76,7 @@ final class BulkCommitHandler
                     $brick->setKey($name);
                 }
                 if (!DataObject\ClassDefinition\Service::importObjectBrickFromJson($brick, json_encode($item), true)) {
-                    throw new RuntimeException('Failed to import objectbrick: ' . $name);
+                    throw new AdminOperationFailedException('Failed to import objectbrick: ' . $name);
                 }
 
                 return;
@@ -88,7 +88,7 @@ final class BulkCommitHandler
                     $fieldCollection->setKey($name);
                 }
                 if (!DataObject\ClassDefinition\Service::importFieldCollectionFromJson($fieldCollection, json_encode($item), true)) {
-                    throw new RuntimeException('Failed to import field collection: ' . $name);
+                    throw new AdminOperationFailedException('Failed to import field collection: ' . $name);
                 }
 
                 return;

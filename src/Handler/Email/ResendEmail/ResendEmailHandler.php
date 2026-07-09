@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Email\ResendEmail;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Logger;
 use OpenDxp\Mail;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Tool;
 use ReflectionClass;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Mime\Address;
 
 final class ResendEmailHandler
@@ -18,7 +18,7 @@ final class ResendEmailHandler
     {
         $emailLog = Tool\Email\Log::getById($payload->id);
         if (!$emailLog instanceof Tool\Email\Log) {
-            throw new NotFoundHttpException('Email log with ID ' . $payload->id . ' not found.');
+            throw new AdminOperationFailedException('Email log with ID ' . $payload->id . ' not found.');
         }
 
         $mail = new Mail();

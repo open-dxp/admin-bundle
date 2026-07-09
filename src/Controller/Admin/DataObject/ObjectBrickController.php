@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\DeleteObjectBrick\DeleteObjectBrickHandler;
@@ -45,7 +46,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * @internal
  */
 #[Route('/class', name: 'opendxp_admin_dataobject_class_')]
-#[IsGranted(CorePermission::Objectbricks->value)]
 class ObjectBrickController extends AdminAbstractController
 {
     #[Route('/objectbrick-get', name: 'objectbrickget', methods: ['GET'])]
@@ -66,6 +66,7 @@ class ObjectBrickController extends AdminAbstractController
         return $this->adminJson(ApiResponse::ok(['id' => $brickDef->getKey()]));
     }
 
+    #[IsGranted(CorePermission::Objectbricks->value)]
     #[Route('/objectbrick-delete', name: 'objectbrickdelete', methods: ['DELETE'])]
     public function objectbrickDeleteAction(DeleteObjectBrickHandler $deleteObjectBrick, StringIdBodyPayload $payload): JsonResponse
     {
@@ -94,16 +95,17 @@ class ObjectBrickController extends AdminAbstractController
         return $this->adminJson(['objectbricks' => $result->objectbricks]);
     }
 
+    #[IsGranted(CorePermission::Objectbricks->value)]
+    #[AsHtmlContentTypeResponse]
     #[Route('/import-objectbrick', name: 'importobjectbrick', methods: ['POST'])]
     public function importObjectbrickAction(ImportObjectBrickHandler $importObjectBrick, ImportObjectBrickPayload $payload): JsonResponse
     {
         $importObjectBrick($payload);
-        $response = $this->adminJson(ApiResponse::ok());
-        $response->headers->set('Content-Type', 'text/html');
 
-        return $response;
+        return $this->adminJson(ApiResponse::ok());
     }
 
+    #[IsGranted(CorePermission::Objectbricks->value)]
     #[Route('/export-objectbrick', name: 'exportobjectbrick', methods: ['GET'])]
     public function exportObjectbrickAction(ExportObjectBrickHandler $exportObjectBrick, ExportObjectBrickPayload $payload): Response
     {
@@ -116,6 +118,7 @@ class ObjectBrickController extends AdminAbstractController
         return $response;
     }
 
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/get-bricks-usages', name: 'getbrickusages', methods: ['GET'])]
     public function getBrickUsagesAction(GetBrickUsagesHandler $getBrickUsages, GetBrickUsagesPayload $payload): Response
     {

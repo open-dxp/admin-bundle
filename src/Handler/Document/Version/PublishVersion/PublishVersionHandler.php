@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Version\PublishVersion;
 
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\Document\DocumentNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -52,10 +53,15 @@ final class PublishVersionHandler
         }
 
         $document->setPublished(true);
-        $document->setKey($currentDocument->getKey());
-        $document->setPath($currentDocument->getRealPath());
-        $document->setUserModification($userId);
-        $document->save();
+
+        try {
+            $document->setKey($currentDocument->getKey());
+            $document->setPath($currentDocument->getRealPath());
+            $document->setUserModification($userId);
+            $document->save();
+        } catch (\Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
 
         $treeData = [];
         $this->adminStyleEnricher->forEditor($document, $treeData);

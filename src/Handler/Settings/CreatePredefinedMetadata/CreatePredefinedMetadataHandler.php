@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\CreatePredefinedMetadata;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\PredefinedMetadataPayload;
 use OpenDxp\Model\Exception\ConfigWriteException;
 use OpenDxp\Model\Metadata;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class CreatePredefinedMetadataHandler
 {
@@ -43,7 +43,7 @@ final class CreatePredefinedMetadataHandler
         );
 
         if ($existingItem) {
-            throw new BadRequestHttpException('rule_violation');
+            throw new AdminOperationFailedException('rule_violation');
         }
 
         $metadata->save();

@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetModalCustomHtml;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\Workflow\WorkflowElementResolver;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject\Concrete as ConcreteObject;
@@ -24,7 +25,6 @@ use OpenDxp\Model\Document;
 use OpenDxp\Workflow\Manager;
 use OpenDxp\Workflow\Notes\CustomHtmlServiceInterface;
 use OpenDxp\Workflow\Transition;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Workflow\Registry;
 
 final class GetModalCustomHtmlHandler
@@ -64,7 +64,7 @@ final class GetModalCustomHtmlHandler
             }
         }
 
-        throw new BadRequestHttpException('error validating the action on this element, element cannot perform this action');
+        throw new AdminOperationFailedException('error validating the action on this element, element cannot perform this action');
     }
 
     private function buildCustomHtml(?CustomHtmlServiceInterface $customHtmlService, ConcreteObject|Document|Asset $element): array

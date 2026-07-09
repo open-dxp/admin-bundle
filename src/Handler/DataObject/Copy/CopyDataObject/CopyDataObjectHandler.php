@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Factory\ElementServiceFactory;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
@@ -56,7 +57,7 @@ final class CopyDataObjectHandler
 
         $source = DataObject::getById($payload->sourceId);
         if (!$source instanceof DataObject) {
-            throw new NotFoundHttpException("Source object not found: {$payload->sourceId}");
+            throw new AdminOperationFailedException("Source object not found: {$payload->sourceId}");
         }
 
         if ($source instanceof DataObject\Concrete && $latestVersion = $source->getLatestVersion()) {

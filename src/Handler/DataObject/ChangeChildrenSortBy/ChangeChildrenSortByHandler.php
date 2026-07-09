@@ -22,8 +22,7 @@ use OpenDxp\Db;
 use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class ChangeChildrenSortByHandler
@@ -42,7 +41,7 @@ final class ChangeChildrenSortByHandler
         $object = DataObject::getById($id);
 
         if (!$object) {
-            throw new NotFoundHttpException(sprintf('DataObject with id %d not found', $id));
+            throw new AdminOperationFailedException(sprintf('DataObject with id %d not found', $id));
         }
 
         $currentSortBy = $object->getChildrenSortBy();
@@ -52,7 +51,7 @@ final class ChangeChildrenSortByHandler
 
         if ($currentSortBy !== $sortBy) {
             if (!$adminUser->isAdmin() && !$adminUser->isAllowed('objects_sort_method')) {
-                throw new AccessDeniedHttpException('Changing the sort method is only allowed for admin users');
+                throw new AdminOperationFailedException('Changing the sort method is only allowed for admin users');
             }
 
             if ($sortBy === 'index') {

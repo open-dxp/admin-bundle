@@ -17,9 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\UpdateFieldCollection;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\UpdateFieldCollection\UpdateFieldCollectionPayload;
 use OpenDxp\Model\DataObject;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class UpdateFieldCollectionHandler
 {
@@ -36,7 +36,7 @@ final class UpdateFieldCollectionHandler
             $list = new DataObject\Fieldcollection\Definition\Listing();
             foreach ($list->loadNames() as $fcName) {
                 if (strtolower($key) === strtolower($fcName)) {
-                    throw new BadRequestHttpException('FieldCollection with the same name already exists (lower/upper cases may be different)');
+                    throw new AdminOperationFailedException('FieldCollection with the same name already exists (lower/upper cases may be different)');
                 }
             }
         }

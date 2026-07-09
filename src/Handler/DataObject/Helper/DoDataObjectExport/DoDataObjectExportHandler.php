@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DoDataObjectExpor
 use InvalidArgumentException;
 use League\Flysystem\UnableToReadFile;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Logger;
@@ -29,7 +30,6 @@ use OpenDxp\Model\DataObject\Listing;
 use OpenDxp\Tool\Storage;
 use OpenDxp\Tool\UserTimezone;
 use Symfony\Component\EventDispatcher\GenericEvent;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class DoDataObjectExportHandler
@@ -120,7 +120,7 @@ final class DoDataObjectExportHandler
             $storage->writeStream($csvFile, $temp);
         } catch (UnableToReadFile $exception) {
             Logger::err($exception->getMessage());
-            throw new BadRequestHttpException(sprintf('export file not found: %s', $payload->fileHandle));
+            throw new AdminOperationFailedException(sprintf('export file not found: %s', $payload->fileHandle));
         } finally {
             if (is_resource($temp)) {
                 fclose($temp);

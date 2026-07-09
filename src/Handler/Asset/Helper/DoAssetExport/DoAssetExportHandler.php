@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport;
 
 use League\Flysystem\UnableToReadFile;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
@@ -25,7 +26,6 @@ use OpenDxp\Logger;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
 use OpenDxp\Tool\Storage;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class DoAssetExportHandler
 {
@@ -78,7 +78,7 @@ final class DoAssetExportHandler
             $storage->writeStream($csvFile, $temp);
         } catch (UnableToReadFile $exception) {
             Logger::err($exception->getMessage());
-            throw new BadRequestHttpException(sprintf('export file not found: %s', $fileHandle));
+            throw new AdminOperationFailedException(sprintf('export file not found: %s', $fileHandle));
         } finally {
             if (is_resource($temp)) {
                 fclose($temp);

@@ -18,10 +18,10 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUser;
 
 use Exception;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Core\Validator\Constraints\UserPassword;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -34,13 +34,13 @@ final class UpdateCurrentUserHandler
 
     /**
      * @throws Exception
-     * @throws BadRequestHttpException
+     * @throws AdminOperationFailedException
      */
     public function __invoke(UpdateCurrentUserPayload $payload): void
     {
         $user = $this->userContext->getAdminUser();
         if ($user === null || $user->getId() !== $payload->requestedUserId) {
-            throw new BadRequestHttpException('User ID mismatch');
+            throw new AdminOperationFailedException('User ID mismatch');
         }
         $values = $payload->values;
         unset($values['name'], $values['id'], $values['admin'], $values['permissions'], $values['roles'], $values['active']);
@@ -70,10 +70,10 @@ final class UpdateCurrentUserHandler
                 $values['password'] = Tool\Authentication::getPasswordHash($user->getName(), $values['new_password']);
             } else {
                 if (!$oldPasswordCheck) {
-                    throw new BadRequestHttpException('incorrect_password');
+                    throw new AdminOperationFailedException('incorrect_password');
                 }
 
-                throw new BadRequestHttpException('password_cannot_be_changed');
+                throw new AdminOperationFailedException('password_cannot_be_changed');
             }
         }
 

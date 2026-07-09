@@ -17,12 +17,17 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\SaveRelation;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject\Classificationstore;
 
 final class SaveRelationHandler
 {
     public function __invoke(SaveRelationPayload $payload): SaveRelationResult
     {
+        if (!$payload->hasData) {
+            throw new AdminOperationFailedException();
+        }
+
         $data = $payload->data;
         $keyId = $data['keyId'];
         $groupId = $data['groupId'];

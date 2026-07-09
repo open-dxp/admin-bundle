@@ -18,9 +18,9 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptions;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class SaveSelectOptionsHandler
@@ -30,7 +30,7 @@ final class SaveSelectOptionsHandler
     public function __invoke(SaveSelectOptionsPayload $payload): SaveSelectOptionsResult
     {
         if ($payload->task === 'add' && (new DataObject\SelectOptions\Config\Listing())->hasConfig($payload->id)) {
-            throw new BadRequestHttpException('Select options with the same ID already exists (lower/upper cases may be different)');
+            throw new AdminOperationFailedException('Select options with the same ID already exists (lower/upper cases may be different)');
         }
 
         $selectOptionsConfiguration = DataObject\SelectOptions\Config::createFromData([

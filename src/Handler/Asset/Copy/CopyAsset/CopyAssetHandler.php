@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Factory\ElementServiceFactory;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset\CopyAssetPayload;
 use OpenDxp\Logger;
@@ -39,7 +40,7 @@ final class CopyAssetHandler
         $source = Asset::getById($sourceId);
 
         if ($source === null) {
-            throw new NotFoundHttpException('Source asset not found');
+            throw new AdminOperationFailedException('Source asset not found');
         }
 
         if ($sourceParentId !== null && $targetParentId !== null) {

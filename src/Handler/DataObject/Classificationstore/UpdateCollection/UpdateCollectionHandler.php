@@ -17,12 +17,17 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateCollection;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject\Classificationstore;
 
 final class UpdateCollectionHandler
 {
     public function __invoke(UpdateCollectionPayload $payload): UpdateCollectionResult
     {
+        if (!$payload->hasData) {
+            throw new AdminOperationFailedException();
+        }
+
         $data = $payload->data;
         $id = $data['id'];
         $config = Classificationstore\CollectionConfig::getById($id);

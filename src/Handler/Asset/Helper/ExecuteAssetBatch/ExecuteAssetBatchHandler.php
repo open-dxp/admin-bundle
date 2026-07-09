@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridBatchService;
 use OpenDxp\Model\User;
@@ -35,6 +36,10 @@ final class ExecuteAssetBatchHandler
         $adminUser = $this->userContext->getAdminUser();
         // Returns false when there is no asset to update (job already completed) — not an error.
         // Throws on permission denied or save failure.
-        $this->gridBatchService->executeAssetBatch($data, $adminUser);
+        try {
+            $this->gridBatchService->executeAssetBatch($data, $adminUser);
+        } catch (\Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
     }
 }

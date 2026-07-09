@@ -17,9 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ImportObjectBrick;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ImportObjectBrick\ImportObjectBrickPayload;
 use OpenDxp\Model\DataObject;
-use RuntimeException;
 
 final class ImportObjectBrickHandler
 {
@@ -28,7 +28,7 @@ final class ImportObjectBrickHandler
         $objectBrick = DataObject\Objectbrick\Definition::getByKey($payload->id);
 
         if (!DataObject\ClassDefinition\Service::importObjectBrickFromJson($objectBrick, $payload->json)) {
-            throw new RuntimeException('Failed to import objectbrick: ' . $payload->id);
+            throw new AdminOperationFailedException('Failed to import objectbrick: ' . $payload->id);
         }
     }
 }
