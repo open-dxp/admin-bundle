@@ -14,12 +14,11 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Builder;
+namespace OpenDxp\Bundle\AdminBundle\Service\Admin;
 
-use Doctrine\DBAL\Connection;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Dto\Admin\AdminSettingsDto;
-use OpenDxp\Bundle\AdminBundle\Dto\Admin\StatisticsDto;
+use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsPayload;
 use OpenDxp\Bundle\AdminBundle\Perspective\Config as PerspectiveConfig;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService;
@@ -41,13 +40,12 @@ use OpenDxp\Tool\Admin;
 use OpenDxp\Tool\MaintenanceModeHelperInterface;
 use OpenDxp\Version;
 use OpenDxp\Video;
-use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsPayload;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-final class AdminSettingsAssembler
+final class AdminSettingsService
 {
     public function __construct(
         private readonly Config $config,
@@ -56,7 +54,6 @@ final class AdminSettingsAssembler
         private readonly Executor $maintenanceExecutor,
         private readonly MaintenanceModeHelperInterface $maintenanceModeHelper,
         private readonly UrlGeneratorInterface $urlGenerator,
-        private readonly Connection $db,
         private readonly KernelInterface $kernel,
         private readonly RequestStack $requestStack,
         #[Autowire('%opendxp_admin.custom_admin_route_name%')]
@@ -188,25 +185,6 @@ final class AdminSettingsAssembler
             checkNewNotificationInterval: $config['notifications']['check_new_notification']['interval'] * 1000,
 
             csrfToken: $this->csrfProtection->getCsrfToken($this->requestStack->getSession()),
-        );
-    }
-
-    public function createStatistics(): StatisticsDto
-    {
-        try {
-            $dbVersion = $this->db->fetchOne('SELECT VERSION()');
-        } catch (\Throwable) {
-            $dbVersion = null;
-        }
-
-        return new StatisticsDto(
-            instanceId: $this->buildInstanceId(),
-            revision: Version::getRevision(),
-            version: Version::getVersion(),
-            majorVersion: Version::getMajorVersion(),
-            phpVersion: PHP_VERSION,
-            dbVersion: is_string($dbVersion) ? $dbVersion : null,
-            bundles: array_keys($this->kernel->getBundles()),
         );
     }
 

@@ -16,10 +16,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings;
 
-use OpenDxp\Bundle\AdminBundle\Builder\AdminSettingsAssembler;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\IndexActionSettingsEvent;
 use OpenDxp\Bundle\AdminBundle\Perspective\Config as PerspectiveConfig;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminSettingsService;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
 use OpenDxp\Config;
@@ -30,7 +30,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 final class SettingsHandler
 {
     public function __construct(
-        private readonly AdminSettingsAssembler $factory,
+        private readonly AdminSettingsService $adminSettingsService,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly OpenDxpBundleManager $bundleManager,
         private readonly Config $config,
@@ -40,7 +40,7 @@ final class SettingsHandler
     public function __invoke(SettingsPayload $payload): SettingsResult
     {
         $user = $this->userContext->getAdminUser();
-        $dto = $this->factory->createSettings($payload, $user);
+        $dto = $this->adminSettingsService->createSettings($payload, $user);
 
         $settings = [
             'instanceId'          => $dto->instanceId,

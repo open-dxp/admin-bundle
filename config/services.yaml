@@ -142,6 +142,9 @@ services:
 
     OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService: ~
 
+    OpenDxp\Bundle\AdminBundle\Service\Admin\AdminSettingsService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Admin\AdminStatisticsService: ~
+
     #
     # Repositories
     #
@@ -153,12 +156,6 @@ services:
     #
     OpenDxp\Bundle\AdminBundle\Factory\:
         resource: '../src/Factory'
-
-    #
-    # Builder
-    #
-    OpenDxp\Bundle\AdminBundle\Builder\:
-        resource: '../src/Builder'
 
     #
     # HTTP / Value Resolvers

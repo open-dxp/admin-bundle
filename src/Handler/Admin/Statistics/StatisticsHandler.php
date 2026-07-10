@@ -18,20 +18,20 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Admin\Statistics;
 
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
-use OpenDxp\Bundle\AdminBundle\Builder\AdminSettingsAssembler;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminStatisticsService;
 
 final class StatisticsHandler
 {
     public function __construct(
-        private readonly AdminSettingsAssembler $factory,
+        private readonly AdminStatisticsService $adminStatisticsService,
         private readonly ClientInterface $httpClient,
     ) {}
 
     public function __invoke(EmptyPayload $payload): void
     {
         try {
-            $dto = $this->factory->createStatistics();
+            $dto = $this->adminStatisticsService->createStatistics();
             $data = [
                 'instance_id'   => $dto->instanceId,
                 'revision'      => $dto->revision,
