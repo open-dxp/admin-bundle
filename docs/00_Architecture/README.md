@@ -48,6 +48,7 @@ src/
 ├── Model/                 # Admin-only models (GridConfig, GridConfigShare, etc.)
 ├── Payload/               # Shared request DTOs consumed by Handlers; action-specific ones live next to their Handler
 ├── Perspective/           # Perspective resolution and serialization
+├── Repository/            # Persistence for admin-only data (e.g. per-user dashboard config), keyed by explicit params, no bound state
 ├── Security/              # Admin authentication, authenticators, security tokens
 ├── Service/               # Application services shared across Handlers (grid data, workflow, element resolution)
 ├── System/                # System-level services
@@ -72,23 +73,28 @@ public function saveAction(
 }
 ```
 
-| Layer    | Location                                          | Responsibility                                                                                                                                               |
-|----------|---------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Payload  | `src/Payload/Common/` or colocated with a Handler | Typed request DTO. `fromRequest()` is resolved automatically by `ExtJsValueResolver` before the controller action runs, the only place request data is read. |
-| Handler  | `src/Handler/**`                                  | One invokable (`__invoke`) class per action. Holds all business logic. Transport-agnostic, never receives the HTTP `Request`.                                |
-| Result   | colocated with its Handler                        | Typed return value, mapped to a JSON response by the controller.                                                                                             |
-| Service  | `src/Service/**`                                  | Logic shared across multiple Handlers (grid data assembly, workflow resolution, element resolution).                                                         |
-| Enricher | `src/Enricher/**`                                 | Adds admin-only presentation data (permissions, admin styles) to tree/editor node data, shared across Handlers.                                              |
+| Layer      | Location                                          | Responsibility                                                                                                                                               |
+|------------|---------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Payload    | `src/Payload/Common/` or colocated with a Handler | Typed request DTO. `fromRequest()` is resolved automatically by `ExtJsValueResolver` before the controller action runs, the only place request data is read. |
+| Handler    | `src/Handler/**`                                  | One invokable (`__invoke`) class per action. Holds all business logic. Transport-agnostic, never receives the HTTP `Request`.                                |
+| Result     | colocated with its Handler                        | Typed return value, mapped to a JSON response by the controller.                                                                                             |
+| Service    | `src/Service/**`                                  | Logic shared across multiple Handlers (grid data assembly, workflow resolution, element resolution).                                                         |
+| Repository | `src/Repository/**`                               | Persistence only.                                                                                                                                            |
+| Enricher   | `src/Enricher/**`                                 | Adds admin-only presentation data (permissions, admin styles) to tree/editor node data, shared across Handlers.                                              |
 
 **Error handling:** 
 
 Handlers always throw on failure, they never return a `success: false` or `errorMessage` field. 
 
-`AdminExceptionListener` (pre-existing, unchanged) converts any exception raised during an 
-admin XHR request into `{success: false, message, ...}` JSON at the exception's real HTTP status.
+`AdminExceptionListener` converts any exception raised during an admin XHR request into `{success: false, message, ...}` JSON at the exception's real HTTP status.
 
-For an expected, recoverable business-rule failure that the ExtJS frontend handles locally as `success: false` at HTTP 200, not a real HTTP error, 
+### AdminOperationFailedException
+For an expected, recoverable business-rule failure that the admin UI handles locally as `success: false` at HTTP 200, not a real HTTP error, 
 throw `OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException` instead of a generic exception; the listener maps it to 200 explicitly rather than a 4xx/5xx status.
+
+### ElementLockedException
+Some exceptions carry their own dedicated response shape instead of the generic `{success: false, message}` body: `OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException` is mapped by the listener to a 200 response with an `editlock` payload,
+which the admin UI uses to show the lock dialog. 
 
 ## Frontend Assets
 
