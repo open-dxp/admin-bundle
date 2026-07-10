@@ -16,19 +16,21 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\AddWidget;
 
-use OpenDxp\Bundle\AdminBundle\Factory\DashboardFactory;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService;
 
 final class AddWidgetHandler
 {
-    public function __construct(private readonly DashboardFactory $dashboardFactory)
-    {
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly DashboardService $dashboardService,
+    ) {
     }
 
     public function __invoke(AddWidgetPayload $payload): AddWidgetResult
     {
-        $dashboard = $this->dashboardFactory->create();
-
-        $config = $dashboard->getDashboard($payload->dashboardId);
+        $user = $this->userContext->getAdminUser();
+        $config = $this->dashboardService->getDashboard($user, $payload->dashboardId);
 
         $nextId = 0;
         foreach ($config['positions'] as $col) {
@@ -44,7 +46,7 @@ final class AddWidgetHandler
             'config' => null,
         ];
 
-        $dashboard->saveDashboard($payload->dashboardId, $config);
+        $this->dashboardService->saveDashboard($user, $payload->dashboardId, $config);
 
         return new AddWidgetResult(id: $nextId);
     }

@@ -19,10 +19,10 @@ namespace OpenDxp\Bundle\AdminBundle\Builder;
 use Doctrine\DBAL\Connection;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Dto\Admin\AdminSettingsDto;
-use OpenDxp\Bundle\AdminBundle\Factory\DashboardFactory;
 use OpenDxp\Bundle\AdminBundle\Dto\Admin\StatisticsDto;
 use OpenDxp\Bundle\AdminBundle\Perspective\Config as PerspectiveConfig;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
+use OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService;
 use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
 use OpenDxp\Bundle\CoreBundle\OptionsProvider\SelectOptionsOptionsProvider;
 use OpenDxp\Config;
@@ -51,7 +51,7 @@ final class AdminSettingsAssembler
 {
     public function __construct(
         private readonly Config $config,
-        private readonly DashboardFactory $dashboardFactory,
+        private readonly DashboardService $dashboardService,
         private readonly CsrfProtectionHandler $csrfProtection,
         private readonly Executor $maintenanceExecutor,
         private readonly MaintenanceModeHelperInterface $maintenanceModeHelper,
@@ -72,7 +72,6 @@ final class AdminSettingsAssembler
         $adminSettings = AdminConfig::get();
 
         $runtimePerspective = PerspectiveConfig::getRuntimePerspective($user);
-        $dashboard = $this->dashboardFactory->create();
 
         try {
             $adminEntrypointUrl = $this->urlGenerator->generate(
@@ -153,7 +152,7 @@ final class AdminSettingsAssembler
 
             perspective: $runtimePerspective,
             availablePerspectives: PerspectiveConfig::getAvailablePerspectives($user),
-            disabledPortlets: $dashboard->getDisabledPortlets(),
+            disabledPortlets: $this->dashboardService->getDisabledPortlets($user),
 
             imageThumbnailsWriteable: (new Asset\Image\Thumbnail\Config())->isWriteable(),
             videoThumbnailsWriteable: (new Asset\Video\Thumbnail\Config())->isWriteable(),

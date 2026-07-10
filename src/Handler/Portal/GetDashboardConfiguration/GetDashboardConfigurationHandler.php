@@ -16,18 +16,21 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\GetDashboardConfiguration;
 
-use OpenDxp\Bundle\AdminBundle\Factory\DashboardFactory;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService;
 
 final class GetDashboardConfigurationHandler
 {
-    public function __construct(private readonly DashboardFactory $dashboardFactory)
-    {
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly DashboardService $dashboardService,
+    ) {
     }
 
     public function __invoke(GetDashboardConfigurationPayload $payload): GetDashboardConfigurationResult
     {
-        $dashboard = $this->dashboardFactory->create();
+        $config = $this->dashboardService->getDashboard($this->userContext->getAdminUser(), $payload->key ?? 'welcome');
 
-        return new GetDashboardConfigurationResult(config: $dashboard->getDashboard($payload->key ?? 'welcome'));
+        return new GetDashboardConfigurationResult(config: $config);
     }
 }

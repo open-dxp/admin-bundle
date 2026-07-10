@@ -16,19 +16,21 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\RemoveWidget;
 
-use OpenDxp\Bundle\AdminBundle\Factory\DashboardFactory;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService;
 
 final class RemoveWidgetHandler
 {
-    public function __construct(private readonly DashboardFactory $dashboardFactory)
-    {
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly DashboardService $dashboardService,
+    ) {
     }
 
     public function __invoke(RemoveWidgetPayload $payload): void
     {
-        $dashboard = $this->dashboardFactory->create();
-
-        $config = $dashboard->getDashboard($payload->dashboardId);
+        $user = $this->userContext->getAdminUser();
+        $config = $this->dashboardService->getDashboard($user, $payload->dashboardId);
         $newConfig = [[], []];
         $colCount = 0;
 
@@ -42,6 +44,6 @@ final class RemoveWidgetHandler
         }
 
         $config['positions'] = $newConfig;
-        $dashboard->saveDashboard($payload->dashboardId, $config);
+        $this->dashboardService->saveDashboard($user, $payload->dashboardId, $config);
     }
 }

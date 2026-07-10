@@ -140,6 +140,14 @@ services:
 
     OpenDxp\Bundle\AdminBundle\Service\Translation\AdminSearchTermResolver: ~
 
+    OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService: ~
+
+    #
+    # Repositories
+    #
+    OpenDxp\Bundle\AdminBundle\Repository\:
+        resource: '../src/Repository'
+
     #
     # Factories
     #

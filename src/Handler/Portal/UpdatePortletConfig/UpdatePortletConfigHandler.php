@@ -16,19 +16,21 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\UpdatePortletConfig;
 
-use OpenDxp\Bundle\AdminBundle\Factory\DashboardFactory;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService;
 
 final class UpdatePortletConfigHandler
 {
-    public function __construct(private readonly DashboardFactory $dashboardFactory)
-    {
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly DashboardService $dashboardService,
+    ) {
     }
 
     public function __invoke(UpdatePortletConfigPayload $payload): void
     {
-        $dashboard = $this->dashboardFactory->create();
-
-        $config = $dashboard->getDashboard($payload->dashboardKey);
+        $user = $this->userContext->getAdminUser();
+        $config = $this->dashboardService->getDashboard($user, $payload->dashboardKey);
         foreach ($config['positions'] as &$col) {
             foreach ($col as &$portlet) {
                 if ($portlet['id'] === $payload->portletId) {
@@ -38,6 +40,6 @@ final class UpdatePortletConfigHandler
             }
         }
 
-        $dashboard->saveDashboard($payload->dashboardKey, $config);
+        $this->dashboardService->saveDashboard($user, $payload->dashboardKey, $config);
     }
 }

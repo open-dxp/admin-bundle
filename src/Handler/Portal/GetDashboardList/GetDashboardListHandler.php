@@ -16,21 +16,24 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\GetDashboardList;
 
-use OpenDxp\Bundle\AdminBundle\Factory\DashboardFactory;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService;
 
 final class GetDashboardListHandler
 {
-    public function __construct(private readonly DashboardFactory $dashboardFactory)
-    {
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly DashboardService $dashboardService,
+    ) {
     }
 
     public function __invoke(EmptyPayload $payload): GetDashboardListResult
     {
-        $dashboard = $this->dashboardFactory->create();
+        $allDashboards = $this->dashboardService->getAllDashboards($this->userContext->getAdminUser());
 
         $dashboards = [];
-        foreach (array_keys($dashboard->getAllDashboards()) as $key) {
+        foreach (array_keys($allDashboards) as $key) {
             if ($key !== 'welcome') {
                 $dashboards[] = $key;
             }

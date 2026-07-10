@@ -16,17 +16,19 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\DeleteDashboard;
 
-use OpenDxp\Bundle\AdminBundle\Factory\DashboardFactory;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService;
 
 final class DeleteDashboardHandler
 {
-    public function __construct(private readonly DashboardFactory $dashboardFactory)
-    {
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly DashboardService $dashboardService,
+    ) {
     }
 
     public function __invoke(DeleteDashboardPayload $payload): void
     {
-        $dashboard = $this->dashboardFactory->create();
-        $dashboard->deleteDashboard($payload->key);
+        $this->dashboardService->deleteDashboard($this->userContext->getAdminUser(), $payload->key);
     }
 }
