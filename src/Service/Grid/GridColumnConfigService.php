@@ -19,11 +19,11 @@ namespace OpenDxp\Bundle\AdminBundle\Service\Grid;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Exception;
+use OpenDxp\Bundle\AdminBundle\Dto\Grid\GridConfigData;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigFavourite;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigShare;
 use OpenDxp\Db;
-use OpenDxp\Bundle\AdminBundle\Service\Grid\Dto\GridConfigData;
 use OpenDxp\Model\User;
 use OpenDxp\Security\SecurityHelper;
 

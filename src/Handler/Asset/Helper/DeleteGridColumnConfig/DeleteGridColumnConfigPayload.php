@@ -25,6 +25,9 @@ final readonly class DeleteGridColumnConfigPayload implements ExtJsPayloadInterf
     public function __construct(
         public readonly int $gridConfigId = 0,
         public readonly bool $noSystemColumns = false,
+        public readonly string $id = '',
+        public readonly string $types = '',
+        public readonly string $searchType = '',
     ) {}
 
     public static function fromRequest(Request $request): static
@@ -32,6 +35,9 @@ final readonly class DeleteGridColumnConfigPayload implements ExtJsPayloadInterf
         return new static(
             gridConfigId:    $request->request->getInt('gridConfigId'),
             noSystemColumns: (bool) $request->query->get('no_system_columns'),
+            id:              $request->request->getString('id'),
+            types:           $request->request->getString('types'),
+            searchType:      $request->request->getString('searchType'),
         );
     }
 }

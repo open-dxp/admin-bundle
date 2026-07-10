@@ -18,9 +18,9 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Service\Grid;
 
 use Exception;
+use OpenDxp\Bundle\AdminBundle\Dto\Grid\GridColumnConfigResult;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigFavourite;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
-use OpenDxp\Bundle\AdminBundle\Service\Grid\Dto\GridColumnConfigResult;
 use OpenDxp\Config;
 use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
@@ -213,7 +213,7 @@ final class DataObjectGridColumnConfigResolver
 
         usort($availableFields, static fn ($a, $b) => $a['position'] <=> $b['position']);
 
-        $frontendLanguages = Tool\Admin::reorderWebsiteLanguages(Tool\Admin::getCurrentUser(), $this->config['general']['valid_languages']);
+        $frontendLanguages = Tool\Admin::reorderWebsiteLanguages($user, $this->config['general']['valid_languages']);
         $language = $frontendLanguages ? $frontendLanguages[0] : $locale;
         if (!Tool::isValidLanguage($language)) {
             $validLanguages = Tool::getValidLanguages();

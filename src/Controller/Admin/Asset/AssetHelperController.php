@@ -31,11 +31,12 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\P
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetMetadataForColumnConfig\GetAssetMetadataForColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetGridColumnConfig\GetGridColumnConfigPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetGridColumnConfig\GetGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\MarkGridConfigFavouritePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\MarkGridConfigFavouriteHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigHandler;
-use OpenDxp\Bundle\AdminBundle\Service\Grid\AssetGridColumnConfigResolver;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Tool\Session;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -52,52 +53,20 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/asset-helper')]
 class AssetHelperController extends AdminAbstractController
 {
-    public function __construct(
-        private readonly AssetGridColumnConfigResolver $gridConfigResolver,
-    ) {
-    }
-
     #[Route('/grid-delete-column-config', name: 'opendxp_admin_asset_assethelper_griddeletecolumnconfig', methods: ['DELETE'])]
     public function gridDeleteColumnConfigAction(
         DeleteGridColumnConfigPayload $payload,
         DeleteGridColumnConfigHandler $handler,
-        Request $request,
     ): JsonResponse {
-        $params = [
-            'id'              => $request->request->getString('id'),
-            'type'            => $request->request->getString('type'),
-            'types'           => $request->request->getString('types'),
-            'gridConfigId'    => $request->request->getString('gridConfigId'),
-            'searchType'      => $request->request->getString('searchType'),
-            'noSystemColumns' => $payload->noSystemColumns,
-        ];
-
-        $handler($payload);
-
-        $resolverResult = $this->gridConfigResolver->resolve($params, true);
-
-        return $this->adminJson([...$resolverResult->jsonSerialize(), 'deleteSuccess' => true]);
+        return $this->adminJson($handler($payload));
     }
 
     #[Route('/grid-get-column-config', name: 'opendxp_admin_asset_assethelper_gridgetcolumnconfig', methods: ['GET'])]
     public function gridGetColumnConfigAction(
-        #[MapQueryParameter] ?string $id = null,
-        #[MapQueryParameter] ?string $type = null,
-        #[MapQueryParameter] ?string $types = null,
-        #[MapQueryParameter] ?string $gridConfigId = null,
-        #[MapQueryParameter] ?string $searchType = null,
-        #[MapQueryParameter(name: 'no_system_columns')] bool $noSystemColumns = false,
+        GetGridColumnConfigPayload $payload,
+        GetGridColumnConfigHandler $handler,
     ): JsonResponse {
-        $params = [
-            'id'              => $id,
-            'type'            => $type,
-            'types'           => $types,
-            'gridConfigId'    => $gridConfigId,
-            'searchType'      => $searchType,
-            'noSystemColumns' => $noSystemColumns,
-        ];
-
-        return $this->adminJson($this->gridConfigResolver->resolve($params));
+        return $this->adminJson($handler($payload));
     }
 
     #[Route('/prepare-helper-column-configs', name: 'opendxp_admin_asset_assethelper_preparehelpercolumnconfigs', methods: ['POST'])]

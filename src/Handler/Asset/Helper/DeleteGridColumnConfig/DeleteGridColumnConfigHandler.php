@@ -20,17 +20,19 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
-use OpenDxp\Model\User;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Grid\AssetGridColumnConfigResolver;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class DeleteGridColumnConfigHandler
 {
-    public function __construct(private readonly AdminUserContextInterface $userContext)
-    {
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly AssetGridColumnConfigResolver $gridConfigResolver,
+    ) {
     }
 
-    public function __invoke(DeleteGridColumnConfigPayload $payload): void
+    public function __invoke(DeleteGridColumnConfigPayload $payload): array
     {
         $gridConfigId = $payload->gridConfigId;
         $adminUser = $this->userContext->getAdminUser();
@@ -44,5 +46,17 @@ final class DeleteGridColumnConfigHandler
         }
 
         $gridConfig->delete();
+
+        $params = [
+            'id'              => $payload->id,
+            'types'           => $payload->types,
+            'gridConfigId'    => $gridConfigId,
+            'searchType'      => $payload->searchType,
+            'noSystemColumns' => $payload->noSystemColumns,
+        ];
+
+        $resolverResult = $this->gridConfigResolver->resolve($params, true);
+
+        return [...$resolverResult->jsonSerialize(), 'deleteSuccess' => true];
     }
 }

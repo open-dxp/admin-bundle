@@ -32,7 +32,6 @@ use OpenDxp\Model\DataObject\ClassDefinition\Data\ReverseObjectRelation;
 use OpenDxp\Model\DataObject\ClassDefinition\PreviewGeneratorInterface;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\Schedule\Task;
-use OpenDxp\Tool;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -221,9 +220,7 @@ final class GetDataObjectHandler
                 return strcasecmp($layoutData1['name'], $layoutData2['name']);
             });
 
-            $user = Tool\Admin::getCurrentUser();
-
-            if ($currentLayoutId == -1 && $user->isAdmin()) {
+            if ($currentLayoutId == -1 && $adminUser->isAdmin()) {
                 $layout = DataObject\Service::getSuperLayoutDefinition($object);
                 $objectData['layout'] = $layout;
             } elseif (!empty($currentLayoutId)) {

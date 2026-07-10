@@ -17,14 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\Grid;
 
+use OpenDxp\Bundle\AdminBundle\Dto\Grid\GridColumnConfigResult;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigFavourite;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
-use OpenDxp\Bundle\AdminBundle\Service\Grid\Dto\GridColumnConfigResult;
 use OpenDxp\Bundle\AdminBundle\Tool;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Metadata;
-use OpenDxp\Model\User;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 

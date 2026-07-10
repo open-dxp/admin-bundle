@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service\Grid\Dto;
+namespace OpenDxp\Bundle\AdminBundle\Dto\Grid;
 
 final class GridColumnConfigResult implements \JsonSerializable
 {
