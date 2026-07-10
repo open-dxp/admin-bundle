@@ -1820,6 +1820,9 @@ class ClassController extends AdminAbstractController implements KernelControlle
         for ($i = $startIndex; $i < $limit; $i++) {
             $icon = $icons[$i];
             $content = file_get_contents(OPENDXP_WEB_ROOT . $icon);
+            if ($content === false) {
+                continue;
+            }
             $result[] = [
                 'text' => sprintf(
                     '<img style="%s" src="data:%s;base64,%s"/>',
