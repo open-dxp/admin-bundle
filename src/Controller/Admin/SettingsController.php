@@ -265,7 +265,9 @@ class SettingsController extends AdminAbstractController
         return $this->adminJson(ApiResponse::ok());
     }
 
-    #[IsGranted(new Expression('is_granted("clear_cache") or is_granted("system_settings")'))]
+    #[IsGranted(new Expression(
+        'is_granted("' . CorePermission::ClearCache->value . '") or is_granted("' . CorePermission::SystemSettings->value . '")'
+    ))]
     #[Route('/clear-cache', name: 'opendxp_admin_settings_clearcache', methods: ['DELETE'])]
     public function clearCacheAction(
         ClearCachePayload $payload,

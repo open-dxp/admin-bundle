@@ -6,7 +6,7 @@ This bundle uses **Codeception** for integration tests and plain **PHPUnit** for
 
 ```
 tests/
-├── Model/                    # Integration tests — require a running OpenDXP environment
+├── Model/                    # Integration tests, require a running OpenDXP environment
 │   ├── GridHelper/           # Grid/listing logic tests
 │   └── Permissions/          # Permission model tests
 └── Support/
@@ -21,7 +21,7 @@ Configuration: `codeception.dist.yml` in the bundle root.
 | Base Class                                 | From               | Use When                                                                |
 |--------------------------------------------|--------------------|-------------------------------------------------------------------------|
 | `OpenDxp\Tests\Support\Test\ModelTestCase` | `open-dxp/opendxp` | Test needs DB, models, or a running OpenDXP (documents, objects, sites) |
-| `PHPUnit\Framework\TestCase`               | `PHPUnit`          | Pure unit test — event classes, enums, services without I/O             |
+| `PHPUnit\Framework\TestCase`               | `PHPUnit`          | Pure unit test: event classes, enums, services without I/O              |
 
 ## When to Write Which Type
 
@@ -33,7 +33,10 @@ Configuration: `codeception.dist.yml` in the bundle root.
 **Integration tests** (`ModelTestCase`):
 - Permission checks against real user/role objects
 - Grid helpers that run queries
-- Controller-level behaviour that reads/writes models
+- Handler/Service-level behaviour that reads/writes models. Business logic lives in
+  `src/Handler/**` and `src/Service/**`, not in controllers, so this is where most
+  integration coverage belongs; test the Handler/Service directly rather than through
+  the controller action where possible
 
 ## Unit Test Example
 

@@ -36,7 +36,7 @@ final readonly class TreeGetChildrenByIdPayload implements ExtJsPayloadInterface
     {
         return new static(
             node: $request->query->getInt('node'),
-            filter: $request->query->getString('filter') ?: null,
+            filter: $request->query->has('filter') ? $request->query->getString('filter') : null,
             start: $request->query->getInt('start'),
             limit: $request->query->getInt('limit', 100000000),
             view: $request->query->getString('view'),

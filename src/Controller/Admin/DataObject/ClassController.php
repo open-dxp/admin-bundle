@@ -153,7 +153,7 @@ class ClassController extends AdminAbstractController
 
         $response = new Response($result->json);
         $response->headers->set('Content-type', 'application/json');
-        $response->headers->set('Content-Disposition', 'attachment; filename: "class_' . $result->className . '_export.json"');
+        $response->headers->set('Content-Disposition', 'attachment; filename="class_' . $result->className . '_export.json"');
 
         return $response;
     }

@@ -38,7 +38,7 @@ final readonly class SaveToSessionPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
-        $id = $request->request->getInt('id');
+        $id = (int) $request->request->get('id');
         if (!$id) {
             return new static(id: 0, page: null, email: null, link: null, hardlink: null, folder: null);
         }

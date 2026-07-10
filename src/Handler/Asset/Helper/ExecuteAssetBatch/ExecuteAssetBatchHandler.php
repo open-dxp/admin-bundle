@@ -30,14 +30,14 @@ final class ExecuteAssetBatchHandler
         private readonly GridBatchService $gridBatchService,
     ) {}
 
-    public function __invoke(ExecuteAssetBatchPayload $payload): void
+    public function __invoke(ExecuteAssetBatchPayload $payload): bool
     {
         $data = $payload->data ?? [];
         $adminUser = $this->userContext->getAdminUser();
         // Returns false when there is no asset to update (job already completed) — not an error.
         // Throws on permission denied or save failure.
         try {
-            $this->gridBatchService->executeAssetBatch($data, $adminUser);
+            return $this->gridBatchService->executeAssetBatch($data, $adminUser);
         } catch (\Exception $e) {
             throw new AdminOperationFailedException($e->getMessage());
         }

@@ -204,11 +204,7 @@ class UserController extends AdminAbstractController
         GetTokenLoginLinkHandler $getTokenLoginLink,
         GetTokenLoginLinkPayload $payload,
     ): JsonResponse {
-        try {
-            $result = $getTokenLoginLink($payload);
-        } catch (\Throwable $e) {
-            return $this->adminJson(ApiResponse::error($e->getMessage()));
-        }
+        $result = $getTokenLoginLink($payload);
 
         return $this->adminJson(ApiResponse::ok(['link' => $result->link]));
     }

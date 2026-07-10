@@ -204,8 +204,8 @@ class AssetHelperController extends AdminAbstractController
     #[Route('/batch', name: 'opendxp_admin_asset_assethelper_batch', methods: ['PUT'])]
     public function batchAction(ExecuteAssetBatchPayload $payload, ExecuteAssetBatchHandler $executeAssetBatch): JsonResponse
     {
-        if ($payload->data !== null) {
-            $executeAssetBatch($payload);
+        if ($payload->data !== null && !$executeAssetBatch($payload)) {
+            return $this->adminJson(ApiResponse::error('AssetHelperController::batchAction => There is no asset left to update.'));
         }
 
         return $this->adminJson(ApiResponse::ok());

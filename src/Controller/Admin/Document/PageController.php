@@ -38,6 +38,7 @@ use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Document\StaticPageGenerator;
 use OpenDxp\Http\Request\Resolver\DocumentResolver;
 use OpenDxp\Http\Request\Resolver\EditmodeResolver;
+use OpenDxp\Model\Document;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -165,14 +166,21 @@ class PageController extends DocumentControllerBase
         DocumentResolver $documentResolver,
         Environment $twig,
     ): JsonResponse {
+        // document/editmode Twig globals and the DocumentResolver must be set before the
+        // handler renders the areablock index, otherwise nested editables see stale context
+        $document = Document\PageSnippet::getById($payload->documentId);
+        if (!$document) {
+            throw $this->createNotFoundException();
+        }
+        $document = clone $document;
+        $document->setEditables([]);
 
+        $documentResolver->setDocument($request, $document);
+        $twig->addGlobal('document', $document);
+        $twig->addGlobal('editmode', true);
         $request->attributes->set(EditmodeResolver::ATTRIBUTE_EDITMODE, true);
 
         $result = $handler($payload);
-
-        $documentResolver->setDocument($request, $result->document);
-        $twig->addGlobal('document', $result->document);
-        $twig->addGlobal('editmode', true);
 
         return new JsonResponse([
             'editableDefinitions' => $result->editableDefinitions,

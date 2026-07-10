@@ -28,10 +28,6 @@ final class AddToRecyclebinHandler
     {
     }
 
-    /**
-     * 1.x swallowed any failure here into a success:false@200 response - this runs as a
-     * background housekeeping call on essentially every element delete across the admin UI.
-     */
     public function __invoke(AddToRecyclebinPayload $payload): void
     {
         try {

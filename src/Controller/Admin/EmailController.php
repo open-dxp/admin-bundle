@@ -35,6 +35,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\ShowEmailLogHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\ShowEmailLogPayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
+use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Http\RequestHelper;
 use Symfony\Component\ExpressionLanguage\Expression;
@@ -52,7 +53,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/email')]
 class EmailController extends AdminAbstractController
 {
-    #[IsGranted(new Expression('is_granted("emails") or is_granted("gdpr_data_extractor")'))]
+    #[IsGranted(new Expression(
+        'is_granted("' . CorePermission::Emails->value . '") or is_granted("' . AdminPermission::GdprDataExtractor->value . '")'
+    ))]
     #[Route('/email-logs', name: 'opendxp_admin_email_emaillogs', methods: ['GET', 'POST'])]
     public function emailLogsAction(
         GetEmailLogsHandler $getEmailLogs,

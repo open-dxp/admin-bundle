@@ -45,6 +45,6 @@ final class GetSubtypeHandler
             $subtype = 'folder';
         }
 
-        return new GetSubtypeResult(subtype: $subtype, id: $el->getId(), type: $payload->type);
+        return new GetSubtypeResult(subtype: $subtype, id: $el->getId(), type: $resolvedType);
     }
 }

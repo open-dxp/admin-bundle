@@ -23,9 +23,9 @@ use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\ChangeMainDocument\ChangeMainDocumentHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\ChangeMainDocument\ChangeMainDocumentPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\RemoveFromSession\RemoveFromSessionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\RemoveFromSession\RemoveFromSessionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Controller\Traits\ElementEditLockHelperTrait;
@@ -75,7 +75,7 @@ abstract class DocumentControllerBase extends AdminAbstractController
 
     #[Route('/remove-from-session', name: 'removefromsession', methods: ['DELETE'])]
     public function removeFromSessionAction(
-        IdBodyPayload $payload,
+        RemoveFromSessionPayload $payload,
         RemoveFromSessionHandler $handler,
     ): JsonResponse {
         $handler($payload);

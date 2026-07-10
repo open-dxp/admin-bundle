@@ -136,12 +136,13 @@ final class GetObjectBrickTreeHandler
             $definitions[] = $group;
         }
 
-        $event = new GenericEvent(null, [
+        $event = new GenericEvent($this, [
             'list' => $definitions,
             'objectId' => $objectId,
             'forObjectEditor' => $forObjectEditor,
             'layoutDefinitions' => $layoutDefinitions,
             'fieldName' => $fieldName,
+            'object' => $object,
         ]);
         $this->eventDispatcher->dispatch($event, AdminEvents::CLASS_OBJECTBRICK_LIST_PRE_SEND_DATA);
 

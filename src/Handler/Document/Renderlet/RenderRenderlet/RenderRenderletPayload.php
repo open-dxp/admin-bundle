@@ -35,7 +35,7 @@ final readonly class RenderRenderletPayload implements ExtJsPayloadInterface
     {
         return new static(
             type: $request->query->get('type'),
-            id: $request->query->getInt('id') ?: null,
+            id: ((int) $request->query->get('id')) ?: null,
             controller: $request->query->getString('controller') ?: null,
             parentDocumentId: $request->query->getString('opendxp_parentDocument') ?: null,
             template: $request->query->getString('template') ?: null,

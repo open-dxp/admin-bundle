@@ -109,7 +109,7 @@ class CustomLayoutController extends AdminAbstractController
 
         $response = new Response($result->json);
         $response->headers->set('Content-type', 'application/json');
-        $response->headers->set('Content-Disposition', 'attachment; filename: "custom_definition_' . $result->name . '_export.json"');
+        $response->headers->set('Content-Disposition', 'attachment; filename="custom_definition_' . $result->name . '_export.json"');
 
         return $response;
     }

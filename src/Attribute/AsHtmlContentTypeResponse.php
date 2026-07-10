@@ -14,18 +14,9 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Handler\Document\RemoveFromSession;
+namespace OpenDxp\Bundle\AdminBundle\Attribute;
 
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
-
-final class RemoveFromSessionHandler
+#[\Attribute(\Attribute::TARGET_METHOD)]
+final class AsHtmlContentTypeResponse
 {
-    public function __construct(
-        private readonly SessionService $sessionService,
-    ) {}
-
-    public function __invoke(RemoveFromSessionPayload $payload): void
-    {
-        $this->sessionService->removeDocument($payload->id);
-    }
 }

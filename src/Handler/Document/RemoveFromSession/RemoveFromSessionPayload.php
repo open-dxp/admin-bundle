@@ -16,16 +16,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\RemoveFromSession;
 
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
+use Symfony\Component\HttpFoundation\Request;
 
-final class RemoveFromSessionHandler
+final readonly class RemoveFromSessionPayload implements ExtJsPayloadInterface
 {
-    public function __construct(
-        private readonly SessionService $sessionService,
-    ) {}
+    public function __construct(public readonly int $id = 0) {}
 
-    public function __invoke(RemoveFromSessionPayload $payload): void
+    public static function fromRequest(Request $request): static
     {
-        $this->sessionService->removeDocument($payload->id);
+        return new static(id: (int) $request->request->get('id'));
     }
 }

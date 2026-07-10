@@ -29,7 +29,7 @@ final readonly class ChangeMainDocumentPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         return new static(
-            id: $request->request->getInt('id'),
+            id: (int) $request->request->get('id'),
             contentMainDocumentPath: $request->request->getString('contentMainDocumentPath'),
         );
     }

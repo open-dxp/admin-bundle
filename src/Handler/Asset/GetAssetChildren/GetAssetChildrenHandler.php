@@ -82,7 +82,7 @@ final class GetAssetChildrenHandler
 
             $beforeListLoadEvent = new GenericEvent(null, [
                 'list' => $childrenList,
-                'context' => [],
+                'context' => $payload->queryAll,
             ]);
             $this->eventDispatcher->dispatch($beforeListLoadEvent, AdminEvents::ASSET_LIST_BEFORE_LIST_LOAD);
             /** @var Asset\Listing $childrenList */

@@ -30,11 +30,12 @@ final readonly class GetAssetChildrenPayload implements ExtJsPayloadInterface
         public readonly int $offset = 0,
         public readonly bool $hasLimit = false,
         public readonly int $inSearch = 0,
+        public readonly array $queryAll = [],
     ) {}
 
     public static function fromRequest(Request $request): static
     {
-        $filter = $request->query->getString('filter') ?: null;
+        $filter = $request->query->has('filter') ? $request->query->getString('filter') : null;
         $limit = $request->query->getInt('limit', 0);
         if ($filter !== null) {
             $limit = 100;
@@ -50,6 +51,7 @@ final readonly class GetAssetChildrenPayload implements ExtJsPayloadInterface
             offset:       $request->query->getInt('start'),
             hasLimit:     $request->query->has('limit'),
             inSearch:     $request->query->getInt('inSearch'),
+            queryAll:     $request->query->all(),
         );
     }
 }

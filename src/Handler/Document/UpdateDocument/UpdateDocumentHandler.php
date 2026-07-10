@@ -59,7 +59,7 @@ final class UpdateDocumentHandler
         }
 
         if ($document->isAllowed('settings')) {
-            if (isset($payload->updateData['parentId'])) {
+            if (!empty($payload->updateData['parentId'])) {
                 $parentDocument = Document::getById((int) $payload->updateData['parentId']);
 
                 if ($document->getParentId() !== $parentDocument->getId()) {
