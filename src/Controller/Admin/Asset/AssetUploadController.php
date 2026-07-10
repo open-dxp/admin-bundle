@@ -17,11 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
-use Exception;
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAsset\AddAssetPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAsset\AddAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\CheckAssetExists\CheckAssetExistsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\CheckAssetExists\CheckAssetExistsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles\ImportZipFilesPayload;
@@ -31,9 +31,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZip\ImportZipHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ReplaceAsset\ReplaceAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ReplaceAsset\ReplaceAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -45,43 +43,31 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(CorePermission::Assets->value)]
 class AssetUploadController extends AdminAbstractController
 {
-    public function __construct(
-        private readonly AssetUploadService $assetUploadService,
-    ) {}
-
     #[Route('/add-asset', name: 'opendxp_admin_asset_addasset', methods: ['POST'])]
-    public function addAssetAction(Request $request): JsonResponse
+    public function addAssetAction(AddAssetPayload $payload, AddAssetHandler $handler): JsonResponse
     {
-        try {
-            $res = $this->assetUploadService->addAsset($request);
-        } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
-        }
+        $asset = $handler($payload)->asset;
 
         return $this->adminJson(ApiResponse::ok([
             'asset' => [
-                'id' => $res['asset']->getId(),
-                'path' => $res['asset']->getFullPath(),
-                'type' => $res['asset']->getType(),
+                'id' => $asset->getId(),
+                'path' => $asset->getFullPath(),
+                'type' => $asset->getType(),
             ],
         ]));
     }
 
     #[AsHtmlContentTypeResponse]
     #[Route('/add-asset-compatibility', name: 'opendxp_admin_asset_addassetcompatibility', methods: ['POST'])]
-    public function addAssetCompatibilityAction(Request $request): JsonResponse
+    public function addAssetCompatibilityAction(AddAssetPayload $payload, AddAssetHandler $handler): JsonResponse
     {
-        try {
-            $res = $this->assetUploadService->addAsset($request);
-        } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
-        }
+        $asset = $handler($payload)->asset;
 
-        return $this->adminJson(ApiResponse::fromBool($res['success'], [
-            'msg' => $res['success'] ? 'Success' : 'Error',
-            'id' => $res['asset'] ? $res['asset']->getId() : null,
-            'fullpath' => $res['asset'] ? $res['asset']->getRealFullPath() : null,
-            'type' => $res['asset'] ? $res['asset']->getType() : null,
+        return $this->adminJson(ApiResponse::ok([
+            'msg' => 'Success',
+            'id' => $asset->getId(),
+            'fullpath' => $asset->getRealFullPath(),
+            'type' => $asset->getType(),
         ]));
     }
 
@@ -111,12 +97,25 @@ class AssetUploadController extends AdminAbstractController
     ): Response {
         $importResult = $handler($payload);
 
-        return new Response($this->encodeJson(ApiResponse::ok(['jobs' => $importResult->jobs, 'jobId' => $importResult->jobId])));
+        // encodeJson(), not adminJson(): this POST isn't XHR, so a JSON content-type
+        // would trigger a download dialog in most browsers instead of being read by the iframe
+        return new Response(
+            $this
+                ->encodeJson(
+                    ApiResponse::ok([
+                        'jobs'  => $importResult->jobs,
+                        'jobId' => $importResult->jobId
+                    ])->jsonSerialize()
+                )
+        );
     }
 
     #[Route('/import-zip-files', name: 'opendxp_admin_asset_importzipfiles', methods: ['POST'])]
-    public function importZipFilesAction(ImportZipFilesPayload $payload, ImportZipFilesHandler $handler): JsonResponse
-    {
+    public function importZipFilesAction(
+        ImportZipFilesPayload $payload,
+        ImportZipFilesHandler $handler
+    ): JsonResponse {
+
         $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());

@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Service\Asset;
 
 use Exception;
 use OpenDxp;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAsset\AddAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Config;
 use OpenDxp\Event\AssetEvents;
@@ -29,8 +30,6 @@ use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\Element\ValidationException;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Mime\MimeTypes;
 
@@ -45,31 +44,29 @@ final class AssetUploadService
     /**
      * @throws Exception
      */
-    public function addAsset(Request $request): array
+    public function addAsset(AddAssetPayload $payload): Asset
     {
         $defaultUploadPath = $this->config['assets']['default_upload_path'] ?? '/';
 
-        if ($request->files->has('Filedata')) {
-            /** @var UploadedFile $file */
-            $file = $request->files->get('Filedata');
-            $filename = $file->getClientOriginalName();
-            $sourcePath = $file->getPathname();
-        } elseif ($request->request->get('type') === 'base64') {
-            $filename = $request->request->get('filename');
+        if ($payload->filedataPath !== null) {
+            $filename = $payload->filedataOriginalName;
+            $sourcePath = $payload->filedataPath;
+        } elseif ($payload->type === 'base64') {
+            $filename = $payload->filename;
             $sourcePath = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/upload-base64' . uniqid('', false) . '.tmp';
-            $data = preg_replace('@^data:[^,]+;base64,@', '', $request->request->get('data'));
+            $data = preg_replace('@^data:[^,]+;base64,@', '', $payload->data);
             $filesystem = new Filesystem();
             $filesystem->dumpFile($sourcePath, base64_decode($data));
         } else {
             throw new Exception('The filename of the asset is empty');
         }
 
-        $parentId = $request->query->getInt('parentId');
-        $parentPath = $request->query->get('parentPath');
+        $parentId = $payload->parentId;
+        $parentPath = $payload->parentPath;
 
-        if ($request->query->has('dir') && $request->query->has('parentId')) {
-            $parent = Asset::getById((int) $request->query->get('parentId'));
-            $dir = $request->query->get('dir');
+        if ($payload->hasDir && $payload->hasParentId) {
+            $parent = Asset::getById($payload->parentId);
+            $dir = $payload->dir;
             if (str_contains($dir, '..')) {
                 throw new Exception('not allowed');
             }
@@ -95,7 +92,7 @@ final class AssetUploadService
             if ($newParent) {
                 $parentId = $newParent->getId();
             }
-        } elseif (!$request->query->get('parentId') && $parentPath) {
+        } elseif (!$parentId && $parentPath) {
             $parent = Asset::getByPath($parentPath);
             if ($parent instanceof Asset\Folder) {
                 $parentId = $parent->getId();
@@ -109,7 +106,7 @@ final class AssetUploadService
             throw new Exception('The filename of the asset is empty');
         }
 
-        $context = $request->query->get('context');
+        $context = $payload->context;
         if ($context) {
             $context = json_decode($context, true);
             $context = $context ?: [];
@@ -130,7 +127,7 @@ final class AssetUploadService
 
         $parentAsset = Asset::getById((int)$parentId);
 
-        if (!$request->query->get('allowOverwrite')) {
+        if (!$payload->allowOverwrite) {
             $filename = $this->getSafeFilename($parentAsset->getRealFullPath(), $filename);
         }
 
@@ -147,7 +144,7 @@ final class AssetUploadService
             throw new Exception('Something went wrong, please check upload_max_filesize and post_max_size in your php.ini as well as the write permissions of your temporary directories.');
         }
 
-        $uploadAssetType = $request->query->get('uploadAssetType');
+        $uploadAssetType = $payload->uploadAssetType;
         if ($uploadAssetType) {
             $mimetype = MimeTypes::getDefault()->guessMimeType($sourcePath);
             $assetType = Asset::getTypeFromMimeMapping($mimetype, $filename);
@@ -159,7 +156,7 @@ final class AssetUploadService
 
         $adminUser = $this->userContext->getAdminUser();
 
-        if ($request->query->get('allowOverwrite') && Asset\Service::pathExists($parentAsset->getRealFullPath().'/'.$filename)) {
+        if ($payload->allowOverwrite && Asset\Service::pathExists($parentAsset->getRealFullPath().'/'.$filename)) {
             $asset = Asset::getByPath($parentAsset->getRealFullPath().'/'.$filename);
             $asset->setStream(fopen($sourcePath, 'rb', false, \OpenDxp\File::getContext()));
             $asset->save();
@@ -174,10 +171,7 @@ final class AssetUploadService
 
         @unlink($sourcePath);
 
-        return [
-            'success' => true,
-            'asset' => $asset,
-        ];
+        return $asset;
     }
 
     public function getSafeFilename(string $targetPath, string $filename): string

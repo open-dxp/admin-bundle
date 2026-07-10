@@ -19,6 +19,8 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\UploadCustomLogo;
 
 use Exception;
 use OpenDxp\Tool;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class UploadCustomLogoHandler
 {
@@ -26,12 +28,17 @@ final class UploadCustomLogoHandler
 
     private const array ALLOWED_EXTENSIONS = ['svg', 'png', 'jpg'];
 
-    public function __invoke(string $pathname, string $extension): void
+    public function __invoke(UploadCustomLogoPayload $payload): void
     {
+        if (!$payload->logoFile instanceof UploadedFile) {
+            throw new BadRequestHttpException('No file uploaded.');
+        }
+
+        $extension = $payload->logoFile->guessExtension() ?? '';
         if (!in_array($extension, self::ALLOWED_EXTENSIONS, true)) {
             throw new Exception('Unsupported file format.');
         }
 
-        Tool\Storage::get('admin')->writeStream(self::LOGO_PATH, fopen($pathname, 'rb'));
+        Tool\Storage::get('admin')->writeStream(self::LOGO_PATH, fopen($payload->logoFile->getPathname(), 'rb'));
     }
 }

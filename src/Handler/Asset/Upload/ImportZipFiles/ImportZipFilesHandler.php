@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles\ImportZipFilesPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService;
 use OpenDxp\File;
 use OpenDxp\Logger;
@@ -59,6 +58,9 @@ final class ImportZipFilesHandler
 
         for ($i = $offset; $i < ($offset + $limit); $i++) {
             $path = $zip->getNameIndex($i);
+            if ($path === false) {
+                continue;
+            }
             if (str_starts_with($path, '__MACOSX/')) {
                 continue;
             }
@@ -69,7 +71,7 @@ final class ImportZipFilesHandler
                 continue;
             }
 
-            if ($path !== false && $zip->extractTo($tmpDir . '/', $path)) {
+            if ($zip->extractTo($tmpDir . '/', $path)) {
                 $tmpFile = $tmpDir . '/' . preg_replace('@^/@', '', $path);
                 $filename = Element\Service::getValidKey(basename($path), 'asset');
                 $relativePath = '';

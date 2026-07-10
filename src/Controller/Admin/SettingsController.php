@@ -55,18 +55,17 @@ use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdatePredefinedMetadata\UpdateP
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdatePredefinedProperty\UpdatePredefinedPropertyHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateWebsiteSetting\UpdateWebsiteSettingHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\UploadCustomLogo\UploadCustomLogoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UploadCustomLogo\UploadCustomLogoPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Logger;
 use Symfony\Component\ExpressionLanguage\Expression;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -91,15 +90,9 @@ class SettingsController extends AdminAbstractController
 
     #[AsHtmlContentTypeResponse]
     #[Route('/upload-custom-logo', name: 'opendxp_admin_settings_uploadcustomlogo', methods: ['POST'])]
-    public function uploadCustomLogoAction(Request $request, UploadCustomLogoHandler $handler): JsonResponse
+    public function uploadCustomLogoAction(UploadCustomLogoPayload $payload, UploadCustomLogoHandler $handler): JsonResponse
     {
-        $logoFile = $request->files->get('Filedata');
-
-        if (!$logoFile instanceof UploadedFile) {
-            throw new BadRequestHttpException('No file uploaded.');
-        }
-
-        $handler($logoFile->getPathname(), $logoFile->guessExtension() ?? '');
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
