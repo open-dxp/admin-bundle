@@ -36,15 +36,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePagePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmode\RenderAreabrickIndexEditmodePayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Document\StaticPageGenerator;
-use OpenDxp\Http\Request\Resolver\DocumentResolver;
-use OpenDxp\Http\Request\Resolver\EditmodeResolver;
-use OpenDxp\Model\Document;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
-use Twig\Environment;
 
 /**
  * @internal
@@ -160,26 +155,9 @@ class PageController extends DocumentControllerBase
      */
     #[Route('/areabrick-render-index-editmode', name: 'areabrick-render-index-editmode', methods: ['POST'])]
     public function areabrickRenderIndexEditmode(
-        Request $request,
         RenderAreabrickIndexEditmodePayload $payload,
         RenderAreabrickIndexEditmodeHandler $handler,
-        DocumentResolver $documentResolver,
-        Environment $twig,
     ): JsonResponse {
-        // document/editmode Twig globals and the DocumentResolver must be set before the
-        // handler renders the areablock index, otherwise nested editables see stale context
-        $document = Document\PageSnippet::getById($payload->documentId);
-        if (!$document) {
-            throw $this->createNotFoundException();
-        }
-        $document = clone $document;
-        $document->setEditables([]);
-
-        $documentResolver->setDocument($request, $document);
-        $twig->addGlobal('document', $document);
-        $twig->addGlobal('editmode', true);
-        $request->attributes->set(EditmodeResolver::ATTRIBUTE_EDITMODE, true);
-
         $result = $handler($payload);
 
         return new JsonResponse([
