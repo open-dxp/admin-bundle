@@ -58,10 +58,10 @@ class DataObjectCopyController extends AdminAbstractController
     #[Route('/copy-rewrite-ids', name: 'copyrewriteids', methods: ['PUT'])]
     public function copyRewriteIdsAction(
         RewriteDataObjectIdsPayload $payload,
-        RewriteDataObjectIdsHandler $rewriteIds,
+        RewriteDataObjectIdsHandler $handler,
         Request $request,
     ): JsonResponse {
-        $rewriteIds($payload);
+        $handler($payload);
 
         Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($payload): void {
             $session->set($payload->transactionId, $payload->updatedIdStore);
@@ -73,10 +73,10 @@ class DataObjectCopyController extends AdminAbstractController
     #[Route('/copy', name: 'copy', methods: ['POST'])]
     public function copyAction(
         CopyDataObjectPayload $payload,
-        CopyDataObjectHandler $copyObject,
+        CopyDataObjectHandler $handler,
         Request $request,
     ): JsonResponse {
-        $result = $copyObject($payload);
+        $result = $handler($payload);
 
         if ($result->newObject !== null) {
             $sessionBag = $payload->sessionBag;

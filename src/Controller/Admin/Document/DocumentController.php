@@ -190,10 +190,10 @@ class DocumentController extends ElementControllerBase
     #[Route('/doc-types', name: 'opendxp_admin_document_document_doctypesget', methods: ['GET'])]
     public function docTypesGetAction(
         EmptyPayload $payload,
-        GetDocTypesListHandler $getDocTypesList,
+        GetDocTypesListHandler $handler,
     ): JsonResponse
     {
-        $result = $getDocTypesList($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->docTypes, 'total' => $result->total]));
     }
@@ -219,10 +219,10 @@ class DocumentController extends ElementControllerBase
     #[Route('/doc-types-destroy', name: 'opendxp_admin_document_document_doctypes_destroy', methods: ['PUT', 'POST', 'DELETE'])]
     public function docTypesDestroyAction(
         DocTypePayload $payload,
-        DeleteDocTypeHandler $delete,
+        DeleteDocTypeHandler $handler,
     ): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $delete($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -230,10 +230,10 @@ class DocumentController extends ElementControllerBase
     #[Route('/doc-types-update', name: 'opendxp_admin_document_document_doctypes_update', methods: ['PUT', 'POST', 'DELETE'])]
     public function docTypesUpdateAction(
         DocTypePayload $payload,
-        UpdateDocTypeHandler $update,
+        UpdateDocTypeHandler $handler,
     ): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $update($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -241,20 +241,20 @@ class DocumentController extends ElementControllerBase
     #[Route('/doc-types-create', name: 'opendxp_admin_document_document_doctypes_create', methods: ['PUT', 'POST', 'DELETE'])]
     public function docTypesCreateAction(
         DocTypePayload $payload,
-        CreateDocTypeHandler $create,
+        CreateDocTypeHandler $handler,
     ): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $create($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/get-doc-types', name: 'opendxp_admin_document_document_getdoctypes', methods: ['GET'])]
     public function getDocTypesAction(
         GetDocTypesByTypePayload $payload,
-        GetDocTypesByTypeHandler $getDocTypesByType,
+        GetDocTypesByTypeHandler $handler,
     ): JsonResponse
     {
-        $result = $getDocTypesByType($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(['docTypes' => $result->docTypes]);
     }
@@ -263,10 +263,10 @@ class DocumentController extends ElementControllerBase
     #[Route('/get-site-custom-settings', name: 'opendxp_admin_document_document_get_site_custom_settings', methods: ['POST'])]
     public function getSiteCustomSettingsAction(
         GetSiteCustomSettingsPayload $payload,
-        GetSiteCustomSettingsHandler $getSiteCustomSettings,
+        GetSiteCustomSettingsHandler $handler,
     ): JsonResponse
     {
-        $result = $getSiteCustomSettings($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(['data' => $result->nodes]);
     }
@@ -287,10 +287,10 @@ class DocumentController extends ElementControllerBase
     #[Route('/remove-site', name: 'opendxp_admin_document_document_removesite', methods: ['DELETE'])]
     public function removeSiteAction(
         RemoveSitePayload $payload,
-        RemoveSiteHandler $removeSite,
+        RemoveSiteHandler $handler,
     ): JsonResponse
     {
-        $removeSite($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -299,10 +299,10 @@ class DocumentController extends ElementControllerBase
     #[Route('/get-id-for-path', name: 'opendxp_admin_document_document_getidforpath', methods: ['GET'])]
     public function getIdForPathAction(
         GetDocumentIdForPathPayload $payload,
-        GetDocumentIdForPathHandler $getDocumentIdForPath,
+        GetDocumentIdForPathHandler $handler,
     ): JsonResponse
     {
-        $result = $getDocumentIdForPath($payload);
+        $result = $handler($payload);
         if (!$result) {
             return $this->adminJson(false);
         }

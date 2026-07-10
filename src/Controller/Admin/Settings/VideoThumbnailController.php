@@ -56,35 +56,35 @@ class VideoThumbnailController extends AdminAbstractController
 
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/video-thumbnail-tree', name: 'opendxp_admin_settings_videothumbnailtree', methods: ['GET', 'POST'])]
-    public function videoThumbnailTreeAction(GetVideoThumbnailTreeHandler $getVideoThumbnailTree): JsonResponse
+    public function videoThumbnailTreeAction(GetVideoThumbnailTreeHandler $handler): JsonResponse
     {
-        $result = $getVideoThumbnailTree();
+        $result = $handler();
 
         return $this->adminJson($result->nodes);
     }
 
     #[Route('/settings/video-thumbnail-list', name: 'opendxp_admin_settings_videothumbnail_list', methods: ['GET'])]
-    public function videoThumbnailListAction(GetVideoThumbnailListHandler $getVideoThumbnailList): JsonResponse
+    public function videoThumbnailListAction(GetVideoThumbnailListHandler $handler): JsonResponse
     {
-        $result = $getVideoThumbnailList();
+        $result = $handler();
 
         return $this->adminJson($result->thumbnails);
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/video-thumbnail-add', name: 'opendxp_admin_settings_videothumbnailadd', methods: ['POST'])]
-    public function videoThumbnailAddAction(AddVideoThumbnailPayload $payload, AddVideoThumbnailHandler $addVideoThumbnail): JsonResponse
+    public function videoThumbnailAddAction(AddVideoThumbnailPayload $payload, AddVideoThumbnailHandler $handler): JsonResponse
     {
-        $result = $addVideoThumbnail($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::fromBool($result->created, ['id' => $result->id]));
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/video-thumbnail-delete', name: 'opendxp_admin_settings_videothumbnaildelete', methods: ['DELETE'])]
-    public function videoThumbnailDeleteAction(DeleteVideoThumbnailPayload $payload, DeleteVideoThumbnailHandler $deleteVideoThumbnail): JsonResponse
+    public function videoThumbnailDeleteAction(DeleteVideoThumbnailPayload $payload, DeleteVideoThumbnailHandler $handler): JsonResponse
     {
-        $deleteVideoThumbnail($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -93,18 +93,18 @@ class VideoThumbnailController extends AdminAbstractController
     #[Route('/settings/video-thumbnail-get', name: 'opendxp_admin_settings_videothumbnailget', methods: ['GET'])]
     public function videoThumbnailGetAction(
         #[MapQueryParameter] string $name,
-        GetVideoThumbnailHandler $getVideoThumbnail,
+        GetVideoThumbnailHandler $handler,
     ): JsonResponse {
-        $result = $getVideoThumbnail($name);
+        $result = $handler($name);
 
         return $this->adminJson($result->data);
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/video-thumbnail-update', name: 'opendxp_admin_settings_videothumbnailupdate', methods: ['PUT'])]
-    public function videoThumbnailUpdateAction(UpdateVideoThumbnailPayload $payload, UpdateVideoThumbnailHandler $updateVideoThumbnail): JsonResponse
+    public function videoThumbnailUpdateAction(UpdateVideoThumbnailPayload $payload, UpdateVideoThumbnailHandler $handler): JsonResponse
     {
-        $updateVideoThumbnail($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

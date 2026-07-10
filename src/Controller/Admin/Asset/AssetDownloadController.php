@@ -48,9 +48,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class AssetDownloadController extends AdminAbstractController
 {
     #[Route('/download', name: 'opendxp_admin_asset_download', methods: ['GET'])]
-    public function downloadAction(DownloadAssetPayload $payload, DownloadAssetHandler $downloadAsset): StreamedResponse
+    public function downloadAction(DownloadAssetPayload $payload, DownloadAssetHandler $handler): StreamedResponse
     {
-        $result = $downloadAsset($payload);
+        $result = $handler($payload);
         $asset = $result->asset;
         $stream = $asset->getStream();
 
@@ -70,9 +70,9 @@ class AssetDownloadController extends AdminAbstractController
     #[Route('/download-image-thumbnail', name: 'opendxp_admin_asset_downloadimagethumbnail', methods: ['GET'])]
     public function downloadImageThumbnailAction(
         DownloadImageThumbnailPayload $payload,
-        DownloadImageThumbnailHandler $downloadImageThumbnail,
+        DownloadImageThumbnailHandler $handler,
     ): BinaryFileResponse {
-        $result = $downloadImageThumbnail($payload);
+        $result = $handler($payload);
 
         $downloadFilename = preg_replace(
             '/\.' . preg_quote(pathinfo($result->image->getFilename(), PATHINFO_EXTENSION), '/') . '$/i',
@@ -94,9 +94,9 @@ class AssetDownloadController extends AdminAbstractController
     #[Route('/download-as-zip-jobs', name: 'opendxp_admin_asset_downloadaszipjobs', methods: ['GET'])]
     public function downloadAsZipJobsAction(
         GetDownloadZipJobsPayload $payload,
-        GetDownloadZipJobsHandler $getZipJobs,
+        GetDownloadZipJobsHandler $handler,
     ): JsonResponse {
-        $result = $getZipJobs($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['jobs' => $result->jobs, 'jobId' => $result->jobId]));
     }
@@ -104,9 +104,9 @@ class AssetDownloadController extends AdminAbstractController
     #[Route('/download-as-zip-add-files', name: 'opendxp_admin_asset_downloadaszipaddfiles', methods: ['GET'])]
     public function downloadAsZipAddFilesAction(
         AddFilesToZipPayload $payload,
-        AddFilesToZipHandler $addFilesToZip,
+        AddFilesToZipHandler $handler,
     ): JsonResponse {
-        $addFilesToZip($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -118,9 +118,9 @@ class AssetDownloadController extends AdminAbstractController
     #[Route('/download-as-zip', name: 'opendxp_admin_asset_downloadaszip', methods: ['GET'])]
     public function downloadAsZipAction(
         DownloadZipPayload $payload,
-        DownloadZipHandler $downloadZip,
+        DownloadZipHandler $handler,
     ): BinaryFileResponse {
-        $result = $downloadZip($payload);
+        $result = $handler($payload);
 
         $response = new BinaryFileResponse($result->zipFile);
         $response->headers->set('Content-Type', 'application/zip');

@@ -58,10 +58,10 @@ class EmailController extends AdminAbstractController
     ))]
     #[Route('/email-logs', name: 'opendxp_admin_email_emaillogs', methods: ['GET', 'POST'])]
     public function emailLogsAction(
-        GetEmailLogsHandler $getEmailLogs,
+        GetEmailLogsHandler $handler,
         GetEmailLogsPayload $payload,
     ): JsonResponse {
-        $result = $getEmailLogs($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'data' => $result->data,
@@ -95,10 +95,10 @@ class EmailController extends AdminAbstractController
     #[IsGranted(CorePermission::Emails->value)]
     #[Route('/delete-email-log', name: 'opendxp_admin_email_deleteemaillog', methods: ['DELETE'])]
     public function deleteEmailLogAction(
-        DeleteEmailLogHandler $deleteEmailLog,
+        DeleteEmailLogHandler $handler,
         IdBodyPayload $payload,
     ): JsonResponse {
-        $deleteEmailLog($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -106,10 +106,10 @@ class EmailController extends AdminAbstractController
     #[IsGranted(CorePermission::Emails->value)]
     #[Route('/resend-email', name: 'opendxp_admin_email_resendemail', methods: ['POST'])]
     public function resendEmailAction(
-        ResendEmailHandler $resendEmail,
+        ResendEmailHandler $handler,
         ResendEmailPayload $payload,
     ): JsonResponse {
-        $resendEmail($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -118,13 +118,13 @@ class EmailController extends AdminAbstractController
     #[Route('/send-test-email', name: 'opendxp_admin_email_sendtestemail', methods: ['POST'])]
     public function sendTestEmailAction(
         Request $request,
-        SendTestEmailHandler $sendTestEmail,
+        SendTestEmailHandler $handler,
         SendTestEmailPayload $payload,
     ): JsonResponse {
         // Simulate a frontend request to prefix assets
         $request->attributes->set(RequestHelper::ATTRIBUTE_FRONTEND_REQUEST, true);
 
-        $sendTestEmail($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -134,7 +134,7 @@ class EmailController extends AdminAbstractController
     public function blocklistAction(
         Request $request,
         BlocklistPayload $payload,
-        GetBlocklistHandler $getBlocklist,
+        GetBlocklistHandler $handler,
         #[MapQueryParameter] ?string $xaction = null,
     ): Response {
         if ($payload->hasData) {
@@ -146,7 +146,7 @@ class EmailController extends AdminAbstractController
             };
         }
 
-        $result = $getBlocklist($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'data' => $result->data,
@@ -158,9 +158,9 @@ class EmailController extends AdminAbstractController
     #[Route('/blocklist-destroy', name: 'opendxp_admin_email_blocklist_destroy', methods: ['POST'])]
     public function blocklistDestroyAction(
         BlocklistPayload $payload,
-        DeleteBlocklistEntryHandler $deleteBlocklistEntry,
+        DeleteBlocklistEntryHandler $handler,
     ): JsonResponse {
-        $deleteBlocklistEntry($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
     }
@@ -169,17 +169,17 @@ class EmailController extends AdminAbstractController
     #[Route('/blocklist-update', name: 'opendxp_admin_email_blocklist_update', methods: ['POST'])]
     public function blocklistUpdateAction(
         BlocklistPayload $payload,
-        UpdateBlocklistEntryHandler $updateBlocklistEntry,
+        UpdateBlocklistEntryHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $updateBlocklistEntry($payload)]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)]));
     }
 
     #[IsGranted(CorePermission::Emails->value)]
     #[Route('/blocklist-create', name: 'opendxp_admin_email_blocklist_create', methods: ['POST'])]
     public function blocklistCreateAction(
         BlocklistPayload $payload,
-        CreateBlocklistEntryHandler $createBlocklistEntry,
+        CreateBlocklistEntryHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $createBlocklistEntry($payload)]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)]));
     }
 }

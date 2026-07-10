@@ -58,10 +58,10 @@ class DocumentCopyController extends AdminAbstractController
     #[Route('/copy-rewrite-ids', name: 'opendxp_admin_document_document_copyrewriteids', methods: ['PUT'])]
     public function copyRewriteIdsAction(
         RewriteDocumentIdsPayload $payload,
-        RewriteDocumentIdsHandler $rewriteIds,
+        RewriteDocumentIdsHandler $handler,
         Request $request,
     ): JsonResponse {
-        $rewriteIds($payload);
+        $handler($payload);
 
         Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($payload): void {
             $session->set($payload->transactionId, $payload->updatedIdStore);
@@ -73,10 +73,10 @@ class DocumentCopyController extends AdminAbstractController
     #[Route('/copy', name: 'opendxp_admin_document_document_copy', methods: ['POST'])]
     public function copyAction(
         CopyDocumentPayload $payload,
-        CopyDocumentHandler $copyDocument,
+        CopyDocumentHandler $handler,
         Request $request,
     ): JsonResponse {
-        $result = $copyDocument($payload);
+        $result = $handler($payload);
 
         if ($result->newDocument !== null) {
             $sessionBag = $payload->sessionBag;

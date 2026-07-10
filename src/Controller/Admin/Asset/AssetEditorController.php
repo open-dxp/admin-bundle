@@ -37,9 +37,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class AssetEditorController extends AdminAbstractController
 {
     #[Route('/image-editor', name: 'opendxp_admin_asset_imageeditor', methods: ['GET'])]
-    public function imageEditorAction(LoadAssetForEditorPayload $payload, LoadAssetForEditorHandler $loadForEditor): Response
+    public function imageEditorAction(LoadAssetForEditorPayload $payload, LoadAssetForEditorHandler $handler): Response
     {
-        $result = $loadForEditor($payload);
+        $result = $handler($payload);
 
         return $this->render('@OpenDxpAdmin/admin/asset/image_editor.html.twig', ['asset' => $result->asset]);
     }
@@ -47,9 +47,9 @@ class AssetEditorController extends AdminAbstractController
     #[Route('/image-editor-save', name: 'opendxp_admin_asset_imageeditorsave', methods: ['PUT'])]
     public function imageEditorSaveAction(
         SaveImageEditorPayload $payload,
-        SaveImageEditorHandler $saveImageEditor,
+        SaveImageEditorHandler $handler,
     ): JsonResponse {
-        $saveImageEditor($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

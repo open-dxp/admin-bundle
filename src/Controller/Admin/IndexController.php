@@ -41,7 +41,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
     public function indexAction(
         Request $request,
         SettingsPayload $payload,
-        SettingsHandler $settingsHandler,
+        SettingsHandler $handler,
         TranslatorInterface $translator,
     ): Response {
         $user = $this->getAdminUser();
@@ -55,7 +55,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
             $translator->setLocale($user->getLanguage());
         }
 
-        $result = $settingsHandler($payload);
+        $result = $handler($payload);
 
         return $this->render($result->template ?? '@OpenDxpAdmin/admin/index/index.html.twig', $result->templateParams);
     }
@@ -64,14 +64,14 @@ class IndexController extends AdminAbstractController implements KernelResponseE
     public function statisticsAction(
         Request $request,
         EmptyPayload $payload,
-        StatisticsHandler $statisticsHandler,
+        StatisticsHandler $handler,
     ): JsonResponse {
 
         if (!$request->isXmlHttpRequest()) {
             throw $this->createAccessDeniedHttpException();
         }
 
-        $statisticsHandler($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

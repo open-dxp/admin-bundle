@@ -39,18 +39,18 @@ class RoleController extends AdminAbstractController
     #[Route('/user/role-tree-get-children-by-id', name: 'opendxp_admin_user_roletreegetchildrenbyid', methods: ['GET'])]
     public function roleTreeGetChildrenByIdAction(
         GetRoleTreeChildrenPayload $payload,
-        GetRoleTreeChildrenHandler $getRoleTreeChildren,
+        GetRoleTreeChildrenHandler $handler,
     ): JsonResponse {
-        return $this->adminJson($getRoleTreeChildren($payload));
+        return $this->adminJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/role-get', name: 'opendxp_admin_user_roleget', methods: ['GET'])]
     public function roleGetAction(
         GetRolePayload $payload,
-        GetRoleHandler $getRole,
+        GetRoleHandler $handler,
     ): JsonResponse {
-        $result = $getRole($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'role' => $result->role,
@@ -67,9 +67,9 @@ class RoleController extends AdminAbstractController
     #[Route('/user/get-roles', name: 'opendxp_admin_user_getroles', methods: ['GET'])]
     public function getRolesAction(
         GetRolesPayload $payload,
-        GetRolesHandler $getRoles,
+        GetRolesHandler $handler,
     ): JsonResponse {
-        $roles = $getRoles($payload);
+        $roles = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['total' => count($roles), 'data' => $roles]));
     }
@@ -78,9 +78,9 @@ class RoleController extends AdminAbstractController
     #[Route('/user/get-roles-for-sharing', name: 'opendxp_admin_user_getrolesforsharing', methods: ['GET'])]
     public function getRolesForSharingAction(
         GetRolesPayload $payload,
-        GetRolesHandler $getRoles,
+        GetRolesHandler $handler,
     ): JsonResponse {
-        $roles = $getRoles($payload);
+        $roles = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['total' => count($roles), 'data' => $roles]));
     }

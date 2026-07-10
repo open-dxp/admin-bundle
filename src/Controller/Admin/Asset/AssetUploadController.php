@@ -88,18 +88,18 @@ class AssetUploadController extends AdminAbstractController
     #[Route('/exists', name: 'opendxp_admin_asset_exists', methods: ['GET'])]
     public function existsAction(
         CheckAssetExistsPayload $payload,
-        CheckAssetExistsHandler $checkAssetExists,
+        CheckAssetExistsHandler $handler,
     ): JsonResponse {
         return new JsonResponse([
-            'exists' => $checkAssetExists($payload),
+            'exists' => $handler($payload),
         ]);
     }
 
     #[AsHtmlContentTypeResponse]
     #[Route('/replace-asset', name: 'opendxp_admin_asset_replaceasset', methods: ['POST', 'PUT'])]
-    public function replaceAssetAction(ReplaceAssetPayload $payload, ReplaceAssetHandler $replaceAsset): JsonResponse
+    public function replaceAssetAction(ReplaceAssetPayload $payload, ReplaceAssetHandler $handler): JsonResponse
     {
-        $asset = $replaceAsset($payload);
+        $asset = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['id' => $asset->getId(), 'path' => $asset->getRealFullPath()]));
     }
@@ -107,17 +107,17 @@ class AssetUploadController extends AdminAbstractController
     #[Route('/import-zip', name: 'opendxp_admin_asset_importzip', methods: ['POST'])]
     public function importZipAction(
         ImportZipPayload $payload,
-        ImportZipHandler $importZip,
+        ImportZipHandler $handler,
     ): Response {
-        $importResult = $importZip($payload);
+        $importResult = $handler($payload);
 
         return new Response($this->encodeJson(ApiResponse::ok(['jobs' => $importResult->jobs, 'jobId' => $importResult->jobId])));
     }
 
     #[Route('/import-zip-files', name: 'opendxp_admin_asset_importzipfiles', methods: ['POST'])]
-    public function importZipFilesAction(ImportZipFilesPayload $payload, ImportZipFilesHandler $importZipFiles): JsonResponse
+    public function importZipFilesAction(ImportZipFilesPayload $payload, ImportZipFilesHandler $handler): JsonResponse
     {
-        $importZipFiles($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

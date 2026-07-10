@@ -50,21 +50,21 @@ class PortalController extends AdminAbstractController
 {
     #[Route('/dashboard-list', name: 'opendxp_admin_portal_dashboardlist', methods: ['GET'])]
     public function dashboardListAction(
-        GetDashboardListHandler $getDashboardList,
+        GetDashboardListHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $getDashboardList($payload);
+        $result = $handler($payload);
 
         return $this->adminJson($result->dashboards);
     }
 
     #[Route('/create-dashboard', name: 'opendxp_admin_portal_createdashboard', methods: ['POST'])]
     public function createDashboardAction(
-        CreateDashboardHandler $createDashboard,
+        CreateDashboardHandler $handler,
         CreateDashboardPayload $payload,
     ): JsonResponse {
         try {
-            $createDashboard($payload);
+            $handler($payload);
         } catch (\InvalidArgumentException $e) {
             return $this->adminJson(ApiResponse::error($e->getMessage()));
         }
@@ -74,100 +74,100 @@ class PortalController extends AdminAbstractController
 
     #[Route('/delete-dashboard', name: 'opendxp_admin_portal_deletedashboard', methods: ['DELETE'])]
     public function deleteDashboardAction(
-        DeleteDashboardHandler $deleteDashboard,
+        DeleteDashboardHandler $handler,
         DeleteDashboardPayload $payload,
     ): JsonResponse {
-        $deleteDashboard($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/get-configuration', name: 'opendxp_admin_portal_getconfiguration', methods: ['GET'])]
     public function getConfigurationAction(
-        GetDashboardConfigurationHandler $getDashboardConfiguration,
+        GetDashboardConfigurationHandler $handler,
         GetDashboardConfigurationPayload $payload,
     ): JsonResponse {
-        $result = $getDashboardConfiguration($payload);
+        $result = $handler($payload);
 
         return $this->adminJson($result->config);
     }
 
     #[Route('/remove-widget', name: 'opendxp_admin_portal_removewidget', methods: ['DELETE'])]
     public function removeWidgetAction(
-        RemoveWidgetHandler $removeWidget,
+        RemoveWidgetHandler $handler,
         RemoveWidgetPayload $payload,
     ): JsonResponse {
-        $removeWidget($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/add-widget', name: 'opendxp_admin_portal_addwidget', methods: ['POST'])]
     public function addWidgetAction(
-        AddWidgetHandler $addWidget,
+        AddWidgetHandler $handler,
         AddWidgetPayload $payload,
     ): JsonResponse {
-        $result = $addWidget($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
 
     #[Route('/reorder-widget', name: 'opendxp_admin_portal_reorderwidget', methods: ['PUT'])]
     public function reorderWidgetAction(
-        ReorderWidgetHandler $reorderWidget,
+        ReorderWidgetHandler $handler,
         ReorderWidgetPayload $payload,
     ): JsonResponse {
-        $reorderWidget($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/update-portlet-config', name: 'opendxp_admin_portal_updateportletconfig', methods: ['PUT'])]
     public function updatePortletConfigAction(
-        UpdatePortletConfigHandler $updatePortletConfig,
+        UpdatePortletConfigHandler $handler,
         UpdatePortletConfigPayload $payload,
     ): JsonResponse {
-        $updatePortletConfig($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/portlet-modified-documents', name: 'opendxp_admin_portal_portletmodifieddocuments', methods: ['GET'])]
     public function portletModifiedDocumentsAction(
-        GetModifiedDocumentsHandler $getModifiedDocuments,
+        GetModifiedDocumentsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $getModifiedDocuments($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(['documents' => $result->documents]);
     }
 
     #[Route('/portlet-modified-assets', name: 'opendxp_admin_portal_portletmodifiedassets', methods: ['GET'])]
     public function portletModifiedAssetsAction(
-        GetModifiedAssetsHandler $getModifiedAssets,
+        GetModifiedAssetsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $getModifiedAssets($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(['assets' => $result->assets]);
     }
 
     #[Route('/portlet-modified-objects', name: 'opendxp_admin_portal_portletmodifiedobjects', methods: ['GET'])]
     public function portletModifiedObjectsAction(
-        GetModifiedObjectsHandler $getModifiedObjects,
+        GetModifiedObjectsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $getModifiedObjects($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(['objects' => $result->objects]);
     }
 
     #[Route('/portlet-modification-statistics', name: 'opendxp_admin_portal_portletmodificationstatistics', methods: ['GET'])]
     public function portletModificationStatisticsAction(
-        GetModificationStatisticsHandler $getModificationStatistics,
+        GetModificationStatisticsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $getModificationStatistics($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(['data' => $result->data]);
     }

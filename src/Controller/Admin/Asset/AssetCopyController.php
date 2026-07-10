@@ -56,10 +56,10 @@ class AssetCopyController extends AdminAbstractController
     #[Route('/copy', name: 'opendxp_admin_asset_copy', methods: ['POST'])]
     public function copyAction(
         CopyAssetPayload $payload,
-        CopyAssetHandler $copyAsset,
+        CopyAssetHandler $handler,
         Request $request,
     ): JsonResponse {
-        $result = $copyAsset($payload);
+        $result = $handler($payload);
 
         if ($result->newAsset !== null && $payload->saveParentId) {
             $session = Tool\Session::getSessionBag($request->getSession(), 'opendxp_copy');

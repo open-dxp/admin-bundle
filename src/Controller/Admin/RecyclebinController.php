@@ -49,7 +49,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     public function listAction(
         Request $request,
         RecyclebinPayload $payload,
-        ListRecyclebinHandler $listRecyclebin,
+        ListRecyclebinHandler $handler,
         #[MapQueryParameter] ?string $xaction = null,
     ): Response {
         if ($payload->hasData) {
@@ -59,7 +59,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
             };
         }
 
-        $result = $listRecyclebin($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
@@ -68,9 +68,9 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     #[Route('/recyclebin/list-destroy', name: 'opendxp_admin_recyclebin_list_destroy', methods: ['POST'])]
     public function listDestroyAction(
         RecyclebinPayload $payload,
-        DeleteRecyclebinItemHandler $deleteRecyclebinItem,
+        DeleteRecyclebinItemHandler $handler,
     ): JsonResponse {
-        $deleteRecyclebinItem($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
     }
@@ -79,9 +79,9 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     #[Route('/recyclebin/restore', name: 'opendxp_admin_recyclebin_restore', methods: ['POST'])]
     public function restoreAction(
         RestoreRecyclebinItemPayload $payload,
-        RestoreRecyclebinItemHandler $restoreRecyclebinItem,
+        RestoreRecyclebinItemHandler $handler,
     ): JsonResponse {
-        $restoreRecyclebinItem($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -90,9 +90,9 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     #[Route('/recyclebin/flush', name: 'opendxp_admin_recyclebin_flush', methods: ['DELETE'])]
     public function flushAction(
         EmptyPayload $payload,
-        FlushRecyclebinHandler $flushRecyclebin,
+        FlushRecyclebinHandler $handler,
     ): JsonResponse {
-        $flushRecyclebin($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -100,9 +100,9 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     #[Route('/recyclebin/add', name: 'opendxp_admin_recyclebin_add', methods: ['POST'])]
     public function addAction(
         AddToRecyclebinPayload $payload,
-        AddToRecyclebinHandler $addToRecyclebin,
+        AddToRecyclebinHandler $handler,
     ): JsonResponse {
-        $addToRecyclebin($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

@@ -42,9 +42,9 @@ use Twig\Extension\CoreExtension;
 class DataObjectVersionController extends AdminAbstractController
 {
     #[Route('/publish-version', name: 'publishversion', methods: ['POST'])]
-    public function publishVersionAction(IdBodyPayload $payload, PublishVersionHandler $publishVersion): JsonResponse
+    public function publishVersionAction(IdBodyPayload $payload, PublishVersionHandler $handler): JsonResponse
     {
-        $result = $publishVersion($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'general' => ['modificationDate' => $result->modificationDate],
@@ -55,11 +55,11 @@ class DataObjectVersionController extends AdminAbstractController
     #[Route('/preview-version', name: 'previewversion', methods: ['GET'])]
     public function previewVersionAction(
         Environment $twig,
-        PreviewVersionHandler $previewVersion,
+        PreviewVersionHandler $handler,
         PreviewVersionPayload $payload,
     ): Response
     {
-        $result = $previewVersion($payload);
+        $result = $handler($payload);
 
         Tool\UserTimezone::setUserTimezone($payload->userTimezone);
         if ($timezone = Tool\UserTimezone::getUserTimezone()) {
@@ -76,11 +76,11 @@ class DataObjectVersionController extends AdminAbstractController
     #[Route('/diff-versions/from/{from}/to/{to}', name: 'diffversions', methods: ['GET'])]
     public function diffVersionsAction(
         Environment $twig,
-        DiffVersionsHandler $diffVersions,
+        DiffVersionsHandler $handler,
         DiffVersionsPayload $payload,
     ): Response
     {
-        $result = $diffVersions($payload);
+        $result = $handler($payload);
 
         Tool\UserTimezone::setUserTimezone($payload->userTimezone);
         if ($timezone = Tool\UserTimezone::getUserTimezone()) {

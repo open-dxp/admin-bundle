@@ -117,7 +117,7 @@ class SettingsController extends AdminAbstractController
     public function metadataAction(
         Request $request,
         PredefinedMetadataPayload $payload,
-        GetPredefinedMetadataListHandler $getPredefinedMetadataList,
+        GetPredefinedMetadataListHandler $handler,
         #[MapQueryParameter] ?string $xaction = null,
     ): Response {
         if ($payload->hasData) {
@@ -129,7 +129,7 @@ class SettingsController extends AdminAbstractController
             };
         }
 
-        $result = $getPredefinedMetadataList($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
@@ -138,9 +138,9 @@ class SettingsController extends AdminAbstractController
     #[Route('/predefined-metadata-destroy', name: 'opendxp_admin_settings_metadata_destroy', methods: ['POST'])]
     public function metadataDestroyAction(
         PredefinedMetadataPayload $payload,
-        DeletePredefinedMetadataHandler $deletePredefinedMetadata,
+        DeletePredefinedMetadataHandler $handler,
     ): JsonResponse {
-        $deletePredefinedMetadata($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
     }
@@ -149,18 +149,18 @@ class SettingsController extends AdminAbstractController
     #[Route('/predefined-metadata-update', name: 'opendxp_admin_settings_metadata_update', methods: ['POST'])]
     public function metadataUpdateAction(
         PredefinedMetadataPayload $payload,
-        UpdatePredefinedMetadataHandler $updatePredefinedMetadata,
+        UpdatePredefinedMetadataHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $updatePredefinedMetadata($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[IsGranted(CorePermission::AssetMetadata->value)]
     #[Route('/predefined-metadata-create', name: 'opendxp_admin_settings_metadata_create', methods: ['POST'])]
     public function metadataCreateAction(
         PredefinedMetadataPayload $payload,
-        CreatePredefinedMetadataHandler $createPredefinedMetadata,
+        CreatePredefinedMetadataHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $createPredefinedMetadata($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[Route('/get-predefined-metadata', name: 'opendxp_admin_settings_getpredefinedmetadata', methods: ['GET'])]
@@ -178,7 +178,7 @@ class SettingsController extends AdminAbstractController
     public function propertiesAction(
         Request $request,
         PredefinedPropertyPayload $payload,
-        GetPredefinedPropertiesListHandler $getPredefinedPropertiesList,
+        GetPredefinedPropertiesListHandler $handler,
         #[MapQueryParameter] ?string $xaction = null,
     ): Response {
         if ($payload->hasData) {
@@ -190,7 +190,7 @@ class SettingsController extends AdminAbstractController
             };
         }
 
-        $result = $getPredefinedPropertiesList($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
@@ -199,9 +199,9 @@ class SettingsController extends AdminAbstractController
     #[Route('/properties-destroy', name: 'opendxp_admin_settings_properties_destroy', methods: ['POST'])]
     public function propertiesDestroyAction(
         PredefinedPropertyPayload $payload,
-        DeletePredefinedPropertyHandler $deletePredefinedProperty,
+        DeletePredefinedPropertyHandler $handler,
     ): JsonResponse {
-        $deletePredefinedProperty($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
     }
@@ -210,18 +210,18 @@ class SettingsController extends AdminAbstractController
     #[Route('/properties-update', name: 'opendxp_admin_settings_properties_update', methods: ['POST'])]
     public function propertiesUpdateAction(
         PredefinedPropertyPayload $payload,
-        UpdatePredefinedPropertyHandler $updatePredefinedProperty,
+        UpdatePredefinedPropertyHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $updatePredefinedProperty($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[IsGranted(CorePermission::PredefinedProperties->value)]
     #[Route('/properties-create', name: 'opendxp_admin_settings_properties_create', methods: ['POST'])]
     public function propertiesCreateAction(
         PredefinedPropertyPayload $payload,
-        CreatePredefinedPropertyHandler $createPredefinedProperty,
+        CreatePredefinedPropertyHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $createPredefinedProperty($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[IsGranted(AdminPermission::SystemAppearance->value)]
@@ -271,9 +271,9 @@ class SettingsController extends AdminAbstractController
     #[Route('/clear-cache', name: 'opendxp_admin_settings_clearcache', methods: ['DELETE'])]
     public function clearCacheAction(
         ClearCachePayload $payload,
-        ClearCacheHandler $clearCache,
+        ClearCacheHandler $handler,
     ): JsonResponse {
-        $clearCache($payload);
+        $handler($payload);
 
         $response = new JsonResponse(ApiResponse::ok());
 
@@ -346,7 +346,7 @@ class SettingsController extends AdminAbstractController
     public function websiteSettingsAction(
         Request $request,
         WebsiteSettingPayload $payload,
-        GetWebsiteSettingsListHandler $getWebsiteSettingsList,
+        GetWebsiteSettingsListHandler $handler,
         #[MapQueryParameter] ?string $xaction = null,
     ): Response {
         if ($payload->hasData) {
@@ -358,7 +358,7 @@ class SettingsController extends AdminAbstractController
             };
         }
 
-        $result = $getWebsiteSettingsList($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
@@ -367,9 +367,9 @@ class SettingsController extends AdminAbstractController
     #[Route('/website-settings-destroy', name: 'opendxp_admin_settings_websitesettings_destroy', methods: ['POST'])]
     public function websiteSettingsDestroyAction(
         WebsiteSettingPayload $payload,
-        DeleteWebsiteSettingHandler $deleteWebsiteSetting,
+        DeleteWebsiteSettingHandler $handler,
     ): JsonResponse {
-        $deleteWebsiteSetting($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
     }
@@ -378,18 +378,18 @@ class SettingsController extends AdminAbstractController
     #[Route('/website-settings-update', name: 'opendxp_admin_settings_websitesettings_update', methods: ['POST'])]
     public function websiteSettingsUpdateAction(
         WebsiteSettingPayload $payload,
-        UpdateWebsiteSettingHandler $updateWebsiteSetting,
+        UpdateWebsiteSettingHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $updateWebsiteSetting($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[IsGranted(CorePermission::WebsiteSettings->value)]
     #[Route('/website-settings-create', name: 'opendxp_admin_settings_websitesettings_create', methods: ['POST'])]
     public function websiteSettingsCreateAction(
         WebsiteSettingPayload $payload,
-        CreateWebsiteSettingHandler $createWebsiteSetting,
+        CreateWebsiteSettingHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $createWebsiteSetting($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[Route('/get-available-algorithms', name: 'opendxp_admin_settings_getavailablealgorithms', methods: ['GET'])]

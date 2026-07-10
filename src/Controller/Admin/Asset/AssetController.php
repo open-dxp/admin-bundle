@@ -100,10 +100,10 @@ class AssetController extends ElementControllerBase
     #[Route('/get-data-by-id', name: 'opendxp_admin_asset_getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
         GetAssetDataPayload $payload,
-        GetAssetDataHandler $getAssetData,
+        GetAssetDataHandler $handler,
     ): JsonResponse {
         try {
-            $result = $getAssetData($payload);
+            $result = $handler($payload);
         } catch (ElementLockedException $e) {
             return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }
@@ -114,9 +114,9 @@ class AssetController extends ElementControllerBase
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_asset_treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(
         GetAssetChildrenPayload $payload,
-        GetAssetChildrenHandler $getChildren,
+        GetAssetChildrenHandler $handler,
     ): JsonResponse {
-        $result = $getChildren($payload);
+        $result = $handler($payload);
 
         if ($payload->hasLimit) {
             return $this->adminJson([
@@ -134,17 +134,17 @@ class AssetController extends ElementControllerBase
     }
 
     #[Route('/add-folder', name: 'opendxp_admin_asset_addfolder', methods: ['POST'])]
-    public function addFolderAction(CreateAssetFolderPayload $payload, CreateAssetFolderHandler $createFolder): JsonResponse
+    public function addFolderAction(CreateAssetFolderPayload $payload, CreateAssetFolderHandler $handler): JsonResponse
     {
-        $createFolder($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/delete', name: 'opendxp_admin_asset_delete', methods: ['DELETE'])]
-    public function deleteAction(DeleteAssetPayload $payload, DeleteAssetHandler $deleteAsset): JsonResponse
+    public function deleteAction(DeleteAssetPayload $payload, DeleteAssetHandler $handler): JsonResponse
     {
-        $result = $deleteAsset($payload);
+        $result = $handler($payload);
 
         if ($result->deleted) {
             return $this->adminJson(ApiResponse::ok(['deleted' => $result->deleted]));
@@ -154,17 +154,17 @@ class AssetController extends ElementControllerBase
     }
 
     #[Route('/update', name: 'opendxp_admin_asset_update', methods: ['PUT'])]
-    public function updateAction(UpdateAssetPayload $payload, UpdateAssetHandler $updateAsset): JsonResponse
+    public function updateAction(UpdateAssetPayload $payload, UpdateAssetHandler $handler): JsonResponse
     {
-        $result = $updateAsset($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
     }
 
     #[Route('/save', name: 'opendxp_admin_asset_save', methods: ['PUT', 'POST'])]
-    public function saveAction(SaveAssetHandler $saveAsset, SaveAssetPayload $payload): JsonResponse
+    public function saveAction(SaveAssetHandler $handler, SaveAssetPayload $payload): JsonResponse
     {
-        $result = $saveAsset($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'data'     => [
@@ -176,9 +176,9 @@ class AssetController extends ElementControllerBase
     }
 
     #[Route('/clear-thumbnail', name: 'opendxp_admin_asset_clearthumbnail', methods: ['POST'])]
-    public function clearThumbnailAction(ClearAssetThumbnailPayload $payload, ClearAssetThumbnailHandler $clearThumbnail): JsonResponse
+    public function clearThumbnailAction(ClearAssetThumbnailPayload $payload, ClearAssetThumbnailHandler $handler): JsonResponse
     {
-        $clearThumbnail($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

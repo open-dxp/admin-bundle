@@ -130,10 +130,10 @@ class DataObjectController extends ElementControllerBase
     #[Route('/get', name: 'get', methods: ['GET'])]
     public function getAction(
         GetDataObjectPayload $payload,
-        GetDataObjectHandler $getDataObject,
+        GetDataObjectHandler $handler,
     ): JsonResponse {
         try {
-            $result = $getDataObject($payload);
+            $result = $handler($payload);
         } catch (ElementLockedException $e) {
             return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
         }

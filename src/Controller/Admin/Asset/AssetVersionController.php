@@ -44,11 +44,11 @@ class AssetVersionController extends AdminAbstractController
     #[Route('/publish-version', name: 'opendxp_admin_asset_publishversion', methods: ['POST'])]
     public function publishVersionAction(
         PublishVersionPayload $payload,
-        PublishVersionHandler $publishVersion,
+        PublishVersionHandler $handler,
         ElementServiceInterface $elementService,
     ): JsonResponse {
 
-        $result = $publishVersion($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'treeData' => $elementService->getElementTreeNodeConfig($result->asset),
@@ -59,9 +59,9 @@ class AssetVersionController extends AdminAbstractController
     public function showVersionAction(
         Environment $twig,
         ShowVersionPayload $payload,
-        ShowVersionHandler $showVersion,
+        ShowVersionHandler $handler,
     ): Response {
-        $result = $showVersion($payload);
+        $result = $handler($payload);
 
         if ($result->isPdf) {
             return $this->render(

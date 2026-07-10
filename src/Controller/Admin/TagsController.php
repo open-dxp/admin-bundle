@@ -52,9 +52,9 @@ class TagsController extends AdminAbstractController
     #[Route('/add', name: 'opendxp_admin_tags_add', methods: ['POST'])]
     public function addAction(
         AddTagPayload $payload,
-        AddTagHandler $addTag,
+        AddTagHandler $handler,
     ): JsonResponse {
-        $result = $addTag($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
@@ -63,9 +63,9 @@ class TagsController extends AdminAbstractController
     #[Route('/delete', name: 'opendxp_admin_tags_delete', methods: ['DELETE'])]
     public function deleteAction(
         DeleteTagPayload $payload,
-        DeleteTagHandler $deleteTag,
+        DeleteTagHandler $handler,
     ): JsonResponse {
-        $deleteTag($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -74,9 +74,9 @@ class TagsController extends AdminAbstractController
     #[Route('/update', name: 'opendxp_admin_tags_update', methods: ['PUT'])]
     public function updateAction(
         UpdateTagPayload $payload,
-        UpdateTagHandler $updateTag,
+        UpdateTagHandler $handler,
     ): JsonResponse {
-        $updateTag($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -84,9 +84,9 @@ class TagsController extends AdminAbstractController
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_tags_treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(
         GetTagTreeChildrenPayload $payload,
-        GetTagTreeChildrenHandler $getTagTreeChildren,
+        GetTagTreeChildrenHandler $handler,
     ): JsonResponse {
-        $result = $getTagTreeChildren($payload);
+        $result = $handler($payload);
 
         return $this->adminJson($result->tags);
     }
@@ -94,13 +94,13 @@ class TagsController extends AdminAbstractController
     #[Route('/load-tags-for-element', name: 'opendxp_admin_tags_loadtagsforelement', methods: ['GET'])]
     public function loadTagsForElementAction(
         LoadTagsForElementPayload $payload,
-        GetTagsForElementHandler $getTagsForElement,
+        GetTagsForElementHandler $handler,
     ): JsonResponse {
         if (!$payload->assignmentCId || !$payload->assignmentCType) {
             return $this->adminJson([]);
         }
 
-        $result = $getTagsForElement($payload);
+        $result = $handler($payload);
 
         return $this->adminJson($result->tags);
     }
@@ -108,9 +108,9 @@ class TagsController extends AdminAbstractController
     #[Route('/add-tag-to-element', name: 'opendxp_admin_tags_addtagtoelement', methods: ['PUT'])]
     public function addTagToElementAction(
         AddTagToElementPayload $payload,
-        AddTagToElementHandler $addTagToElement,
+        AddTagToElementHandler $handler,
     ): JsonResponse {
-        $result = $addTagToElement($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
@@ -118,9 +118,9 @@ class TagsController extends AdminAbstractController
     #[Route('/remove-tag-from-element', name: 'opendxp_admin_tags_removetagfromelement', methods: ['DELETE'])]
     public function removeTagFromElementAction(
         RemoveTagFromElementPayload $payload,
-        RemoveTagFromElementHandler $removeTagFromElement,
+        RemoveTagFromElementHandler $handler,
     ): JsonResponse {
-        $result = $removeTagFromElement($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
     }
@@ -128,9 +128,9 @@ class TagsController extends AdminAbstractController
     #[Route('/get-batch-assignment-jobs', name: 'opendxp_admin_tags_getbatchassignmentjobs', methods: ['GET'])]
     public function getBatchAssignmentJobsAction(
         GetBatchAssignmentJobsPayload $payload,
-        GetBatchAssignmentJobsHandler $getBatchAssignmentJobs,
+        GetBatchAssignmentJobsHandler $handler,
     ): JsonResponse {
-        $result = $getBatchAssignmentJobs($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['idLists' => $result->idListParts, 'totalCount' => $result->totalCount]));
     }
@@ -138,9 +138,9 @@ class TagsController extends AdminAbstractController
     #[Route('/do-batch-assignment', name: 'opendxp_admin_tags_dobatchassignment', methods: ['PUT'])]
     public function doBatchAssignmentAction(
         DoBatchAssignmentPayload $payload,
-        DoBatchAssignmentHandler $doBatchAssignment,
+        DoBatchAssignmentHandler $handler,
     ): JsonResponse {
-        $doBatchAssignment($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

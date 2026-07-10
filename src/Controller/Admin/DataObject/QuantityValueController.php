@@ -51,17 +51,17 @@ class QuantityValueController extends AdminAbstractController
 {
     #[AsHtmlContentTypeResponse]
     #[Route('/unit-import', name: 'unitimport', methods: ['POST', 'PUT'])]
-    public function unitImportAction(ImportQuantityValueUnitsPayload $payload, ImportQuantityValueUnitsHandler $importUnits): JsonResponse
+    public function unitImportAction(ImportQuantityValueUnitsPayload $payload, ImportQuantityValueUnitsHandler $handler): JsonResponse
     {
-        $importUnits($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/unit-export', name: 'unitexport', methods: ['GET'])]
-    public function unitExportAction(ExportQuantityValueUnitsHandler $exportUnits): Response
+    public function unitExportAction(ExportQuantityValueUnitsHandler $handler): Response
     {
-        $response = new Response($exportUnits());
+        $response = new Response($handler());
         $response->headers->set('Content-Type', 'application/json');
         $response->headers->set('Content-Disposition', 'attachment; filename="quantityvalue_unit_export.json"');
 
@@ -70,9 +70,9 @@ class QuantityValueController extends AdminAbstractController
 
     #[Route('/unit-proxy', name: 'unitproxyget', methods: ['GET'])]
     #[IsGranted(CorePermission::QuantityValueUnits->value)]
-    public function unitProxyGetAction(GetQuantityValueUnitsHandler $getUnits, GetQuantityValueUnitsPayload $payload): JsonResponse
+    public function unitProxyGetAction(GetQuantityValueUnitsHandler $handler, GetQuantityValueUnitsPayload $payload): JsonResponse
     {
-        $result = $getUnits($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
@@ -95,51 +95,51 @@ class QuantityValueController extends AdminAbstractController
     #[IsGranted(CorePermission::QuantityValueUnits->value)]
     public function unitProxyDestroyAction(
         QuantityValueUnitPayload $payload,
-        DeleteQuantityValueUnitHandler $deleteUnit,
+        DeleteQuantityValueUnitHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $deleteUnit($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[Route('/unit-proxy-update', name: 'unitproxy_update', methods: ['POST', 'PUT'])]
     #[IsGranted(CorePermission::QuantityValueUnits->value)]
     public function unitProxyUpdateAction(
         QuantityValueUnitPayload $payload,
-        UpdateQuantityValueUnitHandler $updateUnit,
+        UpdateQuantityValueUnitHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $updateUnit($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[Route('/unit-proxy-create', name: 'unitproxy_create', methods: ['POST', 'PUT'])]
     #[IsGranted(CorePermission::QuantityValueUnits->value)]
     public function unitProxyCreateAction(
         QuantityValueUnitPayload $payload,
-        CreateQuantityValueUnitHandler $createUnit,
+        CreateQuantityValueUnitHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $createUnit($payload)->data]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
     }
 
     #[Route('/unit-list', name: 'unitlist', methods: ['GET'])]
-    public function unitListAction(GetQuantityValueUnitListHandler $getUnitList, GetQuantityValueUnitListPayload $payload): JsonResponse
+    public function unitListAction(GetQuantityValueUnitListHandler $handler, GetQuantityValueUnitListPayload $payload): JsonResponse
     {
-        $result = $getUnitList($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
     }
 
     #[Route('/convert', name: 'convert', methods: ['GET'])]
     #[IsGranted(CorePermission::Objects->value)]
-    public function convertAction(ConvertQuantityValueHandler $convert, ConvertQuantityValuePayload $payload): JsonResponse
+    public function convertAction(ConvertQuantityValueHandler $handler, ConvertQuantityValuePayload $payload): JsonResponse
     {
-        $result = $convert($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['value' => $result->value]));
     }
 
     #[Route('/convert-all', name: 'convertall', methods: ['GET'])]
     #[IsGranted(CorePermission::Objects->value)]
-    public function convertAllAction(ConvertAllQuantityValuesHandler $convertAll, ConvertAllQuantityValuesPayload $payload): JsonResponse
+    public function convertAllAction(ConvertAllQuantityValuesHandler $handler, ConvertAllQuantityValuesPayload $payload): JsonResponse
     {
-        $result = $convertAll($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'value' => $result->value,

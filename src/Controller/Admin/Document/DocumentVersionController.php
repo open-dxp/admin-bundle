@@ -42,9 +42,9 @@ class DocumentVersionController extends AdminAbstractController
     #[Route('/version-to-session', name: 'opendxp_admin_document_document_versiontosession', methods: ['POST'])]
     public function versionToSessionAction(
         IdBodyPayload              $payload,
-        SaveVersionToSessionHandler $saveToSession,
+        SaveVersionToSessionHandler $handler,
     ): Response {
-        $saveToSession($payload);
+        $handler($payload);
 
         return new Response();
     }
@@ -53,9 +53,9 @@ class DocumentVersionController extends AdminAbstractController
     #[Route('/publish-version', name: 'opendxp_admin_document_document_publishversion', methods: ['POST'])]
     public function publishVersionAction(
         IdBodyPayload          $payload,
-        PublishVersionHandler  $publishVersion,
+        PublishVersionHandler  $handler,
     ): JsonResponse {
-        $result = $publishVersion($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
     }
@@ -64,9 +64,9 @@ class DocumentVersionController extends AdminAbstractController
     #[Route('/diff-versions/from/{from}/to/{to}', name: 'opendxp_admin_document_document_diffversions', requirements: ['from' => "\d+", 'to' => "\d+"], methods: ['GET'])]
     public function diffVersionsAction(
         DiffVersionsPayload $payload,
-        DiffVersionsHandler $diffVersions,
+        DiffVersionsHandler $handler,
     ): Response {
-        $result = $diffVersions($payload);
+        $result = $handler($payload);
 
         if (!$result->supported) {
             return $this->render('@OpenDxpAdmin/admin/document/document/diff_versions_unsupported.html.twig');

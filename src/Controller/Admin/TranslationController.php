@@ -61,12 +61,12 @@ class TranslationController extends AdminAbstractController
     #[AsHtmlContentTypeResponse]
     #[Route('/import', name: 'opendxp_admin_translation_import', methods: ['POST'])]
     public function importAction(
-        ImportTranslationsHandler $importTranslations,
+        ImportTranslationsHandler $handler,
         ImportTranslationsPayload $payload,
     ): JsonResponse {
         $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
 
-        $result = $importTranslations($payload);
+        $result = $handler($payload);
 
         $extra = [];
         if ($payload->enrichDelta) {
@@ -79,10 +79,10 @@ class TranslationController extends AdminAbstractController
     #[Route('/upload-import', name: 'opendxp_admin_translation_uploadimportfile', methods: ['POST'])]
     public function uploadImportFileAction(
         Request $request,
-        UploadTranslationImportFileHandler $uploadTranslationImportFile,
+        UploadTranslationImportFileHandler $handler,
         UploadTranslationImportFilePayload $payload,
     ): JsonResponse {
-        $result = $uploadTranslationImportFile($payload);
+        $result = $handler($payload);
 
         Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
             $session->set('translation_import_file', $result->importFile);
@@ -95,12 +95,12 @@ class TranslationController extends AdminAbstractController
 
     #[Route('/export', name: 'opendxp_admin_translation_export', methods: ['GET'])]
     public function exportAction(
-        ExportTranslationsHandler $exportTranslations,
+        ExportTranslationsHandler $handler,
         ExportTranslationsPayload $payload,
     ): Response {
         $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
 
-        $result = $exportTranslations($payload);
+        $result = $handler($payload);
 
         $response = new Response("\xEF\xBB\xBF" . $result->csv);
         $response->headers->set('Content-Encoding', 'UTF-8');
@@ -113,10 +113,10 @@ class TranslationController extends AdminAbstractController
 
     #[Route('/add-admin-translation-keys', name: 'opendxp_admin_translation_addadmintranslationkeys', methods: ['POST'])]
     public function addAdminTranslationKeysAction(
-        AddAdminTranslationKeysHandler $addAdminTranslationKeys,
+        AddAdminTranslationKeysHandler $handler,
         AddAdminTranslationKeysPayload $payload,
     ): JsonResponse {
-        $addAdminTranslationKeys($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -125,7 +125,7 @@ class TranslationController extends AdminAbstractController
     public function translationsAction(
         Request $request,
         TranslationPayload $payload,
-        GetTranslationsHandler $getTranslations,
+        GetTranslationsHandler $handler,
         #[MapQueryParameter] ?string $xaction = null,
     ): Response {
         $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
@@ -139,7 +139,7 @@ class TranslationController extends AdminAbstractController
             };
         }
 
-        $result = $getTranslations($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->translations, 'total' => $result->total]));
     }
@@ -147,11 +147,11 @@ class TranslationController extends AdminAbstractController
     #[Route('/translations-destroy', name: 'opendxp_admin_translation_translations_destroy', methods: ['POST'])]
     public function translationsDestroyAction(
         TranslationPayload $payload,
-        DeleteTranslationHandler $deleteTranslation,
+        DeleteTranslationHandler $handler,
     ): JsonResponse {
         $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
 
-        $deleteTranslation($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => []]));
     }
@@ -159,11 +159,11 @@ class TranslationController extends AdminAbstractController
     #[Route('/translations-update', name: 'opendxp_admin_translation_translations_update', methods: ['POST'])]
     public function translationsUpdateAction(
         TranslationPayload $payload,
-        UpdateTranslationHandler $updateTranslation,
+        UpdateTranslationHandler $handler,
     ): JsonResponse {
         $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
 
-        $result = $updateTranslation($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => [
             'key'              => $result->key,
@@ -177,11 +177,11 @@ class TranslationController extends AdminAbstractController
     #[Route('/translations-create', name: 'opendxp_admin_translation_translations_create', methods: ['POST'])]
     public function translationsCreateAction(
         TranslationPayload $payload,
-        CreateTranslationHandler $createTranslation,
+        CreateTranslationHandler $handler,
     ): JsonResponse {
         $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
 
-        $result = $createTranslation($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => [
             'key'              => $result->key,
@@ -204,10 +204,10 @@ class TranslationController extends AdminAbstractController
 
     #[Route('/cleanup', name: 'opendxp_admin_translation_cleanup', methods: ['DELETE'])]
     public function cleanupAction(
-        CleanupTranslationsHandler $cleanupTranslations,
+        CleanupTranslationsHandler $handler,
         CleanupTranslationsPayload $payload,
     ): JsonResponse {
-        $cleanupTranslations($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -220,30 +220,30 @@ class TranslationController extends AdminAbstractController
      */
     #[Route('/content-export-jobs', name: 'opendxp_admin_translation_contentexportjobs', methods: ['POST'])]
     public function contentExportJobsAction(
-        BuildContentExportJobsHandler $buildContentExportJobs,
+        BuildContentExportJobsHandler $handler,
         BuildContentExportJobsPayload $payload,
     ): JsonResponse {
-        $result = $buildContentExportJobs($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['jobs' => $result->jobs, 'id' => $result->exportId]));
     }
 
     #[Route('/merge-item', name: 'opendxp_admin_translation_mergeitem', methods: ['PUT'])]
     public function mergeItemAction(
-        MergeTranslationItemsHandler $mergeTranslationItems,
+        MergeTranslationItemsHandler $handler,
         MergeTranslationItemsPayload $payload,
     ): JsonResponse {
-        $mergeTranslationItems($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/get-website-translation-languages', name: 'opendxp_admin_translation_getwebsitetranslationlanguages', methods: ['GET'])]
     public function getWebsiteTranslationLanguagesAction(
-        GetWebsiteTranslationLanguagesHandler $getWebsiteTranslationLanguages,
+        GetWebsiteTranslationLanguagesHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $getWebsiteTranslationLanguages($payload);
+        $result = $handler($payload);
 
         return $this->adminJson([
             'view' => $result->view,
@@ -255,10 +255,10 @@ class TranslationController extends AdminAbstractController
 
     #[Route('/get-translation-domains', name: 'opendxp_admin_translation_gettranslationdomains', methods: ['GET'])]
     public function getTranslationDomainsAction(
-        GetTranslationDomainsHandler $getTranslationDomains,
+        GetTranslationDomainsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $getTranslationDomains($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(['domains' => $result->domains]);
     }

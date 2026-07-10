@@ -34,16 +34,16 @@ use Symfony\Component\Routing\Attribute\Route;
 class VariantsController extends AdminAbstractController
 {
     #[Route('/update-key', name: 'updatekey', methods: ['PUT'])]
-    public function updateKeyAction(UpdateObjectKeyHandler $updateObjectKey, UpdateObjectKeyPayload $payload): JsonResponse
+    public function updateKeyAction(UpdateObjectKeyHandler $handler, UpdateObjectKeyPayload $payload): JsonResponse
     {
-        $result = $updateObjectKey($payload);
+        $result = $handler($payload);
 
         return $this->adminJson($result->data);
     }
 
     #[Route('/get-variants', name: 'getvariants', methods: ['POST'])]
     public function getVariantsAction(
-        GetVariantsHandler $getVariants,
+        GetVariantsHandler $handler,
         GetVariantsPayload $payload,
         Request $request,
         CsrfProtectionHandler $csrfProtection,
@@ -54,7 +54,7 @@ class VariantsController extends AdminAbstractController
             $request->setLocale($payload->requestedLanguage);
         }
 
-        $result = $getVariants($payload);
+        $result = $handler($payload);
 
         return $this->adminJson($result->data);
     }

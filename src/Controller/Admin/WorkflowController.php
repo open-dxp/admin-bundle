@@ -46,11 +46,11 @@ class WorkflowController extends AdminAbstractController
     #[Route('/get-workflow-form', name: 'opendxp_admin_workflow_getworkflowform', methods: ['POST'])]
     public function getWorkflowFormAction(
         GetWorkflowFormPayload $payload,
-        GetWorkflowFormHandler $getWorkflowForm,
+        GetWorkflowFormHandler $handler,
     ): JsonResponse
     {
         try {
-            $result = $getWorkflowForm($payload);
+            $result = $handler($payload);
 
             $wfConfig = [
                 'message' => $result->message,
@@ -68,10 +68,10 @@ class WorkflowController extends AdminAbstractController
     #[Route('/submit-workflow-transition', name: 'opendxp_admin_workflow_submitworkflowtransition', methods: ['POST'])]
     public function submitWorkflowTransitionAction(
         SubmitWorkflowTransitionPayload $payload,
-        SubmitWorkflowTransitionHandler $submitWorkflowTransition,
+        SubmitWorkflowTransitionHandler $handler,
     ): JsonResponse {
         try {
-            $result = $submitWorkflowTransition($payload);
+            $result = $handler($payload);
 
             if ($result->blocked) {
                 return $this->adminJson(ApiResponse::error('transition failed', ['reasons' => $result->blockerReasons]));
@@ -93,10 +93,10 @@ class WorkflowController extends AdminAbstractController
     #[Route('/submit-global-action', name: 'opendxp_admin_workflow_submitglobal', methods: ['POST'])]
     public function submitGlobalAction(
         SubmitGlobalActionPayload $payload,
-        SubmitGlobalActionHandler $submitGlobalAction,
+        SubmitGlobalActionHandler $handler,
     ): JsonResponse {
         try {
-            $submitGlobalAction($payload);
+            $handler($payload);
 
             return $this->adminJson(ApiResponse::ok(['callback' => 'reloadObject']));
         } catch (ValidationException $e) {
@@ -114,9 +114,9 @@ class WorkflowController extends AdminAbstractController
     #[Route('/get-workflow-details', name: 'opendxp_admin_workflow_getworkflowdetailsstore')]
     public function getWorkflowDetailsStore(
         GetWorkflowDetailsPayload $payload,
-        GetWorkflowDetailsHandler $getWorkflowDetails,
+        GetWorkflowDetailsHandler $handler,
     ): JsonResponse {
-        $result = $getWorkflowDetails($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => count($result->data)]));
     }
@@ -124,9 +124,9 @@ class WorkflowController extends AdminAbstractController
     #[Route('/show-graph', name: 'opendxp_admin_workflow_show_graph', methods: ['GET'])]
     public function showGraph(
         ShowGraphPayload $payload,
-        GetWorkflowSvgHandler $getWorkflowSvg,
+        GetWorkflowSvgHandler $handler,
     ): Response {
-        $svg = $getWorkflowSvg($payload);
+        $svg = $handler($payload);
 
         $response = new Response($svg);
         $response->headers->set('Content-Type', 'image/svg+xml');
@@ -137,11 +137,11 @@ class WorkflowController extends AdminAbstractController
     #[Route('/modal-custom-html', name: 'opendxp_admin_workflow_modal_custom_html', methods: ['POST'])]
     public function getModalCustomHtml(
         GetModalCustomHtmlPayload $payload,
-        GetModalCustomHtmlHandler $getModalCustomHtml,
+        GetModalCustomHtmlHandler $handler,
     ): JsonResponse
     {
         try {
-            $result = $getModalCustomHtml($payload);
+            $result = $handler($payload);
 
             return $this->adminJson(ApiResponse::ok(['customHtml' => $result->customHtml]));
         } catch (Exception $e) {

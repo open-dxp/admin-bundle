@@ -89,9 +89,9 @@ abstract class DocumentControllerBase extends AdminAbstractController
     #[Route('/change-main-document', name: 'changemaindocument', methods: ['PUT'])]
     public function changeMainDocumentAction(
         ChangeMainDocumentPayload $payload,
-        ChangeMainDocumentHandler $changeMainDocument,
+        ChangeMainDocumentHandler $handler,
     ): JsonResponse {
-        $changeMainDocument($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

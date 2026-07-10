@@ -40,35 +40,35 @@ class ThumbnailController extends AdminAbstractController
 {
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/thumbnail-tree', name: 'opendxp_admin_settings_thumbnailtree', methods: ['GET', 'POST'])]
-    public function thumbnailTreeAction(GetThumbnailTreeHandler $getThumbnailTree): JsonResponse
+    public function thumbnailTreeAction(GetThumbnailTreeHandler $handler): JsonResponse
     {
-        $result = $getThumbnailTree();
+        $result = $handler();
 
         return $this->adminJson($result->nodes);
     }
 
     #[Route('/settings/thumbnail-downloadable', name: 'opendxp_admin_settings_thumbnaildownloadable', methods: ['GET'])]
-    public function thumbnailDownloadableAction(GetDownloadableThumbnailsHandler $getDownloadableThumbnails): JsonResponse
+    public function thumbnailDownloadableAction(GetDownloadableThumbnailsHandler $handler): JsonResponse
     {
-        $result = $getDownloadableThumbnails();
+        $result = $handler();
 
         return $this->adminJson($result->thumbnails);
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/thumbnail-add', name: 'opendxp_admin_settings_thumbnailadd', methods: ['POST'])]
-    public function thumbnailAddAction(AddThumbnailPayload $payload, AddThumbnailHandler $addThumbnail): JsonResponse
+    public function thumbnailAddAction(AddThumbnailPayload $payload, AddThumbnailHandler $handler): JsonResponse
     {
-        $result = $addThumbnail($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::fromBool($result->created, ['id' => $result->id]));
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/thumbnail-delete', name: 'opendxp_admin_settings_thumbnaildelete', methods: ['DELETE'])]
-    public function thumbnailDeleteAction(DeleteThumbnailPayload $payload, DeleteThumbnailHandler $deleteThumbnail): JsonResponse
+    public function thumbnailDeleteAction(DeleteThumbnailPayload $payload, DeleteThumbnailHandler $handler): JsonResponse
     {
-        $deleteThumbnail($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -77,18 +77,18 @@ class ThumbnailController extends AdminAbstractController
     #[Route('/settings/thumbnail-get', name: 'opendxp_admin_settings_thumbnailget', methods: ['GET'])]
     public function thumbnailGetAction(
         #[MapQueryParameter] string $name,
-        GetThumbnailHandler $getThumbnail,
+        GetThumbnailHandler $handler,
     ): JsonResponse {
-        $result = $getThumbnail($name);
+        $result = $handler($name);
 
         return $this->adminJson($result->data);
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/thumbnail-update', name: 'opendxp_admin_settings_thumbnailupdate', methods: ['PUT'])]
-    public function thumbnailUpdateAction(UpdateThumbnailPayload $payload, UpdateThumbnailHandler $updateThumbnail): JsonResponse
+    public function thumbnailUpdateAction(UpdateThumbnailPayload $payload, UpdateThumbnailHandler $handler): JsonResponse
     {
-        $updateThumbnail($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

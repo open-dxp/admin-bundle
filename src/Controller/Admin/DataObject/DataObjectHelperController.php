@@ -76,9 +76,9 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/get-export-configs', name: 'getexportconfigs', methods: ['GET'])]
     public function getExportConfigsAction(
         GetExportConfigsPayload $payload,
-        GetExportConfigsHandler $getExportConfigs,
+        GetExportConfigsHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $getExportConfigs($payload)]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)]));
     }
 
     #[Route('/grid-delete-column-config', name: 'griddeletecolumnconfig', methods: ['DELETE'])]
@@ -100,10 +100,10 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/prepare-helper-column-configs', name: 'preparehelpercolumnconfigs', methods: ['POST'])]
     public function prepareHelperColumnConfigs(
         PrepareHelperColumnConfigsPayload $payload,
-        PrepareHelperColumnConfigsHandler $prepareHelperColumns,
+        PrepareHelperColumnConfigsHandler $handler,
         Request $request,
     ): JsonResponse {
-        $result = $prepareHelperColumns($payload);
+        $result = $handler($payload);
 
         Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
             $existingColumns = $session->get('helpercolumns', []);
@@ -116,9 +116,9 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/grid-config-apply-to-all', name: 'gridconfigapplytoall', methods: ['POST'])]
     public function gridConfigApplyToAllAction(
         ApplyGridConfigToAllPayload $payload,
-        ApplyGridConfigToAllHandler $applyToAll,
+        ApplyGridConfigToAllHandler $handler,
     ): JsonResponse {
-        $applyToAll($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -126,9 +126,9 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/grid-mark-favourite-column-config', name: 'gridmarkfavouritecolumnconfig', methods: ['POST'])]
     public function gridMarkFavouriteColumnConfigAction(
         MarkDataObjectGridConfigFavouritePayload $payload,
-        MarkDataObjectGridConfigFavouriteHandler $markFavourite,
+        MarkDataObjectGridConfigFavouriteHandler $handler,
     ): JsonResponse {
-        $result = $markFavourite($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['specializedConfigs' => $result->specializedConfigs]));
     }
@@ -136,9 +136,9 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/grid-save-column-config', name: 'gridsavecolumnconfig', methods: ['POST'])]
     public function gridSaveColumnConfigAction(
         SaveDataObjectGridColumnConfigPayload $payload,
-        SaveDataObjectGridColumnConfigHandler $saveGridColumnConfig,
+        SaveDataObjectGridColumnConfigHandler $handler,
     ): JsonResponse {
-        $result = $saveGridColumnConfig($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok([
             'settings'         => $result->settings,
@@ -154,9 +154,9 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/import-upload', name: 'importupload', methods: ['POST'])]
     public function importUploadAction(
         ImportUploadPayload $payload,
-        ImportUploadHandler $importUpload,
+        ImportUploadHandler $handler,
     ): JsonResponse {
-        $importUpload($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -179,14 +179,14 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/do-export', name: 'doexport', methods: ['POST'])]
     public function doExportAction(
         DoDataObjectExportPayload $payload,
-        DoDataObjectExportHandler $doExport,
+        DoDataObjectExportHandler $handler,
         Request $request,
     ): JsonResponse {
         if ($payload->requestedLanguage !== $request->getLocale()) {
             $request->setLocale($payload->requestedLanguage);
         }
 
-        $doExport($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -245,9 +245,9 @@ class DataObjectHelperController extends AdminAbstractController
     #[Route('/get-available-visible-vields', name: 'getavailablevisiblefields', methods: ['GET'])]
     public function getAvailableVisibleFieldsAction(
         GetAvailableVisibleFieldsPayload $payload,
-        GetAvailableVisibleFieldsHandler $getAvailableFields,
+        GetAvailableVisibleFieldsHandler $handler,
     ): JsonResponse {
-        $result = $getAvailableFields($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(['availableFields' => $result->availableFields]);
     }

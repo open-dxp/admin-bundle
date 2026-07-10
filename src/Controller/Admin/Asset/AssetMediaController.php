@@ -47,9 +47,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class AssetMediaController extends AdminAbstractController
 {
     #[Route('/get-asset', name: 'opendxp_admin_asset_getasset', methods: ['GET'])]
-    public function getAssetAction(DownloadAssetPayload $payload, DownloadAssetHandler $downloadAsset): StreamedResponse
+    public function getAssetAction(DownloadAssetPayload $payload, DownloadAssetHandler $handler): StreamedResponse
     {
-        $result = $downloadAsset($payload);
+        $result = $handler($payload);
         $asset = $result->asset;
         $stream = $asset->getStream();
 
@@ -103,9 +103,9 @@ class AssetMediaController extends AdminAbstractController
     #[Route('/get-preview-video', name: 'opendxp_admin_asset_getpreviewvideo', methods: ['GET'])]
     public function getPreviewVideoAction(
         GetVideoPreviewPayload $payload,
-        GetVideoPreviewHandler $getVideoPreview,
+        GetVideoPreviewHandler $handler,
     ): Response {
-        $result = $getVideoPreview($payload);
+        $result = $handler($payload);
         $previewData = [
             'asset' => $result->asset,
             'thumbnail' => $result->thumbnail,
@@ -122,9 +122,9 @@ class AssetMediaController extends AdminAbstractController
     #[Route('/serve-video-preview', name: 'opendxp_admin_asset_servevideopreview', methods: ['GET'])]
     public function serveVideoPreviewAction(
         ServeVideoPreviewPayload $payload,
-        ServeVideoPreviewHandler $serveVideoPreview,
+        ServeVideoPreviewHandler $handler,
     ): StreamedResponse {
-        $result = $serveVideoPreview($payload);
+        $result = $handler($payload);
 
         return new StreamedResponse(static function () use ($result): void {
             fpassthru($result->stream);
@@ -138,9 +138,9 @@ class AssetMediaController extends AdminAbstractController
     #[Route('/get-text', name: 'opendxp_admin_asset_gettext', methods: ['GET'])]
     public function getTextAction(
         GetAssetTextPayload $payload,
-        GetAssetTextHandler $getAssetText,
+        GetAssetTextHandler $handler,
     ): JsonResponse {
-        $result = $getAssetText($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['text' => $result->text]));
     }

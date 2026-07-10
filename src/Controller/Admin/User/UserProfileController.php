@@ -44,7 +44,7 @@ class UserProfileController extends AdminAbstractController
     #[Route('/user/upload-current-user-image', name: 'opendxp_admin_user_uploadcurrentuserimage', methods: ['POST'])]
     public function uploadCurrentUserImageAction(
         UploadUserImagePayload $payload,
-        UploadUserImageHandler $uploadUserImage,
+        UploadUserImageHandler $handler,
     ): JsonResponse {
         $user = $this->getAdminUser();
 
@@ -55,7 +55,7 @@ class UserProfileController extends AdminAbstractController
             return $this->adminJson(ApiResponse::error());
         }
 
-        $uploadUserImage($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -64,13 +64,13 @@ class UserProfileController extends AdminAbstractController
     public function updateCurrentUserAction(
         Request $request,
         UpdateCurrentUserPayload $payload,
-        UpdateCurrentUserHandler $updateCurrentUser,
+        UpdateCurrentUserHandler $handler,
     ): JsonResponse {
         if (!$request->request->has('id')) {
             return $this->adminJson(false);
         }
 
-        $updateCurrentUser($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -78,9 +78,9 @@ class UserProfileController extends AdminAbstractController
     #[Route('/user/get-current-user', name: 'opendxp_admin_user_getcurrentuser', methods: ['GET'])]
     public function getCurrentUserAction(
         GetCurrentUserPayload $payload,
-        GetCurrentUserHandler $getCurrentUser,
+        GetCurrentUserHandler $handler,
     ): Response {
-        $result = $getCurrentUser($payload);
+        $result = $handler($payload);
 
         $response = new Response('opendxp.currentuser = ' . $this->encodeJson($result->userData));
         $response->headers->set('Content-Type', 'text/javascript');
@@ -91,10 +91,10 @@ class UserProfileController extends AdminAbstractController
     #[Route('/user/reset-my-2fa-secret', name: 'opendxp_admin_user_reset_my_2fa_secret', methods: ['PUT'])]
     public function resetMy2FaSecretAction(
         EmptyPayload $payload,
-        ResetMy2FaSecretHandler $resetMy2FaSecret,
+        ResetMy2FaSecretHandler $handler,
     ): JsonResponse {
 
-        $resetMy2FaSecret($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }

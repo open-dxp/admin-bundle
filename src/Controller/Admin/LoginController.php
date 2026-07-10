@@ -156,11 +156,11 @@ class LoginController extends AdminAbstractController implements KernelControlle
         Request $request,
         CsrfProtectionHandler $csrfProtection,
         LostPasswordPayload $payload,
-        LostPasswordHandler $lostPassword,
+        LostPasswordHandler $handler,
     ): Response {
         $params = $this->loginPageFactory->create($request)->base();
 
-        $result = $lostPassword($payload);
+        $result = $handler($payload);
 
         if ($result->eventResponse !== null) {
             return $result->eventResponse;
@@ -218,10 +218,10 @@ class LoginController extends AdminAbstractController implements KernelControlle
     #[Route('/login/2fa-setup-save', name: 'opendxp_admin_2fa_setup_save')]
     public function twoFactorSetupSaveAction(
         SaveTwoFactorSetupPayload $payload,
-        SaveTwoFactorSetupHandler $saveSetup,
+        SaveTwoFactorSetupHandler $handler,
     ): RedirectResponse {
         try {
-            $saveSetup($payload);
+            $handler($payload);
         } catch (\Throwable) {
             return new RedirectResponse($this->generateUrl('opendxp_admin_2fa_setup', ['error' => '2fa_wrong']));
         }
@@ -233,7 +233,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
     public function twoFactorSetupGenerateAction(
         Request $request,
         GenerateTwoFactorSetupPayload $payload,
-        GenerateTwoFactorSetupHandler $generateSetup,
+        GenerateTwoFactorSetupHandler $handler,
     ): Response {
 
         $params = $this->loginPageFactory->create($request)->base();
@@ -243,7 +243,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
             $params['error'] = $payload->error;
         }
 
-        $result = $generateSetup();
+        $result = $handler();
         $params['image'] = $result->qrDataUri;
 
         $request->getSession()->set('2fa_secret', $result->secret);

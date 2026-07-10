@@ -88,9 +88,9 @@ class AssetThumbnailController extends AdminAbstractController
 
     #[Route('/get-folder-thumbnail', name: 'opendxp_admin_asset_getfolderthumbnail', methods: ['GET'])]
     #[IsGranted(CorePermission::Assets->value)]
-    public function getFolderThumbnailAction(GetFolderThumbnailPayload $payload, GetFolderThumbnailHandler $getFolderThumbnail): StreamedResponse
+    public function getFolderThumbnailAction(GetFolderThumbnailPayload $payload, GetFolderThumbnailHandler $handler): StreamedResponse
     {
-        $result = $getFolderThumbnail($payload);
+        $result = $handler($payload);
 
         $response = new StreamedResponse(static function () use ($result): void {
             fpassthru($result->stream);
@@ -105,9 +105,9 @@ class AssetThumbnailController extends AdminAbstractController
     #[Route('/get-video-thumbnail', name: 'opendxp_admin_asset_getvideothumbnail', methods: ['GET'])]
     public function getVideoThumbnailAction(
         GetVideoThumbnailPayload $payload,
-        GetVideoThumbnailHandler $getVideoThumbnail,
+        GetVideoThumbnailHandler $handler,
     ): StreamedResponse {
-        $result = $getVideoThumbnail($payload);
+        $result = $handler($payload);
 
         $response = new StreamedResponse(static function () use ($result): void {
             fpassthru($result->stream);
@@ -145,9 +145,9 @@ class AssetThumbnailController extends AdminAbstractController
     #[IsGranted(CorePermission::Assets->value)]
     public function getFolderContentPreviewAction(
         GetFolderContentPreviewPayload $payload,
-        GetFolderContentPreviewHandler $getFolderContentPreview,
+        GetFolderContentPreviewHandler $handler,
     ): JsonResponse {
-        $result = $getFolderContentPreview($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['assets' => $result->assets, 'total' => $result->total]));
     }

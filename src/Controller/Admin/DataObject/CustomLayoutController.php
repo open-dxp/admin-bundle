@@ -51,9 +51,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class CustomLayoutController extends AdminAbstractController
 {
     #[Route('/get-custom-layout', name: 'getcustomlayout', methods: ['GET'])]
-    public function getCustomLayoutAction(GetCustomLayoutHandler $getCustomLayout, GetCustomLayoutPayload $payload): JsonResponse
+    public function getCustomLayoutAction(GetCustomLayoutHandler $handler, GetCustomLayoutPayload $payload): JsonResponse
     {
-        $result = $getCustomLayout($payload);
+        $result = $handler($payload);
         $data = $result->data;
         $data['isWriteable'] = $result->isWriteable;
 
@@ -61,9 +61,9 @@ class CustomLayoutController extends AdminAbstractController
     }
 
     #[Route('/add-custom-layout', name: 'addcustomlayout', methods: ['POST'])]
-    public function addCustomLayoutAction(AddCustomLayoutHandler $addCustomLayout, AddCustomLayoutPayload $payload): JsonResponse
+    public function addCustomLayoutAction(AddCustomLayoutHandler $handler, AddCustomLayoutPayload $payload): JsonResponse
     {
-        $customLayout = $addCustomLayout($payload);
+        $customLayout = $handler($payload);
 
         $data = $customLayout->getObjectVars();
         $data['isWriteable'] = $customLayout->isWriteable();
@@ -72,17 +72,17 @@ class CustomLayoutController extends AdminAbstractController
     }
 
     #[Route('/save-custom-layout', name: 'savecustomlayout', methods: ['PUT'])]
-    public function saveCustomLayoutAction(SaveCustomLayoutHandler $saveCustomLayout, SaveCustomLayoutPayload $payload): JsonResponse
+    public function saveCustomLayoutAction(SaveCustomLayoutHandler $handler, SaveCustomLayoutPayload $payload): JsonResponse
     {
-        $customLayout = $saveCustomLayout($payload);
+        $customLayout = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['id' => $customLayout->getId(), 'data' => $customLayout->getObjectVars()]));
     }
 
     #[Route('/delete-custom-layout', name: 'deletecustomlayout', methods: ['DELETE'])]
-    public function deleteCustomLayoutAction(DeleteCustomLayoutHandler $deleteCustomLayout, StringIdBodyPayload $payload): JsonResponse
+    public function deleteCustomLayoutAction(DeleteCustomLayoutHandler $handler, StringIdBodyPayload $payload): JsonResponse
     {
-        $deleteCustomLayout($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -90,22 +90,22 @@ class CustomLayoutController extends AdminAbstractController
     #[AsHtmlContentTypeResponse]
     #[Route('/import-custom-layout-definition', name: 'importcustomlayoutdefinition', methods: ['POST', 'PUT'])]
     public function importCustomLayoutDefinitionAction(
-        ImportCustomLayoutHandler $importCustomLayout,
+        ImportCustomLayoutHandler $handler,
         ImportCustomLayoutPayload $payload,
     ): Response {
         if ($payload->nameAlreadyInUse) {
             return $this->adminJson(ApiResponse::error(null, ['nameAlreadyInUse' => true]));
         }
 
-        $importCustomLayout($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
 
     #[Route('/export-custom-layout-definition', name: 'exportcustomlayoutdefinition', methods: ['GET'])]
-    public function exportCustomLayoutDefinitionAction(ExportCustomLayoutHandler $exportCustomLayout, ExportCustomLayoutPayload $payload): Response
+    public function exportCustomLayoutDefinitionAction(ExportCustomLayoutHandler $handler, ExportCustomLayoutPayload $payload): Response
     {
-        $result = $exportCustomLayout($payload);
+        $result = $handler($payload);
 
         $response = new Response($result->json);
         $response->headers->set('Content-type', 'application/json');
@@ -115,21 +115,21 @@ class CustomLayoutController extends AdminAbstractController
     }
 
     #[Route('/get-custom-layout-definitions', name: 'getcustomlayoutdefinitions', methods: ['GET'])]
-    public function getCustomLayoutDefinitionsAction(GetCustomLayoutDefinitionsHandler $getDefinitions, GetCustomLayoutDefinitionsPayload $payload): JsonResponse
+    public function getCustomLayoutDefinitionsAction(GetCustomLayoutDefinitionsHandler $handler, GetCustomLayoutDefinitionsPayload $payload): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $getDefinitions($payload)->definitions]));
+        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->definitions]));
     }
 
     #[Route('/get-all-layouts', name: 'getalllayouts', methods: ['GET'])]
-    public function getAllLayoutsAction(GetAllLayoutsHandler $getAllLayouts): JsonResponse
+    public function getAllLayoutsAction(GetAllLayoutsHandler $handler): JsonResponse
     {
-        return $this->adminJson(['data' => $getAllLayouts()->layouts]);
+        return $this->adminJson(['data' => $handler()->layouts]);
     }
 
     #[Route('/suggest-custom-layout-identifier', name: 'suggestcustomlayoutidentifier', methods: ['GET'])]
-    public function suggestCustomLayoutIdentifierAction(SuggestCustomLayoutIdentifierHandler $suggestIdentifier, SuggestCustomLayoutIdentifierPayload $payload): Response
+    public function suggestCustomLayoutIdentifierAction(SuggestCustomLayoutIdentifierHandler $handler, SuggestCustomLayoutIdentifierPayload $payload): Response
     {
-        $result = $suggestIdentifier($payload);
+        $result = $handler($payload);
 
         return $this->adminJson([
             'suggestedIdentifier' => $result->suggestedIdentifier,

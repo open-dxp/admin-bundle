@@ -46,10 +46,10 @@ class NotificationController extends AdminAbstractController
     #[IsGranted(CorePermission::NotificationsSend->value)]
     #[Route('/recipients', name: 'opendxp_admin_notification_recipients', methods: ['GET'])]
     public function recipientsAction(
-        GetRecipientsHandler $getRecipients,
+        GetRecipientsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $getRecipients($payload);
+        $result = $handler($payload);
 
         return $this->adminJson($result->data);
     }
@@ -57,10 +57,10 @@ class NotificationController extends AdminAbstractController
     #[IsGranted(CorePermission::NotificationsSend->value)]
     #[Route('/send', name: 'opendxp_admin_notification_send', methods: ['POST'])]
     public function sendAction(
-        SendNotificationHandler $sendNotification,
+        SendNotificationHandler $handler,
         SendNotificationPayload $payload,
     ): JsonResponse {
-        $sendNotification($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
@@ -68,11 +68,11 @@ class NotificationController extends AdminAbstractController
     #[IsGranted(CorePermission::Notifications->value)]
     #[Route('/find', name: 'opendxp_admin_notification_find', methods: ['GET'])]
     public function findAction(
-        FindNotificationHandler $findNotification,
+        FindNotificationHandler $handler,
         IdQueryPayload $payload,
     ): JsonResponse {
         try {
-            $result = $findNotification($payload);
+            $result = $handler($payload);
 
             return $this->adminJson(ApiResponse::ok(['data' => $result->data]));
         } catch (\Throwable) {
@@ -83,10 +83,10 @@ class NotificationController extends AdminAbstractController
     #[IsGranted(CorePermission::Notifications->value)]
     #[Route('/find-all', name: 'opendxp_admin_notification_findall', methods: ['POST'])]
     public function findAllAction(
-        FindAllNotificationsHandler $findAllNotifications,
+        FindAllNotificationsHandler $handler,
         FindAllNotificationsPayload $payload,
     ): JsonResponse {
-        $result = $findAllNotifications($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['total' => $result->total, 'data' => $result->data]));
     }
@@ -94,10 +94,10 @@ class NotificationController extends AdminAbstractController
     #[IsGranted(CorePermission::Notifications->value)]
     #[Route('/find-last-unread', name: 'opendxp_admin_notification_findlastunread', methods: ['GET'])]
     public function findLastUnreadAction(
-        FindLastUnreadNotificationsHandler $findLastUnread,
+        FindLastUnreadNotificationsHandler $handler,
         FindLastUnreadNotificationsPayload $payload,
     ): JsonResponse {
-        $result = $findLastUnread($payload);
+        $result = $handler($payload);
 
         return $this->adminJson(ApiResponse::ok(['total' => $result->total, 'data' => $result->data, 'unread' => $result->unread]));
     }
@@ -127,10 +127,10 @@ class NotificationController extends AdminAbstractController
     #[IsGranted(CorePermission::Notifications->value)]
     #[Route('/delete-all', name: 'opendxp_admin_notification_deleteall', methods: ['DELETE'])]
     public function deleteAllAction(
-        DeleteAllNotificationsHandler $deleteAllNotifications,
+        DeleteAllNotificationsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $deleteAllNotifications($payload);
+        $handler($payload);
 
         return $this->adminJson(ApiResponse::ok());
     }
