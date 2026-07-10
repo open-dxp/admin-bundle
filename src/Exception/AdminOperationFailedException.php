@@ -17,9 +17,10 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Exception;
 
 /**
- * Signals an expected, recoverable business-rule failure that the ExtJS admin UI
- * handles locally via a `success:false` JSON body at HTTP 200 - not a real HTTP error.
- * Deliberately not an HttpExceptionInterface: AdminExceptionListener maps it to 200.
+ * Signals an expected, recoverable business-rule failure that the admin UI
+ * handles locally via a `success:false` JSON body at HTTP 200.
+ *
+ * @see \OpenDxp\Bundle\AdminBundle\EventListener\AdminExceptionListener::onKernelException()
  */
 final class AdminOperationFailedException extends \RuntimeException
 {

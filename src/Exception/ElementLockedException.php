@@ -19,6 +19,12 @@ namespace OpenDxp\Bundle\AdminBundle\Exception;
 use OpenDxp\Model\Element\Editlock;
 use RuntimeException;
 
+/**
+ * Signals that an element is locked for editing by another session.
+ * AdminExceptionListener maps it to a 200 JSON response carrying an "editlock" payload, which the admin UI uses to show the lock dialog.
+ *
+ * @see \OpenDxp\Bundle\AdminBundle\EventListener\AdminExceptionListener::onKernelException()
+ */
 final class ElementLockedException extends RuntimeException
 {
     public function __construct(
