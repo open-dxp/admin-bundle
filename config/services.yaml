@@ -115,6 +115,8 @@ services:
 
     OpenDxp\Bundle\AdminBundle\Service\Login\LoginPageService: ~
 
+    OpenDxp\Bundle\AdminBundle\Service\Notification\NotificationFilterParser: ~
+
     OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper: ~
     OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator: ~
 

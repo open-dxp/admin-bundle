@@ -18,24 +18,22 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Notification\FindAllNotifications;
 
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Notification\NotificationFilterParser;
 use OpenDxp\Model\Notification\Service\NotificationService;
-use OpenDxp\Model\Notification\Service\NotificationServiceFilterParser;
-use Symfony\Component\HttpFoundation\Request;
 
 final class FindAllNotificationsHandler
 {
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly NotificationService $notificationService,
+        private readonly NotificationFilterParser $filterParser,
     ) {}
 
     public function __invoke(FindAllNotificationsPayload $payload): FindAllNotificationsResult
     {
         $filter = ['recipient' => (int) $this->userContext->getAdminUser()?->getId()];
 
-        $syntheticRequest = new Request(request: [NotificationServiceFilterParser::KEY_FILTER => $payload->filter]);
-        $parser = new NotificationServiceFilterParser($syntheticRequest);
-        foreach ($parser->parse() as $key => $val) {
+        foreach ($this->filterParser->parse($payload->filter) as $key => $val) {
             $filter[$key] = $val;
         }
 

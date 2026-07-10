@@ -24,7 +24,7 @@ final readonly class FindAllNotificationsPayload implements ExtJsPayloadInterfac
     public function __construct(
         public readonly int $offset = 0,
         public readonly int $limit = 40,
-        public readonly string $filter = '[]',
+        public readonly array $filter = [],
     ) {}
 
     public static function fromRequest(Request $request): static
@@ -32,7 +32,7 @@ final readonly class FindAllNotificationsPayload implements ExtJsPayloadInterfac
         return new static(
             offset: $request->request->getInt('start'),
             limit: $request->request->getInt('limit', 40),
-            filter: $request->request->getString('filter', '[]'),
+            filter: json_decode($request->request->getString('filter', '[]'), true) ?? [],
         );
     }
 }
