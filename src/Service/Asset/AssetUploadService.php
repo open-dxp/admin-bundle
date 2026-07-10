@@ -52,9 +52,9 @@ final class AssetUploadService
             $filename = $payload->filedataOriginalName;
             $sourcePath = $payload->filedataPath;
         } elseif ($payload->type === 'base64') {
-            $filename = $payload->filename;
+            $filename = $payload->filename ?? '';
             $sourcePath = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/upload-base64' . uniqid('', false) . '.tmp';
-            $data = preg_replace('@^data:[^,]+;base64,@', '', $payload->data);
+            $data = preg_replace('@^data:[^,]+;base64,@', '', $payload->data ?? '');
             $filesystem = new Filesystem();
             $filesystem->dumpFile($sourcePath, base64_decode($data));
         } else {
