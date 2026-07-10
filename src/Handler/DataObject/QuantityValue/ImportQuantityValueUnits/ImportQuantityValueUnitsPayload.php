@@ -26,9 +26,9 @@ final readonly class ImportQuantityValueUnitsPayload implements ExtJsPayloadInte
 
     public static function fromRequest(Request $request): static
     {
-        /** @var UploadedFile $file */
+        /** @var UploadedFile|null $file */
         $file = $request->files->get('Filedata');
 
-        return new static(json: file_get_contents($file->getPathname()));
+        return new static(json: $file !== null ? (file_get_contents($file->getPathname()) ?: '') : '');
     }
 }

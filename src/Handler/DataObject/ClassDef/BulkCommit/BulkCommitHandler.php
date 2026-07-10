@@ -49,7 +49,7 @@ final class BulkCommitHandler
         $filename = $session->get('class_bulk_import_file');
 
         $json = @file_get_contents($filename);
-        $json = json_decode($json, true);
+        $json = json_decode($json !== false ? $json : '', true);
 
         $name = $data['name'];
         $list = $json[$type];

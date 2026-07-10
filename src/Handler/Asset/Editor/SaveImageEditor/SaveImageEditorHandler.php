@@ -41,7 +41,8 @@ final class SaveImageEditorHandler
             throw new AccessDeniedHttpException('Not allowed to publish asset');
         }
 
-        $data = substr($dataUri, strpos($dataUri, ','));
+        $commaPosition = strpos($dataUri, ',');
+        $data = $commaPosition !== false ? substr($dataUri, $commaPosition) : $dataUri;
         $data = base64_decode($data);
         $asset->setData($data);
         $asset->setUserModification($userId);

@@ -29,12 +29,12 @@ final readonly class ImportFieldCollectionPayload implements ExtJsPayloadInterfa
 
     public static function fromRequest(Request $request): static
     {
-        /** @var UploadedFile $file */
+        /** @var UploadedFile|null $file */
         $file = $request->files->get('Filedata');
 
         return new static(
             id:   $request->query->getString('id'),
-            json: file_get_contents($file->getPathname()),
+            json: $file !== null ? (file_get_contents($file->getPathname()) ?: '') : '',
         );
     }
 }

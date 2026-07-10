@@ -31,9 +31,10 @@ final readonly class ImportCustomLayoutPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
-        /** @var UploadedFile $file */
+        /** @var UploadedFile|null $file */
         $file = $request->files->get('Filedata');
-        $importData = json_decode(file_get_contents($file->getPathname()), true) ?? [];
+        $fileContents = $file !== null ? (file_get_contents($file->getPathname()) ?: '') : '';
+        $importData = json_decode($fileContents, true) ?? [];
 
         return new static(
             id:               $request->query->getString('id') ?: null,
