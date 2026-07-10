@@ -24,7 +24,7 @@ use OpenDxp\Config;
 use OpenDxp\Extension\Bundle\OpenDxpBundleManager;
 use OpenDxp\Security\SecurityHelper;
 use Symfony\Component\EventDispatcher\GenericEvent;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -35,7 +35,7 @@ final class LoginPageService
         private readonly OpenDxpBundleManager $bundleManager,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly AuthenticationUtils $authenticationUtils,
-        private readonly Request $request,
+        private readonly RequestStack $requestStack,
     ) {}
 
     /**
@@ -44,6 +44,7 @@ final class LoginPageService
      */
     public function forLoginPage(?string $tooManyAttempts): array
     {
+        $request = $this->requestStack->getCurrentRequest();
         $gcMaxlifetime = (int) ini_get('session.gc_maxlifetime') ?: 120;
 
         $params = $this->base() + [
@@ -51,7 +52,7 @@ final class LoginPageService
             'browserSupported' => $this->detectBrowser(),
             'debug' => OpenDxp::inDebugMode(),
             'includeTemplates' => [],
-            'deeplink' => $this->request->query->has('deeplink'),
+            'deeplink' => $request?->query->has('deeplink') ?? false,
             'error' => $this->resolveError($tooManyAttempts),
             'login_error' => $this->authenticationUtils->getLastAuthenticationError(),
         ];
@@ -59,7 +60,7 @@ final class LoginPageService
         $event = new GenericEvent(null, [
             'parameters' => $params,
             'config' => $this->config,
-            'request' => $this->request,
+            'request' => $request,
         ]);
         $this->eventDispatcher->dispatch($event, AdminEvents::LOGIN_BEFORE_RENDER);
 
@@ -84,10 +85,14 @@ final class LoginPageService
         if ($tooManyAttempts !== null) {
             return SecurityHelper::convertHtmlSpecialChars($tooManyAttempts);
         }
-        if ($this->request->query->has('auth_failed')) {
+
+        $request = $this->requestStack->getCurrentRequest();
+
+        if ($request?->query->has('auth_failed')) {
             return 'error_auth_failed';
         }
-        if ($this->request->query->has('session_expired')) {
+
+        if ($request?->query->has('session_expired')) {
             return 'error_session_expired';
         }
 

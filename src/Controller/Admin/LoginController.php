@@ -29,8 +29,8 @@ use OpenDxp\Bundle\AdminBundle\Handler\Login\LostPassword\LostPasswordHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\LostPassword\LostPasswordPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetup\SaveTwoFactorSetupHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetup\SaveTwoFactorSetupPayload;
-use OpenDxp\Bundle\AdminBundle\Factory\LoginPageFactory;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
+use OpenDxp\Bundle\AdminBundle\Service\Login\LoginPageService;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use OpenDxp\Controller\KernelResponseEventInterface;
 use OpenDxp\Http\ResponseHelper;
@@ -58,7 +58,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
         protected ResponseHelper $responseHelper,
         protected TranslatorInterface $translator,
         protected EventDispatcherInterface $eventDispatcher,
-        private readonly LoginPageFactory $loginPageFactory,
+        private readonly LoginPageService $loginPageService,
     ) {
     }
 
@@ -115,7 +115,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
 
         return $this->render(
             '@OpenDxpAdmin/admin/login/login.html.twig',
-            $this->loginPageFactory->create($request)->forLoginPage($tooManyAttempts),
+            $this->loginPageService->forLoginPage($tooManyAttempts),
         );
     }
 
@@ -158,7 +158,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
         LostPasswordPayload $payload,
         LostPasswordHandler $handler,
     ): Response {
-        $params = $this->loginPageFactory->create($request)->base();
+        $params = $this->loginPageService->base();
 
         $result = $handler($payload);
 
@@ -188,7 +188,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
     #[Route('/login/2fa', name: 'opendxp_admin_2fa')]
     public function twoFactorAuthenticationAction(Request $request): Response
     {
-        $params = $this->loginPageFactory->create($request)->base();
+        $params = $this->loginPageService->base();
 
         if ($request->hasSession()) {
             $session = $request->getSession();
@@ -236,7 +236,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
         GenerateTwoFactorSetupHandler $handler,
     ): Response {
 
-        $params = $this->loginPageFactory->create($request)->base();
+        $params = $this->loginPageService->base();
         $params['setup'] = true;
 
         if ($payload->error) {
