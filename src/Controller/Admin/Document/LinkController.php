@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Link\GetLinkData\GetLinkDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Link\SaveLink\SaveLinkHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Link\SaveLink\SaveLinkPayload;
@@ -42,11 +41,7 @@ class LinkController extends DocumentControllerBase
         IdQueryPayload $payload,
     ): JsonResponse
     {
-        try {
-            $result = $handler($payload);
-        } catch (ElementLockedException $e) {
-            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
-        }
+        $result = $handler($payload);
 
         return $this->preSendDataActions($result->data, $result->link);
     }

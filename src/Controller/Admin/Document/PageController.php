@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\CheckPrettyUrl\CheckPrettyUrlHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\CheckPrettyUrl\CheckPrettyUrlPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GeneratePagePreviews\GeneratePagePreviewsHandler;
@@ -52,11 +51,7 @@ class PageController extends DocumentControllerBase
         GetPageDataHandler $handler,
         GetPageDataPayload $payload,
     ): JsonResponse {
-        try {
-            $result = $handler($payload);
-        } catch (ElementLockedException $e) {
-            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
-        }
+        $result = $handler($payload);
 
         return $this->preSendDataActions($result->data, $result->page);
     }
@@ -64,11 +59,7 @@ class PageController extends DocumentControllerBase
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
     public function saveAction(SavePagePayload $payload, StaticPageGenerator $staticPageGenerator, SavePageHandler $handler): JsonResponse
     {
-        try {
-            $result = $handler($payload);
-        } catch (ElementLockedException $e) {
-            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
-        }
+        $result = $handler($payload);
 
         if ($result->task === self::TASK_PUBLISH || $result->task === self::TASK_UNPUBLISH) {
             $data = [

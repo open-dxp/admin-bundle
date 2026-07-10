@@ -28,7 +28,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionHandl
 use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
-use OpenDxp\Controller\Traits\ElementEditLockHelperTrait;
 use OpenDxp\Model;
 use OpenDxp\Model\Element\ElementInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
@@ -42,8 +41,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(CorePermission::Documents->value)]
 abstract class DocumentControllerBase extends AdminAbstractController
 {
-    use ElementEditLockHelperTrait;
-
     public const string TASK_PUBLISH = 'publish';
 
     public const string TASK_UNPUBLISH = 'unpublish';

@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail\ClearAssetThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail\ClearAssetThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoHandler;
@@ -41,7 +40,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
-use OpenDxp\Controller\Traits\ElementEditLockHelperTrait;
 use OpenDxp\Model\Element\ElementInterface;
 use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -57,8 +55,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(CorePermission::Assets->value)]
 class AssetController extends ElementControllerBase
 {
-    use ElementEditLockHelperTrait;
-
     public function __construct(
         ElementServiceInterface $elementService,
     ) {
@@ -102,11 +98,7 @@ class AssetController extends ElementControllerBase
         GetAssetDataPayload $payload,
         GetAssetDataHandler $handler,
     ): JsonResponse {
-        try {
-            $result = $handler($payload);
-        } catch (ElementLockedException $e) {
-            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
-        }
+        $result = $handler($payload);
 
         return $this->adminJson($result->data);
     }

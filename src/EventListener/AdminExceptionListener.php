@@ -22,6 +22,7 @@ use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\CoreBundle\EventListener\Traits\OpenDxpContextAwareTrait;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
+use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
 use OpenDxp\Http\Request\Resolver\OpenDxpContextResolver;
 use OpenDxp\Model\Element\ValidationException;
 use OpenDxp\Model\Exception\ConfigWriteException;
@@ -90,7 +91,7 @@ class AdminExceptionListener implements EventSubscriberInterface
             $code = 422;
         }
 
-        // expected, recoverable business-rule failure - the ExtJS admin UI's success/failure
+        // expected, recoverable business-rule failure: the ExtJS admin UI's success/failure
         // handling for this call site expects a 200 with success:false, not a real HTTP error
         if ($ex instanceof AdminOperationFailedException) {
             $code = 200;
@@ -98,6 +99,23 @@ class AdminExceptionListener implements EventSubscriberInterface
 
             // without this, HttpKernel::handleThrowable() forces non-error response codes
             // from an exception listener back to 500, since it assumes that's a mistake
+            $event->allowCustomResponseCode();
+        }
+
+        // element is locked for editing: the ExtJS admin UI expects a 200 with an
+        // "editlock" payload to show the lock dialog, not a real HTTP error
+        if ($ex instanceof ElementLockedException) {
+            $editLock = $ex->getEditLock();
+            $editLockData = $editLock->getObjectVars();
+            unset($editLockData['sessionId']);
+
+            if ($user = $editLock->getUser()) {
+                $editLockData['user'] = ['name' => $user->getName()];
+            }
+
+            $data['editlock'] = $editLockData;
+            $code = 200;
+
             $event->allowCustomResponseCode();
         }
 

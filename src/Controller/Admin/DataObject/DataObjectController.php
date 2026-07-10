@@ -50,10 +50,8 @@ use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use OpenDxp\Controller\Traits\ElementEditLockHelperTrait;
 use OpenDxp\Model\Element\ElementInterface;
 use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -68,8 +66,6 @@ use Symfony\Component\Routing\Attribute\Route;
 #[IsGranted(CorePermission::Objects->value)]
 class DataObjectController extends ElementControllerBase
 {
-    use ElementEditLockHelperTrait;
-
     /** On active edit lock answer with editlock response */
     public const string TASK_RESPONSE = 'response';
 
@@ -132,11 +128,7 @@ class DataObjectController extends ElementControllerBase
         GetDataObjectPayload $payload,
         GetDataObjectHandler $handler,
     ): JsonResponse {
-        try {
-            $result = $handler($payload);
-        } catch (ElementLockedException $e) {
-            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
-        }
+        $result = $handler($payload);
 
         $this->sessionService->removeObject('object', $payload->id);
 

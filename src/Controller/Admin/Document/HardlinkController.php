@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\GetHardlinkData\GetHardlinkDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlink\SaveHardlinkHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlink\SaveHardlinkPayload;
@@ -42,11 +41,7 @@ class HardlinkController extends DocumentControllerBase
         IdQueryPayload $payload,
     ): JsonResponse
     {
-        try {
-            $result = $handler($payload);
-        } catch (ElementLockedException $e) {
-            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
-        }
+        $result = $handler($payload);
 
         return $this->preSendDataActions($result->data, $result->link);
     }

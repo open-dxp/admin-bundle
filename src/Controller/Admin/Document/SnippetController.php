@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\GetSnippetData\GetSnippetDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippet\SaveSnippetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippet\SaveSnippetPayload;
@@ -42,11 +41,8 @@ class SnippetController extends DocumentControllerBase
         IdQueryPayload $payload,
     ): JsonResponse
     {
-        try {
-            $result = $handler($payload);
-        } catch (ElementLockedException $e) {
-            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
-        }
+        $result = $handler($payload);
+
         return $this->preSendDataActions($result->data, $result->snippet);
     }
 
@@ -56,11 +52,7 @@ class SnippetController extends DocumentControllerBase
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(SaveSnippetPayload $payload, SaveSnippetHandler $handler): JsonResponse
     {
-        try {
-            $result = $handler($payload);
-        } catch (ElementLockedException $e) {
-            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
-        }
+        $result = $handler($payload);
 
         if ($result->task === self::TASK_PUBLISH || $result->task === self::TASK_UNPUBLISH) {
             return $this->adminJson(ApiResponse::ok([

@@ -17,8 +17,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
-use OpenDxp\Controller\Traits\ElementEditLockHelperTrait;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentPayload;
@@ -78,8 +76,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/document')]
 class DocumentController extends ElementControllerBase
 {
-    use ElementEditLockHelperTrait;
-
     public function __construct(ElementServiceInterface $elementService)
     {
         parent::__construct($elementService);
@@ -112,11 +108,7 @@ class DocumentController extends ElementControllerBase
         GetDocumentDataPayload $payload,
     ): JsonResponse
     {
-        try {
-            $result = $handler($payload);
-        } catch (ElementLockedException $e) {
-            return $this->getEditLockResponse($e->getElementId(), $e->getElementType());
-        }
+        $result = $handler($payload);
 
         return $this->adminJson($result->data);
     }
