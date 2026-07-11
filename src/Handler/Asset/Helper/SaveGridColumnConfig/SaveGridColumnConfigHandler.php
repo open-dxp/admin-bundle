@@ -90,7 +90,7 @@ final class SaveGridColumnConfigHandler
             $gridConfig->setSetAsFavourite($metadata['setAsFavourite'] && $adminUser->isAdmin());
         }
 
-        $gridConfig->setConfig(json_encode($gridConfigData));
+        $gridConfig->setConfig(json_encode($gridConfigData) ?: '');
         $gridConfig->save();
 
         if (!empty($metadata['setAsFavourite']) && $adminUser->isAdmin()) {

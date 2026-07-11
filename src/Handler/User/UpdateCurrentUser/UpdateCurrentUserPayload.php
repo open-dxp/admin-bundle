@@ -31,11 +31,15 @@ final readonly class UpdateCurrentUserPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
+        $data = $request->request->get('data');
+        $decodedValues = json_decode($data !== null ? (string) $data : '', true);
+        $keyBindingsJson = $request->request->has('keyBindings') ? $request->request->get('keyBindings') : null;
+
         return new static(
             requestedUserId: (int) $request->request->get('id'),
-            values: json_decode($request->request->get('data'), true),
-            isPasswordReset: \OpenDxp\Tool\Session::useBag($request->getSession(), static fn (AttributeBagInterface $adminSession) => (bool) $adminSession->get('password_reset')),
-            keyBindingsJson: $request->request->has('keyBindings') ? $request->request->get('keyBindings') : null,
+            values: is_array($decodedValues) ? $decodedValues : [],
+            isPasswordReset: (bool) \OpenDxp\Tool\Session::useBag($request->getSession(), static fn (AttributeBagInterface $adminSession) => (bool) $adminSession->get('password_reset')),
+            keyBindingsJson: $keyBindingsJson !== null ? (string) $keyBindingsJson : null,
         );
     }
 }

@@ -46,6 +46,8 @@ final readonly class RecyclebinPayload implements ExtJsPayloadInterface
         $orderKey = $sortingSettings['orderKey'] ?: 'date';
         $order = $sortingSettings['orderKey'] ? $sortingSettings['order'] : 'DESC';
 
+        $filters = json_decode($request->request->getString('filter', '[]'), true);
+
         return new static(
             hasData: false,
             limit: $request->request->getInt('limit', 50),
@@ -53,7 +55,7 @@ final readonly class RecyclebinPayload implements ExtJsPayloadInterface
             orderKey: $orderKey,
             order: $order,
             filterFullText: $request->request->get('filterFullText') ?: null,
-            filters: json_decode($request->request->getString('filter', '[]'), true) ?? [],
+            filters: is_array($filters) ? $filters : [],
         );
     }
 }

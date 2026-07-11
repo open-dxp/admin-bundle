@@ -92,9 +92,9 @@ final class ChangeChildrenSortByHandler
             );
 
             foreach ($children as $child) {
-                $this->updateLatestVersionIndex($child['id'], $child['modificationDate']);
+                $this->updateLatestVersionIndex((int) $child['id'], (int) $child['modificationDate']);
 
-                DataObject::clearDependentCacheByObjectId($child['id']);
+                DataObject::clearDependentCacheByObjectId((int) $child['id']);
             }
         };
 

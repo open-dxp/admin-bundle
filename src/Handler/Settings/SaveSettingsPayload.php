@@ -29,7 +29,7 @@ final readonly class SaveSettingsPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         return new static(
-            values: json_decode($request->request->getString('data'), true),
+            values: json_decode($request->request->getString('data'), true) ?? [],
             env:    $request->request->getString('env'),
         );
     }

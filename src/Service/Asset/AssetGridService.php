@@ -76,7 +76,7 @@ final class AssetGridService
                     unset($data['id']);
                     $fieldLanguage = $effectiveLanguage;
                     foreach ($data as $key => $value) {
-                        $fieldDef = explode('~', $key);
+                        $fieldDef = explode('~', (string) $key);
                         $key = $fieldDef[0];
                         if (isset($fieldDef[1])) {
                             $fieldLanguage = ($fieldDef[1] === 'none' ? '' : $fieldDef[1]);
@@ -185,7 +185,7 @@ final class AssetGridService
             ]);
             $this->eventDispatcher->dispatch($afterListLoadEvent, AdminEvents::ASSET_LIST_AFTER_LIST_LOAD);
 
-            return $afterListLoadEvent->getArgument('list');
+            return (array) $afterListLoadEvent->getArgument('list');
         }
 
         return ['success' => false];

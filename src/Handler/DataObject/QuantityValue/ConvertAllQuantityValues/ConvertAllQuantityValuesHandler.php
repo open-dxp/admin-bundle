@@ -51,6 +51,6 @@ final class ConvertAllQuantityValuesHandler
             ];
         }
 
-        return new ConvertAllQuantityValuesResult($payload->value, $fromUnit->getAbbreviation(), $convertedValues);
+        return new ConvertAllQuantityValuesResult($payload->value, $fromUnit->getAbbreviation() ?? '', $convertedValues);
     }
 }

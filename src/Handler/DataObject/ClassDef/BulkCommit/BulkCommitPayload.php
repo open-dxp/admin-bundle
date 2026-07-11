@@ -15,8 +15,10 @@ final readonly class BulkCommitPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
+        $data = json_decode($request->request->getString('data'), true);
+
         return new static(
-            data: json_decode($request->request->getString('data'), true) ?? [],
+            data: is_array($data) ? $data : [],
         );
     }
 }

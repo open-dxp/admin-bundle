@@ -17,12 +17,13 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\ExportTranslations;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
+use OpenDxp\Model\Translation;
 use Symfony\Component\HttpFoundation\Request;
 
 final readonly class ExportTranslationsPayload implements ExtJsPayloadInterface
 {
     public function __construct(
-        public readonly ?string $domain,
+        public readonly string $domain,
         public readonly ?string $filter,
         public readonly ?string $searchString,
     ) {}
@@ -30,7 +31,7 @@ final readonly class ExportTranslationsPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         return new static(
-            domain: $request->query->get('domain'),
+            domain: $request->query->get('domain', Translation::DOMAIN_DEFAULT),
             filter: $request->query->get('filter'),
             searchString: $request->query->get('searchString'),
         );

@@ -36,7 +36,7 @@ final class AddPropertyHandler
         $config->setType('input');
         $config->setStoreId($payload->storeId);
         $config->setEnabled(true);
-        $config->setDefinition(json_encode($definition));
+        $config->setDefinition(json_encode($definition) ?: '');
         $config->save();
 
         return new AddPropertyResult(name: $config->getName());

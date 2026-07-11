@@ -24,7 +24,7 @@ final class DocumentMetaEnricher
 {
     public function enrich(Document $document, array &$data): void
     {
-        $fresh = Document::getById($document->getId(), ['force' => true]);
+        $fresh = Document::getById($document->getId() ?? 0, ['force' => true]) ?? $document;
         $data['versionDate'] = $fresh->getModificationDate();
         $data['userPermissions'] = $document->getUserPermissions();
         $data['idPath'] = ElementService::getIdPath($document);

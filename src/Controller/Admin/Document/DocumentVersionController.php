@@ -82,7 +82,7 @@ class DocumentVersionController extends AdminAbstractController
     public function diffVersionsHtmlAction(
         #[MapQueryParameter] ?string $id = null,
     ): BinaryFileResponse {
-        $file = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/' . basename($id);
+        $file = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/' . basename($id ?? '');
         if (file_exists($file)) {
             return new BinaryFileResponse($file);
         }

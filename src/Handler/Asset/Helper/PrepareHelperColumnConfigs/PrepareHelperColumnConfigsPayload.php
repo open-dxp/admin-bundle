@@ -27,8 +27,10 @@ final readonly class PrepareHelperColumnConfigsPayload implements ExtJsPayloadIn
 
     public static function fromRequest(Request $request): static
     {
+        $decoded = json_decode($request->request->getString('columns'));
+
         return new static(
-            columns: json_decode($request->request->getString('columns')) ?? [],
+            columns: is_array($decoded) ? $decoded : [],
         );
     }
 }

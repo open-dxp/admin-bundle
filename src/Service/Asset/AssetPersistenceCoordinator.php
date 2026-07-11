@@ -40,7 +40,7 @@ final class AssetPersistenceCoordinator
         }
 
         return new SaveAssetResult(
-            $asset->getModificationDate(),
+            $asset->getModificationDate() ?? 0,
             $asset->getVersionCount(),
             $this->elementService->getElementTreeNodeConfig($asset),
         );

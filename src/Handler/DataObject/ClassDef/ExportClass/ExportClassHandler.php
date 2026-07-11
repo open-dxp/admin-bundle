@@ -37,7 +37,7 @@ final class ExportClassHandler
 
         return new ExportClassResult(
             json: $json,
-            className: $class->getName(),
+            className: $class->getName() ?? '',
         );
     }
 }

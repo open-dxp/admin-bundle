@@ -70,7 +70,7 @@ class TranslationController extends AdminAbstractController
 
         $extra = [];
         if ($payload->enrichDelta) {
-            $extra['delta'] = base64_encode(json_encode($result->delta));
+            $extra['delta'] = base64_encode(json_encode($result->delta) ?: '');
         }
 
         return $this->adminJson(ApiResponse::ok($extra));

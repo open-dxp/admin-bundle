@@ -9,19 +9,19 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetNicePathPayload implements ExtJsPayloadInterface
 {
-    /** @var array<string, mixed>|null */
-    public readonly ?array $source;
+    /** @var array<string, mixed> */
+    public readonly array $source;
 
-    /** @var array<string, mixed>|null */
-    public readonly ?array $context;
+    /** @var array<string, mixed> */
+    public readonly array $context;
 
-    /** @var array<string, mixed>|null */
-    public readonly ?array $targets;
+    /** @var array<string, mixed> */
+    public readonly array $targets;
 
     public function __construct(
-        ?array $source,
-        ?array $context,
-        ?array $targets,
+        array $source,
+        array $context,
+        array $targets,
         public readonly bool $loadEditModeData,
         public readonly string $idProperty = 'id',
     ) {
@@ -33,15 +33,29 @@ final readonly class GetNicePathPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         $source = $request->request->get('source');
-        $context = $request->request->has('context') ? $request->request->get('context') : [];
+        $context = $request->request->has('context') ? $request->request->get('context') : null;
         $targets = $request->request->get('targets');
 
         return new static(
-            source: $source !== null ? (json_decode($source, true) ?? null) : null,
-            context: $context !== [] ? (json_decode($context, true) ?? null) : null,
-            targets: $targets !== null ? (json_decode($targets, true) ?? null) : null,
+            source: self::decodeToArray($source),
+            context: self::decodeToArray($context),
+            targets: self::decodeToArray($targets),
             loadEditModeData: $request->request->getBoolean('loadEditModeData'),
-            idProperty: $request->request->get('idProperty', 'id'),
+            idProperty: (string) $request->request->get('idProperty', 'id'),
         );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function decodeToArray(mixed $value): array
+    {
+        if (!is_string($value)) {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 }

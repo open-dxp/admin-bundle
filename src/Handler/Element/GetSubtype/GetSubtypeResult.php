@@ -8,7 +8,7 @@ final readonly class GetSubtypeResult
 {
     public function __construct(
         public readonly ?string $subtype,
-        public readonly int $id,
+        public readonly ?int $id,
         public readonly ?string $type,
     ) {}
 }

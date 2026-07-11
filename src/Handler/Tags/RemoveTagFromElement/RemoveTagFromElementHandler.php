@@ -31,6 +31,6 @@ final class RemoveTagFromElementHandler
 
         Tag::removeTagFromElement($payload->elementType, $payload->elementId, $tag);
 
-        return new RemoveTagFromElementResult(id: $tag->getId());
+        return new RemoveTagFromElementResult(id: $tag->getId() ?? 0);
     }
 }

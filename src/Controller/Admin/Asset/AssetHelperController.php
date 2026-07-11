@@ -132,7 +132,7 @@ class AssetHelperController extends AdminAbstractController
         #[MapQueryParameter] ?string $fileHandle = null,
     ): Response {
         try {
-            return $gridExportService->downloadCsvFile($fileHandle);
+            return $gridExportService->downloadCsvFile($fileHandle ?? '');
         } catch (\RuntimeException) {
             throw $this->createNotFoundException('CSV file not found');
         }
@@ -144,7 +144,7 @@ class AssetHelperController extends AdminAbstractController
         #[MapQueryParameter] ?string $fileHandle = null,
     ): BinaryFileResponse {
         try {
-            return $gridExportService->downloadXlsxFile($fileHandle);
+            return $gridExportService->downloadXlsxFile($fileHandle ?? '');
         } catch (\RuntimeException) {
             throw $this->createNotFoundException('XLSX file not found');
         }

@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo;
 
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo\GetIdPathPagingInfoPayload;
 use OpenDxp\Model\DataObject;
 
 final class GetIdPathPagingInfoHandler
@@ -26,7 +25,7 @@ final class GetIdPathPagingInfoHandler
     {
         $path = $payload->path;
         $limit = $payload->limit;
-        $pathParts = explode('/', $path);
+        $pathParts = explode('/', $path ?? '');
         $id = (int) array_pop($pathParts);
 
         $data = [];

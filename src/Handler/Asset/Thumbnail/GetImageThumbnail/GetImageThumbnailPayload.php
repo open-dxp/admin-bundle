@@ -41,12 +41,13 @@ final readonly class GetImageThumbnailPayload implements ExtJsPayloadInterface
     {
         $config = $request->query->getString('config') ?: null;
         $cropPercent = $request->query->getString('cropPercent') ?: null;
+        $decodedConfig = $config !== null ? json_decode($config, true) : null;
 
         return new static(
             id:                  $request->query->getInt('id'),
             hasFileinfo:         $request->query->has('fileinfo'),
             thumbnailParam:      $request->query->all('thumbnail') ?: null,
-            configDecoded:       $config !== null ? json_decode($config, true) : null,
+            configDecoded:       is_array($decodedConfig) ? $decodedConfig : null,
             queryAll:            $request->query->all(),
             hasThumbnailPreview: $request->query->has('treepreview'),
             origin:              $request->query->getString('origin') ?: null,

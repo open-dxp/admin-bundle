@@ -37,6 +37,6 @@ final class CreateStoreHandler
             throw new Exception('Store with the given name exists');
         }
 
-        return new CreateStoreResult(storeId: $config->getId());
+        return new CreateStoreResult(storeId: $config->getId() ?? 0);
     }
 }

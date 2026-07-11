@@ -31,6 +31,6 @@ final class AddTagToElementHandler
 
         Tag::addTagToElement($payload->elementType, $payload->elementId, $tag);
 
-        return new AddTagToElementResult(id: $tag->getId());
+        return new AddTagToElementResult(id: $tag->getId() ?? 0);
     }
 }

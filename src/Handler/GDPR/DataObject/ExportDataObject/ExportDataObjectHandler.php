@@ -39,6 +39,6 @@ final class ExportDataObjectHandler
             throw new AccessDeniedHttpException('Export denied');
         }
 
-        return new ExportDataObjectResult($this->dataObjects->doExportData($object), $object->getId());
+        return new ExportDataObjectResult($this->dataObjects->doExportData($object), $object->getId() ?? 0);
     }
 }

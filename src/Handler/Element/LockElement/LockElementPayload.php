@@ -12,7 +12,7 @@ final readonly class LockElementPayload implements ExtJsPayloadInterface
     public function __construct(
         public readonly int $id,
         public readonly string $type,
-        public readonly ?string $sessionId = null,
+        public readonly string $sessionId,
     ) {}
 
     public static function fromRequest(Request $request): static

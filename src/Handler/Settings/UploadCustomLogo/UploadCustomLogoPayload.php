@@ -28,8 +28,10 @@ final readonly class UploadCustomLogoPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
+        $logoFile = $request->files->get('Filedata');
+
         return new static(
-            logoFile: $request->files->get('Filedata'),
+            logoFile: $logoFile instanceof UploadedFile ? $logoFile : null,
         );
     }
 }

@@ -29,10 +29,12 @@ final readonly class FindAllNotificationsPayload implements ExtJsPayloadInterfac
 
     public static function fromRequest(Request $request): static
     {
+        $decodedFilter = json_decode($request->request->getString('filter', '[]'), true);
+
         return new static(
             offset: $request->request->getInt('start'),
             limit: $request->request->getInt('limit', 40),
-            filter: json_decode($request->request->getString('filter', '[]'), true) ?? [],
+            filter: is_array($decodedFilter) ? $decodedFilter : [],
         );
     }
 }

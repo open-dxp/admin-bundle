@@ -36,7 +36,7 @@ final class ExportObjectBrickHandler
         }
 
         return new ExportObjectBrickResult(
-            $objectBrick->getKey(),
+            $objectBrick->getKey() ?? '',
             DataObject\ClassDefinition\Service::generateObjectBrickJson($objectBrick),
         );
     }

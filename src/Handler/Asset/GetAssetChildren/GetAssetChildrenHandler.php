@@ -101,7 +101,8 @@ final class GetAssetChildrenHandler
 
         $event = new GenericEvent(null, ['assets' => $assets]);
         $this->eventDispatcher->dispatch($event, AdminEvents::ASSET_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA);
-        $assets = $event->getArgument('assets');
+        $eventAssets = $event->getArgument('assets');
+        $assets = is_array($eventAssets) ? $eventAssets : $assets;
 
         return new GetAssetChildrenResult(
             $assets,

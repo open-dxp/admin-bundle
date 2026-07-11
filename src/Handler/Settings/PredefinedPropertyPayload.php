@@ -38,7 +38,7 @@ final readonly class PredefinedPropertyPayload implements ExtJsPayloadInterface
 
         return new static(
             hasData: false,
-            filter: $request->request->get('filter'),
+            filter: $request->request->has('filter') ? $request->request->getString('filter') : null,
         );
     }
 }

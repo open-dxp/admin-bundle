@@ -74,11 +74,13 @@ class AssetDownloadController extends AdminAbstractController
     ): BinaryFileResponse {
         $result = $handler($payload);
 
+        $imageFilename = $result->image->getFilename() ?: '';
+
         $downloadFilename = preg_replace(
-            '/\.' . preg_quote(pathinfo($result->image->getFilename(), PATHINFO_EXTENSION), '/') . '$/i',
+            '/\.' . preg_quote(pathinfo($imageFilename, PATHINFO_EXTENSION), '/') . '$/i',
             '.' . $result->thumbnail->getFileExtension(),
-            $result->image->getFilename()
-        );
+            $imageFilename
+        ) ?? '';
 
         clearstatcache();
 

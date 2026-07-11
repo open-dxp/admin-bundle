@@ -200,14 +200,14 @@ final class GridColumnConfigService
         }
 
         return new GridConfigData(
-            id: $savedGridConfig->getId(),
-            config: $config,
+            id: $savedGridConfig->getId() ?? 0,
+            config: $config ?? [],
             name: SecurityHelper::convertHtmlSpecialChars($savedGridConfig->getName()),
             description: SecurityHelper::convertHtmlSpecialChars($savedGridConfig->getDescription()),
             sharedGlobally: $savedGridConfig->isShareGlobally(),
             setAsFavourite: $savedGridConfig->isSetAsFavourite(),
             isShared: $isShared,
-            ownerId: $savedGridConfig->getOwnerId(),
+            ownerId: $savedGridConfig->getOwnerId() ?? 0,
             modificationDate: $savedGridConfig->getModificationDate(),
             saveFilters: $savedGridConfig->isSaveFilters(),
         );

@@ -79,6 +79,6 @@ final class AddObjectHandler
 
         $object->save();
 
-        return new AddObjectResult(id: $object->getId(), type: $object->getType());
+        return new AddObjectResult(id: $object->getId() ?? 0, type: $object->getType());
     }
 }

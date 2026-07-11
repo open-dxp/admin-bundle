@@ -22,7 +22,7 @@ final readonly class VersionUpdatePayload implements ExtJsPayloadInterface
         $data = $request->request->get('data');
 
         return new static(
-            data: $data !== null
+            data: is_string($data)
                 ? (json_decode($data, true) ?? null)
                 : null,
         );

@@ -33,13 +33,13 @@ final readonly class BuildContentExportJobsPayload implements ExtJsPayloadInterf
     {
         $type = $request->request->get('type');
         $jobUrl = $request->request->get('job_url', $request->getBaseUrl() . '/admin/translation/' . $type . '-export');
-        $data = json_decode($request->request->get('data'), true);
+        $data = json_decode((string) $request->request->get('data'), true);
 
         return new static(
             data: $data && is_array($data) ? $data : [],
             source: str_replace('_', '-', $request->request->get('source', '')),
             target: str_replace('_', '-', $request->request->get('target', '')),
-            jobUrl: $jobUrl,
+            jobUrl: (string) $jobUrl,
             elementsPerJob: max(1, (int) $request->request->get('elements_per_job', 10)),
         );
     }

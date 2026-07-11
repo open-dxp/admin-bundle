@@ -32,9 +32,9 @@ final readonly class UpdateVideoThumbnailPayload implements ExtJsPayloadInterfac
     {
         return new static(
             name:         $request->request->getString('name'),
-            settingsData: json_decode($request->request->getString('settings'), true),
-            mediaData:    json_decode($request->request->getString('medias'), true),
-            mediaOrder:   json_decode($request->request->getString('mediaOrder'), true),
+            settingsData: json_decode($request->request->getString('settings'), true) ?? [],
+            mediaData:    json_decode($request->request->getString('medias'), true) ?? [],
+            mediaOrder:   json_decode($request->request->getString('mediaOrder'), true) ?? [],
         );
     }
 }

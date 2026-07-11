@@ -63,7 +63,7 @@ final class BulkCommitHandler
                     $class = new DataObject\ClassDefinition();
                     $class->setName($name);
                 }
-                if (!DataObject\ClassDefinition\Service::importClassDefinitionFromJson($class, json_encode($item), true)) {
+                if (!DataObject\ClassDefinition\Service::importClassDefinitionFromJson($class, json_encode($item) ?: '', true)) {
                     throw new AdminOperationFailedException('Failed to import class definition: ' . $name);
                 }
 
@@ -75,7 +75,7 @@ final class BulkCommitHandler
                     $brick = new DataObject\Objectbrick\Definition();
                     $brick->setKey($name);
                 }
-                if (!DataObject\ClassDefinition\Service::importObjectBrickFromJson($brick, json_encode($item), true)) {
+                if (!DataObject\ClassDefinition\Service::importObjectBrickFromJson($brick, json_encode($item) ?: '', true)) {
                     throw new AdminOperationFailedException('Failed to import objectbrick: ' . $name);
                 }
 
@@ -87,7 +87,7 @@ final class BulkCommitHandler
                     $fieldCollection = new DataObject\Fieldcollection\Definition();
                     $fieldCollection->setKey($name);
                 }
-                if (!DataObject\ClassDefinition\Service::importFieldCollectionFromJson($fieldCollection, json_encode($item), true)) {
+                if (!DataObject\ClassDefinition\Service::importFieldCollectionFromJson($fieldCollection, json_encode($item) ?: '', true)) {
                     throw new AdminOperationFailedException('Failed to import field collection: ' . $name);
                 }
 

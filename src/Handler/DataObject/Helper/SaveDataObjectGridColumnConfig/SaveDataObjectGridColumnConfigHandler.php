@@ -70,7 +70,7 @@ final class SaveDataObjectGridColumnConfigHandler
             throw new AdminOperationFailedException($e->getMessage());
         }
 
-        if (!empty($metadata['setAsFavourite']) && $adminUser->isAdmin()) {
+        if ($gridConfig && !empty($metadata['setAsFavourite']) && $adminUser->isAdmin()) {
             try {
                 $this->gridColumnConfigService->updateGridConfigFavourites($gridConfig, $metadata, $adminUser, $payload->objectId);
             } catch (\Exception $e) {
@@ -94,7 +94,7 @@ final class SaveDataObjectGridColumnConfigHandler
             $gridConfig->setSaveFilters($metadata['saveFilters'] ?? false);
         }
 
-        $gridConfig->setConfig(json_encode($gridConfigData));
+        $gridConfig->setConfig(json_encode($gridConfigData) ?: '');
         $gridConfig->save();
 
         $availableConfigs = $this->gridColumnConfigService->getMyOwnColumnConfigs($adminUser->getId(), $payload->classId ?? '', $payload->searchType);

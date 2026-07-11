@@ -37,7 +37,8 @@ final readonly class DownloadImageThumbnailPayload implements ExtJsPayloadInterf
 
         $configData = null;
         if ($config !== null) {
-            $configData = json_decode($config, true);
+            $decoded = json_decode($config, true);
+            $configData = is_array($decoded) ? $decoded : null;
         } elseif ($type !== null) {
             $predefined = [
                 'web'    => ['resize_mode' => 'scaleByWidth', 'width' => 3500, 'dpi' => 72,  'format' => 'JPEG', 'quality' => 85],

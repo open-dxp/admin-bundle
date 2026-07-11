@@ -28,7 +28,7 @@ final class DraftEnricher
             return;
         }
 
-        $fresh = Document::getById($document->getId(), ['force' => true]);
+        $fresh = Document::getById($document->getId() ?? 0, ['force' => true]) ?? $document;
         if ($fresh->getModificationDate() < $draftVersion->getDate()) {
             $data['draft'] = [
                 'id' => $draftVersion->getId(),

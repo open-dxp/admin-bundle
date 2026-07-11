@@ -20,9 +20,9 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\CreateTranslation;
 final readonly class CreateTranslationResult
 {
     public function __construct(
-        public string $key,
+        public ?string $key,
         public ?int $creationDate,
-        public int $modificationDate,
+        public ?int $modificationDate,
         public ?string $type,
         public array $translations,
     ) {}

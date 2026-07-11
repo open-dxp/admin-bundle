@@ -52,9 +52,9 @@ final readonly class AddAssetPayload implements ExtJsPayloadInterface
         return new static(
             filedataPath:         $filedataPath,
             filedataOriginalName: $filedataOriginalName,
-            type:                 $request->request->get('type'),
-            filename:             $request->request->get('filename'),
-            data:                 $request->request->get('data'),
+            type:                 $request->request->getString('type') ?: null,
+            filename:             $request->request->getString('filename') ?: null,
+            data:                 $request->request->getString('data') ?: null,
             parentId:             $request->query->getInt('parentId'),
             hasParentId:          $request->query->has('parentId'),
             parentPath:           $request->query->get('parentPath'),

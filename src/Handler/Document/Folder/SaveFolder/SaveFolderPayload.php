@@ -29,11 +29,13 @@ final readonly class SaveFolderPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
+        $properties = $request->request->has('properties')
+            ? json_decode($request->request->getString('properties'), true)
+            : null;
+
         return new static(
             id: $request->request->getInt('id'),
-            properties: $request->request->has('properties')
-                ? (json_decode($request->request->getString('properties'), true) ?? null)
-                : null,
+            properties: is_array($properties) ? $properties : null,
         );
     }
 }

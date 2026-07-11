@@ -17,7 +17,7 @@ final readonly class DeeplinkPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
-        $queryString = $request->server->get('QUERY_STRING') ?? '';
+        $queryString = (string) ($request->server->get('QUERY_STRING') ?? '');
         $perspective = (string) $request->query->get('perspective', '');
         $perspective = strip_tags($perspective);
 

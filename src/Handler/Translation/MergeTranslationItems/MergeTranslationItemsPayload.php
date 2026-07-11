@@ -29,8 +29,10 @@ final readonly class MergeTranslationItemsPayload implements ExtJsPayloadInterfa
 
     public static function fromRequest(Request $request): static
     {
+        $dataList = json_decode($request->request->get('data'), true);
+
         return new static(
-            dataList: json_decode($request->request->get('data'), true),
+            dataList: is_array($dataList) ? $dataList : [],
             domain: $request->request->get('domain', Translation::DOMAIN_DEFAULT),
         );
     }

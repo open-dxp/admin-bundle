@@ -33,13 +33,16 @@ final readonly class NoteListPayload implements ExtJsPayloadInterface
             );
         }
 
+        $filterText = $request->request->get('filterText');
+        $filterJson = $request->request->get('filter');
+
         return new static(
             hasData: false,
             offset: $request->request->getInt('start', 0),
             limit: $request->request->getInt('limit') ?: null,
             sortingSettings: QueryParams::extractSortingSettings($request->request->all()),
-            filterText: $request->request->get('filterText'),
-            filterJson: $request->request->get('filter'),
+            filterText: $filterText !== null ? (string) $filterText : null,
+            filterJson: $filterJson !== null ? (string) $filterJson : null,
             cid: $request->request->has('cid') ? $request->request->getString('cid') : null,
             ctype: $request->request->has('ctype') ? $request->request->getString('ctype') : null,
         );

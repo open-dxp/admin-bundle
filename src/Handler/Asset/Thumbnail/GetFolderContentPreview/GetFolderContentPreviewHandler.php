@@ -95,8 +95,12 @@ final class GetFolderContentPreviewHandler
 
         $afterListLoadEvent = new GenericEvent(null, ['list' => $result, 'context' => $requestParams]);
         $this->eventDispatcher->dispatch($afterListLoadEvent, AdminEvents::ASSET_LIST_AFTER_LIST_LOAD);
-        $result = $afterListLoadEvent->getArgument('list');
+        $eventResult = $afterListLoadEvent->getArgument('list');
+        $result = is_array($eventResult) ? $eventResult : $result;
 
-        return new GetFolderContentPreviewResult($result['data'], $result['total']);
+        $resultData = is_array($result['data'] ?? null) ? $result['data'] : $assets;
+        $resultTotal = is_int($result['total'] ?? null) ? $result['total'] : $list->getTotalCount();
+
+        return new GetFolderContentPreviewResult($resultData, $resultTotal);
     }
 }

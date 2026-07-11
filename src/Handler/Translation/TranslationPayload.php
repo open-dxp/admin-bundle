@@ -39,10 +39,12 @@ final readonly class TranslationPayload implements ExtJsPayloadInterface
         $hasData = $request->request->has('data');
 
         if ($hasData) {
+            $data = json_decode($request->request->getString('data'), true);
+
             return new static(
                 domain: $domain,
                 hasData: true,
-                data: json_decode($request->request->getString('data'), true) ?? [],
+                data: is_array($data) ? $data : [],
             );
         }
 

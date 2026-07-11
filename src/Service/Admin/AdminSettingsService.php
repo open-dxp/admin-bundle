@@ -129,7 +129,7 @@ final class AdminSettingsService
             generateDocumentPreviews: (bool) $config['documents']['generate_preview'],
             disableAssetTreePreview: (bool) $adminSettings['assets']['disable_tree_preview'],
             hideEditImage: (bool) $adminSettings['assets']['hide_edit_image'],
-            dependencyEnabled: $config['dependency']['enabled'],
+            dependencyEnabled: (bool) $config['dependency']['enabled'],
 
             mainDomain: $systemSettings['general']['domain'],
             customAdminEntrypointUrl: $adminEntrypointUrl,
@@ -184,7 +184,7 @@ final class AdminSettingsService
             checkNewNotificationEnabled: $notificationsEnabled && (bool) $config['notifications']['check_new_notification']['enabled'],
             checkNewNotificationInterval: $config['notifications']['check_new_notification']['interval'] * 1000,
 
-            csrfToken: $this->csrfProtection->getCsrfToken($this->requestStack->getSession()),
+            csrfToken: $this->csrfProtection->getCsrfToken($this->requestStack->getSession()) ?? '',
         );
     }
 

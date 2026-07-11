@@ -63,7 +63,7 @@ final class GetUserHandler
         }
 
         // object <=> user dependencies
-        $userObjects = DataObject\Service::getObjectsReferencingUser($user->getId());
+        $userObjects = DataObject\Service::getObjectsReferencingUser((int) $user->getId());
         $userObjectData = [];
         $hasHidden = false;
 

@@ -28,9 +28,10 @@ final readonly class AddAdminTranslationKeysPayload implements ExtJsPayloadInter
     public static function fromRequest(Request $request): static
     {
         $keys = $request->request->get('keys');
+        $decoded = $keys ? json_decode((string) $keys, true) : [];
 
         return new static(
-            keys: $keys ? json_decode($keys, true) : [],
+            keys: is_array($decoded) ? $decoded : [],
         );
     }
 }

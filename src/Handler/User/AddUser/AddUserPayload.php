@@ -34,9 +34,10 @@ final readonly class AddUserPayload implements ExtJsPayloadInterface
     {
         $name = $request->request->get('name', '');
         $referenceId = $request->request->has('rid') ? (int) $request->request->get('rid') : null;
+        $type = $request->request->get('type');
 
         return new static(
-            type: $request->request->get('type'),
+            type: $type !== null ? (string) $type : null,
             parentId: $request->request->getInt('parentId'),
             name: trim((string) $name),
             active: $request->request->getBoolean('active'),

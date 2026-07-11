@@ -16,7 +16,7 @@ final readonly class DocTypePayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
-        $data = json_decode($request->request->get('data', ''), true) ?? [];
+        $data = json_decode($request->request->getString('data'), true) ?? [];
         $id = (string) ($data['id'] ?? '');
         unset($data['id']);
 

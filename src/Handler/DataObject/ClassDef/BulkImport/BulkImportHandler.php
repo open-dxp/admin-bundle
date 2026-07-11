@@ -38,7 +38,7 @@ final class BulkImportHandler
                 } elseif ($groupName === 'customlayout') {
                     $className = $groupItem['className'];
                     $layoutData = ['className' => $className, 'name' => $groupItem['name']];
-                    $name = base64_encode(json_encode($layoutData));
+                    $name = base64_encode(json_encode($layoutData) ?: '');
                     $displayName = $className . ' / ' . $groupItem['name'];
                     $icon = 'custom_views';
                 } else {

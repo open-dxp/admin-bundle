@@ -17,10 +17,13 @@ final readonly class DeleteAllVersionsPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
+        $date = $request->request->get('date');
+        $type = $request->request->get('type');
+
         return new static(
             id: $request->request->getInt('id'),
-            date: $request->request->get('date'),
-            type: $request->request->get('type'),
+            date: $date !== null ? (string) $date : null,
+            type: $type !== null ? (string) $type : null,
         );
     }
 }

@@ -29,9 +29,10 @@ final readonly class ExecuteAssetBatchPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         $raw = $request->request->getString('data');
+        $decoded = $raw !== '' ? json_decode($raw, true) : null;
 
         return new static(
-            data: $raw !== '' ? json_decode($raw, true) : null,
+            data: is_array($decoded) ? $decoded : null,
         );
     }
 }

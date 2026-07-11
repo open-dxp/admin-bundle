@@ -200,10 +200,10 @@ final class UpdateDataObjectHandler
                     $index++;
                 }
 
-                $this->updateLatestVersionIndex($sibling['id'], $index);
+                $this->updateLatestVersionIndex((int) $sibling['id'], $index);
                 $index++;
 
-                DataObject::clearDependentCacheByObjectId($sibling['id']);
+                DataObject::clearDependentCacheByObjectId((int) $sibling['id']);
             }
         };
 

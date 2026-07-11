@@ -30,7 +30,7 @@ final class GetMinimalUserHandler
         }
 
         return new GetMinimalUserResult(
-            id: $user->getId(),
+            id: (int) $user->getId(),
             admin: $user->isAdmin(),
             active: $user->isActive(),
             permissionInfo: [

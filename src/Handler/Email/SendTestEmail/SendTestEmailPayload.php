@@ -28,7 +28,8 @@ final readonly class SendTestEmailPayload implements ExtJsPayloadInterface
     {
         $mailParameters = null;
         if ($request->request->has('mailParamaters')) {
-            $mailParameters = json_decode($request->request->get('mailParamaters'), true) ?: null;
+            $decodedMailParameters = json_decode($request->request->get('mailParamaters'), true) ?: null;
+            $mailParameters = is_array($decodedMailParameters) ? $decodedMailParameters : null;
         }
 
         return new static(

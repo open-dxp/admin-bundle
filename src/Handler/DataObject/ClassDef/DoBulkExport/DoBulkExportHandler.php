@@ -68,6 +68,6 @@ final class DoBulkExportHandler
             }
         }
 
-        return new DoBulkExportResult(json: json_encode($result, JSON_PRETTY_PRINT));
+        return new DoBulkExportResult(json: json_encode($result, JSON_PRETTY_PRINT) ?: '');
     }
 }

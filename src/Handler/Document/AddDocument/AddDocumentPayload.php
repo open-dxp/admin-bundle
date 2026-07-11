@@ -27,12 +27,12 @@ final readonly class AddDocumentPayload implements ExtJsPayloadInterface
             parentId: $request->request->getInt('parentId'),
             type: $request->request->getString('type'),
             key: $request->request->getString('key'),
-            docTypeId: $request->request->get('docTypeId'),
-            translationsBaseDocumentId: $request->request->get('translationsBaseDocument'),
-            language: $request->request->get('language'),
-            inheritanceSource: $request->request->has('inheritanceSource') ? $request->request->get('inheritanceSource') : null,
-            title: $request->request->get('title'),
-            name: $request->request->get('name'),
+            docTypeId: $request->request->getString('docTypeId') ?: null,
+            translationsBaseDocumentId: $request->request->getString('translationsBaseDocument') ?: null,
+            language: $request->request->getString('language') ?: null,
+            inheritanceSource: $request->request->has('inheritanceSource') ? $request->request->getString('inheritanceSource') : null,
+            title: $request->request->getString('title') ?: null,
+            name: $request->request->getString('name') ?: null,
         );
     }
 }

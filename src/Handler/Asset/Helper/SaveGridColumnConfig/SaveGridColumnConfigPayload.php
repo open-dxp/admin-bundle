@@ -37,14 +37,17 @@ final readonly class SaveGridColumnConfigPayload implements ExtJsPayloadInterfac
         $gridconfig = $request->request->getString('gridconfig');
         $settings = $request->request->getString('settings');
 
+        $decodedGridConfig = $gridconfig ? json_decode($gridconfig, true) : [];
+        $decodedMetadata = $settings ? json_decode($settings, true) : null;
+
         return new static(
             assetId:        $request->request->getInt('id'),
             classId:        $request->request->getString('class_id') ?: null,
             context:        $request->request->getString('context') ?: null,
             searchType:     $request->request->getString('searchType') ?: null,
             type:           $request->request->getString('type') ?: null,
-            gridConfigData: $gridconfig ? (json_decode($gridconfig, true) ?? []) : [],
-            metadata:       $settings ? json_decode($settings, true) : null,
+            gridConfigData: is_array($decodedGridConfig) ? $decodedGridConfig : [],
+            metadata:       is_array($decodedMetadata) ? $decodedMetadata : null,
         );
     }
 }

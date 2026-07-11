@@ -31,17 +31,21 @@ final readonly class UpdateUserPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
+        $decodedValues = $request->request->has('data')
+            ? json_decode((string) $request->request->get('data'), true)
+            : null;
+        $decodedWorkspaces = $request->request->has('workspaces')
+            ? json_decode((string) $request->request->get('workspaces'), true)
+            : null;
+        $keyBindingsJson = $request->request->has('keyBindings')
+            ? $request->request->get('keyBindings')
+            : null;
+
         return new static(
             id: $request->request->getInt('id'),
-            values: $request->request->has('data')
-                ? (json_decode($request->request->get('data'), true) ?? null)
-                : null,
-            workspaces: $request->request->has('workspaces')
-                ? (json_decode($request->request->get('workspaces'), true) ?? null)
-                : null,
-            keyBindingsJson: $request->request->has('keyBindings')
-                ? $request->request->get('keyBindings')
-                : null,
+            values: is_array($decodedValues) ? $decodedValues : null,
+            workspaces: is_array($decodedWorkspaces) ? $decodedWorkspaces : null,
+            keyBindingsJson: $keyBindingsJson !== null ? (string) $keyBindingsJson : null,
         );
     }
 }

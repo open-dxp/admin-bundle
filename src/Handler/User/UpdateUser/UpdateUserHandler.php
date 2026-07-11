@@ -125,7 +125,7 @@ final class UpdateUserHandler
                 $tmpArray[] = json_decode($item, true);
             }
             $tmpArray = array_values(array_filter($tmpArray));
-            $tmpArray = json_encode($tmpArray);
+            $tmpArray = json_encode($tmpArray) ?: '';
 
             $user->setKeyBindings($tmpArray);
         }

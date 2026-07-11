@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\UploadTranslationImport
 
 use OpenDxp\Tool\Admin as AdminTool;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class UploadTranslationImportFileHandler
 {
@@ -28,7 +29,11 @@ final class UploadTranslationImportFileHandler
 
     public function __invoke(UploadTranslationImportFilePayload $payload): UploadTranslationImportFileResult
     {
-        $tmpData = file_get_contents($payload->file->getPathname());
+        if ($payload->file === null) {
+            throw new BadRequestHttpException('No file uploaded.');
+        }
+
+        $tmpData = file_get_contents($payload->file->getPathname()) ?: '';
 
         $filename = uniqid('import_translations-', false);
         $importFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/' . $filename;

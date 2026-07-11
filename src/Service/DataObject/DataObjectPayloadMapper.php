@@ -124,7 +124,7 @@ final class DataObjectPayloadMapper
         $adminUser = $this->userContext->getAdminUser();
         $tasks = [];
         foreach ($schedulerData as $taskData) {
-            $taskData['userId'] = $adminUser->getId();
+            $taskData['userId'] = $adminUser?->getId();
             $task = new Task($taskData);
             $tasks[] = $task;
         }

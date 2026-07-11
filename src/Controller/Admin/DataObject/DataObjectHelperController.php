@@ -196,7 +196,7 @@ class DataObjectHelperController extends AdminAbstractController
         #[MapQueryParameter] ?string $fileHandle = null,
     ): Response {
         try {
-            return $this->gridExportService->downloadCsvFile($fileHandle);
+            return $this->gridExportService->downloadCsvFile($fileHandle ?? '');
         } catch (\RuntimeException) {
             throw $this->createNotFoundException('CSV file not found');
         }
@@ -207,7 +207,7 @@ class DataObjectHelperController extends AdminAbstractController
         #[MapQueryParameter] ?string $fileHandle = null,
     ): BinaryFileResponse {
         try {
-            return $this->gridExportService->downloadXlsxFile($fileHandle);
+            return $this->gridExportService->downloadXlsxFile($fileHandle ?? '');
         } catch (\RuntimeException) {
             throw $this->createNotFoundException('XLSX file not found');
         }

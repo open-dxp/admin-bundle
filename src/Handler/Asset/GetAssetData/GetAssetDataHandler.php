@@ -173,7 +173,8 @@ final class GetAssetDataHandler
             'asset' => $asset,
         ]);
         $this->eventDispatcher->dispatch($event, AdminEvents::ASSET_GET_PRE_SEND_DATA);
-        $data = $event->getArgument('data');
+        $eventData = $event->getArgument('data');
+        $data = is_array($eventData) ? $eventData : $data;
 
         return new GetAssetDataResult($data);
     }

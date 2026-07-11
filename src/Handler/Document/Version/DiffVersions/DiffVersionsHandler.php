@@ -86,8 +86,8 @@ final class DiffVersionsHandler
         } else {
             $result = new DiffVersionsResult(
                 supported: true,
-                image1: base64_encode(file_get_contents($fromImageFile)),
-                image2: base64_encode(file_get_contents($toImageFile)),
+                image1: base64_encode(file_get_contents($fromImageFile) ?: ''),
+                image2: base64_encode(file_get_contents($toImageFile) ?: ''),
             );
         }
 

@@ -34,6 +34,6 @@ final class AddTagHandler
             throw new AdminOperationFailedException($e->getMessage());
         }
 
-        return new AddTagResult(id: $tag->getId());
+        return new AddTagResult(id: $tag->getId() ?? 0);
     }
 }

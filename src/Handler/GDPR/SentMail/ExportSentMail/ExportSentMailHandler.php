@@ -34,6 +34,6 @@ final class ExportSentMailHandler
         $sentMailArray['htmlBody'] = $sentMail->getHtmlLog();
         $sentMailArray['textBody'] = $sentMail->getTextLog();
 
-        return new ExportSentMailResult($sentMailArray, $sentMail->getId());
+        return new ExportSentMailResult($sentMailArray, $sentMail->getId() ?? 0);
     }
 }

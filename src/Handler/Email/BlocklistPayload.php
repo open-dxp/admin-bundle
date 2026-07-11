@@ -28,7 +28,7 @@ final readonly class BlocklistPayload implements ExtJsPayloadInterface
                 foreach ($data as $key => &$value) {
                     if (is_string($value)) {
                         if ($key === 'address') {
-                            $value = filter_var($value, FILTER_SANITIZE_EMAIL);
+                            $value = filter_var($value, FILTER_SANITIZE_EMAIL) ?: '';
                         }
                         $value = trim($value);
                     }
@@ -36,7 +36,7 @@ final readonly class BlocklistPayload implements ExtJsPayloadInterface
                 unset($value);
             }
 
-            return new static(hasData: true, data: $data);
+            return new static(hasData: true, data: is_array($data) ? $data : []);
         }
 
         return new static(

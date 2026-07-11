@@ -46,7 +46,7 @@ final class GetTranslationsHandler
         $list->setOrderKey($tableName . '.key', false);
         $list->setLanguages($validLanguages);
 
-        $sortingSettings = QueryParams::extractSortingSettings($payload->requestParams);
+        $sortingSettings = QueryParams::extractSortingSettings($payload->requestParams ?? []);
 
         $joins = [];
 
@@ -66,7 +66,7 @@ final class GetTranslationsHandler
         }
 
         $list->setLimit($payload->limit);
-        $list->setOffset($payload->offset);
+        $list->setOffset($payload->offset ?? 0);
 
         $filterParameters = [
             'filter' => $payload->filter,

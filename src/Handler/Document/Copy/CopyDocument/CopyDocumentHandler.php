@@ -43,7 +43,7 @@ final class CopyDocumentHandler
             $sourceParent = Document::getById($payload->sourceParentId) ?? throw new NotFoundHttpException('Source parent not found');
             $resolvedTargetParentId = $payload->sessionParentId ?? $payload->targetParentId;
             $targetParent = Document::getById($resolvedTargetParentId) ?? throw new NotFoundHttpException('Target parent not found');
-            $targetPath = preg_replace('@^' . $sourceParent->getRealFullPath() . '@', $targetParent . '/', $source->getRealPath());
+            $targetPath = preg_replace('@^' . $sourceParent->getRealFullPath() . '@', $targetParent . '/', $source->getRealPath() ?? '') ?? '';
             $target = Document::getByPath($targetPath);
         } else {
             $target = Document::getById($payload->targetId);

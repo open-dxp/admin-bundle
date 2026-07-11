@@ -52,7 +52,7 @@ final class ReplaceAssetHandler
             ));
         }
 
-        $stream = fopen($filePath, 'rb+');
+        $stream = fopen($filePath, 'rb+') ?: null;
         $asset->setStream($stream);
         $asset->setCustomSetting('thumbnails', null);
 

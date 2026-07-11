@@ -28,7 +28,7 @@ final class DraftEnricher
             return;
         }
 
-        $fresh = Concrete::getById($object->getId(), ['force' => true]);
+        $fresh = Concrete::getById($object->getId() ?? 0, ['force' => true]) ?? $object;
         if ($fresh->getModificationDate() < $draftVersion->getDate()) {
             $data['draft'] = [
                 'id' => $draftVersion->getId(),

@@ -27,8 +27,8 @@ final class CustomLayoutEnricher
             return;
         }
 
-        $layoutArray = json_decode(json_encode($data['layout']), true);
-        $classFieldDefinitions = json_decode(json_encode($object->getClass()->getFieldDefinitions()), true);
+        $layoutArray = json_decode(json_encode($data['layout']) ?: '', true);
+        $classFieldDefinitions = json_decode(json_encode($object->getClass()->getFieldDefinitions()) ?: '', true);
 
         if (is_array($layoutArray)) {
             $this->injectValuesForCustomLayout($layoutArray, $classFieldDefinitions);

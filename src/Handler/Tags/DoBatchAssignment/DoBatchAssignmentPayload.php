@@ -31,10 +31,13 @@ final readonly class DoBatchAssignmentPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
+        $childrenIds = json_decode($request->request->get('childrenIds'), true);
+        $assignedTags = json_decode($request->request->get('assignedTags'), true);
+
         return new static(
             elementType: strip_tags($request->request->get('elementType', '')),
-            childrenIds: json_decode($request->request->get('childrenIds'), true) ?? [],
-            assignedTags: json_decode($request->request->get('assignedTags'), true) ?? [],
+            childrenIds: is_array($childrenIds) ? $childrenIds : [],
+            assignedTags: is_array($assignedTags) ? $assignedTags : [],
             doCleanupTags: $request->request->get('removeAndApply') === 'true',
         );
     }
