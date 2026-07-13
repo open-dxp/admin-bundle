@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAll\ApplyGridConfigToAllHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAll\ApplyGridConfigToAllPayload;
@@ -47,12 +48,11 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\PrepareHelperColumnConf
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfig\SaveDataObjectGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfig\SaveDataObjectGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
-use OpenDxp\Tool\Session;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -64,6 +64,7 @@ class DataObjectHelperController extends AdminAbstractController
 {
     public function __construct(private readonly GridExportService $gridExportService) {}
 
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/load-object-data', name: 'loadobjectdata', methods: ['GET'])]
     public function loadObjectDataAction(
         LoadObjectDataPayload $payload,
@@ -80,6 +81,7 @@ class DataObjectHelperController extends AdminAbstractController
         return $this->apiJson($handler($payload));
     }
 
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/grid-delete-column-config', name: 'griddeletecolumnconfig', methods: ['DELETE'])]
     public function gridDeleteColumnConfigAction(
         DeleteGridColumnConfigPayload $payload,
@@ -88,6 +90,7 @@ class DataObjectHelperController extends AdminAbstractController
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/grid-get-column-config', name: 'gridgetcolumnconfig', methods: ['GET'])]
     public function gridGetColumnConfigAction(
         GetGridColumnConfigPayload $payload,
@@ -96,20 +99,13 @@ class DataObjectHelperController extends AdminAbstractController
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/prepare-helper-column-configs', name: 'preparehelpercolumnconfigs', methods: ['POST'])]
     public function prepareHelperColumnConfigs(
         PrepareHelperColumnConfigsPayload $payload,
         PrepareHelperColumnConfigsHandler $handler,
-        Request $request,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
-            $existingColumns = $session->get('helpercolumns', []);
-            $session->set('helpercolumns', [...$result->helperColumns, ...$existingColumns]);
-        }, 'opendxp_gridconfig');
-
-        return $this->adminJson(['success' => true, 'columns' => $result->columns]);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/grid-config-apply-to-all', name: 'gridconfigapplytoall', methods: ['POST'])]

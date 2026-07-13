@@ -22,7 +22,6 @@ use OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject\DataObjectController;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectChildren\GetDataObjectChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildren\TreeGetDataObjectChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildren\TreeGetDataObjectChildrenPayload;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
 use OpenDxp\Tests\Support\Util\TestHelper;
@@ -225,9 +224,7 @@ class ModelDataObjectPermissionsTest extends AbstractPermissionTest
         $childrenHandler = new GetDataObjectChildrenHandler($userContext, $elementService);
         $handler = new TreeGetDataObjectChildrenHandler($userContext, $elementService, $childrenHandler, new EventDispatcher());
 
-        $controller = $this->buildController(DataObjectController::class, $user, [
-            (new \ReflectionClass(SessionService::class))->newInstanceWithoutConstructor(),
-        ]);
+        $controller = $this->buildController(DataObjectController::class, $user);
 
         $request = new Request(['node' => $element->getId(), 'limit' => 100]);
 

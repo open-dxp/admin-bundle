@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\GetHardlinkData\GetHardlinkDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlink\SaveHardlinkHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlink\SaveHardlinkPayload;
@@ -34,6 +35,7 @@ class HardlinkController extends DocumentControllerBase
     /**
      * @throws Exception
      */
+    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
         GetHardlinkDataHandler $handler,

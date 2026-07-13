@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\UploadTranslationImportFile;
 
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\TranslationImportSessionGateway;
 use OpenDxp\Tool\Admin as AdminTool;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -25,6 +26,7 @@ final class UploadTranslationImportFileHandler
 {
     public function __construct(
         private readonly Filesystem $filesystem,
+        private readonly TranslationImportSessionGateway $translationImportSession,
     ) {}
 
     public function __invoke(UploadTranslationImportFilePayload $payload): UploadTranslationImportFileResult
@@ -45,9 +47,10 @@ final class UploadTranslationImportFileHandler
             $dialect->lineterminator = bin2hex($dialect->lineterminator);
         }
 
+        $this->translationImportSession->storeImportFile($importFile);
+
         return new UploadTranslationImportFileResult(
-            importFile: $importFile,
-            dialect: $dialect,
+            config: ['csvSettings' => $dialect],
         );
     }
 }

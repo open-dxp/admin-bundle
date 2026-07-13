@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUser;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\PasswordResetSessionGateway;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
 use Symfony\Component\Security\Core\Validator\Constraints\UserPassword;
@@ -30,6 +31,7 @@ final class UpdateCurrentUserHandler
     public function __construct(
         private readonly ValidatorInterface $validator,
         private readonly AdminUserContextInterface $userContext,
+        private readonly PasswordResetSessionGateway $passwordResetSession,
     ) {}
 
     /**
@@ -45,7 +47,7 @@ final class UpdateCurrentUserHandler
         if (!empty($values['new_password'])) {
             $oldPasswordCheck = false;
 
-            if ($payload->isPasswordReset) {
+            if ($this->passwordResetSession->isPasswordReset()) {
                 $oldPasswordCheck = true;
             } elseif (!empty($values['old_password'])) {
                 $errors = $this->validator->validate($values['old_password'], [new UserPassword()]);

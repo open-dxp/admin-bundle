@@ -17,8 +17,12 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkImport;
 
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\BulkOperationSessionGateway;
+
 final class BulkImportHandler
 {
+    public function __construct(private readonly BulkOperationSessionGateway $bulkOperationSession) {}
+
     public function __invoke(BulkImportPayload $payload): BulkImportResult
     {
         $tmpName = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/bulk-import-' . uniqid('', false) . '.tmp';
@@ -64,6 +68,8 @@ final class BulkImportHandler
             }
         }
 
-        return new BulkImportResult(items: $result, tmpFile: $tmpName);
+        $this->bulkOperationSession->storeImportFile($tmpName);
+
+        return new BulkImportResult(data: $result);
     }
 }

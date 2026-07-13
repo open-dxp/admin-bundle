@@ -17,14 +17,14 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession;
 
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\Document;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class SaveToSessionHandler
 {
     public function __construct(
-        private readonly SessionService $sessionService,
+        private readonly ElementDraftService $elementDraftService,
         private readonly DocumentPayloadMapper $mapper,
     ) {
     }
@@ -35,7 +35,7 @@ final class SaveToSessionHandler
             return;
         }
 
-        $document = $this->sessionService->getOrLoadDocument($payload->id);
+        $document = $this->elementDraftService->getOrLoadDocument($payload->id);
         if (!$document) {
             throw new NotFoundHttpException('Document not found in session');
         }
@@ -54,6 +54,6 @@ final class SaveToSessionHandler
             $this->mapper->applyFolderPayload($payload->folder, $document);
         }
 
-        $this->sessionService->saveDocument($document);
+        $this->elementDraftService->saveDocument($document);
     }
 }

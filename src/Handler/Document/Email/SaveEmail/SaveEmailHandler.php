@@ -22,14 +22,14 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\SaveEmail\SaveEmailPayload
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\Document\Email;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class SaveEmailHandler
 {
     public function __construct(
-        private readonly SessionService $sessionService,
+        private readonly ElementDraftService $elementDraftService,
         private readonly DocumentPayloadMapper $mapper,
         private readonly DocumentPersistenceCoordinator $coordinator,
         private readonly AdminUserContextInterface $userContext,
@@ -43,7 +43,7 @@ final class SaveEmailHandler
         }
 
         if ($sessionAware) {
-            $sessionEmail = $this->sessionService->getDocument($email);
+            $sessionEmail = $this->elementDraftService->getDocument($email);
             if ($sessionEmail instanceof Email) {
                 $email = $sessionEmail;
             } else {
@@ -56,7 +56,7 @@ final class SaveEmailHandler
         $result = $this->coordinator->save($email, $payload->task);
 
         if ($sessionAware) {
-            $this->sessionService->saveDocument($result->document);
+            $this->elementDraftService->saveDocument($result->document);
         }
 
         $savedEmail = $result->document instanceof Email ? $result->document : $email;

@@ -15,6 +15,7 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentHandler;
@@ -103,6 +104,7 @@ class DocumentController extends ElementControllerBase
     }
 
     #[IsGranted(CorePermission::Documents->value)]
+    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'opendxp_admin_document_document_getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
         GetDocumentDataHandler $handler,

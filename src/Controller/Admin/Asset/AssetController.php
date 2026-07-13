@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail\ClearAssetThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail\ClearAssetThumbnailHandler;
@@ -93,6 +94,7 @@ class AssetController extends ElementControllerBase
         return parent::deleteInfoAction($handler, $payload);
     }
 
+    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'opendxp_admin_asset_getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
         GetAssetDataPayload $payload,
@@ -154,6 +156,7 @@ class AssetController extends ElementControllerBase
         return $this->apiJson($handler($payload));
     }
 
+    #[SessionIdentityAware]
     #[Route('/save', name: 'opendxp_admin_asset_save', methods: ['PUT', 'POST'])]
     public function saveAction(SaveAssetHandler $handler, SaveAssetPayload $payload): JsonResponse
     {

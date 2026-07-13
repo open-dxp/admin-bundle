@@ -18,13 +18,13 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Page\ResetEditablesSession;
 
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\ResetEditablesSession\ResetEditablesSessionPayload;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\Document;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ResetEditablesSessionHandler
 {
-    public function __construct(private readonly SessionService $sessionService) {}
+    public function __construct(private readonly ElementDraftService $elementDraftService) {}
 
     public function __invoke(ResetEditablesSessionPayload $payload): void
     {
@@ -42,6 +42,6 @@ final class ResetEditablesSessionHandler
             }
         }
 
-        $this->sessionService->saveDocument($doc, useForSave: true);
+        $this->elementDraftService->saveDocument($doc, useForSave: true);
     }
 }

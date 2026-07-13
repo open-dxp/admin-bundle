@@ -18,21 +18,19 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DoBulkExport;
 
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\BulkOperationSessionGateway;
 use OpenDxp\Model\DataObject;
-use OpenDxp\Tool\Session;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 final class DoBulkExportHandler
 {
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
-        private readonly RequestStack $requestStack,
+        private readonly BulkOperationSessionGateway $bulkOperationSession,
     ) {}
 
     public function __invoke(): DoBulkExportResult
     {
-        $session = Session::getSessionBag($this->requestStack->getCurrentRequest()->getSession(), 'opendxp_objects');
-        $list = json_decode($session->get('class_bulk_export_settings'), true);
+        $list = json_decode($this->bulkOperationSession->getExportSettings(), true);
 
         $adminUser = $this->userContext->getAdminUser();
         $result = [];

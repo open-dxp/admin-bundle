@@ -22,14 +22,14 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippet\SaveSnippetP
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\Document\Snippet;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class SaveSnippetHandler
 {
     public function __construct(
-        private readonly SessionService $sessionService,
+        private readonly ElementDraftService $elementDraftService,
         private readonly DocumentPayloadMapper $mapper,
         private readonly DocumentPersistenceCoordinator $coordinator,
         private readonly AdminUserContextInterface $userContext,
@@ -43,7 +43,7 @@ final class SaveSnippetHandler
         }
 
         if ($sessionAware) {
-            $sessionSnippet = $this->sessionService->getDocument($snippet);
+            $sessionSnippet = $this->elementDraftService->getDocument($snippet);
             if ($sessionSnippet instanceof Snippet) {
                 $snippet = $sessionSnippet;
             } else {
@@ -56,7 +56,7 @@ final class SaveSnippetHandler
         $result = $this->coordinator->save($snippet, $payload->task);
 
         if ($sessionAware) {
-            $this->sessionService->saveDocument($result->document);
+            $this->elementDraftService->saveDocument($result->document);
         }
 
         $savedSnippet = $result->document instanceof Snippet ? $result->document : $snippet;

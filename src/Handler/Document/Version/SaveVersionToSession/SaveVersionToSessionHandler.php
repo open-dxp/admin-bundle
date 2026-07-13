@@ -19,13 +19,13 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Version\SaveVersionToSessi
 
 use OpenDxp\Bundle\AdminBundle\Exception\Document\DocumentNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Version;
 
 final class SaveVersionToSessionHandler
 {
-    public function __construct(private readonly SessionService $sessionService) {}
+    public function __construct(private readonly ElementDraftService $elementDraftService) {}
 
     public function __invoke(IdBodyPayload $payload): void
     {
@@ -36,6 +36,6 @@ final class SaveVersionToSessionHandler
             throw new DocumentNotFoundException($payload->id);
         }
 
-        $this->sessionService->saveDocument($document);
+        $this->elementDraftService->saveDocument($document);
     }
 }

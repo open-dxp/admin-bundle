@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Factory\ElementServiceFactory;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset\CopyAssetPayload;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\CopySessionGateway;
 use OpenDxp\Logger;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -27,7 +28,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class CopyAssetHandler
 {
-    public function __construct(private readonly ElementServiceFactory $serviceFactory) {}
+    public function __construct(
+        private readonly ElementServiceFactory $serviceFactory,
+        private readonly CopySessionGateway $copySession,
+    ) {}
 
     public function __invoke(CopyAssetPayload $payload): CopyAssetResult
     {
@@ -36,7 +40,7 @@ final class CopyAssetHandler
         $type = $payload->type;
         $sourceParentId = $payload->sourceParentId;
         $targetParentId = $payload->targetParentId;
-        $sessionParentId = $payload->sessionParentId;
+        $sessionParentId = $this->copySession->getParentId($payload->transactionId);
         $source = Asset::getById($sourceId);
 
         if ($source === null) {
@@ -66,6 +70,10 @@ final class CopyAssetHandler
 
         if ($type === 'child') {
             $newAsset = $assetService->copyAsChild($target, $source);
+
+            if ($payload->saveParentId) {
+                $this->copySession->rememberParentId($payload->transactionId, $newAsset->getId());
+            }
 
             return new CopyAssetResult($newAsset);
         }

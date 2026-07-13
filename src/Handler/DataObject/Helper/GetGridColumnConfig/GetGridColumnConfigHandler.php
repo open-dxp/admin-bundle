@@ -48,7 +48,7 @@ final class GetGridColumnConfigHandler
             'noBrickColumns'  => $payload->noBrickColumns,
         ];
 
-        $config = $this->gridConfigResolver->resolve($payload->locale, $params, $payload->helperColumnsBag);
+        $config = $this->gridConfigResolver->resolve($payload->locale, $params);
 
         $event = new GenericEvent($this, [
             'data'    => $config->toArray(),

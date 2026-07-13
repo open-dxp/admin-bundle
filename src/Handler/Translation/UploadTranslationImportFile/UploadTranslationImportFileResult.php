@@ -21,8 +21,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class UploadTranslationImportFileResult implements ResultInterface
 {
+    /**
+     * @param array{csvSettings: object} $config
+     */
     public function __construct(
-        public string $importFile,
-        public object $dialect,
+        public array $config,
     ) {}
 }

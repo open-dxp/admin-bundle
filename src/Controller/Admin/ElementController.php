@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\AnalyzePermissions\AnalyzePermissionsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\AnalyzePermissions\AnalyzePermissionsPayload;
@@ -75,6 +76,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  */
 class ElementController extends AdminAbstractController
 {
+    #[SessionIdentityAware]
     #[Route('/element/lock-element', name: 'opendxp_admin_element_lockelement', methods: ['PUT'])]
     public function lockElementAction(
         LockElementHandler $handler,

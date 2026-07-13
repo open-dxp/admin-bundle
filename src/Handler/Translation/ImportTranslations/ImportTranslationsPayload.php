@@ -18,14 +18,12 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\ImportTranslations;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
 use OpenDxp\Model\Translation;
-use OpenDxp\Tool\Session;
 use Symfony\Component\HttpFoundation\Request;
 
 final readonly class ImportTranslationsPayload implements ExtJsPayloadInterface
 {
     public function __construct(
         public readonly string $domain,
-        public readonly ?string $tmpFile,
         public readonly bool $overwrite,
         public readonly ?object $dialect,
         public readonly bool $enrichDelta,
@@ -39,12 +37,9 @@ final readonly class ImportTranslationsPayload implements ExtJsPayloadInterface
         if ($dialect) {
             $dialect = json_decode($dialect);
         }
-        $session = Session::getSessionBag($request->getSession(), 'opendxp_importconfig');
-        $tmpFile = $session->get('translation_import_file');
 
         return new static(
             domain: $domain,
-            tmpFile: $tmpFile,
             overwrite: !$merge,
             dialect: $dialect,
             enrichDelta: (bool) $merge,

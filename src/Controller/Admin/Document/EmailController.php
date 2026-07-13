@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\GetEmailData\GetEmailDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\SaveEmail\SaveEmailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\SaveEmail\SaveEmailPayload;
@@ -30,6 +31,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/email', name: 'opendxp_admin_document_email_')]
 class EmailController extends DocumentControllerBase
 {
+    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
         GetEmailDataHandler $handler,
@@ -41,6 +43,7 @@ class EmailController extends DocumentControllerBase
         return $this->preSendDataActions($result->data, $result->email);
     }
 
+    #[SessionIdentityAware]
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
     public function saveAction(SaveEmailPayload $payload, SaveEmailHandler $handler): JsonResponse
     {

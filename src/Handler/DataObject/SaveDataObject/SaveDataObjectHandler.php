@@ -22,7 +22,7 @@ use OpenDxp\Bundle\AdminBundle\Helper\DataObjectVersionHelper;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPersistenceCoordinator;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\ClassDefinition\Data\EqualComparisonInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -31,7 +31,7 @@ final class SaveDataObjectHandler
 {
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
-        private readonly SessionService $sessionService,
+        private readonly ElementDraftService $elementDraftService,
         private readonly DataObjectPayloadMapper $mapper,
         private readonly DataObjectPersistenceCoordinator $coordinator,
     ) {}
@@ -79,7 +79,7 @@ final class SaveDataObjectHandler
         $this->mapper->applyPayload($payload, $object, $objectFromDatabase);
 
         if ($payload->task === 'session') {
-            $this->sessionService->saveObject($object);
+            $this->elementDraftService->saveObject($object);
 
             return new SaveDataObjectResult(general: ['modificationDate' => 0, 'versionDate' => 0, 'versionCount' => 0], treeData: []);
         }

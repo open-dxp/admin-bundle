@@ -19,12 +19,16 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetCurrentUser;
 
 use OpenDxp\Bundle\AdminBundle\Helper\User as UserHelper;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\PasswordResetSessionGateway;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
 
 final class GetCurrentUserHandler
 {
-    public function __construct(private readonly AdminUserContextInterface $userContext) {}
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly PasswordResetSessionGateway $passwordResetSession,
+    ) {}
 
     public function __invoke(GetCurrentUserPayload $payload): GetCurrentUserResult
     {
@@ -46,7 +50,7 @@ final class GetCurrentUserHandler
         unset($userData['twoFactorAuthentication']['secret']);
         $userData['twoFactorAuthentication']['isActive'] = $user->getTwoFactorAuthentication('enabled') && $user->getTwoFactorAuthentication('secret');
         $userData['hasImage'] = $user->hasImage();
-        $userData['isPasswordReset'] = $payload->isPasswordReset;
+        $userData['isPasswordReset'] = $this->passwordResetSession->isPasswordReset();
         $userData['validLocales'] = Tool::getSupportedJSLocales();
 
         return new GetCurrentUserResult(userData: $userData);

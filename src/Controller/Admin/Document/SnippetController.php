@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\GetSnippetData\GetSnippetDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippet\SaveSnippetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippet\SaveSnippetPayload;
@@ -34,6 +35,7 @@ class SnippetController extends DocumentControllerBase
     /**
      * @throws Exception
      */
+    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
         GetSnippetDataHandler $handler,
@@ -48,6 +50,7 @@ class SnippetController extends DocumentControllerBase
     /**
      * @throws Exception
      */
+    #[SessionIdentityAware]
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(SaveSnippetPayload $payload, SaveSnippetHandler $handler): JsonResponse
     {

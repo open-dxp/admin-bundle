@@ -18,7 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\Service\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetResult;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Model\Asset;
 
@@ -27,13 +27,13 @@ final class AssetPersistenceCoordinator
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly ElementServiceInterface $elementService,
-        private readonly SessionService $sessionService,
+        private readonly ElementDraftService $elementDraftService,
     ) {}
 
     public function save(Asset $asset, string $task): SaveAssetResult
     {
         if ($task === 'session') {
-            $this->sessionService->saveAsset($asset);
+            $this->elementDraftService->saveAsset($asset);
         } else {
             $asset->setUserModification($this->userContext->getAdminUser()->getId());
             $asset->save();

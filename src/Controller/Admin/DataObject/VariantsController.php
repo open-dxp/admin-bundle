@@ -17,12 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\GetVariants\GetVariantsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\GetVariants\GetVariantsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\UpdateObjectKey\UpdateObjectKeyHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Variants\UpdateObjectKey\UpdateObjectKeyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -39,6 +41,7 @@ class VariantsController extends AdminAbstractController
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/get-variants', name: 'getvariants', methods: ['POST'])]
     public function getVariantsAction(
         GetVariantsHandler $handler,

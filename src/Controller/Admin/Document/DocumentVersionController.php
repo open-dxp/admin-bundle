@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\DiffVersions\DiffVersionsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\DiffVersions\DiffVersionsPayload;
@@ -38,6 +39,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class DocumentVersionController extends AdminAbstractController
 {
     #[IsGranted(CorePermission::Documents->value)]
+    #[SessionIdentityAware]
     #[Route('/version-to-session', name: 'opendxp_admin_document_document_versiontosession', methods: ['POST'])]
     public function versionToSessionAction(
         IdBodyPayload              $payload,
@@ -49,6 +51,7 @@ class DocumentVersionController extends AdminAbstractController
     }
 
     #[IsGranted(CorePermission::Documents->value)]
+    #[SessionIdentityAware]
     #[Route('/publish-version', name: 'opendxp_admin_document_document_publishversion', methods: ['POST'])]
     public function publishVersionAction(
         IdBodyPayload          $payload,

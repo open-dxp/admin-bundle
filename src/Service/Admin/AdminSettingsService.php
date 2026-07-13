@@ -22,6 +22,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsPayload;
 use OpenDxp\Bundle\AdminBundle\Perspective\Config as PerspectiveConfig;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService;
+use OpenDxp\Bundle\AdminBundle\Session\SessionIdentityInterface;
 use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
 use OpenDxp\Bundle\CoreBundle\OptionsProvider\SelectOptionsOptionsProvider;
 use OpenDxp\Config;
@@ -56,6 +57,7 @@ final class AdminSettingsService
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly KernelInterface $kernel,
         private readonly RequestStack $requestStack,
+        private readonly SessionIdentityInterface $sessionIdentity,
         #[Autowire('%opendxp_admin.custom_admin_route_name%')]
         private readonly string $customAdminRouteName,
         #[Autowire('%secret%')]
@@ -116,7 +118,7 @@ final class AdminSettingsService
             devMode: OpenDxp::inDevMode(),
             disableMinifyJs: OpenDxp::disableMinifyJs(),
             environment: $this->kernel->getEnvironment(),
-            sessionId: htmlentities($payload->sessionId, ENT_QUOTES, 'UTF-8'),
+            sessionId: htmlentities($this->sessionIdentity->getId(), ENT_QUOTES, 'UTF-8'),
 
             language: $payload->locale,
             websiteLanguages: Admin::reorderWebsiteLanguages($user, $systemSettings['general']['valid_languages'], true),

@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\CheckPrettyUrl\CheckPrettyUrlHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\CheckPrettyUrl\CheckPrettyUrlPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GeneratePagePreviews\GeneratePagePreviewsHandler;
@@ -44,6 +45,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/page', name: 'opendxp_admin_document_page_')]
 class PageController extends DocumentControllerBase
 {
+    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
     public function getDataByIdAction(
         GetPageDataHandler $handler,
@@ -54,6 +56,7 @@ class PageController extends DocumentControllerBase
         return $this->preSendDataActions($result->data, $result->page);
     }
 
+    #[SessionIdentityAware]
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
     public function saveAction(SavePagePayload $payload, SavePageHandler $handler): JsonResponse
     {
@@ -88,6 +91,7 @@ class PageController extends DocumentControllerBase
         return $this->apiOk();
     }
 
+    #[SessionIdentityAware]
     #[Route('/clear-editable-data', name: 'cleareditabledata', methods: ['PUT'])]
     public function clearEditableDataAction(ResetEditablesSessionPayload $payload, ResetEditablesSessionHandler $handler): JsonResponse
     {

@@ -18,16 +18,11 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetCurrentUser;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 
 final readonly class GetCurrentUserPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly bool $isPasswordReset) {}
-
     public static function fromRequest(Request $request): static
     {
-        return new static(
-            isPasswordReset: (bool) \OpenDxp\Tool\Session::useBag($request->getSession(), fn (AttributeBagInterface $adminSession) => $adminSession->get('password_reset')),
-        );
+        return new static();
     }
 }

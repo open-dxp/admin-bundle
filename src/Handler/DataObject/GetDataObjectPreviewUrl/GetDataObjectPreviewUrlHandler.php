@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl;
 
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\ClassDefinition\PreviewGeneratorInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -26,12 +26,12 @@ final class GetDataObjectPreviewUrlHandler
 {
     public function __construct(
         private readonly PreviewGeneratorInterface $defaultPreviewGenerator,
-        private readonly SessionService $sessionService,
+        private readonly ElementDraftService $elementDraftService,
     ) {}
 
     public function __invoke(GetDataObjectPreviewUrlPayload $payload): string
     {
-        $object = $this->sessionService->getObject('object', $payload->id);
+        $object = $this->elementDraftService->getObject('object', $payload->id);
 
         if (!$object instanceof DataObject\Concrete) {
             throw new NotFoundHttpException(sprintf('Expected an object of type "%s", got "%s"', DataObject\Concrete::class, get_debug_type($object)));

@@ -110,7 +110,13 @@ services:
     OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface:
         class: OpenDxp\Bundle\AdminBundle\Service\AdminUserContext
 
-    OpenDxp\Bundle\AdminBundle\Service\Element\SessionService: ~
+    OpenDxp\Bundle\AdminBundle\Session\SessionIdentityInterface:
+        class: OpenDxp\Bundle\AdminBundle\Session\SessionIdentity
+
+    OpenDxp\Bundle\AdminBundle\Session\Gateway\:
+        resource: '../src/Session/Gateway'
+
+    OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService: ~
     OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService: ~
 
     OpenDxp\Bundle\AdminBundle\Service\Login\LoginPageService: ~

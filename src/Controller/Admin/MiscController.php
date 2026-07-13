@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\Misc\AdminCss\AdminCssHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetAvailableControllerReferences\GetAvailableControllerReferencesHandler;
@@ -141,6 +142,7 @@ class MiscController extends AdminAbstractController
     }
 
     #[IsGranted(CorePermission::MaintenanceMode->value)]
+    #[SessionIdentityAware]
     #[Route('/maintenance', name: 'opendxp_admin_misc_maintenance', methods: ['POST'])]
     public function maintenanceAction(
         MaintenancePayload $payload,

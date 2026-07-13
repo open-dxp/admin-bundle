@@ -7,6 +7,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Login\GenerateTwoFactorSetup;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\TwoFactorSetupSessionGateway;
 use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Google\GoogleAuthenticatorInterface;
 
 final class GenerateTwoFactorSetupHandler
@@ -14,6 +15,7 @@ final class GenerateTwoFactorSetupHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly GoogleAuthenticatorInterface $twoFactor,
+        private readonly TwoFactorSetupSessionGateway $twoFactorSetupSession,
     ) {}
 
     public function __invoke(): GenerateTwoFactorSetupResult
@@ -34,6 +36,8 @@ final class GenerateTwoFactorSetupHandler
             ->data($url)
             ->size(200)
             ->build();
+
+        $this->twoFactorSetupSession->storeSecret($secret);
 
         return new GenerateTwoFactorSetupResult(
             secret: $secret,

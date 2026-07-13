@@ -18,25 +18,33 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\RewriteDocumentIds;
 
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\CopySessionGateway;
 use OpenDxp\Model\Document;
 
 final class RewriteDocumentIdsHandler
 {
-    public function __construct(private readonly AdminUserContextInterface $userContext) {}
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly CopySessionGateway $copySession,
+    ) {}
 
-    public function __invoke(RewriteDocumentIdsPayload $payload): void
+    public function __invoke(RewriteDocumentIdsPayload $payload): RewriteDocumentIdsResult
     {
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
-        $document = Document::getById($payload->documentId);
+        $documentId = $this->copySession->popRewriteStackId($payload->transactionId);
+        $idMapping = $this->copySession->getIdMapping($payload->transactionId);
+        $document = Document::getById($documentId);
 
         if ($document === null) {
-            return;
+            return new RewriteDocumentIdsResult($documentId);
         }
 
-        $document = Document\Service::rewriteIds($document, ['document' => $payload->idMapping], [
+        $document = Document\Service::rewriteIds($document, ['document' => $idMapping], [
             'enableInheritance' => $payload->enableInheritance,
         ]);
         $document->setUserModification($userId);
         $document->save();
+
+        return new RewriteDocumentIdsResult($documentId);
     }
 }

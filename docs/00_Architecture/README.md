@@ -35,22 +35,27 @@ src/
 │   │   ├── Document/      # DocumentController: tree, site panel, site custom settings
 │   │   └── ...
 │   └── Traits/            # Shared controller traits
+├── CustomView/            # Custom document/asset/object tree view configuration
+├── DataObject/            # Grid column config element definitions shared by DataObject grid Handlers
 ├── DependencyInjection/   # Bundle extension + compiler passes
-├── Dto/                   # Data transfer objects for HTTP responses (e.g. ApiResponse)
+├── Dto/                   # Data transfer objects (grid configs, site custom settings, admin bootstrap settings)
 ├── Enricher/              # Adds admin-only data (permissions, admin styles) to tree/editor payloads
 ├── Enum/                  # PHP enums for typed config values
 ├── Event/                 # Admin event classes + AdminEvents constants
 ├── EventListener/         # Symfony event subscribers (internal)
 ├── Exception/             # Admin-specific exceptions (e.g. AdminOperationFailedException)
 ├── Factory/               # Factories for services that can't be constructed via plain DI
+├── GDPR/                  # GDPR data provider integrations (export/anonymize document, asset, object, mail data)
 ├── Handler/               # Business logic, one invokable class per action, see below
 ├── Helper/                # Stateless service helpers (e.g. GridHelperService)
+├── Http/                  # ExtJsValueResolver: resolves Payload::fromRequest() as a controller argument
 ├── Model/                 # Admin-only models (GridConfig, GridConfigShare, etc.)
 ├── Payload/               # Shared request DTOs consumed by Handlers; action-specific ones live next to their Handler
 ├── Perspective/           # Perspective resolution and serialization
 ├── Repository/            # Persistence for admin-only data (e.g. per-user dashboard config), keyed by explicit params, no bound state
 ├── Security/              # Admin authentication, authenticators, security tokens
 ├── Service/               # Application services shared across Handlers (grid data, workflow, element resolution)
+├── Session/               # Session access boundary: SessionGatewayInterface/SessionIdentityInterface and their Gateway/ implementations, see below
 ├── System/                # System-level services
 ├── Translation/           # Admin translation handling
 └── Twig/                  # Twig extensions for admin templates
@@ -67,11 +72,17 @@ public function saveAction(
     SaveClassDefinitionPayload $payload,
     SaveClassDefinitionHandler $handler,
 ): JsonResponse {
-    $result = $handler($payload);
-
-    return $this->adminJson(ApiResponse::ok(['class' => $result->class]));
+    return $this->apiJson($handler($payload));
 }
 ```
+
+`AdminAbstractController::apiJson()` serializes a Handler's Result into the wire envelope
+`{success: true, ...resultProperties}`. Pass `rootProperty: 'nodes'` when the established
+wire contract for an endpoint is the bare value of a single Result property instead of the
+enveloped shape. For a void Handler with nothing to report, use `apiOk()` (`{success: true}`).
+Never build the response body by hand with `adminJson()` in a controller action, if a
+Result's shape does not match what an endpoint needs to return, change the Result and the
+Handler, not the controller.
 
 | Layer      | Location                                          | Responsibility                                                                                                                                               |
 |------------|---------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -95,6 +106,29 @@ throw `OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException` inste
 ### ElementLockedException
 Some exceptions carry their own dedicated response shape instead of the generic `{success: false, message}` body: `OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException` is mapped by the listener to a 200 response with an `editlock` payload,
 which the admin UI uses to show the lock dialog. 
+
+## Session Access
+
+Controllers and Payloads never touch Symfony's HTTP session (`SessionInterface`, `AttributeBagInterface`, `Request::getSession()`), not even to read it. 
+A Payload only carries values taken from the current `Request`; anything session-derived is looked up by the Handler itself, at the point it is actually needed. Only two kinds of classes may reference session storage:
+
+1. **A Gateway** implementing `OpenDxp\Bundle\AdminBundle\Session\SessionGatewayInterface`, living in `src/Session/Gateway/`. Each Gateway wraps exactly one session bag (see the `BAG_*` constants on `SessionGatewayInterface` for the full list of bags in use) behind a small, domain-named API, e.g. `CopySessionGateway::rememberParentId()`, not a raw `get()`/`set()`. Handlers and Services inject the Gateway they need.
+2. **`OpenDxp\Bundle\AdminBundle\Session\SessionIdentityInterface`**, for the narrower case of needing only the current session id as a correlation token (lock ownership, bootstrap settings), not a session value. Carries no mutable state, so it may be injected anywhere.
+
+Controller actions never contain session code, not even a call into a Gateway. Since that means an endpoint's session footprint is otherwise invisible without opening its Handler, mark the action with an attribute instead:
+
+```php
+#[SessionGatewayAware(CopySessionGateway::class)]
+#[Route('/copy', name: 'opendxp_admin_asset_copy', methods: ['POST'])]
+public function copyAction(CopyAssetPayload $payload, CopyAssetHandler $handler): JsonResponse
+{
+    $handler($payload);
+
+    return $this->apiOk();
+}
+```
+
+Use `#[SessionIdentityAware]` (no argument) when only `SessionIdentityInterface` is involved.
 
 ## Frontend Assets
 

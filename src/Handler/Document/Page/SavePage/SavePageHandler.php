@@ -22,7 +22,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePagePayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Document\StaticPageGenerator;
 use OpenDxp\Event\DocumentEvents;
 use OpenDxp\Event\Model\DocumentEvent;
@@ -35,7 +35,7 @@ final class SavePageHandler
     use RecursionBlockingEventDispatchHelperTrait;
 
     public function __construct(
-        private readonly SessionService $sessionService,
+        private readonly ElementDraftService $elementDraftService,
         private readonly DocumentPayloadMapper $mapper,
         private readonly DocumentPersistenceCoordinator $coordinator,
         private readonly AdminUserContextInterface $userContext,
@@ -50,7 +50,7 @@ final class SavePageHandler
         }
 
         if ($sessionAware) {
-            $sessionPage = $this->sessionService->getDocument($oldPage);
+            $sessionPage = $this->elementDraftService->getDocument($oldPage);
             if ($sessionPage instanceof Page) {
                 $page = $sessionPage;
             } else {
@@ -70,7 +70,7 @@ final class SavePageHandler
         );
 
         if ($sessionAware && !in_array($payload->task, ['publish', 'unpublish'], true)) {
-            $this->sessionService->saveDocument($result->document);
+            $this->elementDraftService->saveDocument($result->document);
         }
 
         $savedPage = $result->document instanceof Page ? $result->document : $page;

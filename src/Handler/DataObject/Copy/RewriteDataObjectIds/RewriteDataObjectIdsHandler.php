@@ -19,21 +19,28 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\RewriteDataObjectId
 
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\CopySessionGateway;
 use OpenDxp\Model\DataObject;
 
 final class RewriteDataObjectIdsHandler
 {
-    public function __construct(private readonly AdminUserContextInterface $userContext)
-    {
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly CopySessionGateway $copySession,
+    ) {
     }
 
-    public function __invoke(RewriteDataObjectIdsPayload $payload): void
+    public function __invoke(RewriteDataObjectIdsPayload $payload): RewriteDataObjectIdsResult
     {
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
-        $object = DataObject::getById($payload->objectId) ?? throw new DataObjectNotFoundException($payload->objectId);
+        $objectId = $this->copySession->popRewriteStackId($payload->transactionId);
+        $idMapping = $this->copySession->getIdMapping($payload->transactionId);
+        $object = DataObject::getById($objectId) ?? throw new DataObjectNotFoundException($objectId);
 
-        $object = DataObject\Service::rewriteIds($object, ['object' => $payload->idMapping]);
+        $object = DataObject\Service::rewriteIds($object, ['object' => $idMapping]);
         $object->setUserModification($userId);
         $object->save();
+
+        return new RewriteDataObjectIdsResult($objectId);
     }
 }

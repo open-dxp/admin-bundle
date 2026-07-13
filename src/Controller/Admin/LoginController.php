@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\Login\LoginRedirectEvent;
@@ -31,6 +32,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetup\SaveTwoFactorSet
 use OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetup\SaveTwoFactorSetupPayload;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Service\Login\LoginPageService;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\TwoFactorSetupSessionGateway;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use OpenDxp\Controller\KernelResponseEventInterface;
 use OpenDxp\Http\ResponseHelper;
@@ -215,6 +217,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
         return $this->forward(self::class . '::twoFactorSetupGenerateAction', [], $request->query->all());
     }
 
+    #[SessionGatewayAware(TwoFactorSetupSessionGateway::class)]
     #[Route('/login/2fa-setup-save', name: 'opendxp_admin_2fa_setup_save')]
     public function twoFactorSetupSaveAction(
         SaveTwoFactorSetupPayload $payload,
@@ -229,9 +232,9 @@ class LoginController extends AdminAbstractController implements KernelControlle
         return new RedirectResponse($this->generateUrl('opendxp_admin_login'));
     }
 
+    #[SessionGatewayAware(TwoFactorSetupSessionGateway::class)]
     #[Route('/login/2fa-setup-generate', name: 'opendxp_admin_2fa_setup_generate')]
     public function twoFactorSetupGenerateAction(
-        Request $request,
         GenerateTwoFactorSetupPayload $payload,
         GenerateTwoFactorSetupHandler $handler,
     ): Response {
@@ -245,8 +248,6 @@ class LoginController extends AdminAbstractController implements KernelControlle
 
         $result = $handler();
         $params['image'] = $result->qrDataUri;
-
-        $request->getSession()->set('2fa_secret', $result->secret);
 
         return $this->render('@OpenDxpAdmin/admin/login/two_factor_setup.html.twig', $params);
     }

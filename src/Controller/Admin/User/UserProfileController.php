@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\User;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetCurrentUser\GetCurrentUserHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetCurrentUser\GetCurrentUserPayload;
@@ -29,6 +30,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImageHandl
 use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImagePayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Voter\OwnUserVoter;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\PasswordResetSessionGateway;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -52,6 +54,7 @@ class UserProfileController extends AdminAbstractController
     }
 
     #[IsGranted(OwnUserVoter::OWN_USER, subject: 'payload')]
+    #[SessionGatewayAware(PasswordResetSessionGateway::class)]
     #[Route('/user/update-current-user', name: 'opendxp_admin_user_updatecurrentuser', methods: ['PUT'])]
     public function updateCurrentUserAction(
         UpdateCurrentUserPayload $payload,
@@ -62,6 +65,7 @@ class UserProfileController extends AdminAbstractController
         return $this->apiOk();
     }
 
+    #[SessionGatewayAware(PasswordResetSessionGateway::class)]
     #[Route('/user/get-current-user', name: 'opendxp_admin_user_getcurrentuser', methods: ['GET'])]
     public function getCurrentUserAction(
         GetCurrentUserPayload $payload,

@@ -17,6 +17,7 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
 use OpenDxp;
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\ChangeMainDocument\ChangeMainDocumentHandler;
@@ -59,6 +60,7 @@ abstract class DocumentControllerBase extends AdminAbstractController
     ) {
     }
 
+    #[SessionIdentityAware]
     #[Route('/save-to-session', name: 'savetosession', methods: ['POST'])]
     public function saveToSessionAction(
         SaveToSessionPayload $payload,
@@ -69,6 +71,7 @@ abstract class DocumentControllerBase extends AdminAbstractController
         return $this->apiOk();
     }
 
+    #[SessionIdentityAware]
     #[Route('/remove-from-session', name: 'removefromsession', methods: ['DELETE'])]
     public function removeFromSessionAction(
         RemoveFromSessionPayload $payload,

@@ -18,16 +18,22 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Service\Element;
 
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\SessionIdentityInterface;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Document\Service as DocumentService;
-use Symfony\Component\HttpFoundation\RequestStack;
 
-final class SessionService
+/**
+ * Stashes/retrieves unsaved document, object, and asset edits so an editor can navigate away
+ * and come back to unpublished changes. Despite the "session id" key, storage is a DB-backed
+ * TmpStore keyed by that id as a correlation token, not Symfony session storage — hence
+ * SessionIdentityInterface (read-only id), not a SessionGatewayInterface implementation.
+ */
+final class ElementDraftService
 {
     public function __construct(
-        private readonly RequestStack $requestStack,
+        private readonly SessionIdentityInterface $sessionIdentity,
         private readonly AdminUserContextInterface $userContext,
     ) {}
 
@@ -99,6 +105,6 @@ final class SessionService
 
     private function sessionId(): string
     {
-        return $this->requestStack->getSession()->getId();
+        return $this->sessionIdentity->getId();
     }
 }

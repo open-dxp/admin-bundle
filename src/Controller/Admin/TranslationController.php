@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\AddAdminTranslationKeys\AddAdminTranslationKeysHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\AddAdminTranslationKeys\AddAdminTranslationKeysPayload;
@@ -41,12 +42,11 @@ use OpenDxp\Bundle\AdminBundle\Handler\Translation\UpdateTranslation\UpdateTrans
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\UploadTranslationImportFile\UploadTranslationImportFileHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\UploadTranslationImportFile\UploadTranslationImportFilePayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\TranslationImportSessionGateway;
 use OpenDxp\Model\Translation;
-use OpenDxp\Tool\Session;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -59,6 +59,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class TranslationController extends AdminAbstractController
 {
     #[AsHtmlContentTypeResponse]
+    #[SessionGatewayAware(TranslationImportSessionGateway::class)]
     #[Route('/import', name: 'opendxp_admin_translation_import', methods: ['POST'])]
     public function importAction(
         ImportTranslationsHandler $handler,
@@ -69,21 +70,13 @@ class TranslationController extends AdminAbstractController
         return $this->apiJson($handler($payload), context: [AbstractObjectNormalizer::SKIP_NULL_VALUES => true]);
     }
 
+    #[SessionGatewayAware(TranslationImportSessionGateway::class)]
     #[Route('/upload-import', name: 'opendxp_admin_translation_uploadimportfile', methods: ['POST'])]
     public function uploadImportFileAction(
-        Request $request,
         UploadTranslationImportFileHandler $handler,
         UploadTranslationImportFilePayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
-            $session->set('translation_import_file', $result->importFile);
-        }, 'opendxp_importconfig');
-
-        return $this->adminJson(['success' => true, 'config' => [
-            'csvSettings' => $result->dialect,
-        ]]);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/export', name: 'opendxp_admin_translation_export', methods: ['GET'])]

@@ -16,16 +16,16 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\RemoveFromSession;
 
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 
 final class RemoveFromSessionHandler
 {
     public function __construct(
-        private readonly SessionService $sessionService,
+        private readonly ElementDraftService $elementDraftService,
     ) {}
 
     public function __invoke(RemoveFromSessionPayload $payload): void
     {
-        $this->sessionService->removeDocument($payload->id);
+        $this->elementDraftService->removeDocument($payload->id);
     }
 }

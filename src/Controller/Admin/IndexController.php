@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsPayload;
@@ -36,6 +37,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class IndexController extends AdminAbstractController implements KernelResponseEventInterface
 {
+    #[SessionIdentityAware]
     #[Route('/', name: 'opendxp_admin_index', methods: ['GET'])]
     public function indexAction(
         Request $request,

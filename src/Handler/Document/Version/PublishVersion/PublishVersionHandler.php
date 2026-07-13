@@ -22,7 +22,7 @@ use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\Document\DocumentNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -31,7 +31,7 @@ final class PublishVersionHandler
 {
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
-        private readonly SessionService $sessionService,
+        private readonly ElementDraftService $elementDraftService,
         private readonly AdminStyleEnricher $adminStyleEnricher,
     ) {}
 
@@ -45,7 +45,7 @@ final class PublishVersionHandler
             throw new DocumentNotFoundException($payload->id);
         }
 
-        $this->sessionService->saveDocument($document);
+        $this->elementDraftService->saveDocument($document);
 
         $currentDocument = Document::getById($document->getId());
         if (!$currentDocument?->isAllowed('publish')) {

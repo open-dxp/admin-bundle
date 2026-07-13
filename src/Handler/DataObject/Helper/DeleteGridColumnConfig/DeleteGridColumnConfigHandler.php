@@ -65,7 +65,7 @@ final class DeleteGridColumnConfigHandler
             'noBrickColumns'  => $payload->noBrickColumns,
         ];
 
-        $config = $this->gridConfigResolver->resolve($payload->locale, $params, null, true);
+        $config = $this->gridConfigResolver->resolve($payload->locale, $params, true);
         $data = [...$config->toArray(), 'deleteSuccess' => true];
 
         $event = new GenericEvent($this, [

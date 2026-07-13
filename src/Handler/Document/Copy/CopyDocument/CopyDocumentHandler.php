@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\CopyDocument;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Factory\ElementServiceFactory;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\CopySessionGateway;
 use OpenDxp\Logger;
 use OpenDxp\Model\Document;
 use OpenDxp\Tool;
@@ -32,6 +33,7 @@ final class CopyDocumentHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly ElementServiceFactory $serviceFactory,
+        private readonly CopySessionGateway $copySession,
     ) {}
 
     public function __invoke(CopyDocumentPayload $payload): CopyDocumentResult
@@ -41,7 +43,7 @@ final class CopyDocumentHandler
 
         if ($payload->sourceParentId !== null && $payload->targetParentId !== null) {
             $sourceParent = Document::getById($payload->sourceParentId) ?? throw new NotFoundHttpException('Source parent not found');
-            $resolvedTargetParentId = $payload->sessionParentId ?? $payload->targetParentId;
+            $resolvedTargetParentId = $this->copySession->getParentId($payload->transactionId) ?? $payload->targetParentId;
             $targetParent = Document::getById($resolvedTargetParentId) ?? throw new NotFoundHttpException('Target parent not found');
             $targetPath = preg_replace('@^' . $sourceParent->getRealFullPath() . '@', $targetParent . '/', $source->getRealPath() ?? '') ?? '';
             $target = Document::getByPath($targetPath);
@@ -75,6 +77,8 @@ final class CopyDocumentHandler
             }
 
             $newDocument = $documentService->copyAsChild($target, $source, $payload->enableInheritance, $payload->resetIndex, $payload->language);
+
+            $this->copySession->rememberCopiedId($payload->transactionId, $payload->sourceId, $newDocument->getId(), $payload->saveParentId);
 
             return new CopyDocumentResult($payload->sourceId, $newDocument);
         }

@@ -22,15 +22,13 @@ use Symfony\Component\HttpFoundation\Request;
 final readonly class SettingsPayload implements ExtJsPayloadInterface
 {
     public function __construct(
-        public readonly string $sessionId,
         public readonly string $locale,
     ) {}
 
     public static function fromRequest(Request $request): static
     {
         return new static(
-            sessionId: $request->getSession()->getId(),
-            locale:    $request->getLocale(),
+            locale: $request->getLocale(),
         );
     }
 }

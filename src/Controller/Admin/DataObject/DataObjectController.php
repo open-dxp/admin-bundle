@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectFolder\AddObjectFolderHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectFolder\AddObjectFolderPayload;
@@ -46,10 +48,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl\GetDat
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
-use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -76,7 +78,6 @@ class DataObjectController extends ElementControllerBase
 
     public function __construct(
         ElementServiceInterface $elementService,
-        private readonly SessionService $sessionService,
     ) {
         parent::__construct($elementService);
     }
@@ -114,16 +115,13 @@ class DataObjectController extends ElementControllerBase
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
+    #[SessionIdentityAware]
     #[Route('/get', name: 'get', methods: ['GET'])]
     public function getAction(
         GetDataObjectPayload $payload,
         GetDataObjectHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        $this->sessionService->removeObject('object', $payload->id);
-
-        return $this->apiJson($result, rootProperty: 'data');
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/get-select-options', name: 'getSelectOptions', methods: ['POST'])]
@@ -193,6 +191,7 @@ class DataObjectController extends ElementControllerBase
         return $this->apiJson($handler($payload));
     }
 
+    #[SessionIdentityAware]
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(SaveDataObjectHandler $handler, SaveDataObjectPayload $payload): JsonResponse
     {
@@ -215,6 +214,7 @@ class DataObjectController extends ElementControllerBase
         return $this->apiOk();
     }
 
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/grid-proxy', name: 'gridproxy', methods: ['GET', 'POST', 'PUT'])]
     public function gridProxyAction(
         DataObjectGridProxyPayload $payload,
@@ -232,6 +232,7 @@ class DataObjectController extends ElementControllerBase
         return $this->apiJson($result, rootProperty: 'data');
     }
 
+    #[SessionIdentityAware]
     #[Route('/preview', name: 'preview', methods: ['GET'])]
     public function previewAction(
         GetDataObjectPreviewUrlPayload $payload,

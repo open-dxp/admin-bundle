@@ -18,16 +18,21 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyInfo;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\CopySessionGateway;
 use OpenDxp\Model\Asset;
 use Symfony\Component\Routing\RouterInterface;
 
 final class CopyInfoHandler
 {
-    public function __construct(private readonly RouterInterface $router) {}
+    public function __construct(
+        private readonly RouterInterface $router,
+        private readonly CopySessionGateway $copySession,
+    ) {}
 
     public function __invoke(CopyInfoPayload $payload): CopyInfoResult
     {
         $transactionId = time();
+        $this->copySession->startTransaction((string) $transactionId);
         $pasteJobs = [];
 
         if ($payload->type === 'recursive') {

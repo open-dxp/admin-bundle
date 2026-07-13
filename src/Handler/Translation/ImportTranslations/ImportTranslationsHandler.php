@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\ImportTranslations;
 
 use Locale;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\TranslationImportSessionGateway;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Model\Translation;
 use OpenDxp\Tool;
@@ -30,24 +31,26 @@ final class ImportTranslationsHandler
         private readonly LocaleServiceInterface $localeService,
         private readonly AdminUserContextInterface $userContext,
         private readonly RouterInterface $router,
+        private readonly TranslationImportSessionGateway $translationImportSession,
     ) {}
 
     public function __invoke(ImportTranslationsPayload $payload): ImportTranslationsResult
     {
+        $tmpFile = $this->translationImportSession->getImportFile();
         $admin = $payload->domain === Translation::DOMAIN_ADMIN;
         $allowedLanguages = $admin
             ? Tool\Admin::getLanguages()
             : $this->userContext->getAdminUser()->getAllowedLanguagesForEditingWebsiteTranslations();
         $delta = Translation::importTranslationsFromFile(
-            $payload->tmpFile,
+            $tmpFile,
             $payload->domain,
             $payload->overwrite,
             $allowedLanguages,
             $payload->dialect
         );
 
-        if (is_file($payload->tmpFile)) {
-            @unlink($payload->tmpFile);
+        if (is_file($tmpFile)) {
+            @unlink($tmpFile);
         }
 
         if ($payload->enrichDelta) {

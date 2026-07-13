@@ -25,7 +25,6 @@ final readonly class MaintenancePayload implements ExtJsPayloadInterface
     public function __construct(
         public readonly ?string $activate = null,
         public readonly ?string $deactivate = null,
-        public readonly string $sessionId = '',
     ) {}
 
     public static function fromRequest(Request $request): static
@@ -33,7 +32,6 @@ final readonly class MaintenancePayload implements ExtJsPayloadInterface
         return new static(
             activate: $request->query->has('activate') ? $request->query->getString('activate') : null,
             deactivate: $request->query->has('deactivate') ? $request->query->getString('deactivate') : null,
-            sessionId: $request->getSession()->getId(),
         );
     }
 }

@@ -25,6 +25,7 @@ use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\DataObjectVersionHelper;
 use OpenDxp\Bundle\AdminBundle\Model\DataObject\DataObjectLoadContext;
 use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\ClassDefinition\Data\ManyToManyObjectRelation;
 use OpenDxp\Model\DataObject\ClassDefinition\Data\Relations\AbstractRelations;
@@ -45,6 +46,7 @@ final class GetDataObjectHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly PreviewGeneratorInterface $defaultPreviewGenerator,
         private readonly EditLockService $editLockService,
+        private readonly ElementDraftService $elementDraftService,
         private readonly AdminStyleEnricher $adminStyleEnricher,
         private readonly UserNamesEnricher $userNamesEnricher,
         private readonly CustomLayoutEnricher $customLayoutEnricher,
@@ -240,6 +242,8 @@ final class GetDataObjectHandler
         $this->userNamesEnricher->enrich($object, $objectData['general']);
         $this->customLayoutEnricher->enrich($object, $objectData);
         $this->draftEnricher->enrich($object, $objectData, $draftVersion);
+
+        $this->elementDraftService->removeObject('object', $payload->id);
 
         return new GetDataObjectResult(data: $objectData);
     }

@@ -22,6 +22,7 @@ use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\GridData;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
@@ -38,6 +39,7 @@ final class DataObjectGridService
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly GridHelperService $gridHelperService,
         private readonly LocaleServiceInterface $localeService,
+        private readonly GridColumnConfigSessionGateway $gridColumnConfigSession,
     ) {
     }
 
@@ -87,7 +89,14 @@ final class DataObjectGridService
 
                 return [
                     'success' => true,
-                    'data' => GridData\DataObject::getData($object, $allParams['fields'], $requestedLanguage),
+                    'data' => GridData\DataObject::getData(
+                        $object,
+                        $allParams['fields'],
+                        $requestedLanguage,
+                        [
+                            'helperDefinitions' => $this->gridColumnConfigSession->getHelperColumns(),
+                        ]
+                    ),
                 ];
             } catch (Exception $e) {
                 return [
@@ -116,15 +125,37 @@ final class DataObjectGridService
 
             $objects = [];
             foreach ($list->getObjects() as $object) {
+
                 if ($csvMode) {
-                    $o = DataObject\Service::getCsvDataForObject($object, $requestedLanguage, $allParams['fields'], GridData\DataObject::getHelperDefinitions(), $this->localeService,'title', false, $allParams['context']);
+
+                    $o = DataObject\Service::getCsvDataForObject(
+                        $object,
+                        $requestedLanguage,
+                        $allParams['fields'],
+                        $this->gridColumnConfigSession->getHelperColumns(),
+                        $this->localeService,
+                        'title',
+                        false,
+                        $allParams['context']
+                    );
+
                     // respect isAllowed method which can be extended via object DI for custom permissions
                     if ($object->isAllowed('list')) {
                         $objects[] = $o;
                     }
+
                 } else {
-                    $o = GridData\DataObject::getData($object, $allParams['fields'] ?? null, $requestedLanguage,
-                        ['csvMode' => $csvMode]);
+
+                    $o = GridData\DataObject::getData(
+                        $object,
+                            $allParams['fields'] ?? null,
+                        $requestedLanguage,
+                        [
+                            'csvMode' => $csvMode,
+                            'helperDefinitions' => $this->gridColumnConfigSession->getHelperColumns()
+                        ]
+                    );
+
                     if ($o['permissions']['list']) {
                         $objects[] = $o;
                     }

@@ -21,12 +21,12 @@ use Exception;
 use OpenDxp\Bundle\AdminBundle\Dto\Grid\DataObjectGridColumnConfig;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigFavourite;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 use OpenDxp\Config;
 use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 
 final class DataObjectGridColumnConfigResolver
 {
@@ -36,9 +36,10 @@ final class DataObjectGridColumnConfigResolver
         private readonly GridColumnConfigService $gridColumnConfigService,
         private readonly Config $config,
         private readonly AdminUserContextInterface $userContext,
+        private readonly GridColumnConfigSessionGateway $gridColumnConfigSession,
     ) {}
 
-    public function resolve(string $locale, array $params, ?AttributeBagInterface $helperColumnsBag = null, bool $isDelete = false): DataObjectGridColumnConfig
+    public function resolve(string $locale, array $params, bool $isDelete = false): DataObjectGridColumnConfig
     {
         $user = $this->userContext->getAdminUser();
         $class = null;
@@ -181,9 +182,7 @@ final class DataObjectGridColumnConfigResolver
                                 }
                             }
                         } elseif (DataObject\Service::isHelperGridColumnConfig($key)) {
-                            $calculatedColumnConfig = $helperColumnsBag !== null
-                                ? $this->getCalculatedColumnConfig($helperColumnsBag, $sc)
-                                : null;
+                            $calculatedColumnConfig = $this->getCalculatedColumnConfig($sc);
                             if ($calculatedColumnConfig) {
                                 $availableFields[] = $calculatedColumnConfig;
                             }
@@ -368,7 +367,7 @@ final class DataObjectGridColumnConfigResolver
         return $fieldConfig;
     }
 
-    private function getCalculatedColumnConfig(AttributeBagInterface $helperColumnsBag, array $config): mixed
+    private function getCalculatedColumnConfig(array $config): mixed
     {
         try {
             $existingKey = $config['fieldConfig']['key'];
@@ -379,7 +378,7 @@ final class DataObjectGridColumnConfigResolver
             $calculatedColumnConfig['width'] = $config['width'];
             $calculatedColumnConfig['locked'] = $config['locked'];
 
-            $existingColumns = $helperColumnsBag->get('helpercolumns', []);
+            $existingColumns = $this->gridColumnConfigSession->getHelperColumns();
 
             if (isset($existingColumns[$existingKey])) {
                 return $calculatedColumnConfig;
@@ -391,7 +390,7 @@ final class DataObjectGridColumnConfigResolver
             $phpConfig = json_encode($config['fieldConfig']);
             $phpConfig = json_decode($phpConfig);
             $helperColumns = [$newKey => $phpConfig, ...$existingColumns];
-            $helperColumnsBag->set('helpercolumns', $helperColumns);
+            $this->gridColumnConfigSession->setHelperColumns($helperColumns);
 
             return $calculatedColumnConfig;
         } catch (Exception $e) {

@@ -23,6 +23,6 @@ final readonly class CopyInfoResult implements ResultInterface
 {
     public function __construct(
         public int $transactionId,
-        public array $pasteJobs,
+        public array $pastejobs,
     ) {}
 }

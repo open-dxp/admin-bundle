@@ -18,9 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetGridColumnConfig;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
-use OpenDxp\Tool\Session;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 
 final class GetGridColumnConfigPayload implements ExtJsPayloadInterface
 {
@@ -36,7 +34,6 @@ final class GetGridColumnConfigPayload implements ExtJsPayloadInterface
         public readonly bool $noSystemColumns,
         public readonly bool $noBrickColumns,
         public readonly string $locale,
-        public readonly AttributeBagInterface $helperColumnsBag,
     ) {}
 
     public static function fromRequest(Request $request): static
@@ -53,7 +50,6 @@ final class GetGridColumnConfigPayload implements ExtJsPayloadInterface
             noSystemColumns: $request->query->getBoolean('no_system_columns'),
             noBrickColumns: $request->query->getBoolean('no_brick_columns'),
             locale: $request->getLocale(),
-            helperColumnsBag: Session::getSessionBag($request->getSession(), 'opendxp_gridconfig'),
         );
     }
 }

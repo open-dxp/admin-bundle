@@ -17,18 +17,20 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Misc\Maintenance;
 
+use OpenDxp\Bundle\AdminBundle\Session\SessionIdentityInterface;
 use OpenDxp\Tool\MaintenanceModeHelperInterface;
 
 final class MaintenanceHandler
 {
     public function __construct(
         private readonly MaintenanceModeHelperInterface $maintenanceModeHelper,
+        private readonly SessionIdentityInterface $sessionIdentity,
     ) {}
 
     public function __invoke(MaintenancePayload $payload): void
     {
         if ($payload->activate) {
-            $this->maintenanceModeHelper->activate($payload->sessionId);
+            $this->maintenanceModeHelper->activate($this->sessionIdentity->getId());
         }
 
         if ($payload->deactivate) {

@@ -6,6 +6,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetup;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\TwoFactorSetupSessionGateway;
 use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Google\GoogleAuthenticatorInterface;
 
 final class SaveTwoFactorSetupHandler
@@ -13,11 +14,14 @@ final class SaveTwoFactorSetupHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly GoogleAuthenticatorInterface $twoFactor,
+        private readonly TwoFactorSetupSessionGateway $twoFactorSetupSession,
     ) {}
 
     public function __invoke(SaveTwoFactorSetupPayload $payload): void
     {
-        if (!$payload->secret) {
+        $secret = $this->twoFactorSetupSession->getSecret();
+
+        if (!$secret) {
             throw new Exception('2fa secret not found');
         }
 
@@ -26,7 +30,7 @@ final class SaveTwoFactorSetupHandler
 
         $user->setTwoFactorAuthentication('enabled', true);
         $user->setTwoFactorAuthentication('type', 'google');
-        $user->setTwoFactorAuthentication('secret', $payload->secret);
+        $user->setTwoFactorAuthentication('secret', $secret);
 
         if (!$this->twoFactor->checkCode($proxyUser, $payload->authCode)) {
             throw new Exception('2fa_wrong');

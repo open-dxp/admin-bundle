@@ -17,11 +17,13 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\AddClass\AddClassHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\AddClass\AddClassPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkCommit\BulkCommitHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkCommit\BulkCommitPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkExportPrepare\BulkExportPrepareHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkExportPrepare\BulkExportPreparePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkImport\BulkImportHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkImport\BulkImportPayload;
@@ -60,11 +62,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptions\Sav
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptions\SaveSelectOptionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SuggestClassIdentifier\SuggestClassIdentifierHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Tool\Session;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\BulkOperationSessionGateway;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -160,21 +160,17 @@ class ClassController extends AdminAbstractController
      */
     #[IsGranted(CorePermission::Classes->value)]
     #[AsHtmlContentTypeResponse]
+    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
     #[Route('/bulk-import', name: 'bulkimport', methods: ['POST'])]
-    public function bulkImportAction(BulkImportPayload $payload, BulkImportHandler $handler, Request $request): JsonResponse
+    public function bulkImportAction(BulkImportPayload $payload, BulkImportHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
-            $session->set('class_bulk_import_file', $result->tmpFile);
-        }, 'opendxp_objects');
-
-        return $this->adminJson(['success' => true, 'data' => $result->items]);
+        return $this->apiJson($handler($payload));
     }
 
     /**
      * Add option to export/import all class definitions/brick definitions etc. at once
      */
+    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
     #[Route('/bulk-commit', name: 'bulkcommit', methods: ['POST'])]
     public function bulkCommitAction(BulkCommitPayload $payload, BulkCommitHandler $handler): JsonResponse
     {
@@ -187,12 +183,11 @@ class ClassController extends AdminAbstractController
      * Add option to export/import all class definitions/brick definitions etc. at once
      */
     #[IsGranted(CorePermission::Classes->value)]
+    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
     #[Route('/bulk-export-prepare', name: 'bulkexportprepare', methods: ['POST'])]
-    public function bulkExportPrepareAction(BulkExportPreparePayload $payload, Request $request): Response
+    public function bulkExportPrepareAction(BulkExportPreparePayload $payload, BulkExportPrepareHandler $handler): JsonResponse
     {
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($payload): void {
-            $session->set('class_bulk_export_settings', $payload->data);
-        }, 'opendxp_objects');
+        $handler($payload);
 
         return $this->apiOk();
     }
@@ -203,6 +198,7 @@ class ClassController extends AdminAbstractController
         return $this->apiJson($handler());
     }
 
+    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
     #[Route('/do-bulk-export', name: 'dobulkexport', methods: ['GET'])]
     public function doBulkExportAction(DoBulkExportHandler $handler): Response
     {

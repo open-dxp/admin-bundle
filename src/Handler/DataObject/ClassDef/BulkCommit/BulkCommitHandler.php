@@ -19,9 +19,8 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkCommit;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\BulkOperationSessionGateway;
 use OpenDxp\Model\DataObject;
-use OpenDxp\Tool\Session;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -29,7 +28,7 @@ final class BulkCommitHandler
 {
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
-        private readonly RequestStack $requestStack,
+        private readonly BulkOperationSessionGateway $bulkOperationSession,
     ) {}
 
     public function __invoke(BulkCommitPayload $payload): void
@@ -45,8 +44,7 @@ final class BulkCommitHandler
             }
         }
 
-        $session = Session::getSessionBag($this->requestStack->getCurrentRequest()->getSession(), 'opendxp_objects');
-        $filename = $session->get('class_bulk_import_file');
+        $filename = $this->bulkOperationSession->getImportFile();
 
         $json = @file_get_contents($filename);
         $json = json_decode($json !== false ? $json : '', true);

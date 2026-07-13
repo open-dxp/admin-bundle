@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject\CopyDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject\CopyDataObjectPayload;
@@ -25,10 +26,8 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyInfo\CopyInfoPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\RewriteDataObjectIds\RewriteDataObjectIdsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\RewriteDataObjectIds\RewriteDataObjectIdsPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Tool\Session;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\CopySessionGateway;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -39,58 +38,32 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(CorePermission::Objects->value)]
 class DataObjectCopyController extends AdminAbstractController
 {
+    #[SessionGatewayAware(CopySessionGateway::class)]
     #[Route('/copy-info', name: 'copyinfo', methods: ['GET'])]
     public function copyInfoAction(
         CopyInfoPayload $payload,
         CopyInfoHandler $handler,
-        Request $request,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
-            $session->set((string) $result->transactionId, ['idMapping' => []]);
-        }, 'opendxp_copy');
-
-        return $this->adminJson(['pastejobs' => $result->pasteJobs]);
+        return $this->apiJson($handler($payload));
     }
 
+    #[SessionGatewayAware(CopySessionGateway::class)]
     #[Route('/copy-rewrite-ids', name: 'copyrewriteids', methods: ['PUT'])]
     public function copyRewriteIdsAction(
         RewriteDataObjectIdsPayload $payload,
         RewriteDataObjectIdsHandler $handler,
-        Request $request,
     ): JsonResponse {
-        $handler($payload);
-
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($payload): void {
-            $session->set($payload->transactionId, $payload->updatedIdStore);
-        }, 'opendxp_copy');
-
-        return $this->adminJson(['success' => true, 'id' => $payload->objectId]);
+        return $this->apiJson($handler($payload));
     }
 
+    #[SessionGatewayAware(CopySessionGateway::class)]
     #[Route('/copy', name: 'copy', methods: ['POST'])]
     public function copyAction(
         CopyDataObjectPayload $payload,
         CopyDataObjectHandler $handler,
-        Request $request,
     ): JsonResponse {
-        $result = $handler($payload);
+        $handler($payload);
 
-        if ($result->newObject !== null) {
-            $sessionBag = $payload->sessionBag;
-            $sessionBag['idMapping'][$result->sourceId] = $result->newObject->getId();
-
-            if ($payload->saveParentId) {
-                $sessionBag['parentId'] = $result->newObject->getId();
-            }
-
-            Session::getSessionBag($request->getSession(), 'opendxp_copy')->set($payload->transactionId, $sessionBag);
-        }
-
-        return $this->adminJson([
-            'success' => true,
-            'message' => $result->newObject?->getRealFullPath() ?? '',
-        ]);
+        return $this->apiOk();
     }
 }

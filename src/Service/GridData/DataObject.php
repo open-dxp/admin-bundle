@@ -27,9 +27,7 @@ use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\DataObject\Objectbrick;
 use OpenDxp\Model\DataObject\Service;
 use OpenDxp\Tool\Admin as AdminTool;
-use OpenDxp\Tool\Session;
 use stdClass;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Throwable;
 
 /**
@@ -62,7 +60,7 @@ class DataObject extends Element
                 $fields = array_keys($object->getclass()->getFieldDefinitions());
             }
 
-            $haveHelperDefinition = false;
+            $helperDefinitions = $params['helperDefinitions'] ?? [];
 
             foreach ($fields as $key) {
                 $brickDescriptor = null;
@@ -75,10 +73,6 @@ class DataObject extends Element
                 $def = $object->getClass()->getFieldDefinition($key, $context);
 
                 if (str_starts_with($key, '#')) {
-                    if (!$haveHelperDefinition) {
-                        $helperDefinitions = self::getHelperDefinitions();
-                        $haveHelperDefinition = true;
-                    }
                     if (!empty($helperDefinitions[$key])) {
                         $context['fieldname'] = $key;
                         $data[$key] = \OpenDxp\Model\DataObject\Service::calculateCellValue($object, $helperDefinitions, $key, $context);
@@ -233,18 +227,6 @@ class DataObject extends Element
         }
 
         return $data;
-    }
-
-    public static function getHelperDefinitions(): array
-    {
-        $stack = OpenDxp::getContainer()->get('request_stack');
-        if ($stack->getMainRequest()?->hasSession()) {
-            $session = $stack->getSession();
-
-            return Session::useBag($session, fn (AttributeBagInterface $session) => $session->get('helpercolumns', []), 'opendxp_gridconfig');
-        }
-
-        return [];
     }
 
     /**

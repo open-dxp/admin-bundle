@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigHandler;
@@ -37,12 +38,11 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\Mark
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
-use OpenDxp\Tool\Session;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -68,21 +68,13 @@ class AssetHelperController extends AdminAbstractController
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/prepare-helper-column-configs', name: 'opendxp_admin_asset_assethelper_preparehelpercolumnconfigs', methods: ['POST'])]
     public function prepareHelperColumnConfigs(
         PrepareHelperColumnConfigsPayload $payload,
         PrepareHelperColumnConfigsHandler $handler,
-        Request $request,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($result): void {
-            $existingColumns = $session->get('helpercolumns', []);
-            $helperColumns = [...$result->helperColumns, ...$existingColumns];
-            $session->set('helpercolumns', $helperColumns);
-        }, 'opendxp_gridconfig');
-
-        return $this->adminJson(['success' => true, 'columns' => $result->columns]);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/grid-mark-favourite-column-config', name: 'opendxp_admin_asset_assethelper_gridmarkfavouritecolumnconfig', methods: ['POST'])]

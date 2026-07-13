@@ -17,9 +17,9 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Service\Element;
 
 use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
+use OpenDxp\Bundle\AdminBundle\Session\SessionIdentityInterface;
 use OpenDxp\Model\Element\Editlock;
 use Symfony\Component\EventDispatcher\GenericEvent;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class EditLockService
@@ -27,7 +27,7 @@ final class EditLockService
     private const string TASK_OVERWRITE = 'overwrite';
 
     public function __construct(
-        private readonly RequestStack $requestStack,
+        private readonly SessionIdentityInterface $sessionIdentity,
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
@@ -41,7 +41,7 @@ final class EditLockService
      */
     public function checkAndAcquire(int $id, string $type, string $eventName, mixed $element = null): void
     {
-        $sessionId = $this->requestStack->getSession()->getId();
+        $sessionId = $this->sessionIdentity->getId();
 
         if (!Editlock::isLocked($id, $type, $sessionId)) {
             Editlock::lock($id, $type, $sessionId);
