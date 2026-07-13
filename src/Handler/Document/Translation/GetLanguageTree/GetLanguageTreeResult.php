@@ -16,7 +16,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTree;
 
-final readonly class GetLanguageTreeResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetLanguageTreeResult implements ResultInterface
 {
     public function __construct(
         public readonly array $nodes,

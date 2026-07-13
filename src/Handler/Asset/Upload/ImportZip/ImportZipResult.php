@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZip;
 
-final readonly class ImportZipResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class ImportZipResult implements ResultInterface
 {
     public function __construct(
         public string $jobId,

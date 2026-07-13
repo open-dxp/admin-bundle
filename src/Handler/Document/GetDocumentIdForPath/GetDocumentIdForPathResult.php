@@ -17,10 +17,12 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentIdForPath;
 
-final readonly class GetDocumentIdForPathResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetDocumentIdForPathResult implements ResultInterface
 {
     public function __construct(
-        public readonly int $id,
-        public readonly string $type,
+        public int $id,
+        public string $type,
     ) {}
 }

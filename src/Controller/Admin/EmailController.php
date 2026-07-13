@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\CreateBlocklistEntry\CreateBlocklistEntryHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\DeleteBlocklistEntry\DeleteBlocklistEntryHandler;
@@ -61,12 +60,7 @@ class EmailController extends AdminAbstractController
         GetEmailLogsHandler $handler,
         GetEmailLogsPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'data' => $result->data,
-            'total' => $result->total,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Emails->value)]
@@ -100,7 +94,7 @@ class EmailController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Emails->value)]
@@ -111,7 +105,7 @@ class EmailController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Emails->value)]
@@ -126,7 +120,7 @@ class EmailController extends AdminAbstractController
 
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Emails->value)]
@@ -146,12 +140,7 @@ class EmailController extends AdminAbstractController
             };
         }
 
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'data' => $result->data,
-            'total' => $result->total,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Emails->value)]
@@ -160,9 +149,7 @@ class EmailController extends AdminAbstractController
         BlocklistPayload $payload,
         DeleteBlocklistEntryHandler $handler,
     ): JsonResponse {
-        $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => []]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Emails->value)]
@@ -171,7 +158,7 @@ class EmailController extends AdminAbstractController
         BlocklistPayload $payload,
         UpdateBlocklistEntryHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Emails->value)]
@@ -180,6 +167,6 @@ class EmailController extends AdminAbstractController
         BlocklistPayload $payload,
         CreateBlocklistEntryHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)]));
+        return $this->apiJson($handler($payload));
     }
 }

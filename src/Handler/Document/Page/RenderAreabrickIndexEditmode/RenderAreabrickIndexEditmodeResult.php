@@ -17,12 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmode;
 
-use OpenDxp\Model\Document;
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final readonly class RenderAreabrickIndexEditmodeResult
+final readonly class RenderAreabrickIndexEditmodeResult implements ResultInterface
 {
     public function __construct(
-        public Document\PageSnippet $document,
         public array $editableDefinitions,
         public string $htmlCode,
     ) {}

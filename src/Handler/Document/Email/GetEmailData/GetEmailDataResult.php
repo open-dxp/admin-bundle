@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Email\GetEmailData;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Version;
 
-final readonly class GetEmailDataResult
+final readonly class GetEmailDataResult implements ResultInterface
 {
     public function __construct(
         public Document\Email $email,

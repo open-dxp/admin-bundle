@@ -34,6 +34,6 @@ class AdminController extends AdminAbstractController
     #[Route('/get-data-providers', name: 'opendxp_admin_gdpr_admin_getdataproviders', methods: ['GET'])]
     public function getDataProvidersAction(GetDataProvidersHandler $handler, EmptyPayload $payload): JsonResponse
     {
-        return $this->adminJson($handler($payload)->providers);
+        return $this->apiJson($handler($payload), rootProperty: 'providers');
     }
 }

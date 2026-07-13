@@ -20,7 +20,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 use DateInterval;
 use DateTime;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadAsset\DownloadAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadAsset\DownloadAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetAssetText\GetAssetTextPayload;
@@ -140,9 +139,7 @@ class AssetMediaController extends AdminAbstractController
         GetAssetTextPayload $payload,
         GetAssetTextHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['text' => $result->text]));
+        return $this->apiJson($handler($payload));
     }
 
     private function addThumbnailCacheHeaders(Response $response): void

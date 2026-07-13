@@ -36,7 +36,7 @@ final class GetWorkflowSvgHandler
     /**
      * @throws InvalidArgumentException
      */
-    public function __invoke(ShowGraphPayload $payload): string
+    public function __invoke(ShowGraphPayload $payload): GetWorkflowSvgResult
     {
         $element = $this->elementResolver->resolve($payload->ctype, $payload->cid);
 
@@ -65,6 +65,6 @@ final class GetWorkflowSvgHandler
         $process = Process::fromShellCommandline($cmd);
         $process->run(null, $params);
 
-        return $process->getOutput();
+        return new GetWorkflowSvgResult($process->getOutput());
     }
 }

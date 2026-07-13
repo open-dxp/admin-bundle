@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\LoadAssetForEditor\LoadAssetForEditorPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\LoadAssetForEditor\LoadAssetForEditorHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\SaveImageEditor\SaveImageEditorPayload;
@@ -51,6 +50,6 @@ class AssetEditorController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 }

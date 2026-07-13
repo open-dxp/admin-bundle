@@ -17,10 +17,17 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetUser;
 
-final readonly class GetUserResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetUserResult implements ResultInterface
 {
+    /**
+     * @param array<string, mixed>              $user
+     * @param array<int, array{0: ?int, 1: ?string}> $roles
+     * @param array<string, mixed>              $objectDependencies
+     */
     public function __construct(
-        public array $userData,
+        public array $user,
         public array $roles,
         public array $permissions,
         public array $availablePermissions,

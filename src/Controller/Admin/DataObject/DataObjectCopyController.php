@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject\CopyDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject\CopyDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyInfo\CopyInfoHandler;
@@ -67,7 +66,7 @@ class DataObjectCopyController extends AdminAbstractController
             $session->set($payload->transactionId, $payload->updatedIdStore);
         }, 'opendxp_copy');
 
-        return $this->adminJson(ApiResponse::ok(['id' => $payload->objectId]));
+        return $this->adminJson(['success' => true, 'id' => $payload->objectId]);
     }
 
     #[Route('/copy', name: 'copy', methods: ['POST'])]
@@ -89,8 +88,9 @@ class DataObjectCopyController extends AdminAbstractController
             Session::getSessionBag($request->getSession(), 'opendxp_copy')->set($payload->transactionId, $sessionBag);
         }
 
-        return $this->adminJson(ApiResponse::ok([
+        return $this->adminJson([
+            'success' => true,
             'message' => $result->newObject?->getRealFullPath() ?? '',
-        ]));
+        ]);
     }
 }

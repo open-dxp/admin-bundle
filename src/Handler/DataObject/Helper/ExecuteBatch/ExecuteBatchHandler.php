@@ -28,12 +28,12 @@ final class ExecuteBatchHandler
         private readonly GridBatchService $gridBatchService,
     ) {}
 
-    public function __invoke(ExecuteBatchPayload $payload): bool
+    public function __invoke(ExecuteBatchPayload $payload): void
     {
         $adminUser = $this->userContext->getAdminUser();
 
         try {
-            return $this->gridBatchService->executeObjectBatch($payload->params, $payload->locale, $adminUser);
+            $this->gridBatchService->executeObjectBatch($payload->params, $payload->locale, $adminUser);
         } catch (\Exception $e) {
             throw new AdminOperationFailedException($e->getMessage());
         }

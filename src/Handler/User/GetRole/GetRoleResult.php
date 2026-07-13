@@ -17,13 +17,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetRole;
 
-final readonly class GetRoleResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetRoleResult implements ResultInterface
 {
     public function __construct(
         public array $role,
         public array $permissions,
-        public mixed $classes,
-        public mixed $docTypes,
+        public array $classes,
+        public array $docTypes,
         public array $availablePermissions,
         public array $availablePerspectives,
         public array $validLanguages,

@@ -18,7 +18,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\AddClass\AddClassHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\AddClass\AddClassPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkCommit\BulkCommitHandler;
@@ -61,13 +60,11 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptions\Sav
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptions\SaveSelectOptionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SuggestClassIdentifier\SuggestClassIdentifierHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Logger;
 use OpenDxp\Tool\Session;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -81,42 +78,34 @@ class ClassController extends AdminAbstractController
     #[Route('/get-document-types', name: 'getdocumenttypes', methods: ['GET'])]
     public function getDocumentTypesAction(GetDocumentTypesHandler $handler): JsonResponse
     {
-        return $this->adminJson($handler()->types);
+        return $this->apiJson($handler(), rootProperty: 'types');
     }
 
     #[IsGranted(CorePermission::Classes->value)]
     #[Route('/get-asset-types', name: 'getassettypes', methods: ['GET'])]
     public function getAssetTypesAction(GetAssetTypesHandler $handler): JsonResponse
     {
-        return $this->adminJson($handler()->types);
+        return $this->apiJson($handler(), rootProperty: 'types');
     }
 
     #[Route('/get-tree', name: 'gettree', methods: ['GET', 'POST'])]
     public function getTreeAction(GetClassTreePayload $payload, GetClassTreeHandler $handler): JsonResponse
     {
-        try {
-            $this->checkPermission('objects');
-        } catch (AccessDeniedHttpException) {
-            Logger::log('[Startup] Object types are not loaded as "objects" permission is missing');
-
-            return $this->adminJson([]);
-        }
-
-        return $this->adminJson($handler($payload)->nodes);
+        return $this->apiJson($handler($payload), rootProperty: 'nodes');
     }
 
     #[IsGranted(CorePermission::Classes->value)]
     #[Route('/get', name: 'get', methods: ['GET'])]
     public function getAction(GetClassPayload $payload, GetClassHandler $handler): JsonResponse
     {
-        return $this->adminJson($handler($payload)->classData);
+        return $this->apiJson($handler($payload), rootProperty: 'classData');
     }
 
     #[IsGranted(CorePermission::Classes->value)]
     #[Route('/add', name: 'add', methods: ['POST'])]
     public function addAction(AddClassPayload $payload, AddClassHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['id' => $handler($payload)->id]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classes->value)]
@@ -132,7 +121,7 @@ class ClassController extends AdminAbstractController
     #[Route('/save', name: 'save', methods: ['PUT'])]
     public function saveAction(SaveClassDefinitionPayload $payload, SaveClassDefinitionHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['class' => $handler($payload)->class]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classes->value)]
@@ -142,7 +131,7 @@ class ClassController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Classes->value)]
@@ -163,7 +152,7 @@ class ClassController extends AdminAbstractController
         GetClassDefinitionForColumnConfigPayload $payload,
         GetClassDefinitionForColumnConfigHandler $handler,
     ): JsonResponse {
-        return $this->adminJson($handler($payload)->config);
+        return $this->apiJson($handler($payload), rootProperty: 'config');
     }
 
     /**
@@ -180,7 +169,7 @@ class ClassController extends AdminAbstractController
             $session->set('class_bulk_import_file', $result->tmpFile);
         }, 'opendxp_objects');
 
-        return $this->adminJson(ApiResponse::ok(['data' => $result->items]));
+        return $this->adminJson(['success' => true, 'data' => $result->items]);
     }
 
     /**
@@ -191,7 +180,7 @@ class ClassController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     /**
@@ -205,13 +194,13 @@ class ClassController extends AdminAbstractController
             $session->set('class_bulk_export_settings', $payload->data);
         }, 'opendxp_objects');
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/bulk-export', name: 'bulkexport', methods: ['GET'])]
     public function bulkExportAction(GetClassBulkExportListHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler()->data]));
+        return $this->apiJson($handler());
     }
 
     #[Route('/do-bulk-export', name: 'dobulkexport', methods: ['GET'])]
@@ -231,26 +220,21 @@ class ClassController extends AdminAbstractController
         GetSelectOptionsUsagesPayload $payload,
         GetSelectOptionsUsagesHandler $handler,
     ): Response {
-        return $this->adminJson($handler($payload)->usages);
+        return $this->apiJson($handler($payload), rootProperty: 'usages');
     }
 
     #[IsGranted(CorePermission::Classes->value)]
     #[Route('/get-icons', name: 'geticons', methods: ['GET'])]
     public function getIconsAction(GetClassIconsPayload $payload, GetClassIconsHandler $handler): Response
     {
-        return $this->adminJson($handler($payload)->icons);
+        return $this->apiJson($handler($payload), rootProperty: 'icons');
     }
 
     #[IsGranted(CorePermission::Classes->value)]
     #[Route('/suggest-class-identifier', name: 'suggestclassidentifier')]
-    public function suggestClassIdentifierAction(SuggestClassIdentifierHandler $handler): Response
+    public function suggestClassIdentifierAction(SuggestClassIdentifierHandler $handler): JsonResponse
     {
-        $result = $handler();
-
-        return $this->adminJson([
-            'suggestedIdentifier' => $result->suggestedIdentifier,
-            'existingIds' => $result->existingIds,
-        ]);
+        return $this->apiJson($handler());
     }
 
     #[IsGranted(CorePermission::Classes->value)]
@@ -267,28 +251,28 @@ class ClassController extends AdminAbstractController
     #[Route('/video-supported-types', name: 'videosupportedTypestypes', methods: ['GET'])]
     public function videoAllowedTypesAction(GetVideoAllowedTypesHandler $handler): Response
     {
-        return $this->adminJson($handler()->types);
+        return $this->apiJson($handler(), rootProperty: 'types');
     }
 
     #[IsGranted(CorePermission::Selectoptions->value)]
     #[Route('/select-options-get', name: 'selectoptionsget', methods: ['GET'])]
     public function selectOptionsGetAction(GetSelectOptionsPayload $payload, GetSelectOptionsHandler $handler): JsonResponse
     {
-        return $this->adminJson($handler($payload)->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[IsGranted(CorePermission::Selectoptions->value)]
     #[Route('/select-options-update', name: 'selectoptionsupdate', methods: ['PUT', 'POST'])]
     public function selectOptionsUpdateAction(SaveSelectOptionsPayload $payload, SaveSelectOptionsHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['id' => $handler($payload)->id]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Selectoptions->value)]
     #[Route('/select-options-tree', name: 'selectoptionstree', methods: ['GET', 'POST'])]
     public function selectOptionsTreeAction(GetSelectOptionsTreePayload $payload, GetSelectOptionsTreeHandler $handler): JsonResponse
     {
-        return $this->adminJson($handler($payload)->configurations);
+        return $this->apiJson($handler($payload), rootProperty: 'configurations');
     }
 
     #[IsGranted(CorePermission::Selectoptions->value)]
@@ -297,6 +281,6 @@ class ClassController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 }

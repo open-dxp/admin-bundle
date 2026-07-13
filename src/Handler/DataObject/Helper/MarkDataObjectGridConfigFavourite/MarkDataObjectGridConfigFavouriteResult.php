@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\MarkDataObjectGridConfigFavourite;
 
-final readonly class MarkDataObjectGridConfigFavouriteResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class MarkDataObjectGridConfigFavouriteResult implements ResultInterface
 {
     public function __construct(
         public bool $specializedConfigs,

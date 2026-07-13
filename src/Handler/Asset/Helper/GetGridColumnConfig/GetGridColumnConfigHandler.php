@@ -16,14 +16,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetGridColumnConfig;
 
-use OpenDxp\Bundle\AdminBundle\Dto\Grid\GridColumnConfigResult;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\AssetGridColumnConfigResolver;
 
 final class GetGridColumnConfigHandler
 {
     public function __construct(private readonly AssetGridColumnConfigResolver $gridConfigResolver) {}
 
-    public function __invoke(GetGridColumnConfigPayload $payload): GridColumnConfigResult
+    public function __invoke(GetGridColumnConfigPayload $payload): GetGridColumnConfigResult
     {
         $params = [
             'id'              => $payload->id,
@@ -33,6 +32,8 @@ final class GetGridColumnConfigHandler
             'noSystemColumns' => $payload->noSystemColumns,
         ];
 
-        return $this->gridConfigResolver->resolve($params);
+        $config = $this->gridConfigResolver->resolve($params);
+
+        return new GetGridColumnConfigResult($config->toArray());
     }
 }

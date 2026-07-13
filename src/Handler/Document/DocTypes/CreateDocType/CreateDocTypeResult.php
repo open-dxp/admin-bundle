@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\CreateDocType;
 
-final readonly class CreateDocTypeResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class CreateDocTypeResult implements ResultInterface
 {
     public function __construct(
         public array $data,

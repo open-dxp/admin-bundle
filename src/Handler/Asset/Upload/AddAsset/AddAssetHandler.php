@@ -32,6 +32,10 @@ final class AddAssetHandler
             throw new AdminOperationFailedException($e->getMessage());
         }
 
-        return new AddAssetResult(asset: $asset);
+        return new AddAssetResult([
+            'id' => $asset->getId(),
+            'path' => $asset->getFullPath(),
+            'type' => $asset->getType(),
+        ]);
     }
 }

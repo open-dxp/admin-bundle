@@ -39,9 +39,6 @@ final class UpdateCurrentUserHandler
     public function __invoke(UpdateCurrentUserPayload $payload): void
     {
         $user = $this->userContext->getAdminUser();
-        if ($user === null || $user->getId() !== $payload->requestedUserId) {
-            throw new AdminOperationFailedException('User ID mismatch');
-        }
         $values = $payload->values;
         unset($values['name'], $values['id'], $values['admin'], $values['permissions'], $values['roles'], $values['active']);
 

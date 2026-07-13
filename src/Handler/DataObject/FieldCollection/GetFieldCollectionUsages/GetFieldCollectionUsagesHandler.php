@@ -23,7 +23,7 @@ use OpenDxp\Model\DataObject\ClassDefinition\Listing;
 
 final class GetFieldCollectionUsagesHandler
 {
-    public function __invoke(GetFieldCollectionUsagesPayload $payload): array
+    public function __invoke(GetFieldCollectionUsagesPayload $payload): GetFieldCollectionUsagesResult
     {
         $result = [];
 
@@ -38,6 +38,6 @@ final class GetFieldCollectionUsagesHandler
             }
         }
 
-        return $result;
+        return new GetFieldCollectionUsagesResult(usages: $result);
     }
 }

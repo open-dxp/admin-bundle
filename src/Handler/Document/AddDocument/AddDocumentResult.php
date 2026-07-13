@@ -16,11 +16,12 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument;
 
-use OpenDxp\Model\Document;
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final readonly class AddDocumentResult
+final readonly class AddDocumentResult implements ResultInterface
 {
     public function __construct(
-        public readonly Document $document,
+        public readonly int $id,
+        public readonly string $type,
     ) {}
 }

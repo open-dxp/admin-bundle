@@ -29,7 +29,7 @@ final class AddCustomLayoutHandler
     {
     }
 
-    public function __invoke(AddCustomLayoutPayload $payload): DataObject\ClassDefinition\CustomLayout
+    public function __invoke(AddCustomLayoutPayload $payload): AddCustomLayoutResult
     {
         $layoutId = $payload->layoutIdentifier;
         $layoutName = $payload->layoutName;
@@ -54,6 +54,9 @@ final class AddCustomLayoutHandler
 
         $customLayout->save();
 
-        return $customLayout;
+        $data = $customLayout->getObjectVars();
+        $data['isWriteable'] = $customLayout->isWriteable();
+
+        return new AddCustomLayoutResult(id: $customLayout->getId(), name: $customLayout->getName(), data: $data);
     }
 }

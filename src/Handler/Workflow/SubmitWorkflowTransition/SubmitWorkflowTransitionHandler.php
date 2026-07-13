@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitWorkflowTransition;
 
+use Exception;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\Workflow\WorkflowElementResolver;
 use OpenDxp\Model\Element\ValidationException;
 use OpenDxp\Workflow\Manager;
@@ -30,10 +32,6 @@ final class SubmitWorkflowTransitionHandler
         private readonly WorkflowElementResolver $elementResolver,
     ) {}
 
-    /**
-     * @throws ValidationException
-     * @throws \RuntimeException
-     */
     public function __invoke(SubmitWorkflowTransitionPayload $payload): SubmitWorkflowTransitionResult
     {
         $element = $this->elementResolver->resolve($payload->ctype, $payload->cid);
@@ -47,11 +45,22 @@ final class SubmitWorkflowTransitionHandler
                 iterator_to_array($blockTransitionList->getIterator(), true)
             );
 
-            return new SubmitWorkflowTransitionResult(blocked: true, blockerReasons: $reasons);
+            throw new AdminOperationFailedException('transition failed', ['reasons' => $reasons]);
         }
 
-        $this->workflowManager->applyWithAdditionalData($workflow, $element, $payload->transition, $payload->workflowOptions, true);
+        try {
+            $this->workflowManager->applyWithAdditionalData($workflow, $element, $payload->transition, $payload->workflowOptions, true);
+        } catch (ValidationException $e) {
+            $reason = '';
+            if (count($e->getSubItems()) > 0) {
+                $reason = '<ul>' . implode('', array_map(static fn ($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
+            }
 
-        return new SubmitWorkflowTransitionResult(blocked: false, blockerReasons: []);
+            throw new AdminOperationFailedException($e->getMessage(), ['reasons' => [$reason]]);
+        } catch (Exception $e) {
+            throw new AdminOperationFailedException('error performing action on this element', ['reasons' => [$e->getMessage()]]);
+        }
+
+        return new SubmitWorkflowTransitionResult();
     }
 }

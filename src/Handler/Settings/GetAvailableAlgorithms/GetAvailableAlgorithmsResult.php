@@ -17,7 +17,12 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAlgorithms;
 
-final class GetAvailableAlgorithmsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final class GetAvailableAlgorithmsResult implements ResultInterface
 {
-    public function __construct(public readonly array $options) {}
+    public function __construct(
+        public readonly array $data,
+        public readonly int $total,
+    ) {}
 }

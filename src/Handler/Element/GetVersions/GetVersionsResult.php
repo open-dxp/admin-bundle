@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element\GetVersions;
 
-final readonly class GetVersionsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetVersionsResult implements ResultInterface
 {
     public function __construct(
         public readonly array $versions,

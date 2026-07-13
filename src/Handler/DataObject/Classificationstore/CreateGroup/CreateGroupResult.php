@@ -17,9 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateGroup;
 
-final readonly class CreateGroupResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class CreateGroupResult implements ResultInterface
 {
     public function __construct(
-        public string $name,
+        public string $id,
     ) {}
 }

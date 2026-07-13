@@ -178,7 +178,7 @@ class ModelDocumentPermissionsTest extends AbstractPermissionTest
             'view' => 0,
         ]);
 
-        $responseData = $controller->treeGetChildrenByIdAction($handler, TreeGetDocumentChildrenPayload::fromRequest($request));
+        $responseData = $controller->treeGetChildrenByIdPaginatedAction(TreeGetDocumentChildrenPayload::fromRequest($request), $handler);
 
         $responsePaths = [];
         $responseData = json_decode($responseData->getContent(), true);

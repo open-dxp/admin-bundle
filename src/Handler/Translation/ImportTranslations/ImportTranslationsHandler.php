@@ -63,9 +63,9 @@ final class ImportTranslationsHandler
                 $enrichedDelta[] = $item;
             }
 
-            return new ImportTranslationsResult(delta: $enrichedDelta);
+            return new ImportTranslationsResult(delta: base64_encode(json_encode($enrichedDelta) ?: ''));
         }
 
-        return new ImportTranslationsResult(delta: []);
+        return new ImportTranslationsResult();
     }
 }

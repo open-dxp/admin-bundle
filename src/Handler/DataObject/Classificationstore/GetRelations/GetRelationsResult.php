@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetRelations;
 
-final readonly class GetRelationsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetRelationsResult implements ResultInterface
 {
     public function __construct(
         public array $data,

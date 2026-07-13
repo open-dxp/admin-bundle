@@ -17,8 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsUsages;
 
-final readonly class GetSelectOptionsUsagesResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetSelectOptionsUsagesResult implements ResultInterface
 {
+    /**
+     * @param array<int, array{class: string, field: string}> $usages
+     */
     public function __construct(
         public array $usages,
     ) {}

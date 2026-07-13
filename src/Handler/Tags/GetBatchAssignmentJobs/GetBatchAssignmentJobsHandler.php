@@ -75,7 +75,7 @@ final class GetBatchAssignmentJobsHandler
             $offset += $size;
         }
 
-        return new GetBatchAssignmentJobsResult(idListParts: $idListParts, totalCount: count($idList));
+        return new GetBatchAssignmentJobsResult(idLists: $idListParts, totalCount: count($idList));
     }
 
     /**

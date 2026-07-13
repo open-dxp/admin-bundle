@@ -32,6 +32,6 @@ final class CreateCollectionHandler
             $config->save();
         }
 
-        return new CreateCollectionResult(name: $config->getName());
+        return new CreateCollectionResult(id: $config->getName());
     }
 }

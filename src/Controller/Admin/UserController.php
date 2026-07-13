@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\User\AddUser\AddUserHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\AddUser\AddUserPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUser\DeleteUserHandler;
@@ -67,7 +66,7 @@ class UserController extends AdminAbstractController
         GetUserTreeChildrenHandler $handler,
         GetUserTreeChildrenPayload $payload,
     ): JsonResponse {
-        return $this->adminJson($handler($payload));
+        return $this->apiJson($handler($payload), rootProperty: 'users');
     }
 
     #[IsGranted(CorePermission::Users->value)]
@@ -76,9 +75,7 @@ class UserController extends AdminAbstractController
         AddUserHandler $handler,
         AddUserPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Users->value)]
@@ -89,7 +86,7 @@ class UserController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Users->value)]
@@ -100,7 +97,7 @@ class UserController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Users->value)]
@@ -109,18 +106,7 @@ class UserController extends AdminAbstractController
         GetUserHandler $handler,
         GetUserPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'user' => $result->userData,
-            'roles' => $result->roles,
-            'permissions' => $result->permissions,
-            'availablePermissions' => $result->availablePermissions,
-            'availablePerspectives' => $result->availablePerspectives,
-            'validLanguages' => $result->validLanguages,
-            'validLocales' => $result->validLocales,
-            'objectDependencies' => $result->objectDependencies,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/user/get-minimal', name: 'opendxp_admin_user_getminimal', methods: ['GET'])]
@@ -128,14 +114,7 @@ class UserController extends AdminAbstractController
         GetMinimalUserHandler $handler,
         GetMinimalUserPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson([
-            'id' => $result->id,
-            'admin' => $result->admin,
-            'active' => $result->active,
-            'permissionInfo' => $result->permissionInfo,
-        ]);
+        return $this->apiJson($handler($payload));
     }
 
     #[AsHtmlContentTypeResponse]
@@ -146,7 +125,7 @@ class UserController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/user/delete-image', name: 'opendxp_admin_user_deleteimage', methods: ['DELETE'])]
@@ -156,7 +135,7 @@ class UserController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/user/disable-2fa', name: 'opendxp_admin_user_disable2fasecret', methods: ['DELETE'])]
@@ -164,13 +143,9 @@ class UserController extends AdminAbstractController
         Disable2FaHandler $handler,
         Disable2FaPayload $payload,
     ): JsonResponse {
-        try {
-            $handler($payload);
-        } catch (\Throwable $e) {
-            return $this->adminJson(ApiResponse::error($e->getMessage()));
-        }
+        $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Users->value)]
@@ -181,7 +156,7 @@ class UserController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/user/get-image', name: 'opendxp_admin_user_getimage', methods: ['GET'])]
@@ -204,9 +179,7 @@ class UserController extends AdminAbstractController
         GetTokenLoginLinkHandler $handler,
         GetTokenLoginLinkPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['link' => $result->link]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Users->value)]
@@ -215,7 +188,7 @@ class UserController extends AdminAbstractController
         SearchUsersHandler $handler,
         SearchUsersPayload $payload,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['users' => $handler($payload)]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::ShareConfigurations->value)]
@@ -233,9 +206,7 @@ class UserController extends AdminAbstractController
         GetUsersHandler $handler,
         GetUsersPayload $payload,
     ): JsonResponse {
-        $users = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['total' => count($users), 'data' => $users]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Users->value)]
@@ -244,8 +215,6 @@ class UserController extends AdminAbstractController
         SendInvitationLinkHandler $handler,
         SendInvitationLinkPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::fromBool($result->success, ['message' => $result->message]));
+        return $this->apiJson($handler($payload));
     }
 }

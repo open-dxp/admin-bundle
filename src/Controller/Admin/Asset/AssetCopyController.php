@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset\CopyAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset\CopyAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyInfo\CopyInfoHandler;
@@ -68,6 +67,6 @@ class AssetCopyController extends AdminAbstractController
             $session->set($payload->transactionId, $sessionBag);
         }
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 }

@@ -57,6 +57,6 @@ final class UpdateCollectionHandler
             $item['modificationDate'] = $config->getModificationDate();
         }
 
-        return new UpdateCollectionResult(item: $item);
+        return new UpdateCollectionResult(data: $item);
     }
 }

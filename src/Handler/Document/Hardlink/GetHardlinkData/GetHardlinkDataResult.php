@@ -17,9 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\GetHardlinkData;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\Document\Hardlink;
 
-final readonly class GetHardlinkDataResult
+final readonly class GetHardlinkDataResult implements ResultInterface
 {
     public function __construct(
         /** The original (un-cloned) link, used for lock checks. */

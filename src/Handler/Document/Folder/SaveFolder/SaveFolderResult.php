@@ -17,12 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\SaveFolder;
 
-use OpenDxp\Model\Document\Folder;
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final class SaveFolderResult
+final readonly class SaveFolderResult implements ResultInterface
 {
     public function __construct(
-        public readonly Folder $folder,
-        public readonly array $treeData,
+        public array $treeData,
     ) {}
 }

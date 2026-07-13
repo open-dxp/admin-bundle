@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element\UnlockPropagate;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\Element\Service;
 
 final class UnlockPropagateHandler
 {
-    public function __invoke(UnlockPropagatePayload $payload): UnlockPropagateResult
+    public function __invoke(UnlockPropagatePayload $payload): void
     {
         $element = Service::getElementById($payload->type, $payload->id);
         if (!$element) {
-            return new UnlockPropagateResult(success: false);
+            throw new AdminOperationFailedException();
         }
 
         $element->unlockPropagate();
-
-        return new UnlockPropagateResult(success: true);
     }
 }

@@ -24,6 +24,10 @@ final class GetTagsForElementHandler
 {
     public function __invoke(LoadTagsForElementPayload $payload): GetTagsForElementResult
     {
+        if (!$payload->assignmentCId || !$payload->assignmentCType) {
+            return new GetTagsForElementResult(tags: []);
+        }
+
         $assignedTagArray = [];
         $assignedTags = Tag::getTagsForElement($payload->assignmentCType, $payload->assignmentCId);
 

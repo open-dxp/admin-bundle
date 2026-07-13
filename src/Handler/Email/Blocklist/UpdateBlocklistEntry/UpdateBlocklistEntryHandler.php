@@ -9,12 +9,12 @@ use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
 
 final class UpdateBlocklistEntryHandler
 {
-    public function __invoke(BlocklistPayload $payload): array
+    public function __invoke(BlocklistPayload $payload): UpdateBlocklistEntryResult
     {
         $address = Tool\Email\Blocklist::getByAddress($payload->data['address']);
         $address->setValues($payload->data);
         $address->save();
 
-        return $address->getObjectVars();
+        return new UpdateBlocklistEntryResult($address->getObjectVars());
     }
 }

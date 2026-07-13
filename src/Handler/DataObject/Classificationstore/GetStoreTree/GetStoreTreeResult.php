@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetStoreTree;
 
-final readonly class GetStoreTreeResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetStoreTreeResult implements ResultInterface
 {
     public function __construct(
         public array $items,

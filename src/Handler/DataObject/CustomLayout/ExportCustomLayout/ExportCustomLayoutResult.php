@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ExportCustomLayout;
 
-final readonly class ExportCustomLayoutResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class ExportCustomLayoutResult implements ResultInterface
 {
     public function __construct(
         public string $name,

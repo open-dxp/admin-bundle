@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassDefinitionForColumnConfig;
 
-final readonly class GetClassDefinitionForColumnConfigResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetClassDefinitionForColumnConfigResult implements ResultInterface
 {
     public function __construct(
         public array $config,

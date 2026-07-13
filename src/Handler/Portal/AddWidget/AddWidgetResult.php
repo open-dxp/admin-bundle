@@ -16,7 +16,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\AddWidget;
 
-final readonly class AddWidgetResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class AddWidgetResult implements ResultInterface
 {
     public function __construct(public readonly int $id)
     {

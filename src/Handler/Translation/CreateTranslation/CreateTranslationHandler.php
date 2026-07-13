@@ -51,12 +51,17 @@ final class CreateTranslationHandler
 
         $t->save();
 
-        return new CreateTranslationResult(
-            key: $t->getKey(),
-            creationDate: $t->getCreationDate(),
-            modificationDate: $t->getModificationDate(),
-            type: $t->getType(),
-            translations: $t->getTranslations(),
-        );
+        $prefixedTranslations = [];
+        foreach ($t->getTranslations() as $lang => $translation) {
+            $prefixedTranslations['_' . $lang] = $translation;
+        }
+
+        return new CreateTranslationResult(data: [
+            'key' => $t->getKey(),
+            'creationDate' => $t->getCreationDate(),
+            'modificationDate' => $t->getModificationDate(),
+            'type' => $t->getType(),
+            ...$prefixedTranslations,
+        ]);
     }
 }

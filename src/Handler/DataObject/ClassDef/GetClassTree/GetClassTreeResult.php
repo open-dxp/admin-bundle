@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassTree;
 
-final readonly class GetClassTreeResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetClassTreeResult implements ResultInterface
 {
     public function __construct(
         public array $nodes,

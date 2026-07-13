@@ -17,8 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Tags\GetTagTreeChildren;
 
-final readonly class GetTagTreeChildrenResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetTagTreeChildrenResult implements ResultInterface
 {
+    /**
+     * @param array<int, array<string, mixed>> $tags
+     */
     public function __construct(
         public array $tags,
     ) {}

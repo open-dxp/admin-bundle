@@ -17,13 +17,16 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject;
 
-final readonly class SaveDataObjectResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class SaveDataObjectResult implements ResultInterface
 {
+    /**
+     * @param array{modificationDate: int, versionDate: int, versionCount: int} $general
+     */
     public function __construct(
-        public int $modificationDate,
-        public int $versionDate,
-        public int $versionCount,
+        public array $general,
         public array $treeData,
-        public array $draftData,
+        public ?array $draft = null,
     ) {}
 }

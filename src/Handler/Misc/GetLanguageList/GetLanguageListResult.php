@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Misc\GetLanguageList;
 
-final readonly class GetLanguageListResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetLanguageListResult implements ResultInterface
 {
     public function __construct(
         public array $data,

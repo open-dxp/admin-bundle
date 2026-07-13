@@ -17,8 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkImport;
 
-final readonly class BulkImportResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class BulkImportResult implements ResultInterface
 {
+    /**
+     * @param array<int, array{icon: ?string, checked: bool, type: string, name: string, displayName: string}> $items
+     */
     public function __construct(
         public array $items,
         public string $tmpFile,

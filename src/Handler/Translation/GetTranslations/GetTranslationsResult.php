@@ -17,10 +17,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\GetTranslations;
 
-final readonly class GetTranslationsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetTranslationsResult implements ResultInterface
 {
+    /**
+     * @param array<int, array<string, mixed>> $data
+     */
     public function __construct(
-        public array $translations,
+        public array $data,
         public int $total,
     ) {}
 }

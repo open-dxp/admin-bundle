@@ -17,11 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Misc\AdminCss;
 
-final readonly class AdminCssResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class AdminCssResult implements ResultInterface
 {
     public function __construct(
-        public mixed $customviews,
-        public mixed $adminSettings,
+        public array $customviews,
+        public array $adminSettings,
         public array $languages,
     ) {}
 }

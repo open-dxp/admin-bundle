@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadZip;
 
-final readonly class DownloadZipResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class DownloadZipResult implements ResultInterface
 {
     public function __construct(
         public string $zipFile,

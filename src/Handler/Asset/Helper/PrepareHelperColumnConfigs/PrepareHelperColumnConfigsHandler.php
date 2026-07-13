@@ -39,7 +39,7 @@ final class PrepareHelperColumnConfigsHandler
         }
 
         return new PrepareHelperColumnConfigsResult(
-            newData:       $newData,
+            columns:       $newData,
             helperColumns: $helperColumns,
         );
     }

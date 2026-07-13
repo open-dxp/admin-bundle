@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\User;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRole\GetRoleHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRole\GetRolePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRoles\GetRolesHandler;
@@ -41,7 +40,7 @@ class RoleController extends AdminAbstractController
         GetRoleTreeChildrenPayload $payload,
         GetRoleTreeChildrenHandler $handler,
     ): JsonResponse {
-        return $this->adminJson($handler($payload));
+        return $this->apiJson($handler($payload), rootProperty: 'roles');
     }
 
     #[IsGranted(CorePermission::Users->value)]
@@ -50,17 +49,7 @@ class RoleController extends AdminAbstractController
         GetRolePayload $payload,
         GetRoleHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'role' => $result->role,
-            'permissions' => $result->permissions,
-            'classes' => $result->classes,
-            'docTypes' => $result->docTypes,
-            'availablePermissions' => $result->availablePermissions,
-            'availablePerspectives' => $result->availablePerspectives,
-            'validLanguages' => $result->validLanguages,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Users->value)]
@@ -69,9 +58,7 @@ class RoleController extends AdminAbstractController
         GetRolesPayload $payload,
         GetRolesHandler $handler,
     ): JsonResponse {
-        $roles = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['total' => count($roles), 'data' => $roles]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::ShareConfigurations->value)]
@@ -80,8 +67,6 @@ class RoleController extends AdminAbstractController
         GetRolesPayload $payload,
         GetRolesHandler $handler,
     ): JsonResponse {
-        $roles = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['total' => count($roles), 'data' => $roles]));
+        return $this->apiJson($handler($payload));
     }
 }

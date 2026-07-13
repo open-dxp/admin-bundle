@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\GetEmailData\GetEmailDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\SaveEmail\SaveEmailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\SaveEmail\SaveEmailPayload;
@@ -45,27 +44,6 @@ class EmailController extends DocumentControllerBase
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
     public function saveAction(SaveEmailPayload $payload, SaveEmailHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        if ($result->task === self::TASK_PUBLISH || $result->task === self::TASK_UNPUBLISH) {
-            return $this->adminJson(ApiResponse::ok([
-                'data' => [
-                    'versionDate' => $result->email->getModificationDate(),
-                    'versionCount' => $result->email->getVersionCount(),
-                ],
-                'treeData' => $result->treeData,
-            ]));
-        }
-
-        $draftData = [];
-        if ($result->version) {
-            $draftData = [
-                'id' => $result->version->getId(),
-                'modificationDate' => $result->version->getDate(),
-                'isAutoSave' => $result->version->isAutoSave(),
-            ];
-        }
-
-        return $this->adminJson(ApiResponse::ok(['draft' => $draftData]));
+        return $this->apiJson($handler($payload));
     }
 }

@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DoBulkExport;
 
-final readonly class DoBulkExportResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class DoBulkExportResult implements ResultInterface
 {
     public function __construct(
         public string $json,

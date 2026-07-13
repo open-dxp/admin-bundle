@@ -59,12 +59,10 @@ final class GridBatchService
     /**
      * Executes a batch metadata update on a single asset.
      *
-     * Returns true when the asset was saved or the update was handled by an event subscriber.
-     * Returns false when there is no asset to update (job already completed).
-     *
-     * @throws Exception on permission denied or save failure
+     * @throws Exception on permission denied, save failure, or when there is
+     *                    no asset to update (job already completed) or nothing changed
      */
-    public function executeAssetBatch(array $data, User $adminUser): bool
+    public function executeAssetBatch(array $data, User $adminUser): void
     {
         $loader = OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
 
@@ -76,7 +74,7 @@ final class GridBatchService
         $this->eventDispatcher->dispatch($updateEvent, AdminEvents::ASSET_LIST_BEFORE_BATCH_UPDATE);
 
         if ($updateEvent->getArgument('processed')) {
-            return true;
+            return;
         }
 
         $language = null;
@@ -87,9 +85,7 @@ final class GridBatchService
         $asset = Asset::getById((int) $data['job']);
 
         if (!$asset) {
-            Logger::debug('GridBatchService::executeAssetBatch => There is no asset left to update.');
-
-            return false;
+            throw new Exception('AssetHelperController::batchAction => There is no asset left to update.');
         }
 
         if (!$asset->isAllowed('publish')) {
@@ -170,39 +166,33 @@ final class GridBatchService
             }
         }
 
-        if ($dirty) {
-            $metadataEvent = new GenericEvent(null, [
-                'id' => $asset->getId(),
-                'metadata' => $metadata,
-            ]);
-
-            $this->eventDispatcher->dispatch($metadataEvent, AdminEvents::ASSET_METADATA_PRE_SET);
-
-            $asset->setMetadataRaw($metadata);
-            $asset->save();
-
-            return true;
+        if (!$dirty) {
+            throw new Exception('AssetHelperController::batchAction => There is no asset left to update.');
         }
 
-        return false;
+        $metadataEvent = new GenericEvent(null, [
+            'id' => $asset->getId(),
+            'metadata' => $metadata,
+        ]);
+
+        $this->eventDispatcher->dispatch($metadataEvent, AdminEvents::ASSET_METADATA_PRE_SET);
+
+        $asset->setMetadataRaw($metadata);
+        $asset->save();
     }
 
     /**
      * Executes a batch field update on a single DataObject.
      *
-     * Returns true when the object was saved.
-     * Returns false when there is no object to update (job already completed).
-     *
-     * @throws Exception on permission denied or save failure
+     * @throws Exception on permission denied, save failure, or when there is
+     *                    no object to update (job already completed)
      */
-    public function executeObjectBatch(array $params, string $locale, User $adminUser): bool
+    public function executeObjectBatch(array $params, string $locale, User $adminUser): void
     {
         $object = DataObject\Concrete::getById($params['job']);
 
         if (!$object) {
-            Logger::debug('GridBatchService::executeObjectBatch => There is no object left to update.');
-
-            return false;
+            throw new Exception('There is no object left to update.');
         }
 
         $requestedLanguage = $params['language'];
@@ -378,7 +368,5 @@ final class GridBatchService
         $object->setOmitMandatoryCheck(!$object->isPublished());
         $object->setUserModification($adminUser->getId());
         $object->save();
-
-        return true;
     }
 }

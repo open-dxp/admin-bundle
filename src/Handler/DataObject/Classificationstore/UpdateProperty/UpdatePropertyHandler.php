@@ -45,6 +45,6 @@ final class UpdatePropertyHandler
         $config->save();
         $item = GetPropertiesHandler::buildKeyConfigItem($config);
 
-        return new UpdatePropertyResult(item: $item);
+        return new UpdatePropertyResult(data: $item);
     }
 }

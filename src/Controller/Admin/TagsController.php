@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTag\AddTagHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTag\AddTagPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTagToElement\AddTagToElementHandler;
@@ -54,9 +53,7 @@ class TagsController extends AdminAbstractController
         AddTagPayload $payload,
         AddTagHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::TagsConfiguration->value)]
@@ -67,7 +64,7 @@ class TagsController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::TagsConfiguration->value)]
@@ -78,7 +75,7 @@ class TagsController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_tags_treegetchildrenbyid', methods: ['GET'])]
@@ -86,9 +83,7 @@ class TagsController extends AdminAbstractController
         GetTagTreeChildrenPayload $payload,
         GetTagTreeChildrenHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->tags);
+        return $this->apiJson($handler($payload), rootProperty: 'tags');
     }
 
     #[Route('/load-tags-for-element', name: 'opendxp_admin_tags_loadtagsforelement', methods: ['GET'])]
@@ -96,13 +91,7 @@ class TagsController extends AdminAbstractController
         LoadTagsForElementPayload $payload,
         GetTagsForElementHandler $handler,
     ): JsonResponse {
-        if (!$payload->assignmentCId || !$payload->assignmentCType) {
-            return $this->adminJson([]);
-        }
-
-        $result = $handler($payload);
-
-        return $this->adminJson($result->tags);
+        return $this->apiJson($handler($payload), rootProperty: 'tags');
     }
 
     #[Route('/add-tag-to-element', name: 'opendxp_admin_tags_addtagtoelement', methods: ['PUT'])]
@@ -110,9 +99,7 @@ class TagsController extends AdminAbstractController
         AddTagToElementPayload $payload,
         AddTagToElementHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/remove-tag-from-element', name: 'opendxp_admin_tags_removetagfromelement', methods: ['DELETE'])]
@@ -120,9 +107,7 @@ class TagsController extends AdminAbstractController
         RemoveTagFromElementPayload $payload,
         RemoveTagFromElementHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/get-batch-assignment-jobs', name: 'opendxp_admin_tags_getbatchassignmentjobs', methods: ['GET'])]
@@ -130,9 +115,7 @@ class TagsController extends AdminAbstractController
         GetBatchAssignmentJobsPayload $payload,
         GetBatchAssignmentJobsHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['idLists' => $result->idListParts, 'totalCount' => $result->totalCount]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/do-batch-assignment', name: 'opendxp_admin_tags_dobatchassignment', methods: ['PUT'])]
@@ -142,6 +125,6 @@ class TagsController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 }

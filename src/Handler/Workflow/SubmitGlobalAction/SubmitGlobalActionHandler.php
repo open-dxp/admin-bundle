@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitGlobalAction;
 
+use Exception;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\Workflow\WorkflowElementResolver;
 use OpenDxp\Model\Element\ValidationException;
 use OpenDxp\Workflow\Manager;
@@ -30,11 +32,7 @@ final class SubmitGlobalActionHandler
         private readonly WorkflowElementResolver $elementResolver,
     ) {}
 
-    /**
-     * @throws ValidationException
-     * @throws \RuntimeException
-     */
-    public function __invoke(SubmitGlobalActionPayload $payload): void
+    public function __invoke(SubmitGlobalActionPayload $payload): SubmitGlobalActionResult
     {
         $element = $this->elementResolver->resolve($payload->ctype, $payload->cid);
 
@@ -43,6 +41,19 @@ final class SubmitGlobalActionHandler
         $globalAction = $this->workflowManager->getGlobalAction($payload->workflowName, $payload->transition);
         $saveSubject = !$globalAction || $globalAction->getSaveSubject();
 
-        $this->workflowManager->applyGlobalAction($workflow, $element, $payload->transition, $payload->workflowOptions, $saveSubject);
+        try {
+            $this->workflowManager->applyGlobalAction($workflow, $element, $payload->transition, $payload->workflowOptions, $saveSubject);
+        } catch (ValidationException $e) {
+            $reason = '';
+            if (count($e->getSubItems()) > 0) {
+                $reason = '<ul>' . implode('', array_map(static fn ($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
+            }
+
+            throw new AdminOperationFailedException($e->getMessage(), ['reasons' => [$reason]]);
+        } catch (Exception $e) {
+            throw new AdminOperationFailedException('error performing action on this element', ['reasons' => [$e->getMessage()]]);
+        }
+
+        return new SubmitGlobalActionResult();
     }
 }

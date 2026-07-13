@@ -19,10 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\PrepareHelperColu
 
 final class PrepareHelperColumnConfigsHandler
 {
-    /**
-     * @return array{newData: \stdClass[], helperColumns: array<string, \stdClass>}
-     */
-    public function __invoke(PrepareHelperColumnConfigsPayload $payload): array
+    public function __invoke(PrepareHelperColumnConfigsPayload $payload): PrepareHelperColumnConfigsResult
     {
         $helperColumns = [];
         $newData = [];
@@ -36,9 +33,9 @@ final class PrepareHelperColumnConfigsHandler
             $newData[] = $item;
         }
 
-        return [
-            'newData'       => $newData,
-            'helperColumns' => $helperColumns,
-        ];
+        return new PrepareHelperColumnConfigsResult(
+            columns: $newData,
+            helperColumns: $helperColumns,
+        );
     }
 }

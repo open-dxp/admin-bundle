@@ -25,7 +25,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class SaveCustomLayoutHandler
 {
-    public function __invoke(SaveCustomLayoutPayload $payload): DataObject\ClassDefinition\CustomLayout
+    public function __invoke(SaveCustomLayoutPayload $payload): SaveCustomLayoutResult
     {
         $id = $payload->id;
         $configuration = $payload->configuration;
@@ -55,6 +55,6 @@ final class SaveCustomLayoutHandler
 
         $customLayout->save();
 
-        return $customLayout;
+        return new SaveCustomLayoutResult(id: $customLayout->getId(), data: $customLayout->getObjectVars());
     }
 }

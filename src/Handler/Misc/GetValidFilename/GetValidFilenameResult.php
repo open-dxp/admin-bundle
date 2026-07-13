@@ -17,9 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Misc\GetValidFilename;
 
-final readonly class GetValidFilenameResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetValidFilenameResult implements ResultInterface
 {
     public function __construct(
-        public mixed $filename,
+        public string $filename,
     ) {}
 }

@@ -26,6 +26,9 @@ final class GetFieldCollectionHandler
     {
         $fc = DataObject\Fieldcollection\Definition::getByKey($payload->id);
 
-        return new GetFieldCollectionResult($fc->getObjectVars(), $fc->isWritable());
+        $data = $fc->getObjectVars();
+        $data['isWriteable'] = $fc->isWritable();
+
+        return new GetFieldCollectionResult($data);
     }
 }

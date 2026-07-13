@@ -35,7 +35,7 @@ final class SaveSnippetHandler
         private readonly AdminUserContextInterface $userContext,
     ) {}
 
-    public function __invoke(SaveSnippetPayload $payload, bool $sessionAware = true): SaveSnippetResult
+    public function __invoke(SaveSnippetPayload $payload, bool $sessionAware = true): SaveSnippetPublishedResult|SaveSnippetDraftResult
     {
         $snippet = Snippet::getById($payload->id);
         if (!$snippet) {
@@ -59,11 +59,27 @@ final class SaveSnippetHandler
             $this->sessionService->saveDocument($result->document);
         }
 
-        return new SaveSnippetResult(
-            snippet: $result->document instanceof Snippet ? $result->document : $snippet,
-            task: $result->task,
-            version: $result->version,
-            treeData: $result->treeData,
-        );
+        $savedSnippet = $result->document instanceof Snippet ? $result->document : $snippet;
+
+        if ($result->task === 'publish' || $result->task === 'unpublish') {
+            return new SaveSnippetPublishedResult(
+                data: [
+                    'versionDate' => $savedSnippet->getModificationDate(),
+                    'versionCount' => $savedSnippet->getVersionCount(),
+                ],
+                treeData: $result->treeData,
+            );
+        }
+
+        $draft = [];
+        if ($result->version) {
+            $draft = [
+                'id' => $result->version->getId(),
+                'modificationDate' => $result->version->getDate(),
+                'isAutoSave' => $result->version->isAutoSave(),
+            ];
+        }
+
+        return new SaveSnippetDraftResult(draft: $draft);
     }
 }

@@ -30,41 +30,50 @@ final class GetWorkflowFormHandler
 
     public function __invoke(GetWorkflowFormPayload $payload): GetWorkflowFormResult
     {
-        $element = $this->elementResolver->resolve($payload->ctype, $payload->cid);
+        try {
+            $element = $this->elementResolver->resolve($payload->ctype, $payload->cid);
 
-        $workflow = $this->workflowManager->getWorkflowIfExists($element, $payload->workflowName);
+            $workflow = $this->workflowManager->getWorkflowIfExists($element, $payload->workflowName);
 
-        if (empty($workflow)) {
-            return new GetWorkflowFormResult(
-                message: 'workflow not found',
-                notesEnabled: false,
-                notesRequired: false,
-                additionalFields: [],
-            );
-        }
-
-        $enabledTransitions = $workflow->getEnabledTransitions($element);
-        $transition = null;
-        foreach ($enabledTransitions as $_transition) {
-            if ($_transition->getName() === $payload->transitionName) {
-                $transition = $_transition;
+            if (empty($workflow)) {
+                return new GetWorkflowFormResult(
+                    message: 'workflow not found',
+                    notes_enabled: false,
+                    notes_required: false,
+                    additional_fields: [],
+                );
             }
-        }
 
-        if (!$transition instanceof Transition) {
+            $enabledTransitions = $workflow->getEnabledTransitions($element);
+            $transition = null;
+            foreach ($enabledTransitions as $_transition) {
+                if ($_transition->getName() === $payload->transitionName) {
+                    $transition = $_transition;
+                }
+            }
+
+            if (!$transition instanceof Transition) {
+                return new GetWorkflowFormResult(
+                    message: sprintf('transition %s currently not allowed', $payload->transitionName),
+                    notes_enabled: false,
+                    notes_required: false,
+                    additional_fields: [],
+                );
+            }
+
             return new GetWorkflowFormResult(
-                message: sprintf('transition %s currently not allowed', $payload->transitionName),
-                notesEnabled: false,
-                notesRequired: false,
-                additionalFields: [],
+                message: '',
+                notes_enabled: false,
+                notes_required: $transition->getNotesCommentRequired(),
+                additional_fields: [],
+            );
+        } catch (\Exception $e) {
+            return new GetWorkflowFormResult(
+                message: $e->getMessage(),
+                notes_enabled: false,
+                notes_required: false,
+                additional_fields: [],
             );
         }
-
-        return new GetWorkflowFormResult(
-            message: '',
-            notesEnabled: false,
-            notesRequired: $transition->getNotesCommentRequired(),
-            additionalFields: [],
-        );
     }
 }

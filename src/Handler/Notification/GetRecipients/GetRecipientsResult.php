@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Notification\GetRecipients;
 
-final readonly class GetRecipientsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetRecipientsResult implements ResultInterface
 {
     public function __construct(
         public array $data,

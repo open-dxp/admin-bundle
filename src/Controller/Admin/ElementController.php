@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\AnalyzePermissions\AnalyzePermissionsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\AnalyzePermissions\AnalyzePermissionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\DeleteAllVersions\DeleteAllVersionsHandler;
@@ -68,6 +67,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -82,7 +82,7 @@ class ElementController extends AdminAbstractController
     ): Response {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/element/unlock-element', name: 'opendxp_admin_element_unlockelement', methods: ['PUT'])]
@@ -92,7 +92,7 @@ class ElementController extends AdminAbstractController
     ): Response {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/element/unlock-elements', name: 'opendxp_admin_element_unlockelements', methods: ['POST'])]
@@ -102,7 +102,7 @@ class ElementController extends AdminAbstractController
     ): Response {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/element/get-subtype', name: 'opendxp_admin_element_getsubtype', methods: ['GET'])]
@@ -110,13 +110,7 @@ class ElementController extends AdminAbstractController
         GetSubtypeHandler $handler,
         GetSubtypePayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'subtype' => $result->subtype,
-            'id' => $result->id,
-            'type' => $result->type,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/element/note-types', name: 'opendxp_admin_element_notetypes', methods: ['GET'])]
@@ -124,9 +118,7 @@ class ElementController extends AdminAbstractController
         GetNoteTypesPayload $payload,
         GetNoteTypesHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['noteTypes' => $result->noteTypes]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/element/note-list', name: 'opendxp_admin_element_notelist', methods: ['POST'])]
@@ -144,12 +136,7 @@ class ElementController extends AdminAbstractController
             };
         }
 
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'data' => $result->data,
-            'total' => $result->total,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/element/note-list-destroy', name: 'opendxp_admin_element_notelist_destroy', methods: ['POST'])]
@@ -160,7 +147,7 @@ class ElementController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok(['data' => []]));
+        return $this->apiOk();
     }
 
     #[Route('/element/note-add', name: 'opendxp_admin_element_noteadd', methods: ['POST'])]
@@ -171,7 +158,7 @@ class ElementController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/element/find-usages', name: 'opendxp_admin_element_findusages', methods: ['GET'])]
@@ -179,13 +166,7 @@ class ElementController extends AdminAbstractController
         FindUsagesHandler $handler,
         FindUsagesPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'data' => $result->data,
-            'total' => $result->total,
-            'hasHidden' => $result->hasHidden,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/element/get-replace-assignments-batch-jobs', name: 'opendxp_admin_element_getreplaceassignmentsbatchjobs', methods: ['GET'])]
@@ -193,9 +174,7 @@ class ElementController extends AdminAbstractController
         GetReplaceAssignmentsBatchJobsHandler $handler,
         GetReplaceAssignmentsBatchJobsPayload $payload,
     ): JsonResponse {
-        $jobs = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['jobs' => $jobs->jobs]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/element/replace-assignments', name: 'opendxp_admin_element_replaceassignments', methods: ['POST'])]
@@ -205,7 +184,7 @@ class ElementController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/element/unlock-propagate', name: 'opendxp_admin_element_unlockpropagate', methods: ['PUT'])]
@@ -213,9 +192,9 @@ class ElementController extends AdminAbstractController
         UnlockPropagateHandler $handler,
         UnlockPropagatePayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
+        $handler($payload);
 
-        return $this->adminJson(ApiResponse::fromBool($result->success));
+        return $this->apiOk();
     }
 
     #[Route('/element/type-path', name: 'opendxp_admin_element_typepath', methods: ['GET'])]
@@ -223,20 +202,7 @@ class ElementController extends AdminAbstractController
         TypePathHandler $handler,
         TypePathPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        $data = [
-            'index' => $result->index,
-            'idPath' => $result->idPath,
-            'typePath' => $result->typePath,
-            'fullpath' => $result->fullpath,
-        ];
-
-        if ($result->sortIndexPath !== null) {
-            $data['sortIndexPath'] = $result->sortIndexPath;
-        }
-
-        return $this->adminJson(ApiResponse::ok($data));
+        return $this->apiJson($handler($payload), context: [AbstractObjectNormalizer::SKIP_NULL_VALUES => true]);
     }
 
     #[Route('/element/version-update', name: 'opendxp_admin_element_versionupdate', methods: ['PUT'])]
@@ -246,7 +212,7 @@ class ElementController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/element/get-nice-path', name: 'opendxp_admin_element_getnicepath', methods: ['POST'])]
@@ -254,9 +220,7 @@ class ElementController extends AdminAbstractController
         GetNicePathHandler $handler,
         GetNicePathPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/element/get-versions', name: 'opendxp_admin_element_getversions', methods: ['GET'])]
@@ -264,9 +228,7 @@ class ElementController extends AdminAbstractController
         GetVersionsHandler $handler,
         GetVersionsPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(['versions' => $result->versions]);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/element/delete-draft', name: 'opendxp_admin_element_deletedraft', methods: ['DELETE'])]
@@ -276,7 +238,7 @@ class ElementController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/element/delete-version', name: 'opendxp_admin_element_deleteversion', methods: ['DELETE'])]
@@ -286,7 +248,7 @@ class ElementController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/element/delete-all-versions', name: 'opendxp_admin_element_deleteallversion', methods: ['DELETE'])]
@@ -296,7 +258,7 @@ class ElementController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/element/get-requires-dependencies', name: 'opendxp_admin_element_getrequiresdependencies', methods: ['GET'])]
@@ -304,9 +266,7 @@ class ElementController extends AdminAbstractController
         GetRequiresDependenciesHandler $handler,
         GetDependenciesPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/element/get-required-by-dependencies', name: 'opendxp_admin_element_getrequiredbydependencies', methods: ['GET'])]
@@ -314,9 +274,7 @@ class ElementController extends AdminAbstractController
         GetRequiredByDependenciesHandler $handler,
         GetDependenciesPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/element/get-predefined-properties', name: 'opendxp_admin_element_getpredefinedproperties', methods: ['GET'])]
@@ -324,9 +282,7 @@ class ElementController extends AdminAbstractController
         GetPredefinedPropertiesHandler $handler,
         GetPredefinedPropertiesPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(['properties' => $result->properties]);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/element/analyze-permissions', name: 'opendxp_admin_element_analyzepermissions', methods: ['POST'])]
@@ -334,8 +290,6 @@ class ElementController extends AdminAbstractController
         AnalyzePermissionsHandler $handler,
         AnalyzePermissionsPayload $payload,
     ): Response {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data]));
+        return $this->apiJson($handler($payload));
     }
 }

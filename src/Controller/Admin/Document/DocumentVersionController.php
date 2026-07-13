@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\DiffVersions\DiffVersionsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\DiffVersions\DiffVersionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\PublishVersion\PublishVersionHandler;
@@ -55,9 +54,7 @@ class DocumentVersionController extends AdminAbstractController
         IdBodyPayload          $payload,
         PublishVersionHandler  $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Documents->value)]

@@ -26,6 +26,9 @@ final class GetObjectBrickHandler
     {
         $brick = DataObject\Objectbrick\Definition::getByKey($payload->id);
 
-        return new GetObjectBrickResult($brick->getObjectVars(), $brick->isWritable());
+        $data = $brick->getObjectVars();
+        $data['isWriteable'] = $brick->isWritable();
+
+        return new GetObjectBrickResult($data);
     }
 }

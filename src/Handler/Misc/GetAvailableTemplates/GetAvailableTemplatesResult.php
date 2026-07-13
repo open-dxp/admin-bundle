@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Misc\GetAvailableTemplates;
 
-final readonly class GetAvailableTemplatesResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetAvailableTemplatesResult implements ResultInterface
 {
     public function __construct(
         public array $data,

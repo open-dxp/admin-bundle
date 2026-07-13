@@ -16,11 +16,18 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\CheckTranslationLanguage;
 
-final readonly class CheckTranslationLanguageResult
+use OpenDxp\Bundle\AdminBundle\Handler\ConditionalResultInterface;
+
+final readonly class CheckTranslationLanguageResult implements ConditionalResultInterface
 {
     public function __construct(
         public readonly bool $found,
         public readonly ?string $language,
         public readonly ?array $translationLinks,
     ) {}
+
+    public function isSuccessful(): bool
+    {
+        return $this->found;
+    }
 }

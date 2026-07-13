@@ -17,8 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetMinimalUser;
 
-final readonly class GetMinimalUserResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetMinimalUserResult implements ResultInterface
 {
+    /**
+     * @param array{assets: bool, documents: bool, objects: bool} $permissionInfo
+     */
     public function __construct(
         public int $id,
         public bool $admin,

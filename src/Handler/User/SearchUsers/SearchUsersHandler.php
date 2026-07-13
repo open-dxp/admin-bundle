@@ -21,7 +21,7 @@ use OpenDxp\Model\User;
 
 final class SearchUsersHandler
 {
-    public function __invoke(SearchUsersPayload $payload): array
+    public function __invoke(SearchUsersPayload $payload): SearchUsersResult
     {
         $q = '%' . $payload->query . '%';
 
@@ -44,6 +44,6 @@ final class SearchUsersHandler
             }
         }
 
-        return $users;
+        return new SearchUsersResult(users: $users);
     }
 }

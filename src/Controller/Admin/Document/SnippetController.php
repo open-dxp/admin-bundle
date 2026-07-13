@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\GetSnippetData\GetSnippetDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippet\SaveSnippetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippet\SaveSnippetPayload;
@@ -52,27 +51,6 @@ class SnippetController extends DocumentControllerBase
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(SaveSnippetPayload $payload, SaveSnippetHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        if ($result->task === self::TASK_PUBLISH || $result->task === self::TASK_UNPUBLISH) {
-            return $this->adminJson(ApiResponse::ok([
-                'data' => [
-                    'versionDate' => $result->snippet->getModificationDate(),
-                    'versionCount' => $result->snippet->getVersionCount(),
-                ],
-                'treeData' => $result->treeData,
-            ]));
-        }
-
-        $draftData = [];
-        if ($result->version) {
-            $draftData = [
-                'id' => $result->version->getId(),
-                'modificationDate' => $result->version->getDate(),
-                'isAutoSave' => $result->version->isAutoSave(),
-            ];
-        }
-
-        return $this->adminJson(ApiResponse::ok(['draft' => $draftData]));
+        return $this->apiJson($handler($payload));
     }
 }

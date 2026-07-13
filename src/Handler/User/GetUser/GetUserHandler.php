@@ -112,7 +112,7 @@ final class GetUserHandler
         $availablePerspectives = Config::getAvailablePerspectives(null);
 
         return new GetUserResult(
-            userData: $userData,
+            user: $userData,
             roles: $roles,
             permissions: $user->generatePermissionList(),
             availablePermissions: $availableUserPermissionsData,

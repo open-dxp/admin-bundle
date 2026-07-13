@@ -55,6 +55,6 @@ final class GetAllLayoutsHandler
             }
         }
 
-        return new AllLayoutsResult($layouts);
+        return new AllLayoutsResult(data: $layouts);
     }
 }

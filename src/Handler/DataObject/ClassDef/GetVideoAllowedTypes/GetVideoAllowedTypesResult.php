@@ -17,8 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetVideoAllowedTypes;
 
-final readonly class GetVideoAllowedTypesResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetVideoAllowedTypesResult implements ResultInterface
 {
+    /**
+     * @param array<int, array{key: string, value: string}> $types
+     */
     public function __construct(
         public array $types,
     ) {}

@@ -16,7 +16,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentData;
 
-final readonly class GetDocumentDataResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetDocumentDataResult implements ResultInterface
 {
     public function __construct(
         public readonly array $data,

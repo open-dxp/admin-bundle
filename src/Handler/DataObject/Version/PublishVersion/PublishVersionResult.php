@@ -16,10 +16,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PublishVersion;
 
-final readonly class PublishVersionResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class PublishVersionResult implements ResultInterface
 {
+    /**
+     * @param array{modificationDate: int} $general
+     */
     public function __construct(
-        public int $modificationDate,
+        public array $general,
         public array $treeData,
     ) {}
 }

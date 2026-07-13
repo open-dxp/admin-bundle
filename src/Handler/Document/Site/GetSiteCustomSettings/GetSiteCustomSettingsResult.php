@@ -17,9 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Site\GetSiteCustomSettings;
 
-final readonly class GetSiteCustomSettingsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetSiteCustomSettingsResult implements ResultInterface
 {
     public function __construct(
-        public readonly array $nodes,
+        public readonly array $data,
     ) {}
 }

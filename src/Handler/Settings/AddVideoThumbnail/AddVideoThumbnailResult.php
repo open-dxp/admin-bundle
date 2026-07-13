@@ -17,10 +17,17 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\AddVideoThumbnail;
 
-final readonly class AddVideoThumbnailResult
+use OpenDxp\Bundle\AdminBundle\Handler\ConditionalResultInterface;
+
+final readonly class AddVideoThumbnailResult implements ConditionalResultInterface
 {
     public function __construct(
         public string $id,
         public bool $created,
     ) {}
+
+    public function isSuccessful(): bool
+    {
+        return $this->created;
+    }
 }

@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTagToElement;
 
-final readonly class AddTagToElementResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class AddTagToElementResult implements ResultInterface
 {
     public function __construct(
         public int $id,

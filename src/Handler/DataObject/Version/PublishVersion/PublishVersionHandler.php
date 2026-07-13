@@ -61,7 +61,7 @@ final class PublishVersionHandler
         $this->adminStyleEnricher->forTree($object, $treeData);
 
         return new PublishVersionResult(
-            modificationDate: (int) $object->getModificationDate(),
+            general: ['modificationDate' => (int) $object->getModificationDate()],
             treeData: $treeData,
         );
     }

@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Portal\AddWidget\AddWidgetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Portal\AddWidget\AddWidgetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Portal\CreateDashboard\CreateDashboardHandler;
@@ -53,9 +52,7 @@ class PortalController extends AdminAbstractController
         GetDashboardListHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->dashboards);
+        return $this->apiJson($handler($payload), rootProperty: 'dashboards');
     }
 
     #[Route('/create-dashboard', name: 'opendxp_admin_portal_createdashboard', methods: ['POST'])]
@@ -63,13 +60,9 @@ class PortalController extends AdminAbstractController
         CreateDashboardHandler $handler,
         CreateDashboardPayload $payload,
     ): JsonResponse {
-        try {
-            $handler($payload);
-        } catch (\InvalidArgumentException $e) {
-            return $this->adminJson(ApiResponse::error($e->getMessage()));
-        }
+        $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/delete-dashboard', name: 'opendxp_admin_portal_deletedashboard', methods: ['DELETE'])]
@@ -79,7 +72,7 @@ class PortalController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/get-configuration', name: 'opendxp_admin_portal_getconfiguration', methods: ['GET'])]
@@ -87,9 +80,7 @@ class PortalController extends AdminAbstractController
         GetDashboardConfigurationHandler $handler,
         GetDashboardConfigurationPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->config);
+        return $this->apiJson($handler($payload), rootProperty: 'config');
     }
 
     #[Route('/remove-widget', name: 'opendxp_admin_portal_removewidget', methods: ['DELETE'])]
@@ -99,7 +90,7 @@ class PortalController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/add-widget', name: 'opendxp_admin_portal_addwidget', methods: ['POST'])]
@@ -107,9 +98,7 @@ class PortalController extends AdminAbstractController
         AddWidgetHandler $handler,
         AddWidgetPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['id' => $result->id]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/reorder-widget', name: 'opendxp_admin_portal_reorderwidget', methods: ['PUT'])]
@@ -119,7 +108,7 @@ class PortalController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/update-portlet-config', name: 'opendxp_admin_portal_updateportletconfig', methods: ['PUT'])]
@@ -129,7 +118,7 @@ class PortalController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/portlet-modified-documents', name: 'opendxp_admin_portal_portletmodifieddocuments', methods: ['GET'])]
@@ -137,9 +126,7 @@ class PortalController extends AdminAbstractController
         GetModifiedDocumentsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(['documents' => $result->documents]);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/portlet-modified-assets', name: 'opendxp_admin_portal_portletmodifiedassets', methods: ['GET'])]
@@ -147,9 +134,7 @@ class PortalController extends AdminAbstractController
         GetModifiedAssetsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(['assets' => $result->assets]);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/portlet-modified-objects', name: 'opendxp_admin_portal_portletmodifiedobjects', methods: ['GET'])]
@@ -157,9 +142,7 @@ class PortalController extends AdminAbstractController
         GetModifiedObjectsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(['objects' => $result->objects]);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/portlet-modification-statistics', name: 'opendxp_admin_portal_portletmodificationstatistics', methods: ['GET'])]
@@ -167,8 +150,6 @@ class PortalController extends AdminAbstractController
         GetModificationStatisticsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(['data' => $result->data]);
+        return $this->apiJson($handler($payload));
     }
 }

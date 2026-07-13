@@ -17,11 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitWorkflowTransition;
 
-final readonly class SubmitWorkflowTransitionResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class SubmitWorkflowTransitionResult implements ResultInterface
 {
     public function __construct(
-        public bool $blocked,
-        /** @var string[] */
-        public array $blockerReasons,
+        public string $callback = 'reloadObject',
     ) {}
 }

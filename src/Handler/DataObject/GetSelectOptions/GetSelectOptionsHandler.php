@@ -26,7 +26,7 @@ final class GetSelectOptionsHandler
 {
     public function __construct(private readonly DataObjectPayloadMapper $mapper) {}
 
-    public function __invoke(GetSelectOptionsPayload $payload): array
+    public function __invoke(GetSelectOptionsPayload $payload): GetSelectOptionsResult
     {
         $object = DataObject\Concrete::getById($payload->objectId);
         if (!$object instanceof DataObject\Concrete) {
@@ -50,7 +50,7 @@ final class GetSelectOptionsHandler
                 : OptionsProviderResolver::MODE_SELECT
         );
 
-        return $optionsProvider->getOptions(
+        $options = $optionsProvider->getOptions(
             [
                 'object' => $object,
                 'fieldname' => $fieldDefinition->getName(),
@@ -59,5 +59,7 @@ final class GetSelectOptionsHandler
             ],
             $fieldDefinition
         );
+
+        return new GetSelectOptionsResult(options: $options);
     }
 }

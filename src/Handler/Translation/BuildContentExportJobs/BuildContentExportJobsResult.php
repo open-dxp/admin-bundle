@@ -17,10 +17,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\BuildContentExportJobs;
 
-final readonly class BuildContentExportJobsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class BuildContentExportJobsResult implements ResultInterface
 {
+    /**
+     * @param array<int, array<int, array<string, mixed>>> $jobs
+     */
     public function __construct(
         public array $jobs,
-        public string $exportId,
+        public string $id,
     ) {}
 }

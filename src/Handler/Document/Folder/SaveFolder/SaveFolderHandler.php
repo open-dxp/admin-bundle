@@ -40,9 +40,6 @@ final class SaveFolderHandler
         $this->mapper->applyFolderPayload($payload, $folder);
         $result = $this->coordinator->save($folder, 'publish');
 
-        return new SaveFolderResult(
-            folder: $result->document instanceof Folder ? $result->document : $folder,
-            treeData: $result->treeData,
-        );
+        return new SaveFolderResult(treeData: $result->treeData);
     }
 }

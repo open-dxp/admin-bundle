@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassTree;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Translation;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Logger;
 
 final class GetClassTreeHandler
 {
@@ -31,11 +32,18 @@ final class GetClassTreeHandler
 
     public function __invoke(GetClassTreePayload $payload): GetClassTreeResult
     {
+        $adminUser = $this->userContext->getAdminUser();
+
+        if ($adminUser === null || !$adminUser->isAllowed('objects')) {
+            Logger::log('[Startup] Object types are not loaded as "objects" permission is missing');
+
+            return new GetClassTreeResult(nodes: []);
+        }
+
         $createAllowed = $payload->createAllowed;
         $withId = $payload->withId;
         $useTitle = $payload->useTitle;
         $grouped = $payload->grouped;
-        $adminUser = $this->userContext->getAdminUser();
         $classesList = new DataObject\ClassDefinition\Listing();
         $classesList->setOrderKey('name');
         $classesList->setOrder('asc');

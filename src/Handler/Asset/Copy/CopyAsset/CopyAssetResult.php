@@ -17,9 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\Asset;
 
-final readonly class CopyAssetResult
+final readonly class CopyAssetResult implements ResultInterface
 {
     public function __construct(
         public ?Asset $newAsset = null,

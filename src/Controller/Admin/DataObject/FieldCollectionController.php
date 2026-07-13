@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\DeleteFieldCollection\DeleteFieldCollectionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ExportFieldCollection\ExportFieldCollectionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ExportFieldCollection\ExportFieldCollectionPayload;
@@ -51,20 +50,14 @@ class FieldCollectionController extends AdminAbstractController
     #[Route('/fieldcollection-get', name: 'fieldcollectionget', methods: ['GET'])]
     public function fieldcollectionGetAction(GetFieldCollectionHandler $handler, GetFieldCollectionPayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-        $data = $result->data;
-        $data['isWriteable'] = $result->isWriteable;
-
-        return $this->adminJson($data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[IsGranted(CorePermission::Classes->value)]
     #[Route('/fieldcollection-update', name: 'fieldcollectionupdate', methods: ['PUT', 'POST'])]
     public function fieldcollectionUpdateAction(UpdateFieldCollectionHandler $handler, UpdateFieldCollectionPayload $payload): JsonResponse
     {
-        $fcDef = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['id' => $fcDef->getKey()]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classes->value)]
@@ -74,7 +67,7 @@ class FieldCollectionController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/fieldcollection-tree', name: 'fieldcollectiontree', methods: ['GET', 'POST'])]
@@ -83,18 +76,16 @@ class FieldCollectionController extends AdminAbstractController
         $result = $handler($payload);
 
         if ($payload->forObjectEditor) {
-            return $this->adminJson(['fieldcollections' => $result->definitions, 'layoutDefinitions' => $result->layoutDefinitions]);
+            return $this->apiJson($result);
         }
 
-        return $this->adminJson($result->definitions);
+        return $this->apiJson($result, rootProperty: 'definitions');
     }
 
     #[Route('/fieldcollection-list', name: 'fieldcollectionlist', methods: ['GET'])]
     public function fieldcollectionListAction(GetFieldCollectionListHandler $handler, GetFieldCollectionListPayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(['fieldcollections' => $result->fieldcollections]);
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Fieldcollections->value)]
@@ -104,7 +95,7 @@ class FieldCollectionController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Fieldcollections->value)]
@@ -124,6 +115,6 @@ class FieldCollectionController extends AdminAbstractController
     #[Route('/get-fieldcollection-usages', name: 'getfieldcollectionusages', methods: ['GET'])]
     public function getFieldcollectionUsagesAction(GetFieldCollectionUsagesHandler $handler, GetFieldCollectionUsagesPayload $payload): Response
     {
-        return $this->adminJson($handler($payload));
+        return $this->apiJson($handler($payload), rootProperty: 'usages');
     }
 }

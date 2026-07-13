@@ -24,7 +24,7 @@ final class GetUsersHandler
 {
     public function __construct(private readonly AdminUserContextInterface $userContext) {}
 
-    public function __invoke(GetUsersPayload $payload): array
+    public function __invoke(GetUsersPayload $payload): GetUsersResult
     {
         $currentUserId = (int) $this->userContext->getAdminUser()?->getId();
         $list = new User\Listing();
@@ -48,6 +48,6 @@ final class GetUsersHandler
             }
         }
 
-        return $users;
+        return new GetUsersResult(data: $users, total: count($users));
     }
 }

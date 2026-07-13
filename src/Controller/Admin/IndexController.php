@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Admin\Statistics\StatisticsHandler;
@@ -73,7 +72,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
 
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     public function onKernelResponseEvent(ResponseEvent $event): void

@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\DiffVersions\DiffVersionsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\DiffVersions\DiffVersionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PreviewVersion\PreviewVersionHandler;
@@ -44,12 +43,7 @@ class DataObjectVersionController extends AdminAbstractController
     #[Route('/publish-version', name: 'publishversion', methods: ['POST'])]
     public function publishVersionAction(IdBodyPayload $payload, PublishVersionHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'general' => ['modificationDate' => $result->modificationDate],
-            'treeData' => $result->treeData,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/preview-version', name: 'previewversion', methods: ['GET'])]

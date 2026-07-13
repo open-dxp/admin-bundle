@@ -17,12 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowForm;
 
-final readonly class GetWorkflowFormResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetWorkflowFormResult implements ResultInterface
 {
     public function __construct(
         public string $message,
-        public bool $notesEnabled,
-        public bool $notesRequired,
-        public array $additionalFields,
+        public bool $notes_enabled,
+        public bool $notes_required,
+        public array $additional_fields,
     ) {}
 }

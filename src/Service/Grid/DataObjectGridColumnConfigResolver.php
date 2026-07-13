@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Service\Grid;
 
 use Exception;
-use OpenDxp\Bundle\AdminBundle\Dto\Grid\GridColumnConfigResult;
+use OpenDxp\Bundle\AdminBundle\Dto\Grid\DataObjectGridColumnConfig;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigFavourite;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Config;
@@ -38,7 +38,7 @@ final class DataObjectGridColumnConfigResolver
         private readonly AdminUserContextInterface $userContext,
     ) {}
 
-    public function resolve(string $locale, array $params, ?AttributeBagInterface $helperColumnsBag = null, bool $isDelete = false): GridColumnConfigResult
+    public function resolve(string $locale, array $params, ?AttributeBagInterface $helperColumnsBag = null, bool $isDelete = false): DataObjectGridColumnConfig
     {
         $user = $this->userContext->getAdminUser();
         $class = null;
@@ -242,7 +242,7 @@ final class DataObjectGridColumnConfigResolver
             $gridContext = json_decode($gridContext, true);
         }
 
-        return new GridColumnConfigResult(
+        return new DataObjectGridColumnConfig(
             availableFields: $availableFields,
             settings: $settings,
             availableConfigs: $availableConfigs,

@@ -17,13 +17,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlink;
 
-use OpenDxp\Model\Document\Hardlink;
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final class SaveHardlinkResult
+final readonly class SaveHardlinkResult implements ResultInterface
 {
+    /**
+     * @param array{versionDate: int, versionCount: int} $data
+     */
     public function __construct(
-        public readonly Hardlink $link,
-        public readonly string $task,
-        public readonly array $treeData,
+        public array $data,
+        public array $treeData,
     ) {}
 }

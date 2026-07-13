@@ -23,6 +23,7 @@ use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator;
 use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
+use OpenDxp\Document\StaticPageGenerator;
 use OpenDxp\Event\DocumentEvents;
 use OpenDxp\Event\Model\DocumentEvent;
 use OpenDxp\Event\Traits\RecursionBlockingEventDispatchHelperTrait;
@@ -38,9 +39,10 @@ final class SavePageHandler
         private readonly DocumentPayloadMapper $mapper,
         private readonly DocumentPersistenceCoordinator $coordinator,
         private readonly AdminUserContextInterface $userContext,
+        private readonly StaticPageGenerator $staticPageGenerator,
     ) {}
 
-    public function __invoke(SavePagePayload $payload, bool $sessionAware = true): SavePageResult
+    public function __invoke(SavePagePayload $payload, bool $sessionAware = true): SavePagePublishedResult|SavePageDraftResult
     {
         $oldPage = Page::getById($payload->id);
         if (!$oldPage) {
@@ -71,12 +73,30 @@ final class SavePageHandler
             $this->sessionService->saveDocument($result->document);
         }
 
-        return new SavePageResult(
-            page: $result->document instanceof Page ? $result->document : $page,
-            oldPage: $oldPage,
-            task: $result->task,
-            version: $result->version,
-            treeData: $result->treeData,
-        );
+        $savedPage = $result->document instanceof Page ? $result->document : $page;
+
+        if ($result->task === 'publish' || $result->task === 'unpublish') {
+            $data = [
+                'versionDate' => $savedPage->getModificationDate(),
+                'versionCount' => $savedPage->getVersionCount(),
+            ];
+            if ($staticGeneratorEnabled = $savedPage->getStaticGeneratorEnabled()) {
+                $data['staticGeneratorEnabled'] = $staticGeneratorEnabled;
+                $data['staticLastGenerated'] = $this->staticPageGenerator->getLastModified($savedPage);
+            }
+
+            return new SavePagePublishedResult(data: $data, treeData: $result->treeData);
+        }
+
+        $draft = [];
+        if ($result->version) {
+            $draft = [
+                'id' => $result->version->getId(),
+                'modificationDate' => $result->version->getDate(),
+                'isAutoSave' => $result->version->isAutoSave(),
+            ];
+        }
+
+        return new SavePageDraftResult(treeData: $result->treeData, draft: $draft);
     }
 }

@@ -107,7 +107,7 @@ final class GetTranslationsHandler
         }
 
         return new GetTranslationsResult(
-            translations: $translations,
+            data: $translations,
             total: $list->getTotalCount(),
         );
     }

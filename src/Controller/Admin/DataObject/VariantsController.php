@@ -36,9 +36,7 @@ class VariantsController extends AdminAbstractController
     #[Route('/update-key', name: 'updatekey', methods: ['PUT'])]
     public function updateKeyAction(UpdateObjectKeyHandler $handler, UpdateObjectKeyPayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/get-variants', name: 'getvariants', methods: ['POST'])]
@@ -54,8 +52,6 @@ class VariantsController extends AdminAbstractController
             $request->setLocale($payload->requestedLanguage);
         }
 
-        $result = $handler($payload);
-
-        return $this->adminJson($result->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 }

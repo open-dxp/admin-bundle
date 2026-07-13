@@ -38,7 +38,7 @@ class OpenDxpUsersController extends AdminAbstractController
     #[Route('/search-users', name: 'opendxp_admin_gdpr_opendxpusers_searchusers', methods: ['GET'])]
     public function searchUsersAction(SearchUsersHandler $handler, SearchDataPayload $payload): JsonResponse
     {
-        return $this->adminJson($handler($payload)->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/export-user-data', name: 'opendxp_admin_gdpr_opendxpusers_exportuserdata', methods: ['GET'])]

@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickTree;
 
-final readonly class ObjectBrickTreeResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class ObjectBrickTreeResult implements ResultInterface
 {
     public function __construct(
         public array $definitions,
-        public array $layoutDefinitions,
     ) {}
 }

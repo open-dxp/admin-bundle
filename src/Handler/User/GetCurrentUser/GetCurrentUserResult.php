@@ -17,8 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetCurrentUser;
 
-final readonly class GetCurrentUserResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetCurrentUserResult implements ResultInterface
 {
+    /**
+     * @param array<string, mixed> $userData
+     */
     public function __construct(
         public array $userData,
     ) {}

@@ -25,7 +25,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GenerateQrCodeHandler
 {
-    public function __invoke(GenerateQrCodePayload $payload): string
+    public function __invoke(GenerateQrCodePayload $payload): GenerateQrCodeResult
     {
         $page = Document\Page::getById($payload->id);
 
@@ -44,6 +44,6 @@ final class GenerateQrCodeHandler
         $tmpFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/qr-code-' . uniqid('', false) . '.png';
         $result->saveToFile($tmpFile);
 
-        return $tmpFile;
+        return new GenerateQrCodeResult($tmpFile);
     }
 }

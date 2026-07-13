@@ -35,7 +35,7 @@ final class SaveEmailHandler
         private readonly AdminUserContextInterface $userContext,
     ) {}
 
-    public function __invoke(SaveEmailPayload $payload, bool $sessionAware = true): SaveEmailResult
+    public function __invoke(SaveEmailPayload $payload, bool $sessionAware = true): SaveEmailPublishedResult|SaveEmailDraftResult
     {
         $email = Email::getById($payload->id);
         if (!$email) {
@@ -59,11 +59,27 @@ final class SaveEmailHandler
             $this->sessionService->saveDocument($result->document);
         }
 
-        return new SaveEmailResult(
-            email: $result->document instanceof Email ? $result->document : $email,
-            task: $result->task,
-            version: $result->version,
-            treeData: $result->treeData,
-        );
+        $savedEmail = $result->document instanceof Email ? $result->document : $email;
+
+        if ($result->task === 'publish' || $result->task === 'unpublish') {
+            return new SaveEmailPublishedResult(
+                data: [
+                    'versionDate' => $savedEmail->getModificationDate(),
+                    'versionCount' => $savedEmail->getVersionCount(),
+                ],
+                treeData: $result->treeData,
+            );
+        }
+
+        $draft = [];
+        if ($result->version) {
+            $draft = [
+                'id' => $result->version->getId(),
+                'modificationDate' => $result->version->getDate(),
+                'isAutoSave' => $result->version->isAutoSave(),
+            ];
+        }
+
+        return new SaveEmailDraftResult(draft: $draft);
     }
 }

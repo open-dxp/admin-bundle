@@ -17,8 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetDocumentTypes;
 
-final readonly class GetDocumentTypesResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetDocumentTypesResult implements ResultInterface
 {
+    /**
+     * @param array<int, array{text: string}> $types
+     */
     public function __construct(
         public array $types,
     ) {}

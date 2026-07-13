@@ -17,10 +17,12 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValues;
 
-final readonly class ConvertAllQuantityValuesResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class ConvertAllQuantityValuesResult implements ResultInterface
 {
     public function __construct(
-        public mixed $value,
+        public ?string $value,
         public string $fromUnit,
         public array $values,
     ) {}

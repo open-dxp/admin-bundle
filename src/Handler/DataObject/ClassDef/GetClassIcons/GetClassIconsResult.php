@@ -17,8 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassIcons;
 
-final readonly class GetClassIconsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetClassIconsResult implements ResultInterface
 {
+    /**
+     * @param array<int, array{text: string, value: string}> $icons
+     */
     public function __construct(
         public array $icons,
     ) {}

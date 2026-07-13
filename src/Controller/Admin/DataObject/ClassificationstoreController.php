@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\AddCollections\AddCollectionsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\AddCollections\AddCollectionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\AddGroups\AddGroupsHandler;
@@ -85,7 +84,7 @@ class ClassificationstoreController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
@@ -94,7 +93,7 @@ class ClassificationstoreController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
@@ -103,7 +102,7 @@ class ClassificationstoreController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
@@ -112,143 +111,131 @@ class ClassificationstoreController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/create-group', name: 'creategroup', methods: ['POST'])]
     public function createGroupAction(CreateGroupPayload $payload, CreateGroupHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['id' => $handler($payload)->name]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/create-store', name: 'createstore', methods: ['POST'])]
     public function createStoreAction(CreateStorePayload $payload, CreateStoreHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['storeId' => $handler($payload)->storeId]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/create-collection', name: 'createcollection', methods: ['POST'])]
     public function createCollectionAction(CreateCollectionPayload $payload, CreateCollectionHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['id' => $handler($payload)->name]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Objects->value)]
     #[Route('/collections', name: 'collectionsactionget', methods: ['GET'])]
     public function collectionsActionGet(GetCollectionsPayload $payload, GetCollectionsHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/collections', name: 'collections', methods: ['POST', 'PUT'])]
     public function collectionsAction(UpdateCollectionPayload $payload, UpdateCollectionHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->item]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Objects->value)]
     #[Route('/groups', name: 'groupsactionget', methods: ['GET'])]
     public function groupsActionGet(GetGroupsPayload $payload, GetGroupsHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/groups', name: 'groupsaction', methods: ['POST', 'PUT'])]
     public function groupsAction(UpdateGroupPayload $payload, UpdateGroupHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->item]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/collection-relations', name: 'collectionrelationsget', methods: ['GET'])]
     public function collectionRelationsGetAction(GetCollectionRelationsPayload $payload, GetCollectionRelationsHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/collection-relations', name: 'collectionrelations', methods: ['POST', 'PUT'])]
     public function collectionRelationsAction(SaveCollectionRelationsPayload $payload, SaveCollectionRelationsHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/list-stores', name: 'liststores', methods: ['GET'])]
     public function listStoresAction(ListStoresHandler $handler): JsonResponse
     {
-        return $this->adminJson($handler()->storeConfigs);
+        return $this->apiJson($handler(), rootProperty: 'storeConfigs');
     }
 
     #[Route('/search-relations', name: 'searchrelations', methods: ['GET'])]
     public function searchRelationsAction(SearchRelationsPayload $payload, SearchRelationsHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/relations', name: 'relationsactionget', methods: ['GET'])]
     public function relationsActionGet(GetRelationsPayload $payload, GetRelationsHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/relations', name: 'relations', methods: ['POST', 'PUT'])]
     public function relationsAction(SaveRelationPayload $payload, SaveRelationHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Objects->value)]
     #[Route('/add-collections', name: 'addcollections', methods: ['POST'])]
     public function addCollectionsAction(AddCollectionsPayload $payload, AddCollectionsHandler $handler): JsonResponse
     {
-        return $this->adminJson($handler($payload)->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[IsGranted(CorePermission::Objects->value)]
     #[Route('/add-groups', name: 'addgroups', methods: ['POST'])]
     public function addGroupsAction(AddGroupsPayload $payload, AddGroupsHandler $handler): JsonResponse
     {
-        return $this->adminJson($handler($payload)->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/properties', name: 'propertiesget', methods: ['GET'])]
     public function propertiesGetAction(GetPropertiesPayload $payload, GetPropertiesHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/properties', name: 'properties', methods: ['POST', 'PUT'])]
     public function propertiesAction(UpdatePropertyPayload $payload, UpdatePropertyHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->item]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/add-property', name: 'addproperty', methods: ['POST'])]
     public function addPropertyAction(AddPropertyPayload $payload, AddPropertyHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['id' => $handler($payload)->name]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
@@ -257,7 +244,7 @@ class ClassificationstoreController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
@@ -266,20 +253,20 @@ class ClassificationstoreController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/storetree', name: 'storetree', methods: ['GET'])]
     public function storetreeAction(GetStoreTreeHandler $handler): JsonResponse
     {
-        return $this->adminJson($handler()->items);
+        return $this->apiJson($handler(), rootProperty: 'items');
     }
 
     #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/get-page', name: 'getpage', methods: ['GET'])]
     public function getPageAction(GetPagePayload $payload, GetPageHandler $handler): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['page' => $handler($payload)->page]));
+        return $this->apiJson($handler($payload));
     }
 }

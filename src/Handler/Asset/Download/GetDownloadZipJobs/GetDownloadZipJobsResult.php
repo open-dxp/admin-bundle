@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\GetDownloadZipJobs;
 
-final readonly class GetDownloadZipJobsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetDownloadZipJobsResult implements ResultInterface
 {
     public function __construct(
         public string $jobId,

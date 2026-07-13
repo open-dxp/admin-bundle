@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxy;
 
-final readonly class DataObjectGridProxyResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class DataObjectGridProxyResult implements ResultInterface
 {
     public function __construct(
         public array $data,

@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\GetVideoThumbnailTree;
 
-final readonly class GetVideoThumbnailTreeResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetVideoThumbnailTreeResult implements ResultInterface
 {
     public function __construct(
         public array $nodes,

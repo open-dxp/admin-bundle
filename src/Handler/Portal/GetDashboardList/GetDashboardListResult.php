@@ -16,7 +16,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\GetDashboardList;
 
-final readonly class GetDashboardListResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetDashboardListResult implements ResultInterface
 {
     public function __construct(public readonly array $dashboards)
     {

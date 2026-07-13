@@ -17,9 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveClassDefinition;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\DataObject\ClassDefinition;
 
-final readonly class SaveClassDefinitionResult
+final readonly class SaveClassDefinitionResult implements ResultInterface
 {
     public function __construct(
         public ClassDefinition $class,

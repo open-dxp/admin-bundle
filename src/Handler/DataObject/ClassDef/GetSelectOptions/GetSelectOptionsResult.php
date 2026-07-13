@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptions;
 
-final readonly class GetSelectOptionsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetSelectOptionsResult implements ResultInterface
 {
     public function __construct(
         public array $data,

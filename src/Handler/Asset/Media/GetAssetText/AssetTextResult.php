@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetAssetText;
 
-final readonly class AssetTextResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class AssetTextResult implements ResultInterface
 {
     public function __construct(
         public ?string $text,

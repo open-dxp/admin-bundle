@@ -17,9 +17,12 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowDetails;
 
-final readonly class GetWorkflowDetailsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetWorkflowDetailsResult implements ResultInterface
 {
     public function __construct(
         public array $data,
+        public int $total,
     ) {}
 }

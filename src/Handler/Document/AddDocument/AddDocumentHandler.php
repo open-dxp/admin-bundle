@@ -106,7 +106,7 @@ final class AddDocumentHandler
             }
         }
 
-        return new AddDocumentResult($document);
+        return new AddDocumentResult($document->getId(), $document->getType());
     }
 
     private function createPage(Document $parentDocument, array $createValues, ?string $title, ?string $name): Document\Page

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element\AnalyzePermissions;
 
-final readonly class AnalyzePermissionsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class AnalyzePermissionsResult implements ResultInterface
 {
     public function __construct(
         public readonly array $data,

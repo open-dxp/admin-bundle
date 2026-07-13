@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\ShowVersion;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Version;
 
-final readonly class ShowVersionResult
+final readonly class ShowVersionResult implements ResultInterface
 {
     public function __construct(
         public Asset $asset,

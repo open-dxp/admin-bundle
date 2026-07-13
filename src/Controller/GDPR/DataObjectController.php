@@ -36,7 +36,7 @@ class DataObjectController extends AdminAbstractController
     #[Route('/search-data-objects', name: 'opendxp_admin_gdpr_dataobject_searchdataobjects', methods: ['GET'])]
     public function searchDataObjectsAction(SearchDataObjectsHandler $handler, SearchDataPayload $payload): JsonResponse
     {
-        return $this->adminJson($handler($payload)->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/export', name: 'opendxp_admin_gdpr_dataobject_exportdataobject', methods: ['GET'])]

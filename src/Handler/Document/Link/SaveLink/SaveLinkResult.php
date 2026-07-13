@@ -17,13 +17,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Link\SaveLink;
 
-use OpenDxp\Model\Document\Link;
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final class SaveLinkResult
+final readonly class SaveLinkResult implements ResultInterface
 {
+    /**
+     * @param array{versionDate: int, versionCount: int} $data
+     */
     public function __construct(
-        public readonly Link $link,
-        public readonly string $task,
-        public readonly array $treeData,
+        public array $data,
+        public array $treeData,
     ) {}
 }

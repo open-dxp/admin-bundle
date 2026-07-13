@@ -17,9 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateGroup;
 
-final readonly class UpdateGroupResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class UpdateGroupResult implements ResultInterface
 {
     public function __construct(
-        public array $item,
+        public array $data,
     ) {}
 }

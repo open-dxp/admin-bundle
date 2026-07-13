@@ -17,10 +17,11 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
+use OpenDxp\Bundle\AdminBundle\Payload\OwnUserAwareInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 
-final readonly class UploadUserImagePayload implements ExtJsPayloadInterface
+final readonly class UploadUserImagePayload implements ExtJsPayloadInterface, OwnUserAwareInterface
 {
     public function __construct(
         public readonly ?int $targetUserId,
@@ -33,5 +34,10 @@ final readonly class UploadUserImagePayload implements ExtJsPayloadInterface
             targetUserId: $request->query->has('id') ? $request->query->getInt('id') : null,
             avatarFile: $request->files->get('Filedata'),
         );
+    }
+
+    public function getOwnUserId(): int
+    {
+        return $this->targetUserId ?? 0;
     }
 }

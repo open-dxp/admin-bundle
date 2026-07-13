@@ -17,10 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetUserImage;
 
-use OpenDxp\Model\User;
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final readonly class GetUserImageResult
+final readonly class GetUserImageResult implements ResultInterface
 {
+    /**
+     * @param resource $image
+     */
     public function __construct(
         public mixed $image,
     ) {}

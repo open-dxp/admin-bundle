@@ -17,10 +17,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\GetSystemSettings;
 
-final class GetSystemSettingsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final class GetSystemSettingsResult implements ResultInterface
 {
+    /**
+     * @param array{languages: array} $config
+     */
     public function __construct(
         public readonly array $values,
-        public readonly array $languages,
+        public readonly array $config,
     ) {}
 }

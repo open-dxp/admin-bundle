@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderThumbnail;
 
-final readonly class FolderThumbnailResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class FolderThumbnailResult implements ResultInterface
 {
     public function __construct(
         /** @var resource */

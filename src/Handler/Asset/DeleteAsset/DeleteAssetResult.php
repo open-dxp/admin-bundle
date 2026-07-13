@@ -17,10 +17,16 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAsset;
 
-final readonly class DeleteAssetResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class DeleteAssetResult implements ResultInterface
 {
+    /**
+     * @param ?array<int, string> $deleted asset id => real full path of each deleted asset;
+     *                                      null unless this was a batch ("children") delete
+     */
     public function __construct(
-        public array $deleted = [],
+        public ?array $deleted = null,
     ) {}
 }
 

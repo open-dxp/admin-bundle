@@ -19,20 +19,22 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersion;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetVersionNotFoundException;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\AssetResult;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersion\PublishVersionPayload;
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class PublishVersionHandler
 {
-    public function __construct(private readonly AdminUserContextInterface $userContext)
-    {
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly ElementServiceInterface $elementService,
+    ) {
     }
 
-    public function __invoke(PublishVersionPayload $payload): AssetResult
+    public function __invoke(PublishVersionPayload $payload): PublishVersionResult
     {
         $versionId = $payload->versionId;
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
@@ -57,6 +59,6 @@ final class PublishVersionHandler
             throw new AdminOperationFailedException($e->getMessage());
         }
 
-        return new AssetResult($asset);
+        return new PublishVersionResult($this->elementService->getElementTreeNodeConfig($asset));
     }
 }

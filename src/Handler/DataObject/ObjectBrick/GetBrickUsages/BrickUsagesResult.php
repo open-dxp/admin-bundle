@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetBrickUsages;
 
-final readonly class BrickUsagesResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class BrickUsagesResult implements ResultInterface
 {
     public function __construct(
         public array $usages,

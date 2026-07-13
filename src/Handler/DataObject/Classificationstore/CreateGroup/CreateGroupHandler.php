@@ -33,6 +33,6 @@ final class CreateGroupHandler
         $config->setName($payload->name);
         $config->save();
 
-        return new CreateGroupResult(name: $config->getName());
+        return new CreateGroupResult(id: $config->getName());
     }
 }

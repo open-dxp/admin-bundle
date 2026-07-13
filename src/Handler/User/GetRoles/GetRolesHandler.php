@@ -21,7 +21,7 @@ use OpenDxp\Model\User;
 
 final class GetRolesHandler
 {
-    public function __invoke(GetRolesPayload $payload): array
+    public function __invoke(GetRolesPayload $payload): GetRolesResult
     {
         $list = new User\Role\Listing();
         $list->setCondition('`type` = "role"');
@@ -37,6 +37,6 @@ final class GetRolesHandler
             }
         }
 
-        return $roles;
+        return new GetRolesResult(data: $roles, total: count($roles));
     }
 }

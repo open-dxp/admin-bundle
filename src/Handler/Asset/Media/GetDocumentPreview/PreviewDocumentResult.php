@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetDocumentPreview;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Asset\Enum\PdfScanStatus;
 
-final readonly class PreviewDocumentResult
+final readonly class PreviewDocumentResult implements ResultInterface
 {
     public function __construct(
         public Asset\Document $asset,

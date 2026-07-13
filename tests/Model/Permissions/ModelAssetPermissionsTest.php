@@ -18,8 +18,8 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset\AssetController;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildren\GetAssetChildrenHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildren\GetAssetChildrenPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\TreeGetAssetChildren\TreeGetAssetChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\TreeGetAssetChildren\TreeGetAssetChildrenPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Property;
@@ -295,7 +295,7 @@ class ModelAssetPermissionsTest extends AbstractPermissionTest
     {
         $elementService = $this->buildElementService($user);
         $userContext = $this->buildUserContext($user);
-        $handler = new GetAssetChildrenHandler($userContext, $elementService, new EventDispatcher());
+        $handler = new TreeGetAssetChildrenHandler($userContext, $elementService, new EventDispatcher());
 
         $controller = $this->buildController(AssetController::class, $user, [
             (new \ReflectionClass(AssetGridService::class))->newInstanceWithoutConstructor(),
@@ -307,7 +307,7 @@ class ModelAssetPermissionsTest extends AbstractPermissionTest
             'view' => 0,
         ]);
 
-        $responseData = $controller->treeGetChildrenByIdAction(GetAssetChildrenPayload::fromRequest($request), $handler);
+        $responseData = $controller->treeGetChildrenByIdPaginatedAction(TreeGetAssetChildrenPayload::fromRequest($request), $handler);
         $responsePaths = [];
         $responseData = json_decode($responseData->getContent(), true);
         foreach ($responseData['nodes'] as $node) {

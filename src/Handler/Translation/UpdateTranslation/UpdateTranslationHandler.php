@@ -50,12 +50,17 @@ final class UpdateTranslationHandler
         $t->setModificationDate(time());
         $t->save();
 
-        return new UpdateTranslationResult(
-            key: $t->getKey(),
-            creationDate: $t->getCreationDate(),
-            modificationDate: $t->getModificationDate(),
-            type: $t->getType(),
-            translations: $t->getTranslations(),
-        );
+        $prefixedTranslations = [];
+        foreach ($t->getTranslations() as $lang => $translation) {
+            $prefixedTranslations['_' . $lang] = $translation;
+        }
+
+        return new UpdateTranslationResult(data: [
+            'key' => $t->getKey(),
+            'creationDate' => $t->getCreationDate(),
+            'modificationDate' => $t->getModificationDate(),
+            'type' => $t->getType(),
+            ...$prefixedTranslations,
+        ]);
     }
 }

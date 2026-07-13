@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element\GetReplaceAssignmentsBatchJobs;
 
-final readonly class GetReplaceAssignmentsBatchJobsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetReplaceAssignmentsBatchJobsResult implements ResultInterface
 {
     public function __construct(
         public readonly array $jobs,

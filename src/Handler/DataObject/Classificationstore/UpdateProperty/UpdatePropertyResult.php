@@ -17,9 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProperty;
 
-final readonly class UpdatePropertyResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class UpdatePropertyResult implements ResultInterface
 {
     public function __construct(
-        public array $item,
+        public array $data,
     ) {}
 }

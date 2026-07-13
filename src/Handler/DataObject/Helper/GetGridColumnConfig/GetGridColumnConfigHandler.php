@@ -33,7 +33,7 @@ final class GetGridColumnConfigHandler
         private readonly RequestStack $requestStack,
     ) {}
 
-    public function __invoke(GetGridColumnConfigPayload $payload): array
+    public function __invoke(GetGridColumnConfigPayload $payload): GetGridColumnConfigResult
     {
         $params = [
             'id'              => $payload->id,
@@ -48,16 +48,16 @@ final class GetGridColumnConfigHandler
             'noBrickColumns'  => $payload->noBrickColumns,
         ];
 
-        $result = $this->gridConfigResolver->resolve($payload->locale, $params, $payload->helperColumnsBag);
+        $config = $this->gridConfigResolver->resolve($payload->locale, $params, $payload->helperColumnsBag);
 
         $event = new GenericEvent($this, [
-            'data'    => $result->jsonSerialize(),
+            'data'    => $config->toArray(),
             'request' => $this->requestStack->getCurrentRequest(),
             'config'  => $this->config,
             'context' => 'get',
         ]);
         $this->eventDispatcher->dispatch($event, AdminEvents::OBJECT_GRID_GET_COLUMN_CONFIG_PRE_SEND_DATA);
 
-        return $event->getArgument('data');
+        return new GetGridColumnConfigResult($event->getArgument('data'));
     }
 }

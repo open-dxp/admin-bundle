@@ -17,9 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadImageThumbnail;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\Asset\Image;
 
-final readonly class DownloadImageThumbnailResult
+final readonly class DownloadImageThumbnailResult implements ResultInterface
 {
     public function __construct(
         public Image $image,

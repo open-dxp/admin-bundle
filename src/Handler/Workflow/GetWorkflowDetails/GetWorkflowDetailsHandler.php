@@ -81,7 +81,7 @@ final class GetWorkflowDetailsHandler
             ];
         }
 
-        return new GetWorkflowDetailsResult(data: $data);
+        return new GetWorkflowDetailsResult(data: $data, total: count($data));
     }
 
     private function getWorkflowSvg(WorkflowInterface $workflow, ConcreteObject|Document|Asset $element): string

@@ -39,10 +39,13 @@ final class SaveLinkHandler
 
         $this->mapper->applyLinkPayload($payload, $link);
         $result = $this->coordinator->save($link, $payload->task);
+        $savedLink = $result->document instanceof Link ? $result->document : $link;
 
         return new SaveLinkResult(
-            link: $result->document instanceof Link ? $result->document : $link,
-            task: $result->task,
+            data: [
+                'versionDate' => $savedLink->getModificationDate(),
+                'versionCount' => $savedLink->getVersionCount(),
+            ],
             treeData: $result->treeData,
         );
     }

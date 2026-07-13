@@ -17,13 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\Asset;
 
-final readonly class GetImageThumbnailResult
+final readonly class GetImageThumbnailResult implements ResultInterface
 {
     public function __construct(
         public Asset\Image $image,
-        public mixed $thumbnailResult,
+        public ?Asset\Image\ThumbnailInterface $thumbnailResult,
         public bool $returnLoadingGif,
         public bool $returnFileinfo,
     ) {}

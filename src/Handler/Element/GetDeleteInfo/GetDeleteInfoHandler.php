@@ -40,7 +40,7 @@ final class GetDeleteInfoHandler
         private readonly UrlGeneratorInterface $urlGenerator,
     ) {}
 
-    public function __invoke(GetDeleteInfoPayload $payload): array
+    public function __invoke(GetDeleteInfoPayload $payload): GetDeleteInfoResult
     {
         $hasDependency = false;
         $errors = false;
@@ -175,14 +175,14 @@ final class GetDeleteInfoHandler
             }
         }
 
-        return [
-            'hasDependencies' => $hasDependency,
-            'children' => $totalChildren,
-            'deletejobs' => $deleteJobs,
-            'batchDelete' => count($idList) > 1,
-            'elementKey' => $elementKey,
-            'errors' => $errors,
-            'itemResults' => $itemResults,
-        ];
+        return new GetDeleteInfoResult(
+            hasDependencies: $hasDependency,
+            children: $totalChildren,
+            deletejobs: $deleteJobs,
+            batchDelete: count($idList) > 1,
+            elementKey: $elementKey,
+            errors: $errors,
+            itemResults: $itemResults,
+        );
     }
 }

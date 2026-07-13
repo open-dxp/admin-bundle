@@ -38,7 +38,7 @@ final class DeleteGridColumnConfigHandler
         private readonly AdminUserContextInterface $userContext,
     ) {}
 
-    public function __invoke(DeleteGridColumnConfigPayload $payload): array
+    public function __invoke(DeleteGridColumnConfigPayload $payload): DeleteGridColumnConfigResult
     {
         if ($payload->gridConfigId !== null) {
             $adminUser = $this->userContext->getAdminUser();
@@ -65,8 +65,8 @@ final class DeleteGridColumnConfigHandler
             'noBrickColumns'  => $payload->noBrickColumns,
         ];
 
-        $resolverResult = $this->gridConfigResolver->resolve($payload->locale, $params, null, true);
-        $data = [...$resolverResult->jsonSerialize(), 'deleteSuccess' => true];
+        $config = $this->gridConfigResolver->resolve($payload->locale, $params, null, true);
+        $data = [...$config->toArray(), 'deleteSuccess' => true];
 
         $event = new GenericEvent($this, [
             'data'    => $data,
@@ -76,6 +76,6 @@ final class DeleteGridColumnConfigHandler
         ]);
         $this->eventDispatcher->dispatch($event, AdminEvents::OBJECT_GRID_GET_COLUMN_CONFIG_PRE_SEND_DATA);
 
-        return $event->getArgument('data');
+        return new DeleteGridColumnConfigResult($event->getArgument('data'));
     }
 }

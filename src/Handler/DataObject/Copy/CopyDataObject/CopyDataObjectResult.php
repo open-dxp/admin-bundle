@@ -17,9 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\DataObject;
 
-final readonly class CopyDataObjectResult
+final readonly class CopyDataObjectResult implements ResultInterface
 {
     public function __construct(
         public int $sourceId,

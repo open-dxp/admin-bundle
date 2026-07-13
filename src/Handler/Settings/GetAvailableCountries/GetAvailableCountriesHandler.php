@@ -37,6 +37,6 @@ final class GetAvailableCountriesHandler
             }
         }
 
-        return new GetAvailableCountriesResult(options: $options);
+        return new GetAvailableCountriesResult(data: $options, total: count($options));
     }
 }

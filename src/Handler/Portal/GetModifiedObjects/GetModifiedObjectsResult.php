@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\GetModifiedObjects;
 
-final readonly class GetModifiedObjectsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetModifiedObjectsResult implements ResultInterface
 {
     public function __construct(
         public array $objects,

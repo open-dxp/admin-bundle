@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\CreatePredefinedProperty;
 
-final readonly class CreatePredefinedPropertyResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class CreatePredefinedPropertyResult implements ResultInterface
 {
     public function __construct(
         public array $data,

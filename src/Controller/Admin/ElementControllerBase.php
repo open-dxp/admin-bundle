@@ -19,13 +19,11 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootPayload;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
-use OpenDxp\Model\Element\ElementInterface;
-use OpenDxp\Model\Element\Service;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 
 /**
  * @internal
@@ -36,35 +34,13 @@ abstract class ElementControllerBase extends AdminAbstractController
     {
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    protected function getTreeNodeConfig(ElementInterface $element): array
-    {
-        return [];
-    }
-
     #[Route('/tree-get-root', name: 'treegetroot', methods: ['GET'])]
     public function treeGetRootAction(
-        #[MapQueryParameter] ?string $elementType = null,
-        #[MapQueryParameter(flags: FILTER_NULL_ON_FAILURE)] ?int $id = null,
+        GetTreeRootPayload $payload,
+        GetTreeRootHandler $handler,
     ): JsonResponse
     {
-        $type = $elementType;
-        $allowedTypes = ['asset', 'document', 'object'];
-
-        $id = $id ?? 1;
-
-        if (in_array($type, $allowedTypes)) {
-            $root = Service::getElementById($type, $id);
-            if ($root?->isAllowed('list')) {
-                return $this->adminJson($this->getTreeNodeConfig($root));
-            }
-
-            return $this->adminJson(ApiResponse::error(null, ['id' => $id]));
-        }
-
-        return $this->adminJson(ApiResponse::error('missing_permission'));
+        return $this->apiJson($handler($payload), rootProperty: 'treeNodeConfig');
     }
 
     #[Route('/delete-info', name: 'deleteinfo', methods: ['GET'])]
@@ -73,6 +49,6 @@ abstract class ElementControllerBase extends AdminAbstractController
         GetDeleteInfoPayload $payload,
     ): JsonResponse
     {
-        return $this->adminJson($handler($payload));
+        return $this->apiJson($handler($payload));
     }
 }

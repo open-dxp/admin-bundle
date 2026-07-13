@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearCache\ClearCachePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearCache\ClearCacheHandler;
@@ -58,14 +57,12 @@ use OpenDxp\Bundle\AdminBundle\Handler\Settings\UploadCustomLogo\UploadCustomLog
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\UploadCustomLogo\UploadCustomLogoPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Logger;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -94,7 +91,7 @@ class SettingsController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/delete-custom-logo', name: 'opendxp_admin_settings_deletecustomlogo', methods: ['DELETE'])]
@@ -102,7 +99,7 @@ class SettingsController extends AdminAbstractController
     {
         $handler();
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::AssetMetadata->value)]
@@ -122,9 +119,7 @@ class SettingsController extends AdminAbstractController
             };
         }
 
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::AssetMetadata->value)]
@@ -135,7 +130,7 @@ class SettingsController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok(['data' => []]));
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::AssetMetadata->value)]
@@ -144,7 +139,7 @@ class SettingsController extends AdminAbstractController
         PredefinedMetadataPayload $payload,
         UpdatePredefinedMetadataHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::AssetMetadata->value)]
@@ -153,7 +148,7 @@ class SettingsController extends AdminAbstractController
         PredefinedMetadataPayload $payload,
         CreatePredefinedMetadataHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/get-predefined-metadata', name: 'opendxp_admin_settings_getpredefinedmetadata', methods: ['GET'])]
@@ -163,7 +158,7 @@ class SettingsController extends AdminAbstractController
         #[MapQueryParameter] ?string $subType = null,
         #[MapQueryParameter] ?string $group = null,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($type, $subType, $group)->data]));
+        return $this->apiJson($handler($type, $subType, $group));
     }
 
     #[IsGranted(CorePermission::PredefinedProperties->value)]
@@ -183,9 +178,7 @@ class SettingsController extends AdminAbstractController
             };
         }
 
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::PredefinedProperties->value)]
@@ -196,7 +189,7 @@ class SettingsController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok(['data' => []]));
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::PredefinedProperties->value)]
@@ -205,7 +198,7 @@ class SettingsController extends AdminAbstractController
         PredefinedPropertyPayload $payload,
         UpdatePredefinedPropertyHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::PredefinedProperties->value)]
@@ -214,26 +207,21 @@ class SettingsController extends AdminAbstractController
         PredefinedPropertyPayload $payload,
         CreatePredefinedPropertyHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(AdminPermission::SystemAppearance->value)]
     #[Route('/get-admin-system', name: 'opendxp_appearance_admin_settings_get', methods: ['GET'])]
     public function getAppearanceSystemAction(GetAppearanceSettingsHandler $handler): JsonResponse
     {
-        return $this->adminJson(['values' => $handler()->values]);
+        return $this->apiJson($handler());
     }
 
     #[IsGranted(CorePermission::SystemSettings->value)]
     #[Route('/get-system', name: 'opendxp_admin_settings_getsystem', methods: ['GET'])]
     public function getSystemAction(GetSystemSettingsHandler $handler): JsonResponse
     {
-        $result = $handler();
-
-        return $this->adminJson([
-            'values' => $result->values,
-            'config' => ['languages' => $result->languages],
-        ]);
+        return $this->apiJson($handler());
     }
 
     #[IsGranted(AdminPermission::SystemAppearance->value)]
@@ -244,7 +232,7 @@ class SettingsController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::SystemSettings->value)]
@@ -255,7 +243,7 @@ class SettingsController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(new Expression(
@@ -268,7 +256,7 @@ class SettingsController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        $response = new JsonResponse(ApiResponse::ok());
+        $response = $this->apiOk();
 
         if (!$payload->onlyOpendxpCache) {
             // send response before exit so the client gets a reply before the process terminates
@@ -286,7 +274,7 @@ class SettingsController extends AdminAbstractController
     {
         $handler();
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::ClearTempFiles->value)]
@@ -295,13 +283,13 @@ class SettingsController extends AdminAbstractController
     {
         $handler();
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/get-available-admin-languages', name: 'opendxp_admin_settings_getavailableadminlanguages', methods: ['GET'])]
     public function getAvailableAdminLanguagesAction(GetAvailableAdminLanguagesHandler $handler): JsonResponse
     {
-        return $this->adminJson($handler()->langs);
+        return $this->apiJson($handler(), rootProperty: 'langs');
     }
 
     #[Route('/get-available-sites', name: 'opendxp_admin_settings_getavailablesites', methods: ['GET'])]
@@ -309,23 +297,13 @@ class SettingsController extends AdminAbstractController
         GetAvailableSitesHandler $handler,
         #[MapQueryParameter] ?string $excludeMainSite = null,
     ): JsonResponse {
-        try {
-            $this->checkPermission('documents');
-        } catch (AccessDeniedHttpException) {
-            Logger::log('[Startup] Sites are not loaded as "documents" permission is missing');
-
-            return $this->adminJson([]);
-        }
-
-        return $this->adminJson($handler(excludeMainSite: (bool) $excludeMainSite)->sites);
+        return $this->apiJson($handler(excludeMainSite: (bool) $excludeMainSite), rootProperty: 'sites');
     }
 
     #[Route('/get-available-countries', name: 'opendxp_admin_settings_getavailablecountries', methods: ['GET'])]
     public function getAvailableCountriesAction(GetAvailableCountriesHandler $handler): JsonResponse
     {
-        $result = $handler();
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->options, 'total' => count($result->options)]));
+        return $this->apiJson($handler());
     }
 
     #[Route('/thumbnail-adapter-check', name: 'opendxp_admin_settings_thumbnailadaptercheck', methods: ['GET'])]
@@ -351,9 +329,7 @@ class SettingsController extends AdminAbstractController
             };
         }
 
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::WebsiteSettings->value)]
@@ -364,7 +340,7 @@ class SettingsController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok(['data' => []]));
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::WebsiteSettings->value)]
@@ -373,7 +349,7 @@ class SettingsController extends AdminAbstractController
         WebsiteSettingPayload $payload,
         UpdateWebsiteSettingHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::WebsiteSettings->value)]
@@ -382,14 +358,12 @@ class SettingsController extends AdminAbstractController
         WebsiteSettingPayload $payload,
         CreateWebsiteSettingHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/get-available-algorithms', name: 'opendxp_admin_settings_getavailablealgorithms', methods: ['GET'])]
     public function getAvailableAlgorithmsAction(GetAvailableAlgorithmsHandler $handler): JsonResponse
     {
-        $result = $handler();
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->options, 'total' => count($result->options)]));
+        return $this->apiJson($handler());
     }
 }

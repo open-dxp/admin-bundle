@@ -16,9 +16,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAsset;
 
-use OpenDxp\Model\Asset;
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final readonly class AddAssetResult
+final readonly class AddAssetResult implements ResultInterface
 {
-    public function __construct(public readonly Asset $asset) {}
+    /**
+     * @param array{id: int, path: string, type: string} $asset
+     */
+    public function __construct(
+        public readonly array $asset,
+    ) {}
 }

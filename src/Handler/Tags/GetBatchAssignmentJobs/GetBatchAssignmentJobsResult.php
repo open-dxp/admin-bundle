@@ -17,10 +17,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Tags\GetBatchAssignmentJobs;
 
-final readonly class GetBatchAssignmentJobsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetBatchAssignmentJobsResult implements ResultInterface
 {
+    /**
+     * @param int[][] $idLists
+     */
     public function __construct(
-        public array $idListParts,
+        public array $idLists,
         public int $totalCount,
     ) {}
 }

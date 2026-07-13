@@ -28,7 +28,7 @@ final class UpdateObjectBrickHandler
 {
     public function __construct(private readonly EventDispatcherInterface $eventDispatcher) {}
 
-    public function __invoke(UpdateObjectBrickPayload $payload): DataObject\Objectbrick\Definition
+    public function __invoke(UpdateObjectBrickPayload $payload): UpdateObjectBrickResult
     {
         $key = $payload->key;
         $title = $payload->title;
@@ -71,6 +71,6 @@ final class UpdateObjectBrickHandler
 
         $brickDef->save();
 
-        return $brickDef;
+        return new UpdateObjectBrickResult(id: $brickDef->getKey());
     }
 }

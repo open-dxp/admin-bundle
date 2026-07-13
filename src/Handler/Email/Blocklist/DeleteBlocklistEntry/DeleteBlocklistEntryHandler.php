@@ -9,9 +9,11 @@ use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
 
 final class DeleteBlocklistEntryHandler
 {
-    public function __invoke(BlocklistPayload $payload): void
+    public function __invoke(BlocklistPayload $payload): DeleteBlocklistEntryResult
     {
         $entry = Tool\Email\Blocklist::getByAddress($payload->data['address']);
         $entry->delete();
+
+        return new DeleteBlocklistEntryResult();
     }
 }

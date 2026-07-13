@@ -18,7 +18,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\ChangeMainDocument\ChangeMainDocumentHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\ChangeMainDocument\ChangeMainDocumentPayload;
@@ -67,7 +66,7 @@ abstract class DocumentControllerBase extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/remove-from-session', name: 'removefromsession', methods: ['DELETE'])]
@@ -77,7 +76,7 @@ abstract class DocumentControllerBase extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     /**
@@ -90,7 +89,7 @@ abstract class DocumentControllerBase extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     public function getTreeNodeConfig(ElementInterface $element): array

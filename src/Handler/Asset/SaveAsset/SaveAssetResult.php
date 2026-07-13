@@ -17,11 +17,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset;
 
-final readonly class SaveAssetResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class SaveAssetResult implements ResultInterface
 {
+    /**
+     * @param array{versionDate: int, versionCount: int} $data
+     */
     public function __construct(
-        public int $versionDate,
-        public int $versionCount,
+        public array $data,
         public array $treeData,
     ) {}
 }

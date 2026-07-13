@@ -17,12 +17,17 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject;
 
 final class GetIdPathPagingInfoHandler
 {
     public function __invoke(GetIdPathPagingInfoPayload $payload): GetIdPathPagingInfoResult
     {
+        if ($payload->path === null) {
+            throw new AdminOperationFailedException();
+        }
+
         $path = $payload->path;
         $limit = $payload->limit;
         $pathParts = explode('/', $path ?? '');

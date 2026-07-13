@@ -32,7 +32,7 @@ final class DeleteGridColumnConfigHandler
     ) {
     }
 
-    public function __invoke(DeleteGridColumnConfigPayload $payload): array
+    public function __invoke(DeleteGridColumnConfigPayload $payload): DeleteGridColumnConfigResult
     {
         $gridConfigId = $payload->gridConfigId;
         $adminUser = $this->userContext->getAdminUser();
@@ -55,8 +55,8 @@ final class DeleteGridColumnConfigHandler
             'noSystemColumns' => $payload->noSystemColumns,
         ];
 
-        $resolverResult = $this->gridConfigResolver->resolve($params, true);
+        $config = $this->gridConfigResolver->resolve($params, true);
 
-        return [...$resolverResult->jsonSerialize(), 'deleteSuccess' => true];
+        return new DeleteGridColumnConfigResult([...$config->toArray(), 'deleteSuccess' => true]);
     }
 }

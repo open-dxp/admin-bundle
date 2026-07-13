@@ -23,13 +23,13 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetPagePreviewImagePathHandler
 {
-    public function __invoke(GetPagePreviewImagePathPayload $payload): string
+    public function __invoke(GetPagePreviewImagePathPayload $payload): GetPagePreviewImagePathResult
     {
         $document = Document\Page::getById($payload->id);
         if (!$document instanceof Document\Page) {
             throw new NotFoundHttpException('Page not found');
         }
 
-        return $document->getPreviewImageFilesystemPath();
+        return new GetPagePreviewImagePathResult($document->getPreviewImageFilesystemPath());
     }
 }

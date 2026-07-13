@@ -32,7 +32,7 @@ final class ReplaceAssetHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,private readonly TranslatorInterface $translator) {}
 
-    public function __invoke(ReplaceAssetPayload $payload): Asset
+    public function __invoke(ReplaceAssetPayload $payload): ReplaceAssetResult
     {
         $id = $payload->id;
         $filePath = $payload->filePath;
@@ -76,6 +76,6 @@ final class ReplaceAssetHandler
 
         $asset->save();
 
-        return $asset;
+        return new ReplaceAssetResult(id: $asset->getId(), path: $asset->getRealFullPath());
     }
 }

@@ -16,11 +16,18 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\DetermineTranslationParent;
 
-final readonly class DetermineTranslationParentResult
+use OpenDxp\Bundle\AdminBundle\Handler\ConditionalResultInterface;
+
+final readonly class DetermineTranslationParentResult implements ConditionalResultInterface
 {
     public function __construct(
         public readonly bool $found,
         public readonly ?string $targetPath,
         public readonly ?int $targetId,
     ) {}
+
+    public function isSuccessful(): bool
+    {
+        return $this->found;
+    }
 }

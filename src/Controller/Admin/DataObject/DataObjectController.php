@@ -34,8 +34,8 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions\GetSelectOpti
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions\GetSelectOptionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObjectFolder\SaveDataObjectFolderHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObjectFolder\SaveDataObjectFolderPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetChildrenById\TreeGetChildrenByIdHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetChildrenById\TreeGetChildrenByIdPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildren\TreeGetDataObjectChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildren\TreeGetDataObjectChildrenPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\UpdateDataObject\UpdateDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\UpdateDataObject\UpdateDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectFolder\GetDataObjectFolderHandler;
@@ -49,15 +49,14 @@ use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use OpenDxp\Model\Element\ElementInterface;
-use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 
 /**
  * @internal
@@ -84,43 +83,35 @@ class DataObjectController extends ElementControllerBase
 
     #[Route('/tree-get-children-by-id', name: 'treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(
-        TreeGetChildrenByIdPayload $payload,
-        TreeGetChildrenByIdHandler $handler,
-    ): JsonResponse {
-        $result = $handler($payload);
-
-        if ($result->limit) {
-            return $this->adminJson([
-                'offset'     => $result->offset,
-                'limit'      => $result->limit,
-                'total'      => $result->total,
-                'overflow'   => !is_null($result->filter) && ($result->filteredTotalCount > $result->limit),
-                'nodes'      => $result->objects,
-                'fromPaging' => $result->fromPaging,
-                'filter'     => $result->filter ?: '',
-                'inSearch'   => $payload->inSearch,
-            ]);
-        }
-
-        return $this->adminJson($result->objects);
+        Request $request,
+        TreeGetDataObjectChildrenPayload $payload,
+    ): Response {
+        return match ($payload->hasPagination()) {
+            true  => $this->forward(self::class . '::treeGetChildrenByIdPaginatedAction', [], $request->query->all()),
+            false => $this->forward(self::class . '::treeGetChildrenByIdListAction', [], $request->query->all()),
+        };
     }
 
-    #[Override]
-    protected function getTreeNodeConfig(ElementInterface $element): array
-    {
-        return $this->elementService->getElementTreeNodeConfig($element);
+    #[Route('/tree-get-children-by-id-paginated', name: 'treegetchildrenbyidpaginated', methods: ['GET'])]
+    public function treeGetChildrenByIdPaginatedAction(
+        TreeGetDataObjectChildrenPayload $payload,
+        TreeGetDataObjectChildrenHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
+    }
+
+    #[Route('/tree-get-children-by-id-list', name: 'treegetchildrenbyidlist', methods: ['GET'])]
+    public function treeGetChildrenByIdListAction(
+        TreeGetDataObjectChildrenPayload $payload,
+        TreeGetDataObjectChildrenHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), rootProperty: 'nodes');
     }
 
     #[Route('/get-id-path-paging-info', name: 'getidpathpaginginfo', methods: ['GET'])]
     public function getIdPathPagingInfoAction(GetIdPathPagingInfoHandler $handler, GetIdPathPagingInfoPayload $payload): JsonResponse
     {
-        if ($payload->path === null) {
-            return $this->adminJson(['success' => false]);
-        }
-
-        $result = $handler($payload);
-
-        return $this->adminJson($result->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/get', name: 'get', methods: ['GET'])]
@@ -132,7 +123,7 @@ class DataObjectController extends ElementControllerBase
 
         $this->sessionService->removeObject('object', $payload->id);
 
-        return $this->adminJson($result->data);
+        return $this->apiJson($result, rootProperty: 'data');
     }
 
     #[Route('/get-select-options', name: 'getSelectOptions', methods: ['POST'])]
@@ -140,9 +131,7 @@ class DataObjectController extends ElementControllerBase
         GetSelectOptionsPayload $payload,
         GetSelectOptionsHandler $handler,
     ): JsonResponse {
-        $options = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['options' => $options]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/get-folder', name: 'getfolder', methods: ['GET'])]
@@ -150,9 +139,7 @@ class DataObjectController extends ElementControllerBase
         IdQueryPayload $payload,
         GetDataObjectFolderHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/add', name: 'add', methods: ['POST'])]
@@ -160,12 +147,7 @@ class DataObjectController extends ElementControllerBase
         AddObjectPayload $payload,
         AddObjectHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'id'   => $result->id,
-            'type' => $result->type,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/add-folder', name: 'addfolder', methods: ['POST'])]
@@ -175,7 +157,7 @@ class DataObjectController extends ElementControllerBase
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/delete', name: 'delete', methods: ['DELETE'])]
@@ -186,11 +168,11 @@ class DataObjectController extends ElementControllerBase
         $result = $handler($payload);
 
         if ($payload->type === 'children') {
-            return $this->adminJson(ApiResponse::ok(['deleted' => $result->deleted]));
+            return $this->apiJson($result);
         }
 
         // return ok even when the object doesn't exist — valid for batch delete incl. children
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/change-children-sort-by', name: 'changechildrensortby', methods: ['PUT'])]
@@ -200,7 +182,7 @@ class DataObjectController extends ElementControllerBase
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/update', name: 'update', methods: ['PUT'])]
@@ -208,9 +190,7 @@ class DataObjectController extends ElementControllerBase
         UpdateDataObjectPayload $payload,
         UpdateDataObjectHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
@@ -219,29 +199,10 @@ class DataObjectController extends ElementControllerBase
         $result = $handler($payload);
 
         if ($payload->task === 'session' || $payload->task === 'scheduler') {
-            return $this->adminJson(ApiResponse::ok());
+            return $this->apiOk();
         }
 
-        if ($payload->task === 'publish' || $payload->task === 'unpublish') {
-            return $this->adminJson(ApiResponse::ok([
-                'general' => [
-                    'modificationDate' => $result->modificationDate,
-                    'versionDate'      => $result->versionDate,
-                    'versionCount'     => $result->versionCount,
-                ],
-                'treeData' => $result->treeData,
-            ]));
-        }
-
-        return $this->adminJson(ApiResponse::ok([
-            'general' => [
-                'modificationDate' => $result->modificationDate,
-                'versionDate'      => $result->versionDate,
-                'versionCount'     => $result->versionCount,
-            ],
-            'draft'    => $result->draftData,
-            'treeData' => $result->treeData,
-        ]));
+        return $this->apiJson($result, context: [AbstractObjectNormalizer::SKIP_NULL_VALUES => true]);
     }
 
     #[Route('/save-folder', name: 'savefolder', methods: ['PUT'])]
@@ -251,7 +212,7 @@ class DataObjectController extends ElementControllerBase
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/grid-proxy', name: 'gridproxy', methods: ['GET', 'POST', 'PUT'])]
@@ -268,7 +229,7 @@ class DataObjectController extends ElementControllerBase
             $request->setLocale($result->requestedLanguage);
         }
 
-        return $this->adminJson($result->data);
+        return $this->apiJson($result, rootProperty: 'data');
     }
 
     #[Route('/preview', name: 'preview', methods: ['GET'])]

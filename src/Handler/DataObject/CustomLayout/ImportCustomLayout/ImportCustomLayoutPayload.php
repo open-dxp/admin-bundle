@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ImportCustomLayout;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
-use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -26,7 +25,6 @@ final readonly class ImportCustomLayoutPayload implements ExtJsPayloadInterface
     public function __construct(
         public readonly ?string $id = null,
         public readonly array $importData = [],
-        public readonly bool $nameAlreadyInUse = false,
     ) {}
 
     public static function fromRequest(Request $request): static
@@ -37,9 +35,8 @@ final readonly class ImportCustomLayoutPayload implements ExtJsPayloadInterface
         $importData = json_decode($fileContents, true) ?? [];
 
         return new static(
-            id:               $request->query->getString('id') ?: null,
-            importData:       $importData,
-            nameAlreadyInUse: isset($importData['name']) && DataObject\ClassDefinition\CustomLayout::getByName($importData['name']) instanceof DataObject\ClassDefinition\CustomLayout,
+            id:         $request->query->getString('id') ?: null,
+            importData: $importData,
         );
     }
 }

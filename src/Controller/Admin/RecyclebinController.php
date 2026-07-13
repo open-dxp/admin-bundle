@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\AddToRecyclebin\AddToRecyclebinHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\AddToRecyclebin\AddToRecyclebinPayload;
@@ -59,9 +58,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
             };
         }
 
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Recyclebin->value)]
@@ -70,9 +67,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
         RecyclebinPayload $payload,
         DeleteRecyclebinItemHandler $handler,
     ): JsonResponse {
-        $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => []]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Recyclebin->value)]
@@ -83,7 +78,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Recyclebin->value)]
@@ -94,7 +89,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/recyclebin/add', name: 'opendxp_admin_recyclebin_add', methods: ['POST'])]
@@ -104,7 +99,7 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     public function onKernelControllerEvent(ControllerEvent $event): void

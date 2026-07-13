@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Settings;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\AddThumbnail\AddThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\AddThumbnail\AddThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteThumbnail\DeleteThumbnailPayload;
@@ -42,26 +41,20 @@ class ThumbnailController extends AdminAbstractController
     #[Route('/settings/thumbnail-tree', name: 'opendxp_admin_settings_thumbnailtree', methods: ['GET', 'POST'])]
     public function thumbnailTreeAction(GetThumbnailTreeHandler $handler): JsonResponse
     {
-        $result = $handler();
-
-        return $this->adminJson($result->nodes);
+        return $this->apiJson($handler(), rootProperty: 'nodes');
     }
 
     #[Route('/settings/thumbnail-downloadable', name: 'opendxp_admin_settings_thumbnaildownloadable', methods: ['GET'])]
     public function thumbnailDownloadableAction(GetDownloadableThumbnailsHandler $handler): JsonResponse
     {
-        $result = $handler();
-
-        return $this->adminJson($result->thumbnails);
+        return $this->apiJson($handler(), rootProperty: 'thumbnails');
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/thumbnail-add', name: 'opendxp_admin_settings_thumbnailadd', methods: ['POST'])]
     public function thumbnailAddAction(AddThumbnailPayload $payload, AddThumbnailHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::fromBool($result->created, ['id' => $result->id]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
@@ -70,7 +63,7 @@ class ThumbnailController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
@@ -79,9 +72,7 @@ class ThumbnailController extends AdminAbstractController
         #[MapQueryParameter] string $name,
         GetThumbnailHandler $handler,
     ): JsonResponse {
-        $result = $handler($name);
-
-        return $this->adminJson($result->data);
+        return $this->apiJson($handler($name), rootProperty: 'data');
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
@@ -90,6 +81,6 @@ class ThumbnailController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 }

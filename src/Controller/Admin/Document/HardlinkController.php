@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\GetHardlinkData\GetHardlinkDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlink\SaveHardlinkHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlink\SaveHardlinkPayload;
@@ -52,14 +51,6 @@ class HardlinkController extends DocumentControllerBase
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(SaveHardlinkPayload $payload, SaveHardlinkHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'data' => [
-                'versionDate' => $result->link->getModificationDate(),
-                'versionCount' => $result->link->getVersionCount(),
-            ],
-            'treeData' => $result->treeData,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 }

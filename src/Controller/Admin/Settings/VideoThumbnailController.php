@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Settings;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\AddVideoThumbnail\AddVideoThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\AddVideoThumbnail\AddVideoThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteVideoThumbnail\DeleteVideoThumbnailPayload;
@@ -58,26 +57,20 @@ class VideoThumbnailController extends AdminAbstractController
     #[Route('/settings/video-thumbnail-tree', name: 'opendxp_admin_settings_videothumbnailtree', methods: ['GET', 'POST'])]
     public function videoThumbnailTreeAction(GetVideoThumbnailTreeHandler $handler): JsonResponse
     {
-        $result = $handler();
-
-        return $this->adminJson($result->nodes);
+        return $this->apiJson($handler(), rootProperty: 'nodes');
     }
 
     #[Route('/settings/video-thumbnail-list', name: 'opendxp_admin_settings_videothumbnail_list', methods: ['GET'])]
     public function videoThumbnailListAction(GetVideoThumbnailListHandler $handler): JsonResponse
     {
-        $result = $handler();
-
-        return $this->adminJson($result->thumbnails);
+        return $this->apiJson($handler(), rootProperty: 'thumbnails');
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/video-thumbnail-add', name: 'opendxp_admin_settings_videothumbnailadd', methods: ['POST'])]
     public function videoThumbnailAddAction(AddVideoThumbnailPayload $payload, AddVideoThumbnailHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::fromBool($result->created, ['id' => $result->id]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
@@ -86,7 +79,7 @@ class VideoThumbnailController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
@@ -95,9 +88,7 @@ class VideoThumbnailController extends AdminAbstractController
         #[MapQueryParameter] string $name,
         GetVideoThumbnailHandler $handler,
     ): JsonResponse {
-        $result = $handler($name);
-
-        return $this->adminJson($result->data);
+        return $this->apiJson($handler($name), rootProperty: 'data');
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]
@@ -106,6 +97,6 @@ class VideoThumbnailController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 }

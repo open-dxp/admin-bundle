@@ -21,7 +21,7 @@ use OpenDxp\Model\User;
 
 final class GetRoleTreeChildrenHandler
 {
-    public function __invoke(GetRoleTreeChildrenPayload $payload): array
+    public function __invoke(GetRoleTreeChildrenPayload $payload): GetRoleTreeChildrenResult
     {
         $list = new User\Role\Listing();
         $list->setCondition('parentId = ?', $payload->node);
@@ -32,7 +32,7 @@ final class GetRoleTreeChildrenHandler
             $roles[] = $this->buildRoleTreeNodeConfig($role);
         }
 
-        return $roles;
+        return new GetRoleTreeChildrenResult(roles: $roles);
     }
 
     private function buildRoleTreeNodeConfig(User\Role|User\Role\Folder $role): array

@@ -57,6 +57,9 @@ final class GetCustomLayoutHandler
             }
         }
 
-        return new GetCustomLayoutResult($customLayout->getObjectVars(), $customLayout->isWriteable());
+        $data = $customLayout->getObjectVars();
+        $data['isWriteable'] = $customLayout->isWriteable();
+
+        return new GetCustomLayoutResult($data);
     }
 }

@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ExportFieldCollection;
 
-final readonly class ExportFieldCollectionResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class ExportFieldCollectionResult implements ResultInterface
 {
     public function __construct(
         public string $key,

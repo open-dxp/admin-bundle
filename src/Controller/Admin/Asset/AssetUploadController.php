@@ -19,9 +19,9 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAsset\AddAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAsset\AddAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAssetCompatibility\AddAssetCompatibilityHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\CheckAssetExists\CheckAssetExistsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\CheckAssetExists\CheckAssetExistsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles\ImportZipFilesPayload;
@@ -46,29 +46,14 @@ class AssetUploadController extends AdminAbstractController
     #[Route('/add-asset', name: 'opendxp_admin_asset_addasset', methods: ['POST'])]
     public function addAssetAction(AddAssetPayload $payload, AddAssetHandler $handler): JsonResponse
     {
-        $asset = $handler($payload)->asset;
-
-        return $this->adminJson(ApiResponse::ok([
-            'asset' => [
-                'id' => $asset->getId(),
-                'path' => $asset->getFullPath(),
-                'type' => $asset->getType(),
-            ],
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[AsHtmlContentTypeResponse]
     #[Route('/add-asset-compatibility', name: 'opendxp_admin_asset_addassetcompatibility', methods: ['POST'])]
-    public function addAssetCompatibilityAction(AddAssetPayload $payload, AddAssetHandler $handler): JsonResponse
+    public function addAssetCompatibilityAction(AddAssetPayload $payload, AddAssetCompatibilityHandler $handler): JsonResponse
     {
-        $asset = $handler($payload)->asset;
-
-        return $this->adminJson(ApiResponse::ok([
-            'msg' => 'Success',
-            'id' => $asset->getId(),
-            'fullpath' => $asset->getRealFullPath(),
-            'type' => $asset->getType(),
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/exists', name: 'opendxp_admin_asset_exists', methods: ['GET'])]
@@ -76,18 +61,14 @@ class AssetUploadController extends AdminAbstractController
         CheckAssetExistsPayload $payload,
         CheckAssetExistsHandler $handler,
     ): JsonResponse {
-        return new JsonResponse([
-            'exists' => $handler($payload),
-        ]);
+        return $this->apiJson($handler($payload));
     }
 
     #[AsHtmlContentTypeResponse]
     #[Route('/replace-asset', name: 'opendxp_admin_asset_replaceasset', methods: ['POST', 'PUT'])]
     public function replaceAssetAction(ReplaceAssetPayload $payload, ReplaceAssetHandler $handler): JsonResponse
     {
-        $asset = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['id' => $asset->getId(), 'path' => $asset->getRealFullPath()]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/import-zip', name: 'opendxp_admin_asset_importzip', methods: ['POST'])]
@@ -95,18 +76,10 @@ class AssetUploadController extends AdminAbstractController
         ImportZipPayload $payload,
         ImportZipHandler $handler,
     ): Response {
-        $importResult = $handler($payload);
-
         // encodeJson(), not adminJson(): this POST isn't XHR, so a JSON content-type
         // would trigger a download dialog in most browsers instead of being read by the iframe
         return new Response(
-            $this
-                ->encodeJson(
-                    ApiResponse::ok([
-                        'jobs'  => $importResult->jobs,
-                        'jobId' => $importResult->jobId
-                    ])->jsonSerialize()
-                )
+            $this->encodeJson(['success' => true, ...get_object_vars($handler($payload))])
         );
     }
 
@@ -118,6 +91,6 @@ class AssetUploadController extends AdminAbstractController
 
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 }

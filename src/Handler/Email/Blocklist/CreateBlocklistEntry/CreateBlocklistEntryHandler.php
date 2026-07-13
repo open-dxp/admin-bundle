@@ -9,7 +9,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
 
 final class CreateBlocklistEntryHandler
 {
-    public function __invoke(BlocklistPayload $payload): array
+    public function __invoke(BlocklistPayload $payload): CreateBlocklistEntryResult
     {
         $data = $payload->data;
         unset($data['id']);
@@ -18,6 +18,6 @@ final class CreateBlocklistEntryHandler
         $address->setValues($data);
         $address->save();
 
-        return $address->getObjectVars();
+        return new CreateBlocklistEntryResult($address->getObjectVars());
     }
 }

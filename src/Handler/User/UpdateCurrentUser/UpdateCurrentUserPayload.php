@@ -17,10 +17,11 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUser;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
+use OpenDxp\Bundle\AdminBundle\Payload\OwnUserAwareInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 
-final readonly class UpdateCurrentUserPayload implements ExtJsPayloadInterface
+final readonly class UpdateCurrentUserPayload implements ExtJsPayloadInterface, OwnUserAwareInterface
 {
     public function __construct(
         public readonly int $requestedUserId,
@@ -41,5 +42,10 @@ final readonly class UpdateCurrentUserPayload implements ExtJsPayloadInterface
             isPasswordReset: (bool) \OpenDxp\Tool\Session::useBag($request->getSession(), static fn (AttributeBagInterface $adminSession) => (bool) $adminSession->get('password_reset')),
             keyBindingsJson: $keyBindingsJson !== null ? (string) $keyBindingsJson : null,
         );
+    }
+
+    public function getOwnUserId(): int
+    {
+        return $this->requestedUserId;
     }
 }

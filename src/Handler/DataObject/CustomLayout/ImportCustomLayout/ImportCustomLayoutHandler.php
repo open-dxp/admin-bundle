@@ -27,13 +27,20 @@ final class ImportCustomLayoutHandler
 {
     public function __invoke(ImportCustomLayoutPayload $payload): void
     {
+        $importData = $payload->importData;
+
+        if (isset($importData['name'])
+            && DataObject\ClassDefinition\CustomLayout::getByName($importData['name']) instanceof DataObject\ClassDefinition\CustomLayout
+        ) {
+            throw new AdminOperationFailedException('', ['nameAlreadyInUse' => true]);
+        }
+
         $customLayout = DataObject\ClassDefinition\CustomLayout::getById($payload->id);
         if (!$customLayout) {
             throw new AdminOperationFailedException('Custom layout not found');
         }
 
         try {
-            $importData = $payload->importData;
             $layout = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($importData['layoutDefinitions'], true);
             $customLayout->setLayoutDefinitions($layout);
             if (isset($importData['name'])) {

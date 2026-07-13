@@ -106,6 +106,6 @@ final class BuildContentExportJobsHandler
             ]];
         }
 
-        return new BuildContentExportJobsResult(jobs: $jobs, exportId: $exportId);
+        return new BuildContentExportJobsResult(jobs: $jobs, id: $exportId);
     }
 }

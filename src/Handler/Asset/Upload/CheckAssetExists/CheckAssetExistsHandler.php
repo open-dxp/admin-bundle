@@ -24,7 +24,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class CheckAssetExistsHandler
 {
-    public function __invoke(CheckAssetExistsPayload $payload): bool
+    public function __invoke(CheckAssetExistsPayload $payload): CheckAssetExistsResult
     {
         $parentId = $payload->parentId;
         $filename = $payload->filename;
@@ -41,6 +41,6 @@ final class CheckAssetExistsHandler
             $dir = '/' . trim($dir, '/ ');
         }
 
-        return Asset\Service::pathExists($parentAsset->getRealFullPath() . $dir . '/' . $filename);
+        return new CheckAssetExistsResult(Asset\Service::pathExists($parentAsset->getRealFullPath() . $dir . '/' . $filename));
     }
 }

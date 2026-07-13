@@ -37,7 +37,7 @@ class AssetController extends AdminAbstractController
     #[Route('/search-assets', name: 'opendxp_admin_gdpr_asset_searchasset', methods: ['GET'])]
     public function searchAssetAction(SearchAssetsHandler $handler, SearchDataPayload $payload): JsonResponse
     {
-        return $this->adminJson($handler($payload)->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/export', name: 'opendxp_admin_gdpr_asset_exportassets', methods: ['GET'])]

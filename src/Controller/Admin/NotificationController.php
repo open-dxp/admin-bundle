@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Notification\DeleteAllNotifications\DeleteAllNotificationsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Notification\DeleteNotification\DeleteNotificationHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Notification\FindAllNotifications\FindAllNotificationsHandler;
@@ -49,9 +48,7 @@ class NotificationController extends AdminAbstractController
         GetRecipientsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[IsGranted(CorePermission::NotificationsSend->value)]
@@ -62,7 +59,7 @@ class NotificationController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Notifications->value)]
@@ -71,13 +68,7 @@ class NotificationController extends AdminAbstractController
         FindNotificationHandler $handler,
         IdQueryPayload $payload,
     ): JsonResponse {
-        try {
-            $result = $handler($payload);
-
-            return $this->adminJson(ApiResponse::ok(['data' => $result->data]));
-        } catch (\Throwable) {
-            return $this->adminJson(['success' => false]);
-        }
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Notifications->value)]
@@ -86,9 +77,7 @@ class NotificationController extends AdminAbstractController
         FindAllNotificationsHandler $handler,
         FindAllNotificationsPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['total' => $result->total, 'data' => $result->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Notifications->value)]
@@ -97,9 +86,7 @@ class NotificationController extends AdminAbstractController
         FindLastUnreadNotificationsHandler $handler,
         FindLastUnreadNotificationsPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['total' => $result->total, 'data' => $result->data, 'unread' => $result->unread]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Notifications->value)]
@@ -110,7 +97,7 @@ class NotificationController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Notifications->value)]
@@ -121,7 +108,7 @@ class NotificationController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Notifications->value)]
@@ -132,6 +119,6 @@ class NotificationController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 }

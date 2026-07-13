@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionTree;
 
-final readonly class FieldCollectionTreeResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class FieldCollectionTreeResult implements ResultInterface
 {
     public function __construct(
         public array $definitions,
-        public array $layoutDefinitions,
     ) {}
 }

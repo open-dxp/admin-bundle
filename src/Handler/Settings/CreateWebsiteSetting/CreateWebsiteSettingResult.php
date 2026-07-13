@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\CreateWebsiteSetting;
 
-final readonly class CreateWebsiteSettingResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class CreateWebsiteSettingResult implements ResultInterface
 {
     public function __construct(
         public array $data,

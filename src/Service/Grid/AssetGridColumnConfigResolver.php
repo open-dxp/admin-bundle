@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\Grid;
 
-use OpenDxp\Bundle\AdminBundle\Dto\Grid\GridColumnConfigResult;
+use OpenDxp\Bundle\AdminBundle\Dto\Grid\AssetGridColumnConfig;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigFavourite;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
@@ -35,7 +35,7 @@ final class AssetGridColumnConfigResolver
         private readonly AdminUserContextInterface $userContext,
     ) {}
 
-    public function resolve(array $params, bool $isDelete = false): GridColumnConfigResult
+    public function resolve(array $params, bool $isDelete = false): AssetGridColumnConfig
     {
         $user = $this->userContext->getAdminUser();
         $classId = $params['id'];
@@ -79,7 +79,7 @@ final class AssetGridColumnConfigResolver
             $gridContext = json_decode($gridContext, true);
         }
 
-        return new GridColumnConfigResult(
+        return new AssetGridColumnConfig(
             availableFields: $availableFields,
             settings: $settings,
             availableConfigs: $availableConfigs,

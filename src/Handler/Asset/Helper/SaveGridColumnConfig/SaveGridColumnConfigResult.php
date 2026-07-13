@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig;
 
-final readonly class SaveGridColumnConfigResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class SaveGridColumnConfigResult implements ResultInterface
 {
     public function __construct(
         public array $settings,

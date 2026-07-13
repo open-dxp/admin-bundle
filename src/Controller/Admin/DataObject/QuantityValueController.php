@@ -18,7 +18,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValues\ConvertAllQuantityValuesHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValues\ConvertAllQuantityValuesPayload;
@@ -55,7 +54,7 @@ class QuantityValueController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/unit-export', name: 'unitexport', methods: ['GET'])]
@@ -72,9 +71,7 @@ class QuantityValueController extends AdminAbstractController
     #[IsGranted(CorePermission::QuantityValueUnits->value)]
     public function unitProxyGetAction(GetQuantityValueUnitsHandler $handler, GetQuantityValueUnitsPayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/unit-proxy', name: 'unitproxy', methods: ['POST', 'PUT'])]
@@ -97,7 +94,7 @@ class QuantityValueController extends AdminAbstractController
         QuantityValueUnitPayload $payload,
         DeleteQuantityValueUnitHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/unit-proxy-update', name: 'unitproxy_update', methods: ['POST', 'PUT'])]
@@ -106,7 +103,7 @@ class QuantityValueController extends AdminAbstractController
         QuantityValueUnitPayload $payload,
         UpdateQuantityValueUnitHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/unit-proxy-create', name: 'unitproxy_create', methods: ['POST', 'PUT'])]
@@ -115,36 +112,26 @@ class QuantityValueController extends AdminAbstractController
         QuantityValueUnitPayload $payload,
         CreateQuantityValueUnitHandler $handler,
     ): JsonResponse {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/unit-list', name: 'unitlist', methods: ['GET'])]
     public function unitListAction(GetQuantityValueUnitListHandler $handler, GetQuantityValueUnitListPayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->data, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/convert', name: 'convert', methods: ['GET'])]
     #[IsGranted(CorePermission::Objects->value)]
     public function convertAction(ConvertQuantityValueHandler $handler, ConvertQuantityValuePayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['value' => $result->value]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/convert-all', name: 'convertall', methods: ['GET'])]
     #[IsGranted(CorePermission::Objects->value)]
     public function convertAllAction(ConvertAllQuantityValuesHandler $handler, ConvertAllQuantityValuesPayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'value' => $result->value,
-            'fromUnit' => $result->fromUnit,
-            'values' => $result->values,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 }

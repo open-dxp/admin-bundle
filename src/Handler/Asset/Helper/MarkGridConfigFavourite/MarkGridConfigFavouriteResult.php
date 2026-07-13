@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite;
 
-final readonly class MarkGridConfigFavouriteResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class MarkGridConfigFavouriteResult implements ResultInterface
 {
     public function __construct(
         public bool $specializedConfigs,

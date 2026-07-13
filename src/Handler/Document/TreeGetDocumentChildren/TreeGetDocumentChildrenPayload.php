@@ -28,6 +28,11 @@ final readonly class TreeGetDocumentChildrenPayload implements ExtJsPayloadInter
         public readonly array $allParams,
     ) {}
 
+    public function hasPagination(): bool
+    {
+        return array_key_exists('limit', $this->allParams);
+    }
+
     public static function fromRequest(Request $request): static
     {
         return new static(

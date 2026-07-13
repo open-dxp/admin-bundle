@@ -16,7 +16,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings;
 
-final readonly class SettingsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class SettingsResult implements ResultInterface
 {
     public function __construct(
         public array $templateParams,

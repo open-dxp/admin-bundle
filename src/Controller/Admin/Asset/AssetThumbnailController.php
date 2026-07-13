@@ -20,7 +20,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 use DateInterval;
 use DateTime;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetDocumentThumbnail\GetDocumentThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetDocumentThumbnail\GetDocumentThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderContentPreview\GetFolderContentPreviewPayload;
@@ -147,9 +146,7 @@ class AssetThumbnailController extends AdminAbstractController
         GetFolderContentPreviewPayload $payload,
         GetFolderContentPreviewHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['assets' => $result->assets, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     private function addThumbnailCacheHeaders(Response $response): void

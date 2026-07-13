@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\GDPR\Asset\SearchAssets;
 
-final readonly class SearchAssetsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class SearchAssetsResult implements ResultInterface
 {
     public function __construct(
         public array $data,

@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\CopyDocument\CopyDocumentHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\CopyDocument\CopyDocumentPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Copy\CopyInfo\CopyInfoHandler;
@@ -67,7 +66,7 @@ class DocumentCopyController extends AdminAbstractController
             $session->set($payload->transactionId, $payload->updatedIdStore);
         }, 'opendxp_copy');
 
-        return $this->adminJson(ApiResponse::ok(['id' => $payload->documentId]));
+        return $this->adminJson(['success' => true, 'id' => $payload->documentId]);
     }
 
     #[Route('/copy', name: 'opendxp_admin_document_document_copy', methods: ['POST'])]
@@ -89,6 +88,6 @@ class DocumentCopyController extends AdminAbstractController
             Session::getSessionBag($request->getSession(), 'opendxp_copy')->set($payload->transactionId, $sessionBag);
         }
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 }

@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Link\GetLinkData\GetLinkDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Link\SaveLink\SaveLinkHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Link\SaveLink\SaveLinkPayload;
@@ -52,14 +51,6 @@ class LinkController extends DocumentControllerBase
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
     public function saveAction(SaveLinkPayload $payload, SaveLinkHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'data' => [
-                'versionDate' => $result->link->getModificationDate(),
-                'versionCount' => $result->link->getVersionCount(),
-            ],
-            'treeData' => $result->treeData,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 }

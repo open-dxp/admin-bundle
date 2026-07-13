@@ -18,17 +18,18 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail\ClearAssetThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ClearAssetThumbnail\ClearAssetThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolder\CreateAssetFolderPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolder\CreateAssetFolderHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAsset\DeleteAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAsset\DeleteAssetHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildren\GetAssetChildrenPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetChildren\GetAssetChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\TreeGetAssetChildren\TreeGetAssetChildrenPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\TreeGetAssetChildren\TreeGetAssetChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetData\GetAssetDataPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetData\GetAssetDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\GridProxy\GridProxyHandler;
@@ -40,11 +41,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
-use OpenDxp\Model\Element\ElementInterface;
 use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -72,16 +72,16 @@ class AssetController extends ElementControllerBase
             $csrfProtection->checkCsrfToken($request);
         }
 
-        return $this->adminJson($handler($payload)->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Override]
     #[Route('/tree-get-root', name: 'opendxp_admin_asset_treegetroot', methods: ['GET'])]
     public function treeGetRootAction(
-        #[MapQueryParameter] ?string $elementType = null,
-        #[MapQueryParameter(flags: FILTER_NULL_ON_FAILURE)] ?int $id = null,
+        GetTreeRootPayload $payload,
+        GetTreeRootHandler $handler,
     ): JsonResponse {
-        return parent::treeGetRootAction($elementType, $id);
+        return parent::treeGetRootAction($payload, $handler);
     }
 
     #[Override]
@@ -98,31 +98,34 @@ class AssetController extends ElementControllerBase
         GetAssetDataPayload $payload,
         GetAssetDataHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_asset_treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(
-        GetAssetChildrenPayload $payload,
-        GetAssetChildrenHandler $handler,
+        Request $request,
+        TreeGetAssetChildrenPayload $payload,
+    ): Response {
+        return match ($payload->hasPagination()) {
+            true  => $this->forward(self::class . '::treeGetChildrenByIdPaginatedAction', [], $request->query->all()),
+            false => $this->forward(self::class . '::treeGetChildrenByIdListAction', [], $request->query->all()),
+        };
+    }
+
+    #[Route('/tree-get-children-by-id-paginated', name: 'opendxp_admin_asset_treegetchildrenbyidpaginated', methods: ['GET'])]
+    public function treeGetChildrenByIdPaginatedAction(
+        TreeGetAssetChildrenPayload $payload,
+        TreeGetAssetChildrenHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
+        return $this->apiJson($handler($payload));
+    }
 
-        if ($payload->hasLimit) {
-            return $this->adminJson([
-                'offset'   => $result->offset,
-                'limit'    => $result->limit,
-                'total'    => $result->totalChildCount,
-                'overflow' => $payload->filter !== null && ($result->filteredTotalCount > $result->limit),
-                'nodes'    => $result->assets,
-                'filter'   => $result->filter ?: '',
-                'inSearch' => $payload->inSearch,
-            ]);
-        }
-
-        return $this->adminJson($result->assets);
+    #[Route('/tree-get-children-by-id-list', name: 'opendxp_admin_asset_treegetchildrenbyidlist', methods: ['GET'])]
+    public function treeGetChildrenByIdListAction(
+        TreeGetAssetChildrenPayload $payload,
+        TreeGetAssetChildrenHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), rootProperty: 'nodes');
     }
 
     #[Route('/add-folder', name: 'opendxp_admin_asset_addfolder', methods: ['POST'])]
@@ -130,7 +133,7 @@ class AssetController extends ElementControllerBase
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/delete', name: 'opendxp_admin_asset_delete', methods: ['DELETE'])]
@@ -138,33 +141,23 @@ class AssetController extends ElementControllerBase
     {
         $result = $handler($payload);
 
-        if ($result->deleted) {
-            return $this->adminJson(ApiResponse::ok(['deleted' => $result->deleted]));
+        if ($result->deleted !== null) {
+            return $this->apiJson($result);
         }
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/update', name: 'opendxp_admin_asset_update', methods: ['PUT'])]
     public function updateAction(UpdateAssetPayload $payload, UpdateAssetHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/save', name: 'opendxp_admin_asset_save', methods: ['PUT', 'POST'])]
     public function saveAction(SaveAssetHandler $handler, SaveAssetPayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'data'     => [
-                'versionDate'  => $result->versionDate,
-                'versionCount' => $result->versionCount,
-            ],
-            'treeData' => $result->treeData,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/clear-thumbnail', name: 'opendxp_admin_asset_clearthumbnail', methods: ['POST'])]
@@ -172,12 +165,7 @@ class AssetController extends ElementControllerBase
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
-    #[Override]
-    protected function getTreeNodeConfig(ElementInterface $element): array
-    {
-        return $this->elementService->getElementTreeNodeConfig($element);
-    }
 }

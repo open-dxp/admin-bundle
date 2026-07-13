@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\GetSnippetData;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\Document\Snippet;
 use OpenDxp\Model\Version;
 
-final readonly class GetSnippetDataResult
+final readonly class GetSnippetDataResult implements ResultInterface
 {
     public function __construct(
         public Snippet $snippet,

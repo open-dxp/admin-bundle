@@ -17,8 +17,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SuggestClassIdentifier;
 
-final readonly class SuggestClassIdentifierResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class SuggestClassIdentifierResult implements ResultInterface
 {
+    /**
+     * @param array<int, string> $existingIds
+     */
     public function __construct(
         public int $suggestedIdentifier,
         public array $existingIds,

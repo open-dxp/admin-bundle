@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Tags\RemoveTagFromElement;
 
-final readonly class RemoveTagFromElementResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class RemoveTagFromElementResult implements ResultInterface
 {
     public function __construct(
         public int $id,

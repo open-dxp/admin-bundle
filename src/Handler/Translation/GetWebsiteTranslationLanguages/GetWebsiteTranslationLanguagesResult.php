@@ -16,8 +16,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\GetWebsiteTranslationLanguages;
 
-final readonly class GetWebsiteTranslationLanguagesResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetWebsiteTranslationLanguagesResult implements ResultInterface
 {
+    /**
+     * @param string[] $view
+     * @param string[] $edit
+     */
     public function __construct(
         public array $view,
         public array $edit,

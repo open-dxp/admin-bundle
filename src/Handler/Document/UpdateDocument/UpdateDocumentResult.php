@@ -16,7 +16,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateDocument;
 
-final readonly class UpdateDocumentResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class UpdateDocumentResult implements ResultInterface
 {
     public function __construct(
         public readonly array $treeData,

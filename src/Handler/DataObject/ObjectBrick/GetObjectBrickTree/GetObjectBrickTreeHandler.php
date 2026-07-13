@@ -31,7 +31,7 @@ final class GetObjectBrickTreeHandler
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
-    public function __invoke(GetObjectBrickTreePayload $payload): ObjectBrickTreeResult
+    public function __invoke(GetObjectBrickTreePayload $payload): ObjectBrickTreeResult|ObjectBrickTreeEditorResult
     {
         $forObjectEditor = $payload->forObjectEditor;
         $objectId = $payload->objectId;
@@ -146,9 +146,16 @@ final class GetObjectBrickTreeHandler
         ]);
         $this->eventDispatcher->dispatch($event, AdminEvents::CLASS_OBJECTBRICK_LIST_PRE_SEND_DATA);
 
-        return new ObjectBrickTreeResult(
-            $event->getArgument('list'),
-            $event->getArgument('layoutDefinitions'),
-        );
+        $definitions = $event->getArgument('list');
+        $layoutDefinitions = $event->getArgument('layoutDefinitions');
+
+        if ($forObjectEditor) {
+            return new ObjectBrickTreeEditorResult(
+                objectbricks: $definitions,
+                layoutDefinitions: $layoutDefinitions,
+            );
+        }
+
+        return new ObjectBrickTreeResult(definitions: $definitions);
     }
 }

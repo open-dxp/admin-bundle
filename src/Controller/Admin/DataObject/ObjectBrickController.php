@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\DeleteObjectBrick\DeleteObjectBrickHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ExportObjectBrick\ExportObjectBrickHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ExportObjectBrick\ExportObjectBrickPayload;
@@ -51,19 +50,13 @@ class ObjectBrickController extends AdminAbstractController
     #[Route('/objectbrick-get', name: 'objectbrickget', methods: ['GET'])]
     public function objectbrickGetAction(GetObjectBrickHandler $handler, GetObjectBrickPayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-        $data = $result->data;
-        $data['isWriteable'] = $result->isWriteable;
-
-        return $this->adminJson($data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/objectbrick-update', name: 'objectbrickupdate', methods: ['PUT', 'POST'])]
     public function objectbrickUpdateAction(UpdateObjectBrickHandler $handler, UpdateObjectBrickPayload $payload): JsonResponse
     {
-        $brickDef = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['id' => $brickDef->getKey()]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Objectbricks->value)]
@@ -72,7 +65,7 @@ class ObjectBrickController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/objectbrick-tree', name: 'objectbricktree', methods: ['GET', 'POST'])]
@@ -81,18 +74,16 @@ class ObjectBrickController extends AdminAbstractController
         $result = $handler($payload);
 
         if ($payload->forObjectEditor) {
-            return $this->adminJson(['objectbricks' => $result->definitions, 'layoutDefinitions' => $result->layoutDefinitions]);
+            return $this->apiJson($result);
         }
 
-        return $this->adminJson($result->definitions);
+        return $this->apiJson($result, rootProperty: 'definitions');
     }
 
     #[Route('/objectbrick-list', name: 'objectbricklist', methods: ['GET'])]
     public function objectbrickListAction(GetObjectBrickListHandler $handler, GetObjectBrickListPayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(['objectbricks' => $result->objectbricks]);
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Objectbricks->value)]
@@ -102,7 +93,7 @@ class ObjectBrickController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Objectbricks->value)]
@@ -122,6 +113,6 @@ class ObjectBrickController extends AdminAbstractController
     #[Route('/get-bricks-usages', name: 'getbrickusages', methods: ['GET'])]
     public function getBrickUsagesAction(GetBrickUsagesHandler $handler, GetBrickUsagesPayload $payload): Response
     {
-        return $this->adminJson($handler($payload)->usages);
+        return $this->apiJson($handler($payload), rootProperty: 'usages');
     }
 }

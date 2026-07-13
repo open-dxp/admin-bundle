@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetModalCustomHtml;
 
-final readonly class GetModalCustomHtmlResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetModalCustomHtmlResult implements ResultInterface
 {
     public function __construct(
         public array $customHtml,

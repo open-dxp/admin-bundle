@@ -57,6 +57,6 @@ final class UpdateGroupHandler
             $item['modificationDate'] = $config->getModificationDate();
         }
 
-        return new UpdateGroupResult(item: $item);
+        return new UpdateGroupResult(data: $item);
     }
 }

@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\AddCustomLayout\AddCustomLayoutHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\AddCustomLayout\AddCustomLayoutPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\DeleteCustomLayout\DeleteCustomLayoutHandler;
@@ -53,30 +52,19 @@ class CustomLayoutController extends AdminAbstractController
     #[Route('/get-custom-layout', name: 'getcustomlayout', methods: ['GET'])]
     public function getCustomLayoutAction(GetCustomLayoutHandler $handler, GetCustomLayoutPayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-        $data = $result->data;
-        $data['isWriteable'] = $result->isWriteable;
-
-        return $this->adminJson(ApiResponse::ok(['data' => $data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/add-custom-layout', name: 'addcustomlayout', methods: ['POST'])]
     public function addCustomLayoutAction(AddCustomLayoutHandler $handler, AddCustomLayoutPayload $payload): JsonResponse
     {
-        $customLayout = $handler($payload);
-
-        $data = $customLayout->getObjectVars();
-        $data['isWriteable'] = $customLayout->isWriteable();
-
-        return $this->adminJson(ApiResponse::ok(['id' => $customLayout->getId(), 'name' => $customLayout->getName(), 'data' => $data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/save-custom-layout', name: 'savecustomlayout', methods: ['PUT'])]
     public function saveCustomLayoutAction(SaveCustomLayoutHandler $handler, SaveCustomLayoutPayload $payload): JsonResponse
     {
-        $customLayout = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['id' => $customLayout->getId(), 'data' => $customLayout->getObjectVars()]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/delete-custom-layout', name: 'deletecustomlayout', methods: ['DELETE'])]
@@ -84,7 +72,7 @@ class CustomLayoutController extends AdminAbstractController
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[AsHtmlContentTypeResponse]
@@ -93,13 +81,9 @@ class CustomLayoutController extends AdminAbstractController
         ImportCustomLayoutHandler $handler,
         ImportCustomLayoutPayload $payload,
     ): Response {
-        if ($payload->nameAlreadyInUse) {
-            return $this->adminJson(ApiResponse::error(null, ['nameAlreadyInUse' => true]));
-        }
-
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/export-custom-layout-definition', name: 'exportcustomlayoutdefinition', methods: ['GET'])]
@@ -117,24 +101,18 @@ class CustomLayoutController extends AdminAbstractController
     #[Route('/get-custom-layout-definitions', name: 'getcustomlayoutdefinitions', methods: ['GET'])]
     public function getCustomLayoutDefinitionsAction(GetCustomLayoutDefinitionsHandler $handler, GetCustomLayoutDefinitionsPayload $payload): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->definitions]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/get-all-layouts', name: 'getalllayouts', methods: ['GET'])]
     public function getAllLayoutsAction(GetAllLayoutsHandler $handler): JsonResponse
     {
-        return $this->adminJson(['data' => $handler()->layouts]);
+        return $this->apiJson($handler());
     }
 
     #[Route('/suggest-custom-layout-identifier', name: 'suggestcustomlayoutidentifier', methods: ['GET'])]
-    public function suggestCustomLayoutIdentifierAction(SuggestCustomLayoutIdentifierHandler $handler, SuggestCustomLayoutIdentifierPayload $payload): Response
+    public function suggestCustomLayoutIdentifierAction(SuggestCustomLayoutIdentifierHandler $handler, SuggestCustomLayoutIdentifierPayload $payload): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson([
-            'suggestedIdentifier' => $result->suggestedIdentifier,
-            'existingIds' => $result->existingIds,
-            'existingNames' => $result->existingNames,
-        ]);
+        return $this->apiJson($handler($payload));
     }
 }

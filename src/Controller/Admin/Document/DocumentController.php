@@ -16,7 +16,6 @@
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentPayload;
@@ -60,13 +59,15 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateDocument\UpdateDocumentHan
 use OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateDocument\UpdateDocumentPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootPayload;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
-use OpenDxp\Model\Element\ElementInterface;
 use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -85,10 +86,10 @@ class DocumentController extends ElementControllerBase
     #[Override]
     #[Route('/tree-get-root', name: 'opendxp_admin_document_document_treegetroot', methods: ['GET'])]
     public function treeGetRootAction(
-        #[MapQueryParameter] ?string $elementType = null,
-        #[MapQueryParameter(flags: FILTER_NULL_ON_FAILURE)] ?int $id = null,
+        GetTreeRootPayload $payload,
+        GetTreeRootHandler $handler,
     ): JsonResponse {
-        return parent::treeGetRootAction($elementType, $id);
+        return parent::treeGetRootAction($payload, $handler);
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -108,32 +109,40 @@ class DocumentController extends ElementControllerBase
         GetDocumentDataPayload $payload,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/tree-get-children-by-id', name: 'opendxp_admin_document_document_treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(
-        TreeGetDocumentChildrenHandler $handler,
+        Request $request,
         TreeGetDocumentChildrenPayload $payload,
+    ): Response
+    {
+        return match ($payload->hasPagination()) {
+            true  => $this->forward(self::class . '::treeGetChildrenByIdPaginatedAction', [], $request->query->all()),
+            false => $this->forward(self::class . '::treeGetChildrenByIdListAction', [], $request->query->all()),
+        };
+    }
+
+    #[IsGranted(CorePermission::Documents->value)]
+    #[Route('/tree-get-children-by-id-paginated', name: 'opendxp_admin_document_document_treegetchildrenbyidpaginated', methods: ['GET'])]
+    public function treeGetChildrenByIdPaginatedAction(
+        TreeGetDocumentChildrenPayload $payload,
+        TreeGetDocumentChildrenHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
+        return $this->apiJson($handler($payload));
+    }
 
-        if ($result->paginated) {
-            return $this->adminJson([
-                'offset' => $result->offset,
-                'limit' => $result->limit,
-                'total' => $result->total,
-                'nodes' => $result->documents,
-                'filter' => $result->filter ?: '',
-                'inSearch' => $payload->inSearch,
-            ]);
-        }
-
-        return $this->adminJson($result->documents);
+    #[IsGranted(CorePermission::Documents->value)]
+    #[Route('/tree-get-children-by-id-list', name: 'opendxp_admin_document_document_treegetchildrenbyidlist', methods: ['GET'])]
+    public function treeGetChildrenByIdListAction(
+        TreeGetDocumentChildrenPayload $payload,
+        TreeGetDocumentChildrenHandler $handler,
+    ): JsonResponse
+    {
+        return $this->apiJson($handler($payload), rootProperty: 'nodes');
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -143,12 +152,7 @@ class DocumentController extends ElementControllerBase
         AddDocumentHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok([
-            'id' => $result->document->getId(),
-            'type' => $result->document->getType(),
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -161,10 +165,10 @@ class DocumentController extends ElementControllerBase
         $result = $handler($payload);
 
         if ($payload->type === 'children') {
-            return $this->adminJson(ApiResponse::ok(['deleted' => $result->deleted]));
+            return $this->apiJson($result);
         }
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -174,9 +178,7 @@ class DocumentController extends ElementControllerBase
         UpdateDocumentHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/doc-types', name: 'opendxp_admin_document_document_doctypesget', methods: ['GET'])]
@@ -185,9 +187,7 @@ class DocumentController extends ElementControllerBase
         GetDocTypesListHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['data' => $result->docTypes, 'total' => $result->total]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -202,7 +202,7 @@ class DocumentController extends ElementControllerBase
             'destroy' => $this->forward(self::class . '::docTypesDestroyAction', [], $request->query->all()),
             'update'  => $this->forward(self::class . '::docTypesUpdateAction', [], $request->query->all()),
             'create'  => $this->forward(self::class . '::docTypesCreateAction', [], $request->query->all()),
-            default   => $this->adminJson(false),
+            default   => throw new BadRequestHttpException(),
         };
     }
 
@@ -214,7 +214,7 @@ class DocumentController extends ElementControllerBase
         DeleteDocTypeHandler $handler,
     ): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -225,7 +225,7 @@ class DocumentController extends ElementControllerBase
         UpdateDocTypeHandler $handler,
     ): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -236,7 +236,7 @@ class DocumentController extends ElementControllerBase
         CreateDocTypeHandler $handler,
     ): JsonResponse
     {
-        return $this->adminJson(ApiResponse::ok(['data' => $handler($payload)->data]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -246,9 +246,7 @@ class DocumentController extends ElementControllerBase
         GetDocTypesByTypeHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(['docTypes' => $result->docTypes]);
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -258,9 +256,7 @@ class DocumentController extends ElementControllerBase
         GetSiteCustomSettingsHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(['data' => $result->nodes]);
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -270,9 +266,7 @@ class DocumentController extends ElementControllerBase
         UpdateSiteHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->siteVars);
+        return $this->apiJson($handler($payload), rootProperty: 'siteVars');
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -284,7 +278,7 @@ class DocumentController extends ElementControllerBase
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -294,12 +288,7 @@ class DocumentController extends ElementControllerBase
         GetDocumentIdForPathHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
-        if (!$result) {
-            return $this->adminJson(false);
-        }
-
-        return $this->adminJson(['id' => $result->id, 'type' => $result->type]);
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -309,9 +298,7 @@ class DocumentController extends ElementControllerBase
         GetLanguageTreeHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson($result->nodes);
+        return $this->apiJson($handler($payload), rootProperty: 'nodes');
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -321,13 +308,7 @@ class DocumentController extends ElementControllerBase
         GetLanguageTreeRootHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson([
-            'root' => $result->root,
-            'columns' => $result->columns,
-            'languages' => $result->languages,
-        ]);
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -339,7 +320,7 @@ class DocumentController extends ElementControllerBase
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -349,12 +330,7 @@ class DocumentController extends ElementControllerBase
         DetermineTranslationParentHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::fromBool($result->found, [
-            'targetPath' => $result->targetPath,
-            'targetId' => $result->targetId,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -366,7 +342,7 @@ class DocumentController extends ElementControllerBase
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -378,7 +354,7 @@ class DocumentController extends ElementControllerBase
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -388,17 +364,7 @@ class DocumentController extends ElementControllerBase
         CheckTranslationLanguageHandler $handler,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::fromBool($result->found, [
-            'language' => $result->language,
-            'translationLinks' => $result->translationLinks,
-        ]));
+        return $this->apiJson($handler($payload));
     }
 
-    #[Override]
-    public function getTreeNodeConfig(ElementInterface $element): array
-    {
-        return $this->elementService->getElementTreeNodeConfig($element);
-    }
 }

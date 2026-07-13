@@ -20,8 +20,8 @@ namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject\DataObjectController;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectChildren\GetDataObjectChildrenHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetChildrenById\TreeGetChildrenByIdHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetChildrenById\TreeGetChildrenByIdPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildren\TreeGetDataObjectChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildren\TreeGetDataObjectChildrenPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Element\SessionService;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
@@ -223,18 +223,18 @@ class ModelDataObjectPermissionsTest extends AbstractPermissionTest
         $elementService = $this->buildElementService($user);
         $userContext = $this->buildUserContext($user);
         $childrenHandler = new GetDataObjectChildrenHandler($userContext, $elementService);
-        $handler = new TreeGetChildrenByIdHandler($userContext, $elementService, $childrenHandler, new EventDispatcher());
+        $handler = new TreeGetDataObjectChildrenHandler($userContext, $elementService, $childrenHandler, new EventDispatcher());
 
         $controller = $this->buildController(DataObjectController::class, $user, [
             (new \ReflectionClass(SessionService::class))->newInstanceWithoutConstructor(),
         ]);
 
-        $request = new Request(['node' => $element->getId()]);
+        $request = new Request(['node' => $element->getId(), 'limit' => 100]);
 
         try {
             TestHelper::callMethod($controller, 'checkPermission', ['objects']);
-            $responseData = $controller->treeGetChildrenByIdAction(
-                TreeGetChildrenByIdPayload::fromRequest($request),
+            $responseData = $controller->treeGetChildrenByIdPaginatedAction(
+                TreeGetDataObjectChildrenPayload::fromRequest($request),
                 $handler,
             );
         } catch (Exception $e) {

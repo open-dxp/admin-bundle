@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Notification\FindAllNotifications;
 
-final readonly class FindAllNotificationsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class FindAllNotificationsResult implements ResultInterface
 {
     public function __construct(
         public array $data,

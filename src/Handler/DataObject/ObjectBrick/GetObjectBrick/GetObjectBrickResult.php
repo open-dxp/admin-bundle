@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrick;
 
-final readonly class GetObjectBrickResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetObjectBrickResult implements ResultInterface
 {
     public function __construct(
         public array $data,
-        public bool $isWriteable,
     ) {}
 }

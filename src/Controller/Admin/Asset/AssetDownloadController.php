@@ -20,7 +20,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 use DateInterval;
 use DateTime;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZip\AddFilesToZipPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZip\AddFilesToZipHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadAsset\DownloadAssetPayload;
@@ -98,9 +97,7 @@ class AssetDownloadController extends AdminAbstractController
         GetDownloadZipJobsPayload $payload,
         GetDownloadZipJobsHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->adminJson(ApiResponse::ok(['jobs' => $result->jobs, 'jobId' => $result->jobId]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/download-as-zip-add-files', name: 'opendxp_admin_asset_downloadaszipaddfiles', methods: ['GET'])]
@@ -110,7 +107,7 @@ class AssetDownloadController extends AdminAbstractController
     ): JsonResponse {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     /**

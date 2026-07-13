@@ -17,13 +17,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Media\GetVideoPreview;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\Asset;
 
-final readonly class PreviewVideoResult
+final readonly class PreviewVideoResult implements ResultInterface
 {
     public function __construct(
         public Asset\Video $asset,
-        public mixed $thumbnail,
+        public ?array $thumbnail,
         public string $configName,
         public bool $isFinished,
     ) {}

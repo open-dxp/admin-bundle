@@ -81,7 +81,7 @@ final class SaveDataObjectHandler
         if ($payload->task === 'session') {
             $this->sessionService->saveObject($object);
 
-            return new SaveDataObjectResult(modificationDate: 0, versionDate: 0, versionCount: 0, treeData: [], draftData: []);
+            return new SaveDataObjectResult(general: ['modificationDate' => 0, 'versionDate' => 0, 'versionCount' => 0], treeData: []);
         }
 
         return $this->coordinator->save($object, $payload->task);

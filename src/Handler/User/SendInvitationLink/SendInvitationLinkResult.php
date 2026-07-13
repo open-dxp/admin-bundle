@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\SendInvitationLink;
 
-final readonly class SendInvitationLinkResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class SendInvitationLinkResult implements ResultInterface
 {
     public function __construct(
-        public bool   $success,
         public string $message,
     ) {}
 }

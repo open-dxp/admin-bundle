@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PreviewVersion;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\DataObject\AbstractObject;
 use OpenDxp\Model\Version;
 
-final readonly class PreviewVersionResult
+final readonly class PreviewVersionResult implements ResultInterface
 {
     public function __construct(
         public AbstractObject $object,

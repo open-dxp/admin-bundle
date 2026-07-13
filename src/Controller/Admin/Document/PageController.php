@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
-use OpenDxp\Bundle\AdminBundle\Dto\Response\ApiResponse;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\CheckPrettyUrl\CheckPrettyUrlHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\CheckPrettyUrl\CheckPrettyUrlPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GeneratePagePreviews\GeneratePagePreviewsHandler;
@@ -34,7 +33,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePageHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePagePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmode\RenderAreabrickIndexEditmodePayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
-use OpenDxp\Document\StaticPageGenerator;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -57,33 +55,9 @@ class PageController extends DocumentControllerBase
     }
 
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
-    public function saveAction(SavePagePayload $payload, StaticPageGenerator $staticPageGenerator, SavePageHandler $handler): JsonResponse
+    public function saveAction(SavePagePayload $payload, SavePageHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
-
-        if ($result->task === self::TASK_PUBLISH || $result->task === self::TASK_UNPUBLISH) {
-            $data = [
-                'versionDate'  => $result->page->getModificationDate(),
-                'versionCount' => $result->page->getVersionCount(),
-            ];
-            if ($staticGeneratorEnabled = $result->page->getStaticGeneratorEnabled()) {
-                $data['staticGeneratorEnabled'] = $staticGeneratorEnabled;
-                $data['staticLastGenerated'] = $staticPageGenerator->getLastModified($result->page);
-            }
-
-            return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData, 'data' => $data]));
-        }
-
-        $draftData = [];
-        if ($result->version) {
-            $draftData = [
-                'id'               => $result->version->getId(),
-                'modificationDate' => $result->version->getDate(),
-                'isAutoSave'       => $result->version->isAutoSave(),
-            ];
-        }
-
-        return $this->adminJson(ApiResponse::ok(['treeData' => $result->treeData, 'draft' => $draftData]));
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/generate-previews', name: 'generatepreviews', methods: ['GET'])]
@@ -91,7 +65,7 @@ class PageController extends DocumentControllerBase
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/display-preview-image', name: 'display_preview_image', methods: ['GET'])]
@@ -99,9 +73,9 @@ class PageController extends DocumentControllerBase
         GetPagePreviewImagePathHandler $handler,
         GetPagePreviewImagePathPayload $payload,
     ): BinaryFileResponse {
-        $filePath = $handler($payload);
+        $result = $handler($payload);
 
-        return new BinaryFileResponse($filePath, 200, [
+        return new BinaryFileResponse($result->filePath, 200, [
             'Content-Type' => 'image/jpg',
         ]);
     }
@@ -109,9 +83,9 @@ class PageController extends DocumentControllerBase
     #[Route('/check-pretty-url', name: 'checkprettyurl', methods: ['POST'])]
     public function checkPrettyUrlAction(CheckPrettyUrlPayload $payload, CheckPrettyUrlHandler $handler): JsonResponse
     {
-        $result = $handler($payload);
+        $handler($payload);
 
-        return $this->adminJson(ApiResponse::fromBool($result->success, ['message' => implode('<br>', $result->messages)]));
+        return $this->apiOk();
     }
 
     #[Route('/clear-editable-data', name: 'cleareditabledata', methods: ['PUT'])]
@@ -119,7 +93,7 @@ class PageController extends DocumentControllerBase
     {
         $handler($payload);
 
-        return $this->adminJson(ApiResponse::ok());
+        return $this->apiOk();
     }
 
     #[Route('/qr-code', name: 'qrcode', methods: ['GET'])]
@@ -127,9 +101,9 @@ class PageController extends DocumentControllerBase
         GenerateQrCodeHandler $handler,
         GenerateQrCodePayload $payload,
     ): BinaryFileResponse {
-        $tmpFile = $handler($payload);
+        $result = $handler($payload);
 
-        $response = new BinaryFileResponse($tmpFile);
+        $response = new BinaryFileResponse($result->filePath);
         $response->headers->set('Content-Type', 'image/png');
 
         if ($payload->download) {
@@ -149,11 +123,6 @@ class PageController extends DocumentControllerBase
         RenderAreabrickIndexEditmodePayload $payload,
         RenderAreabrickIndexEditmodeHandler $handler,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return new JsonResponse([
-            'editableDefinitions' => $result->editableDefinitions,
-            'htmlCode'            => $result->htmlCode,
-        ]);
+        return $this->apiJson($handler($payload));
     }
 }

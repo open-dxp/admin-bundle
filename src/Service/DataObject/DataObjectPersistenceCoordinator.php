@@ -57,11 +57,12 @@ final class DataObjectPersistenceCoordinator
             }
 
             return new SaveDataObjectResult(
-                modificationDate: $object->getModificationDate() ?? 0,
-                versionDate: $newObject->getModificationDate() ?? 0,
-                versionCount: $newObject->getVersionCount(),
+                general: [
+                    'modificationDate' => $object->getModificationDate() ?? 0,
+                    'versionDate' => $newObject->getModificationDate() ?? 0,
+                    'versionCount' => $newObject->getVersionCount(),
+                ],
                 treeData: $treeData,
-                draftData: [],
             );
         }
 
@@ -69,11 +70,12 @@ final class DataObjectPersistenceCoordinator
             $object->saveScheduledTasks();
 
             return new SaveDataObjectResult(
-                modificationDate: $object->getModificationDate() ?? 0,
-                versionDate: $object->getModificationDate() ?? 0,
-                versionCount: $object->getVersionCount(),
+                general: [
+                    'modificationDate' => $object->getModificationDate() ?? 0,
+                    'versionDate' => $object->getModificationDate() ?? 0,
+                    'versionCount' => $object->getVersionCount(),
+                ],
                 treeData: [],
-                draftData: [],
             );
         }
 
@@ -100,11 +102,13 @@ final class DataObjectPersistenceCoordinator
             $newObject = DataObject::getById($object->getId(), ['force' => true]);
 
             return new SaveDataObjectResult(
-                modificationDate: $object->getModificationDate() ?? 0,
-                versionDate: $newObject->getModificationDate() ?? 0,
-                versionCount: $newObject->getVersionCount(),
+                general: [
+                    'modificationDate' => $object->getModificationDate() ?? 0,
+                    'versionDate' => $newObject->getModificationDate() ?? 0,
+                    'versionCount' => $newObject->getVersionCount(),
+                ],
                 treeData: $treeData,
-                draftData: $draftData,
+                draft: $draftData,
             );
         }
 

@@ -37,18 +37,18 @@ final class TreeGetDocumentChildrenHandler
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
-    public function __invoke(TreeGetDocumentChildrenPayload $payload): TreeGetDocumentChildrenResult
+    public function __invoke(TreeGetDocumentChildrenPayload $payload): TreeGetDocumentChildrenPaginatedResult|TreeGetDocumentChildrenListResult
     {
-        $paginated = isset($payload->allParams['limit']);
         $limit = (int)($payload->allParams['limit'] ?? 100000000);
         $offset = (int)($payload->allParams['start'] ?? 0);
 
         $filter = $payload->allParams['filter'] ?? null;
-        if (!is_null($filter)) {
-            if (!str_ends_with($filter, '*')) {
-                $filter .= '*';
+        $sqlFilter = $filter;
+        if (!is_null($sqlFilter)) {
+            if (!str_ends_with($sqlFilter, '*')) {
+                $sqlFilter .= '*';
             }
-            $filter = str_replace('*', '%', $filter);
+            $sqlFilter = str_replace('*', '%', $sqlFilter);
             $limit = 100;
             $offset = 0;
         }
@@ -83,8 +83,8 @@ final class TreeGetDocumentChildrenHandler
                 $condition .= ' AND IF(' . $anyAllowedRowOrChildren . ',1,IF(' . $inheritedPermission . ', ' . $isDisallowedCurrentRow . ' = 0, 0)) = 1';
             }
 
-            if ($filter) {
-                $condition = '(' . $condition . ')' . ' AND CAST(documents.key AS CHAR CHARACTER SET utf8) COLLATE utf8_general_ci LIKE ' . $db->quote($filter);
+            if ($sqlFilter) {
+                $condition = '(' . $condition . ')' . ' AND CAST(documents.key AS CHAR CHARACTER SET utf8) COLLATE utf8_general_ci LIKE ' . $db->quote($sqlFilter);
             }
 
             $list->setCondition($condition);
@@ -112,13 +112,17 @@ final class TreeGetDocumentChildrenHandler
         $this->eventDispatcher->dispatch($event, AdminEvents::DOCUMENT_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA);
         $documents = $event->getArgument('documents');
 
-        return new TreeGetDocumentChildrenResult(
-            documents: $documents,
+        if (!$payload->hasPagination()) {
+            return new TreeGetDocumentChildrenListResult($documents);
+        }
+
+        return new TreeGetDocumentChildrenPaginatedResult(
+            nodes: $documents,
             offset: $offset,
             limit: $limit,
             total: $document->getChildAmount($adminUser),
-            filter: $filter,
-            paginated: $paginated,
+            filter: $filter ?? '',
+            inSearch: $payload->inSearch,
         );
     }
 }

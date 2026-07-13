@@ -17,9 +17,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset;
 
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Model\Asset;
 
-final readonly class AssetResult
+final readonly class AssetResult implements ResultInterface
 {
     public function __construct(
         public Asset $asset,

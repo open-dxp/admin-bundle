@@ -17,17 +17,29 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableSites;
 
+use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Logger;
 use OpenDxp\Model;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class GetAvailableSitesHandler
 {
-    public function __construct(private readonly TranslatorInterface $translator)
-    {
+    public function __construct(
+        private readonly TranslatorInterface $translator,
+        private readonly AdminUserContextInterface $userContext,
+    ) {
     }
 
     public function __invoke(bool $excludeMainSite): GetAvailableSitesResult
     {
+        $adminUser = $this->userContext->getAdminUser();
+
+        if ($adminUser === null || !$adminUser->isAllowed('documents')) {
+            Logger::log('[Startup] Sites are not loaded as "documents" permission is missing');
+
+            return new GetAvailableSitesResult(sites: []);
+        }
+
         $sitesList = new Model\Site\Listing();
         $sitesObjects = $sitesList->load();
         $sites = [];

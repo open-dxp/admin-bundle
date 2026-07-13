@@ -23,7 +23,7 @@ use OpenDxp\Model\DataObject;
 
 final class UpdateFieldCollectionHandler
 {
-    public function __invoke(UpdateFieldCollectionPayload $payload): DataObject\Fieldcollection\Definition
+    public function __invoke(UpdateFieldCollectionPayload $payload): UpdateFieldCollectionResult
     {
         $key = $payload->key;
         $title = $payload->title;
@@ -61,6 +61,6 @@ final class UpdateFieldCollectionHandler
 
         $fcDef->save();
 
-        return $fcDef;
+        return new UpdateFieldCollectionResult(id: $fcDef->getKey());
     }
 }

@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\DeleteDataObject;
 
-final readonly class DeleteDataObjectResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class DeleteDataObjectResult implements ResultInterface
 {
     public function __construct(
         public array $deleted = [],

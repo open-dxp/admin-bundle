@@ -17,10 +17,12 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\GetDocTypesList;
 
-final readonly class GetDocTypesListResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetDocTypesListResult implements ResultInterface
 {
     public function __construct(
-        public readonly array $docTypes,
+        public readonly array $data,
         public readonly int $total,
     ) {}
 }

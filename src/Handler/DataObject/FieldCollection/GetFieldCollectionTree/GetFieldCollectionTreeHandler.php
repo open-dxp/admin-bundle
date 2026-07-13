@@ -31,7 +31,7 @@ final class GetFieldCollectionTreeHandler
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
-    public function __invoke(GetFieldCollectionTreePayload $payload): FieldCollectionTreeResult
+    public function __invoke(GetFieldCollectionTreePayload $payload): FieldCollectionTreeResult|FieldCollectionTreeEditorResult
     {
         $forObjectEditor = $payload->forObjectEditor;
         $allowedTypes = $payload->allowedTypes;
@@ -99,9 +99,16 @@ final class GetFieldCollectionTreeHandler
         ]);
         $this->eventDispatcher->dispatch($event, AdminEvents::CLASS_FIELDCOLLECTION_LIST_PRE_SEND_DATA);
 
-        return new FieldCollectionTreeResult(
-            $event->getArgument('list'),
-            $event->getArgument('layoutDefinitions'),
-        );
+        $definitions = $event->getArgument('list');
+        $layoutDefinitions = $event->getArgument('layoutDefinitions');
+
+        if ($forObjectEditor) {
+            return new FieldCollectionTreeEditorResult(
+                fieldcollections: $definitions,
+                layoutDefinitions: $layoutDefinitions,
+            );
+        }
+
+        return new FieldCollectionTreeResult(definitions: $definitions);
     }
 }

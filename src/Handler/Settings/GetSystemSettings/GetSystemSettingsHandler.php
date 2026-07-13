@@ -62,6 +62,6 @@ final class GetSystemSettingsHandler
             }
         }
 
-        return new GetSystemSettingsResult(values: $values, languages: $languageOptions);
+        return new GetSystemSettingsResult(values: $values, config: ['languages' => $languageOptions]);
     }
 }

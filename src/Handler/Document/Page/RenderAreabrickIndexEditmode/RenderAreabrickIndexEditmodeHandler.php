@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmode;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmode\RenderAreabrickIndexEditmodePayload;
 use OpenDxp\Document\Editable\Block\BlockStateStack;
 use OpenDxp\Document\Editable\EditmodeEditableDefinitionCollector;
 use OpenDxp\Http\Request\Resolver\DocumentResolver;
@@ -71,7 +70,6 @@ final class RenderAreabrickIndexEditmodeHandler
         $htmlCode = trim($areablock->renderIndex($payload->index, true));
 
         return new RenderAreabrickIndexEditmodeResult(
-            document: $document,
             editableDefinitions: $this->definitionCollector->getDefinitions(),
             htmlCode: $htmlCode,
         );

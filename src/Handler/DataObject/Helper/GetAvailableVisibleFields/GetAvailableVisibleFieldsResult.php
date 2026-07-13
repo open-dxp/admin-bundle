@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetAvailableVisibleFields;
 
-final readonly class GetAvailableVisibleFieldsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class GetAvailableVisibleFieldsResult implements ResultInterface
 {
     public function __construct(
         public array $availableFields,

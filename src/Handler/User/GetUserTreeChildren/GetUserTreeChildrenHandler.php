@@ -21,7 +21,7 @@ use OpenDxp\Model\User;
 
 final class GetUserTreeChildrenHandler
 {
-    public function __invoke(GetUserTreeChildrenPayload $payload): array
+    public function __invoke(GetUserTreeChildrenPayload $payload): GetUserTreeChildrenResult
     {
         $list = new User\Listing();
         $list->setCondition('parentId = ?', $payload->node);
@@ -36,7 +36,7 @@ final class GetUserTreeChildrenHandler
             }
         }
 
-        return $users;
+        return new GetUserTreeChildrenResult(users: $users);
     }
 
     private function buildTreeNodeConfig(User|User\Folder $user): array

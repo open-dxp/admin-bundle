@@ -39,6 +39,6 @@ final class AddPropertyHandler
         $config->setDefinition(json_encode($definition) ?: '');
         $config->save();
 
-        return new AddPropertyResult(name: $config->getName());
+        return new AddPropertyResult(id: $config->getName());
     }
 }

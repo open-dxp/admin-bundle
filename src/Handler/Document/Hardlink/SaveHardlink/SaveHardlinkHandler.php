@@ -39,10 +39,13 @@ final class SaveHardlinkHandler
 
         $this->mapper->applyHardlinkPayload($payload, $link);
         $result = $this->coordinator->save($link, $payload->task);
+        $savedLink = $result->document instanceof Hardlink ? $result->document : $link;
 
         return new SaveHardlinkResult(
-            link: $result->document instanceof Hardlink ? $result->document : $link,
-            task: $result->task,
+            data: [
+                'versionDate' => $savedLink->getModificationDate(),
+                'versionCount' => $savedLink->getVersionCount(),
+            ],
             treeData: $result->treeData,
         );
     }

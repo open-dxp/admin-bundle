@@ -17,9 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\ImportTranslations;
 
-final readonly class ImportTranslationsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class ImportTranslationsResult implements ResultInterface
 {
     public function __construct(
-        public array $delta,
+        public ?string $delta = null,
     ) {}
 }

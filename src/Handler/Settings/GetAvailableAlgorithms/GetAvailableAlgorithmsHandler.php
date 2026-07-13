@@ -36,6 +36,6 @@ final class GetAvailableAlgorithmsHandler
             ];
         }
 
-        return new GetAvailableAlgorithmsResult(options: $options);
+        return new GetAvailableAlgorithmsResult(data: $options, total: count($options));
     }
 }

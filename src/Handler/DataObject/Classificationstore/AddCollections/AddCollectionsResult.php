@@ -17,7 +17,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\AddCollections;
 
-final readonly class AddCollectionsResult
+use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+
+final readonly class AddCollectionsResult implements ResultInterface
 {
     public function __construct(
         public array $data,
