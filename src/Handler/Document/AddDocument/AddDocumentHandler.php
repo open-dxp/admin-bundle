@@ -82,12 +82,12 @@ final class AddDocumentHandler
         }
 
         $document = match ($payload->type) {
+            'folder' => $this->createFolder($parentDocument, $createValues),
             'page' => $this->createPage($parentDocument, $createValues, $payload->title, $payload->name),
             'snippet' => Document\Snippet::create($parentDocument->getId(), $createValues),
             'email' => Document\Email::create($parentDocument->getId(), $createValues),
             'link' => Document\Link::create($parentDocument->getId(), $createValues),
             'hardlink' => Document\Hardlink::create($parentDocument->getId(), $createValues),
-            'folder' => $this->createFolder($parentDocument, $createValues),
             default => $this->createCustomType($payload->type, $parentDocument, $createValues),
         };
 

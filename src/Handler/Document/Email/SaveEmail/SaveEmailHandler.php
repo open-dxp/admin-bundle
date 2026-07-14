@@ -17,9 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Email\SaveEmail;
 
-use OpenDxp\Bundle\AdminBundle\Helper\DocumentVersionHelper;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Email\SaveEmail\SaveEmailPayload;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
@@ -32,54 +29,30 @@ final class SaveEmailHandler
         private readonly ElementDraftService $elementDraftService,
         private readonly DocumentPayloadMapper $mapper,
         private readonly DocumentPersistenceCoordinator $coordinator,
-        private readonly AdminUserContextInterface $userContext,
     ) {}
 
-    public function __invoke(SaveEmailPayload $payload, bool $sessionAware = true): SaveEmailPublishedResult|SaveEmailDraftResult
+    public function __invoke(SaveEmailPayload $payload): SaveEmailPublishedResult|SaveEmailDraftResult
     {
-        $email = Email::getById($payload->id);
-        if (!$email) {
+        $loadedEmail = Email::getById($payload->id);
+        if (!$loadedEmail) {
             throw new NotFoundHttpException('Email not found');
         }
 
-        if ($sessionAware) {
-            $sessionEmail = $this->elementDraftService->getDocument($email);
-            if ($sessionEmail instanceof Email) {
-                $email = $sessionEmail;
-            } else {
-                $email = DocumentVersionHelper::resolveLatestDraft($email, userId: $this->userContext->getAdminUser()?->getId());
-            }
-        }
+        $email = $this->elementDraftService->resolveDraft($loadedEmail);
 
         $this->mapper->applyPagePayload($payload, $email);
 
-        $result = $this->coordinator->save($email, $payload->task);
+        $persistenceData = $this->coordinator->save($email, $payload->task);
 
-        if ($sessionAware) {
-            $this->elementDraftService->saveDocument($result->document);
-        }
+        $this->elementDraftService->saveDocument($email);
 
-        $savedEmail = $result->document instanceof Email ? $result->document : $email;
-
-        if ($result->task === 'publish' || $result->task === 'unpublish') {
+        if ($payload->task === 'publish' || $payload->task === 'unpublish') {
             return new SaveEmailPublishedResult(
-                data: [
-                    'versionDate' => $savedEmail->getModificationDate(),
-                    'versionCount' => $savedEmail->getVersionCount(),
-                ],
-                treeData: $result->treeData,
+                data: $persistenceData->data,
+                treeData: $persistenceData->treeData,
             );
         }
 
-        $draft = [];
-        if ($result->version) {
-            $draft = [
-                'id' => $result->version->getId(),
-                'modificationDate' => $result->version->getDate(),
-                'isAutoSave' => $result->version->isAutoSave(),
-            ];
-        }
-
-        return new SaveEmailDraftResult(draft: $draft);
+        return new SaveEmailDraftResult(draft: $persistenceData->draft ?? []);
     }
 }

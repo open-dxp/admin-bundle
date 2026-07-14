@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Link\SaveLink;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Link\SaveLink\SaveLinkPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator;
 use OpenDxp\Model\Document\Link;
@@ -38,15 +37,11 @@ final class SaveLinkHandler
         }
 
         $this->mapper->applyLinkPayload($payload, $link);
-        $result = $this->coordinator->save($link, $payload->task);
-        $savedLink = $result->document instanceof Link ? $result->document : $link;
+        $persistenceData = $this->coordinator->save($link, $payload->task);
 
         return new SaveLinkResult(
-            data: [
-                'versionDate' => $savedLink->getModificationDate(),
-                'versionCount' => $savedLink->getVersionCount(),
-            ],
-            treeData: $result->treeData,
+            data: $persistenceData->data,
+            treeData: $persistenceData->treeData,
         );
     }
 }

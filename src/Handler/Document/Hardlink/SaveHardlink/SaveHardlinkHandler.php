@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlink;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlink\SaveHardlinkPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator;
 use OpenDxp\Model\Document\Hardlink;
@@ -38,15 +37,11 @@ final class SaveHardlinkHandler
         }
 
         $this->mapper->applyHardlinkPayload($payload, $link);
-        $result = $this->coordinator->save($link, $payload->task);
-        $savedLink = $result->document instanceof Hardlink ? $result->document : $link;
+        $persistenceData = $this->coordinator->save($link, $payload->task);
 
         return new SaveHardlinkResult(
-            data: [
-                'versionDate' => $savedLink->getModificationDate(),
-                'versionCount' => $savedLink->getVersionCount(),
-            ],
-            treeData: $result->treeData,
+            data: $persistenceData->data,
+            treeData: $persistenceData->treeData,
         );
     }
 }

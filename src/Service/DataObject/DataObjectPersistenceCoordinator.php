@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\DataObject;
 
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectResult;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -28,10 +28,25 @@ final class DataObjectPersistenceCoordinator
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly ElementServiceInterface $elementService,
-    ) {}
+        private readonly ElementDraftService $elementDraftService,
+    ) {
+    }
 
-    public function save(DataObject\Concrete $object, string $task): SaveDataObjectResult
+    public function save(DataObject\Concrete $object, string $task): DataObjectPersistenceData
     {
+        if ($task === 'session') {
+            $this->elementDraftService->saveObject($object);
+
+            return new DataObjectPersistenceData(
+                general: [
+                    'modificationDate' => 0,
+                    'versionDate'      => 0,
+                    'versionCount'     => 0
+                ],
+                treeData: [],
+            );
+        }
+
         $adminUser = $this->userContext->getAdminUser();
 
         if ($task === 'unpublish') {
@@ -56,11 +71,11 @@ final class DataObjectPersistenceCoordinator
                 $object->deleteAutoSaveVersions($adminUser->getId());
             }
 
-            return new SaveDataObjectResult(
+            return new DataObjectPersistenceData(
                 general: [
                     'modificationDate' => $object->getModificationDate() ?? 0,
-                    'versionDate' => $newObject->getModificationDate() ?? 0,
-                    'versionCount' => $newObject->getVersionCount(),
+                    'versionDate'      => $newObject->getModificationDate() ?? 0,
+                    'versionCount'     => $newObject->getVersionCount(),
                 ],
                 treeData: $treeData,
             );
@@ -69,11 +84,11 @@ final class DataObjectPersistenceCoordinator
         if ($task === 'scheduler' && $object->isAllowed('settings')) {
             $object->saveScheduledTasks();
 
-            return new SaveDataObjectResult(
+            return new DataObjectPersistenceData(
                 general: [
                     'modificationDate' => $object->getModificationDate() ?? 0,
-                    'versionDate' => $object->getModificationDate() ?? 0,
-                    'versionCount' => $object->getVersionCount(),
+                    'versionDate'      => $object->getModificationDate() ?? 0,
+                    'versionCount'     => $object->getVersionCount(),
                 ],
                 treeData: [],
             );
@@ -86,9 +101,9 @@ final class DataObjectPersistenceCoordinator
             if ($object->isPublished() || $isAutoSave) {
                 $version = $object->saveVersion(true, true, null, $isAutoSave);
                 $draftData = [
-                    'id' => $version->getId(),
+                    'id'               => $version->getId(),
                     'modificationDate' => $version->getDate(),
-                    'isAutoSave' => $version->isAutoSave(),
+                    'isAutoSave'       => $version->isAutoSave(),
                 ];
             } else {
                 $object->save();
@@ -101,11 +116,11 @@ final class DataObjectPersistenceCoordinator
             $treeData = $this->elementService->getElementTreeNodeConfig($object);
             $newObject = DataObject::getById($object->getId(), ['force' => true]);
 
-            return new SaveDataObjectResult(
+            return new DataObjectPersistenceData(
                 general: [
                     'modificationDate' => $object->getModificationDate() ?? 0,
-                    'versionDate' => $newObject->getModificationDate() ?? 0,
-                    'versionCount' => $newObject->getVersionCount(),
+                    'versionDate'      => $newObject->getModificationDate() ?? 0,
+                    'versionCount'     => $newObject->getVersionCount(),
                 ],
                 treeData: $treeData,
                 draft: $draftData,

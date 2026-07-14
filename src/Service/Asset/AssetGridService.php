@@ -26,11 +26,9 @@ use OpenDxp\Bundle\AdminBundle\Service\GridData;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use OpenDxp\Logger;
 use OpenDxp\Loader\ImplementationLoader\Exception\UnsupportedException;
-use OpenDxp\Model;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Metadata;
 use Symfony\Component\EventDispatcher\GenericEvent;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

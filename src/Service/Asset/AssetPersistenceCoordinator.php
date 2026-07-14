@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\Asset;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetResult;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
@@ -30,7 +29,7 @@ final class AssetPersistenceCoordinator
         private readonly ElementDraftService $elementDraftService,
     ) {}
 
-    public function save(Asset $asset, string $task): SaveAssetResult
+    public function save(Asset $asset, string $task): AssetPersistenceData
     {
         if ($task === 'session') {
             $this->elementDraftService->saveAsset($asset);
@@ -39,7 +38,7 @@ final class AssetPersistenceCoordinator
             $asset->save();
         }
 
-        return new SaveAssetResult(
+        return new AssetPersistenceData(
             data: [
                 'versionDate' => $asset->getModificationDate() ?? 0,
                 'versionCount' => $asset->getVersionCount(),

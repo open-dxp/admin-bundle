@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\Element;
 
+use OpenDxp\Bundle\AdminBundle\Helper\DocumentVersionHelper;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Session\SessionIdentityInterface;
 use OpenDxp\Model\Asset;
@@ -36,6 +37,28 @@ final class ElementDraftService
         private readonly SessionIdentityInterface $sessionIdentity,
         private readonly AdminUserContextInterface $userContext,
     ) {}
+
+    /**
+     * Resolves the version of $document that should be loaded into the editor: a pending
+     * session draft if one exists for the current user, otherwise the latest saved draft
+     * version, otherwise $document itself.
+     *
+     * @template T of Document\PageSnippet
+     *
+     * @param T $document
+     *
+     * @return T
+     */
+    public function resolveDraft(Document\PageSnippet $document): Document\PageSnippet
+    {
+        $sessionDocument = $this->getDocument($document);
+        if ($sessionDocument !== null && $sessionDocument::class === $document::class) {
+            /** @var T $sessionDocument */
+            return $sessionDocument;
+        }
+
+        return DocumentVersionHelper::resolveLatestDraft($document, userId: $this->userContext->getAdminUser()?->getId());
+    }
 
     public function saveDocument(Document $doc, bool $useForSave = false): void
     {

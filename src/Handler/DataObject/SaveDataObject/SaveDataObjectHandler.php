@@ -22,7 +22,6 @@ use OpenDxp\Bundle\AdminBundle\Helper\DataObjectVersionHelper;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPersistenceCoordinator;
-use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\ClassDefinition\Data\EqualComparisonInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -31,7 +30,6 @@ final class SaveDataObjectHandler
 {
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
-        private readonly ElementDraftService $elementDraftService,
         private readonly DataObjectPayloadMapper $mapper,
         private readonly DataObjectPersistenceCoordinator $coordinator,
     ) {}
@@ -72,18 +70,21 @@ final class SaveDataObjectHandler
             }
         }
 
-        if (($payload->task === 'unpublish' && !$object->isAllowed('unpublish')) || ($payload->task === 'publish' && !$object->isAllowed('publish'))) {
+        if (
+            ($payload->task === 'unpublish' && !$object->isAllowed('unpublish')) ||
+            ($payload->task === 'publish' && !$object->isAllowed('publish'))
+        ) {
             throw new AccessDeniedHttpException();
         }
 
         $this->mapper->applyPayload($payload, $object, $objectFromDatabase);
 
-        if ($payload->task === 'session') {
-            $this->elementDraftService->saveObject($object);
+        $persistenceData = $this->coordinator->save($object, $payload->task);
 
-            return new SaveDataObjectResult(general: ['modificationDate' => 0, 'versionDate' => 0, 'versionCount' => 0], treeData: []);
-        }
-
-        return $this->coordinator->save($object, $payload->task);
+        return new SaveDataObjectResult(
+            general: $persistenceData->general,
+            treeData: $persistenceData->treeData,
+            draft: $persistenceData->draft
+        );
     }
 }

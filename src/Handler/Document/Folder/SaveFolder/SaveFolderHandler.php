@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\SaveFolder;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\SaveFolder\SaveFolderPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator;
 use OpenDxp\Model\Document\Folder;
@@ -38,8 +37,8 @@ final class SaveFolderHandler
         }
 
         $this->mapper->applyFolderPayload($payload, $folder);
-        $result = $this->coordinator->save($folder, 'publish');
+        $persistenceData = $this->coordinator->save($folder, 'publish');
 
-        return new SaveFolderResult(treeData: $result->treeData);
+        return new SaveFolderResult(treeData: $persistenceData->treeData);
     }
 }

@@ -40,6 +40,11 @@ final class SaveAssetHandler
 
         $this->payloadMapper->applyPayload($payload, $asset);
 
-        return $this->coordinator->save($asset, $payload->task);
+        $persistenceData = $this->coordinator->save($asset, $payload->task);
+
+        return new SaveAssetResult(
+            data: $persistenceData->data,
+            treeData: $persistenceData->treeData
+        );
     }
 }

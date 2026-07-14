@@ -17,9 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippet;
 
-use OpenDxp\Bundle\AdminBundle\Helper\DocumentVersionHelper;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\SaveSnippet\SaveSnippetPayload;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
@@ -32,54 +29,30 @@ final class SaveSnippetHandler
         private readonly ElementDraftService $elementDraftService,
         private readonly DocumentPayloadMapper $mapper,
         private readonly DocumentPersistenceCoordinator $coordinator,
-        private readonly AdminUserContextInterface $userContext,
     ) {}
 
-    public function __invoke(SaveSnippetPayload $payload, bool $sessionAware = true): SaveSnippetPublishedResult|SaveSnippetDraftResult
+    public function __invoke(SaveSnippetPayload $payload): SaveSnippetPublishedResult|SaveSnippetDraftResult
     {
-        $snippet = Snippet::getById($payload->id);
-        if (!$snippet) {
+        $loadedSnippet = Snippet::getById($payload->id);
+        if (!$loadedSnippet) {
             throw new NotFoundHttpException('Snippet not found');
         }
 
-        if ($sessionAware) {
-            $sessionSnippet = $this->elementDraftService->getDocument($snippet);
-            if ($sessionSnippet instanceof Snippet) {
-                $snippet = $sessionSnippet;
-            } else {
-                $snippet = DocumentVersionHelper::resolveLatestDraft($snippet, userId: $this->userContext->getAdminUser()?->getId());
-            }
-        }
+        $snippet = $this->elementDraftService->resolveDraft($loadedSnippet);
 
         $this->mapper->applyPagePayload($payload, $snippet);
 
-        $result = $this->coordinator->save($snippet, $payload->task);
+        $persistenceData = $this->coordinator->save($snippet, $payload->task);
 
-        if ($sessionAware) {
-            $this->elementDraftService->saveDocument($result->document);
-        }
+        $this->elementDraftService->saveDocument($snippet);
 
-        $savedSnippet = $result->document instanceof Snippet ? $result->document : $snippet;
-
-        if ($result->task === 'publish' || $result->task === 'unpublish') {
+        if ($payload->task === 'publish' || $payload->task === 'unpublish') {
             return new SaveSnippetPublishedResult(
-                data: [
-                    'versionDate' => $savedSnippet->getModificationDate(),
-                    'versionCount' => $savedSnippet->getVersionCount(),
-                ],
-                treeData: $result->treeData,
+                data: $persistenceData->data,
+                treeData: $persistenceData->treeData,
             );
         }
 
-        $draft = [];
-        if ($result->version) {
-            $draft = [
-                'id' => $result->version->getId(),
-                'modificationDate' => $result->version->getDate(),
-                'isAutoSave' => $result->version->isAutoSave(),
-            ];
-        }
-
-        return new SaveSnippetDraftResult(draft: $draft);
+        return new SaveSnippetDraftResult(draft: $persistenceData->draft ?? []);
     }
 }

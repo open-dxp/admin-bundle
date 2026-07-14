@@ -15,17 +15,16 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service\Document;
+namespace OpenDxp\Bundle\AdminBundle\Service\DataObject;
 
-use OpenDxp\Model\Document;
-use OpenDxp\Model\Version;
-
-final class DocumentSaveResult
+final class DataObjectPersistenceData
 {
+    /**
+     * @param array{modificationDate: int, versionDate: int, versionCount: int} $general
+     */
     public function __construct(
-        public readonly string $task,
-        public readonly Document $document,
-        public readonly ?Version $version,
+        public readonly array $general,
         public readonly array $treeData,
+        public readonly ?array $draft = null,
     ) {}
 }

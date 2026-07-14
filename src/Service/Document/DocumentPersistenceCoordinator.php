@@ -20,7 +20,6 @@ namespace OpenDxp\Bundle\AdminBundle\Service\Document;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Model\Document;
-use OpenDxp\Model\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 final class DocumentPersistenceCoordinator
@@ -30,7 +29,7 @@ final class DocumentPersistenceCoordinator
         private readonly ElementServiceInterface $elementService,
     ) {}
 
-    public function save(Document $document, string $task): DocumentSaveResult
+    public function save(Document $document, string $task): DocumentPersistenceData
     {
         $document->setModificationDate(time());
         $document->setUserModification($this->userContext->getAdminUser()->getId());
@@ -65,11 +64,17 @@ final class DocumentPersistenceCoordinator
             $document->deleteAutoSaveVersions($this->userContext->getAdminUser()->getId());
         }
 
-        return new DocumentSaveResult(
-            task: $task,
-            document: $document,
-            version: $version,
+        return new DocumentPersistenceData(
+            data: [
+                'versionDate'  => $document->getModificationDate(),
+                'versionCount' => $document->getVersionCount(),
+            ],
             treeData: $this->elementService->getElementTreeNodeConfig($document),
+            draft: $version ? [
+                'id'               => $version->getId(),
+                'modificationDate' => $version->getDate(),
+                'isAutoSave'       => $version->isAutoSave(),
+            ] : null,
         );
     }
 }
