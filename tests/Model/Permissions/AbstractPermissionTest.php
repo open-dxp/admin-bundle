@@ -58,11 +58,9 @@ abstract class AbstractPermissionTest extends ModelTestCase
         ]);
     }
 
-    protected function buildController(string $classname, User $user, array $extraConstructorArgs = []): mixed
+    protected function buildController(string $classname, User $user): mixed
     {
-        $elementService = $this->buildElementService($user);
-
-        return Stub::construct($classname, [$elementService, ...$extraConstructorArgs], [
+        return Stub::construct($classname, [], [
             'getAdminUser' => function () use ($user) {
                 return $user;
             },

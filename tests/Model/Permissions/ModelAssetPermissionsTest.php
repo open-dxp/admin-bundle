@@ -20,7 +20,6 @@ namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset\AssetController;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\TreeGetAssetChildren\TreeGetAssetChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\TreeGetAssetChildren\TreeGetAssetChildrenPayload;
-use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Property;
 use OpenDxp\Model\User;
@@ -297,9 +296,7 @@ class ModelAssetPermissionsTest extends AbstractPermissionTest
         $userContext = $this->buildUserContext($user);
         $handler = new TreeGetAssetChildrenHandler($userContext, $elementService, new EventDispatcher());
 
-        $controller = $this->buildController(AssetController::class, $user, [
-            (new \ReflectionClass(AssetGridService::class))->newInstanceWithoutConstructor(),
-        ]);
+        $controller = $this->buildController(AssetController::class, $user);
 
         $request = new Request([
             'node' => $element->getId(),
