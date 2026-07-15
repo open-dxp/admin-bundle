@@ -15,64 +15,71 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Handler\Translation;
+namespace OpenDxp\Bundle\AdminBundle\Service\Translation;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder as DoctrineQueryBuilder;
 use OpenDxp\Model\Translation;
 
-trait TranslationQueryTrait
+final class TranslationQueryService
 {
-    protected const string FILTER_PLACEHOLDER_NAME = 'placeHolder';
+    private const string FILTER_PLACEHOLDER_NAME = 'placeHolder';
 
-    protected function extendTranslationQuery(array $joins, Translation\Listing $list, string $tableName, array $filters): void
+    public function __construct(protected Connection $db)
     {
-        if ($joins) {
-            $list->onCreateQueryBuilder(
-                function (DoctrineQueryBuilder $select) use ($joins, $tableName, $filters): void {
-                    $db = \OpenDxp\Db::get();
-
-                    $alreadyJoined = [];
-
-                    foreach ($joins as $join) {
-                        $fieldname = $join['language'];
-
-                        if (isset($alreadyJoined[$fieldname])) {
-                            continue;
-                        }
-                        $alreadyJoined[$fieldname] = 1;
-
-                        $select->addSelect($fieldname . '.text AS ' . $fieldname);
-                        $select->leftJoin(
-                            $tableName,
-                            $tableName,
-                            $fieldname,
-                            '('
-                            . $fieldname . '.key = ' . $tableName . '.key'
-                            . ' and ' . $fieldname . '.language = ' . $db->quote($fieldname)
-                            . ')'
-                        );
-                    }
-
-                    $havings = $filters['conditions'];
-                    if ($havings) {
-                        $havings = implode(' AND ', $havings);
-                        $select->having($havings);
-                    }
-                }
-            );
-        }
     }
 
-    protected function getGridFilterCondition(array $filterParameters, string $tableName, bool $languageMode, array $validLanguages): array
+    public function extendTranslationQuery(array $joins, Translation\Listing $list, string $tableName, array $filters): void
+    {
+        if (count($joins) === 0) {
+            return;
+        }
+
+        $list->onCreateQueryBuilder(
+            function (DoctrineQueryBuilder $select) use ($joins, $tableName, $filters): void {
+
+                $alreadyJoined = [];
+
+                foreach ($joins as $join) {
+                   $fieldName = $join['language'];
+
+                    if (isset($alreadyJoined[$fieldName])) {
+                        continue;
+                    }
+
+                    $alreadyJoined[$fieldName] = 1;
+
+                    $select->addSelect($fieldName . '.text AS ' .$fieldName);
+                    $select->leftJoin(
+                        $tableName,
+                        $tableName,
+                       $fieldName,
+                        '('
+                        .$fieldName . '.key = ' . $tableName . '.key'
+                        . ' and ' .$fieldName . '.language = ' . $this->db->quote($fieldName)
+                        . ')'
+                    );
+                }
+
+                $havings = $filters['conditions'];
+                if ($havings) {
+                    $havings = implode(' AND ', $havings);
+                    $select->having($havings);
+                }
+            }
+        );
+    }
+
+    public function getGridFilterCondition(array $filterParameters, string $tableName, bool $languageMode, array $validLanguages): array
     {
         $placeHolderCount = 0;
         $joins = [];
         $conditions = [];
 
-        $db = \OpenDxp\Db::get();
         $conditionFilters = [];
 
         $filterJson = $filterParameters['filter'];
+
         if ($filterJson) {
             $propertyField = 'property';
             $operatorField = 'operator';
@@ -83,55 +90,55 @@ trait TranslationQueryTrait
                 $field = null;
                 $value = null;
 
-                $fieldname = $filter[$propertyField];
-                if (in_array(ltrim($fieldname, '_'), $validLanguages)) {
-                    $fieldname = ltrim($fieldname, '_');
+               $fieldName = $filter[$propertyField];
+                if (in_array(ltrim($fieldName, '_'), $validLanguages)) {
+                   $fieldName = ltrim($fieldName, '_');
                 }
-                $fieldname = str_replace('--', '', $fieldname);
-                if (!$languageMode && in_array($fieldname, $validLanguages)) {
+               $fieldName = str_replace('--', '',$fieldName);
+                if (!$languageMode && in_array($fieldName, $validLanguages)) {
                     continue;
                 }
-                if ($languageMode && !in_array($fieldname, $validLanguages)) {
+                if ($languageMode && !in_array($fieldName, $validLanguages)) {
                     continue;
                 }
 
                 $allowedNonLanguageFields = ['key', 'type', 'creationDate', 'modificationDate'];
-                if (!$languageMode && !in_array($fieldname, $allowedNonLanguageFields)) {
+                if (!$languageMode && !in_array($fieldName, $allowedNonLanguageFields)) {
                     continue;
                 }
 
                 if (!$languageMode) {
-                    $fieldname = $tableName . '.' . $fieldname;
+                   $fieldName = $tableName . '.' .$fieldName;
                 }
 
                 if (!empty($filter['value'])) {
                     if ($filter['type'] === 'string') {
                         $operator = 'LIKE';
-                        $field = $fieldname;
+                        $field =$fieldName;
                         $value = '%' . $filter['value'] . '%';
                     } elseif ($filter['type'] === 'date' ||
-                        (in_array($fieldname, ['modificationDate', 'creationDate']))) {
+                        (in_array($fieldName, ['modificationDate', 'creationDate']))) {
                         if ($filter[$operatorField] === 'lt') {
                             $operator = '<';
                         } elseif ($filter[$operatorField] === 'gt') {
                             $operator = '>';
                         } elseif ($filter[$operatorField] === 'eq') {
                             $operator = '=';
-                            $fieldname = "UNIX_TIMESTAMP(DATE(FROM_UNIXTIME({$fieldname})))";
+                           $fieldName = "UNIX_TIMESTAMP(DATE(FROM_UNIXTIME({$fieldName})))";
                         }
                         $filter['value'] = strtotime($filter['value']);
-                        $field = $fieldname;
+                        $field =$fieldName;
                         $value = $filter['value'];
                     }
                 }
 
                 if ($field && $value) {
-                    $condition = $db->quoteIdentifier($field) . ' ' . $operator . ' ' . $db->quote($value);
+                    $condition = $this->db->quoteIdentifier($field) . ' ' . $operator . ' ' . $this->db->quote($value);
 
                     if ($languageMode) {
-                        $conditions[$fieldname] = $condition;
+                        $conditions[$fieldName] = $condition;
                         $joins[] = [
-                            'language' => $fieldname,
+                            'language' =>$fieldName,
                         ];
                     } else {
                         $placeHolderName = self::FILTER_PLACEHOLDER_NAME . $placeHolderCount;

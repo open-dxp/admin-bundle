@@ -52,11 +52,21 @@ class QueryParams
                 $groupId = (int) $groupKeyId[0];
                 $keyid = (int) $groupKeyId[1];
 
-                return ['orderKey' => $sortParam['property'], 'fieldname' => $fieldname, 'groupId' => $groupId, 'keyId' => $keyid, 'order' => $order, 'isFeature' => 1];
+                return [
+                    'orderKey' => $sortParam['property'],
+                    'fieldname' => $fieldname,
+                    'groupId' => $groupId,
+                    'keyId' => $keyid,
+                    'order' => $order,
+                    'isFeature' => 1
+                ];
             }
         }
 
-        return ['orderKey' => $orderKey, 'order' => $order];
+        return [
+            'orderKey' => $orderKey,
+            'order' => $order
+        ];
     }
 
     public static function getRecordIdForGridRequest(string $param): int
@@ -68,8 +78,6 @@ class QueryParams
 
     /**
      * Creates a condition string from the passed ExtJs filter definitions
-     *
-     *
      *
      * @throws Exception
      */

@@ -19,8 +19,8 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\ExportTranslations;
 
 use Doctrine\DBAL\Exception\SyntaxErrorException;
 use InvalidArgumentException;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\TranslationQueryTrait;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Translation\TranslationQueryService;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\Translation;
 use OpenDxp\Tool;
@@ -28,45 +28,47 @@ use OpenDxp\Tool\Text;
 
 final class ExportTranslationsHandler
 {
-    use TranslationQueryTrait;
-
-    public function __construct(private readonly AdminUserContextInterface $userContext) {}
+    public function __construct(
+        private readonly AdminUserContextInterface $userContext,
+        private readonly TranslationQueryService $translationQueryService,
+    ) {}
 
     public function __invoke(ExportTranslationsPayload $payload): ExportTranslationsResult
     {
         $admin = $payload->domain === Translation::DOMAIN_ADMIN;
+
         $allowedLanguages = $admin
             ? Tool\Admin::getLanguages()
             : $this->userContext->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations();
+
         $translation = new Translation();
         $translation->setDomain($payload->domain);
         $tableName = $translation->getDao()->getDatabaseTableName();
 
         $list = new Translation\Listing();
         $list->setDomain($payload->domain);
-
-        $joins = [];
-
         $list->setOrder('asc');
         $list->setOrderKey($tableName . '.key', false);
+
+        $joins = [];
 
         $filterParameters = [
             'filter'       => $payload->filter,
             'searchString' => $payload->searchString,
         ];
 
-        $conditions = $this->getGridFilterCondition($filterParameters, $tableName, false, $allowedLanguages);
-        if ($conditions !== []) {
-            $list->setCondition($conditions['condition'], $conditions['params']);
-        }
-
-        $filters = $this->getGridFilterCondition($filterParameters, $tableName, true, $allowedLanguages);
+        $conditions = $this->translationQueryService->getGridFilterCondition($filterParameters, $tableName, false, $allowedLanguages);
+        $filters = $this->translationQueryService->getGridFilterCondition($filterParameters, $tableName, true, $allowedLanguages);
 
         if ($filters) {
             $joins = [...$joins, ...$filters['joins']];
         }
 
-        $this->extendTranslationQuery($joins, $list, $tableName, $filters);
+        if ($conditions !== []) {
+            $list->setCondition($conditions['condition'], $conditions['params']);
+        }
+
+        $this->translationQueryService->extendTranslationQuery($joins, $list, $tableName, $filters);
 
         try {
             $list->load();
@@ -97,7 +99,12 @@ final class ExportTranslationsHandler
         foreach ($translationObjects as $t) {
             $row = $t->getTranslations();
             $row = Element\Service::escapeCsvRecord($row);
-            $translations[] = ['key' => $t->getKey(), 'creationDate' => $t->getCreationDate(), 'modificationDate' => $t->getModificationDate(), ...$row];
+            $translations[] = [
+                'key' => $t->getKey(),
+                'creationDate' => $t->getCreationDate(),
+                'modificationDate' => $t->getModificationDate(),
+                ...$row
+            ];
         }
 
         $columns = array_keys($translations[0]);

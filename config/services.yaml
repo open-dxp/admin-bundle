@@ -145,6 +145,7 @@ services:
     OpenDxp\Bundle\AdminBundle\Service\Cache\OpenDxpCacheClearingService: ~
     OpenDxp\Bundle\AdminBundle\Service\Cache\SymfonyCacheClearingService: ~
 
+    OpenDxp\Bundle\AdminBundle\Service\Translation\TranslationQueryService: ~
     OpenDxp\Bundle\AdminBundle\Service\Translation\AdminSearchTermResolver: ~
 
     OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService: ~
