@@ -28,7 +28,10 @@ final class DashboardRepository
             return [];
         }
 
-        return Serialize::unserialize(file_get_contents($this->getConfigFile($user))) ?: [];
+        return Serialize::unserialize(
+            file_get_contents($this->getConfigFile($user)),
+            ['allowed_classes' => false]
+        ) ?: [];
     }
 
     public function save(User $user, array $dashboards): void

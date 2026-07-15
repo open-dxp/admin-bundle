@@ -63,6 +63,9 @@ class Assets extends Elements implements DataProviderInterface
 
         foreach (array_keys($this->exportIds) as $id) {
             $theAsset = Asset::getById((int) $id);
+            if (!$theAsset instanceof Asset) {
+                continue;
+            }
 
             $resultItem = Exporter::exportAsset($theAsset);
             $resultItem = json_encode($resultItem);

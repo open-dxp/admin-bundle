@@ -95,6 +95,11 @@ trait TranslationQueryTrait
                     continue;
                 }
 
+                $allowedNonLanguageFields = ['key', 'type', 'creationDate', 'modificationDate'];
+                if (!$languageMode && !in_array($fieldname, $allowedNonLanguageFields)) {
+                    continue;
+                }
+
                 if (!$languageMode) {
                     $fieldname = $tableName . '.' . $fieldname;
                 }

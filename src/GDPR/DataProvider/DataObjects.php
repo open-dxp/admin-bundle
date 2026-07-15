@@ -62,13 +62,17 @@ class DataObjects extends Elements implements DataProviderInterface
         if (!empty($this->exportIds['object'])) {
             foreach (array_keys($this->exportIds['object']) as $id) {
                 $object = AbstractObject::getById((int)$id);
-                $exportResult[] = Exporter::exportObject($object);
+                if ($object instanceof AbstractObject) {
+                    $exportResult[] = Exporter::exportObject($object);
+                }
             }
         }
         if (!empty($this->exportIds['image'])) {
             foreach (array_keys($this->exportIds['image']) as $id) {
                 $theAsset = Asset::getById((int) $id);
-                $exportResult[] = Exporter::exportAsset($theAsset);
+                if ($theAsset instanceof Asset) {
+                    $exportResult[] = Exporter::exportAsset($theAsset);
+                }
             }
         }
 

@@ -1,5 +1,12 @@
 # Changelog / Upgrade Notes
 
+## 1.3.4
+* Chore: Remove unused grid configuration processing logic from DataObjectController by @solverat in https://github.com/open-dxp/admin-bundle/pull/89
+* Bugfix: resolve persistent thumbnail spinners in asset folder preview by @solverat in https://github.com/open-dxp/admin-bundle/pull/90
+* Bugfix: standardize Content-Disposition header formatting across controllers by @solverat in https://github.com/open-dxp/admin-bundle/pull/92
+* Improvement: Add stricter unserialize options; refactor variable naming in TranslationController by @solverat in https://github.com/open-dxp/admin-bundle/pull/88
+* Improvement: Added css color variables prefix by @cbl6499 in https://github.com/open-dxp/admin-bundle/pull/87
+
 ## 1.3.3
 * Improvement: add forceResize checkbox to video thumbnail settings [#82](https://github.com/open-dxp/admin-bundle/pull/82)
 * Bugfix: executing workflow transitions [#80](https://github.com/open-dxp/admin-bundle/pull/80)

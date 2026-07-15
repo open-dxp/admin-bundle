@@ -29,12 +29,12 @@ body {
     padding: 0;
     margin: 0;
     font-size: 14px;
-    color: var(--color-white);
-    background: var(--color-neutral-a);
+    color: var(--color-opendxp-white);
+    background: var(--color-opendxp-neutral-a);
 }
 
 a, a:hover, a:visited, a:active {
-    color: var(--color-white);
+    color: var(--color-opendxp-white);
     text-decoration: none;
 }
 
@@ -45,7 +45,7 @@ a, a:hover, a:visited, a:active {
     left: 0;
     width: 480px;
     height: 100%;
-    background: var(--color-neutral-a);
+    background: var(--color-opendxp-neutral-a);
 }
 
 #content {
@@ -54,13 +54,13 @@ a, a:hover, a:visited, a:active {
     top: 0;
     left: 0;
     width: 480px;
-    background: var(--color-neutral-a);
+    background: var(--color-opendxp-neutral-a);
     padding: 280px 90px 20px 90px;
 }
 
 #content input {
-    background: var(--color-neutral-d);
-    color: var(--color-white);
+    background: var(--color-opendxp-neutral-d);
+    color: var(--color-opendxp-white);
     margin-bottom: 10px;
     width: 100%;
     padding: 10px;
@@ -71,8 +71,8 @@ a, a:hover, a:visited, a:active {
 }
 
 #content button {
-    background: var(--color-primary-a);
-    color: var(--color-primary-b);
+    background: var(--color-opendxp-primary-a);
+    color: var(--color-opendxp-primary-b);
     margin-bottom: 10px;
     width: 100%;
     padding: 10px;
@@ -88,16 +88,16 @@ a, a:hover, a:visited, a:active {
 }
 
 #content .text.error {
-    color: var(--color-red-a);
+    color: var(--color-opendxp-red-a);
     padding: 10px;
-    background: var(--color-white);
+    background: var(--color-opendxp-white);
     border-radius: 2px;
 }
 
 #content .text.success {
-    color: var(--color-green-a);
+    color: var(--color-opendxp-green-a);
     padding: 10px;
-    background: var(--color-white);
+    background: var(--color-opendxp-white);
     border-radius: 2px;
 }
 
@@ -150,7 +150,7 @@ a, a:hover, a:visited, a:active {
     bottom: 70px;
     width: 480px;
     padding: 30px 90px 0 90px;
-    border-top: 1px solid var(--color-primary-b);
+    border-top: 1px solid var(--color-opendxp-primary-b);
 }
 
 @media screen and (max-height: 800px) {
@@ -167,7 +167,7 @@ a, a:hover, a:visited, a:active {
 #news hr {
     width: 40px;
     height: 1px;
-    background: var(--color-primary-b);
+    background: var(--color-opendxp-primary-b);
     margin: 0;
     border: 0;
 }
@@ -187,45 +187,45 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active  {
-    -webkit-box-shadow: 0 0 0 30px var(--color-neutral-d) inset !important;
+    -webkit-box-shadow: 0 0 0 30px var(--color-opendxp-neutral-d) inset !important;
 }
 
 input:-webkit-autofill {
-    -webkit-text-fill-color: var(--color-white) !important;
+    -webkit-text-fill-color: var(--color-opendxp-white) !important;
 }
 
 .inverted {
-    color: var(--color-neutral-a);
-    background: var(--color-white);
+    color: var(--color-opendxp-neutral-a);
+    background: var(--color-opendxp-white);
 }
 
 .inverted a, .inverted a:hover, .inverted a:visited, .inverted a:active {
-    color: var(--color-primary-b);
+    color: var(--color-opendxp-primary-b);
 }
 
 .inverted #contentBackground {
-    background: var(--color-white);
+    background: var(--color-opendxp-white);
 }
 
 .inverted #content {
-    background: var(--color-white);
+    background: var(--color-opendxp-white);
 }
 
 .inverted #content input {
-    background: var(--color-neutral-h);
-    color: var(--color-neutral-a);
+    background: var(--color-opendxp-neutral-h);
+    color: var(--color-opendxp-neutral-a);
 }
 
 .inverted #footer a {
-    color: var(--color-neutral-a);
+    color: var(--color-opendxp-neutral-a);
 }
 
 .inverted #news {
-    border-top: 1px solid var(--color-neutral-g);
+    border-top: 1px solid var(--color-opendxp-neutral-g);
 }
 
 .inverted #news h2 {
-    color: var(--color-neutral-a);
+    color: var(--color-opendxp-neutral-a);
 }
 
 
@@ -234,9 +234,9 @@ input:-webkit-autofill {
 .inverted input:-webkit-autofill:hover,
 .inverted input:-webkit-autofill:focus,
 .inverted input:-webkit-autofill:active  {
-    -webkit-box-shadow: 0 0 0 30px var(--color-neutral-h) inset !important;
+    -webkit-box-shadow: 0 0 0 30px var(--color-opendxp-neutral-h) inset !important;
 }
 
 .inverted input:-webkit-autofill {
-    -webkit-text-fill-color: var(--color-neutral-a) !important;
+    -webkit-text-fill-color: var(--color-opendxp-neutral-a) !important;
 }

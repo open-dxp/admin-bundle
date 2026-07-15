@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final readonly class QuantityValueUnitPayload implements ExtJsPayloadInterface
 {
@@ -25,6 +26,11 @@ final readonly class QuantityValueUnitPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
-        return new static(data: json_decode($request->request->getString('data'), true) ?? []);
+        $data = json_decode($request->request->getString('data'), true) ?? [];
+        if (!is_array($data)) {
+            throw new BadRequestHttpException('Invalid data format');
+        }
+
+        return new static(data: $data);
     }
 }
