@@ -29,7 +29,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Notification\GetRecipients\GetRecipientsH
 use OpenDxp\Bundle\AdminBundle\Handler\Notification\MarkAsReadNotification\MarkAsReadNotificationHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Notification\SendNotification\SendNotificationHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Notification\SendNotification\SendNotificationPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -46,9 +45,8 @@ class NotificationController extends AdminAbstractController
     #[Route('/recipients', name: 'opendxp_admin_notification_recipients', methods: ['GET'])]
     public function recipientsAction(
         GetRecipientsHandler $handler,
-        EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), rootProperty: 'data');
+        return $this->apiJson($handler(), rootProperty: 'data');
     }
 
     #[IsGranted(CorePermission::NotificationsSend->value)]
@@ -115,9 +113,8 @@ class NotificationController extends AdminAbstractController
     #[Route('/delete-all', name: 'opendxp_admin_notification_deleteall', methods: ['DELETE'])]
     public function deleteAllAction(
         DeleteAllNotificationsHandler $handler,
-        EmptyPayload $payload,
     ): JsonResponse {
-        $handler($payload);
+        $handler();
 
         return $this->apiOk();
     }

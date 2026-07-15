@@ -28,7 +28,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUser\UpdateCurrentUserH
 use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUser\UpdateCurrentUserPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImageHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImagePayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Security\Voter\OwnUserVoter;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\PasswordResetSessionGateway;
@@ -82,11 +81,10 @@ class UserProfileController extends AdminAbstractController
 
     #[Route('/user/reset-my-2fa-secret', name: 'opendxp_admin_user_reset_my_2fa_secret', methods: ['PUT'])]
     public function resetMy2FaSecretAction(
-        EmptyPayload $payload,
         ResetMy2FaSecretHandler $handler,
     ): JsonResponse {
 
-        $handler($payload);
+        $handler();
 
         return $this->apiOk();
     }

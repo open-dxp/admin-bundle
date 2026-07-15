@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Misc\GetAvailableTemplates;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Controller\Config\ControllerDataProvider;
 
 final class GetAvailableTemplatesHandler
@@ -26,7 +25,7 @@ final class GetAvailableTemplatesHandler
         private readonly ControllerDataProvider $provider,
     ) {}
 
-    public function __invoke(EmptyPayload $payload): GetAvailableTemplatesResult
+    public function __invoke(): GetAvailableTemplatesResult
     {
         $templates = $this->provider->getTemplates();
 

@@ -18,11 +18,10 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\GetModificationStatistics;
 
 use DateTime;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 
 final class GetModificationStatisticsHandler
 {
-    public function __invoke(EmptyPayload $payload): GetModificationStatisticsResult
+    public function __invoke(): GetModificationStatisticsResult
     {
         $db = \OpenDxp\Db::get();
 

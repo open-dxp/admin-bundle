@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Notification\GetRecipients;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\Notification\Service\UserService;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -30,7 +29,7 @@ final class GetRecipientsHandler
         private readonly TranslatorInterface $translator,
     ) {}
 
-    public function __invoke(EmptyPayload $payload): GetRecipientsResult
+    public function __invoke(): GetRecipientsResult
     {
         $adminUser = $this->userContext->getAdminUser();
         $data = [];

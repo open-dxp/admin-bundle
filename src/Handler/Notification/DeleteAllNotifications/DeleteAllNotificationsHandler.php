@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Notification\DeleteAllNotifications;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\Notification\Service\NotificationService;
 
@@ -27,7 +26,7 @@ final class DeleteAllNotificationsHandler
         private readonly NotificationService $notificationService,
     ) {}
 
-    public function __invoke(EmptyPayload $payload): void
+    public function __invoke(): void
     {
         $this->notificationService->deleteAll((int) $this->userContext->getAdminUser()?->getId());
     }

@@ -27,7 +27,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\ListRecyclebin\ListRecyclebinH
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RecyclebinPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RestoreRecyclebinItem\RestoreRecyclebinItemHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RestoreRecyclebinItem\RestoreRecyclebinItemPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Controller\KernelControllerEventInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -84,10 +83,9 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
     #[IsGranted(CorePermission::Recyclebin->value)]
     #[Route('/recyclebin/flush', name: 'opendxp_admin_recyclebin_flush', methods: ['DELETE'])]
     public function flushAction(
-        EmptyPayload $payload,
         FlushRecyclebinHandler $handler,
     ): JsonResponse {
-        $handler($payload);
+        $handler();
 
         return $this->apiOk();
     }

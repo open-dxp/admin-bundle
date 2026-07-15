@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GeneratePagePreviews;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Messenger\GeneratePagePreviewMessage;
 use OpenDxp\Model\Document;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -28,7 +27,7 @@ final class GeneratePagePreviewsHandler
         private readonly MessageBusInterface $messengerBusOpendxpCore,
     ) {}
 
-    public function __invoke(EmptyPayload $payload): void
+    public function __invoke(): void
     {
         $list = new Document\Listing();
         $list->setCondition('`type` = ?', ['page']);

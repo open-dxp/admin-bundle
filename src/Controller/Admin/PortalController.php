@@ -37,7 +37,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Portal\ReorderWidget\ReorderWidgetHandler
 use OpenDxp\Bundle\AdminBundle\Handler\Portal\ReorderWidget\ReorderWidgetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Portal\UpdatePortletConfig\UpdatePortletConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Portal\UpdatePortletConfig\UpdatePortletConfigPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -50,9 +49,8 @@ class PortalController extends AdminAbstractController
     #[Route('/dashboard-list', name: 'opendxp_admin_portal_dashboardlist', methods: ['GET'])]
     public function dashboardListAction(
         GetDashboardListHandler $handler,
-        EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), rootProperty: 'dashboards');
+        return $this->apiJson($handler(), rootProperty: 'dashboards');
     }
 
     #[Route('/create-dashboard', name: 'opendxp_admin_portal_createdashboard', methods: ['POST'])]
@@ -124,32 +122,28 @@ class PortalController extends AdminAbstractController
     #[Route('/portlet-modified-documents', name: 'opendxp_admin_portal_portletmodifieddocuments', methods: ['GET'])]
     public function portletModifiedDocumentsAction(
         GetModifiedDocumentsHandler $handler,
-        EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), envelope: false);
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[Route('/portlet-modified-assets', name: 'opendxp_admin_portal_portletmodifiedassets', methods: ['GET'])]
     public function portletModifiedAssetsAction(
         GetModifiedAssetsHandler $handler,
-        EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), envelope: false);
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[Route('/portlet-modified-objects', name: 'opendxp_admin_portal_portletmodifiedobjects', methods: ['GET'])]
     public function portletModifiedObjectsAction(
         GetModifiedObjectsHandler $handler,
-        EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), envelope: false);
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[Route('/portlet-modification-statistics', name: 'opendxp_admin_portal_portletmodificationstatistics', methods: ['GET'])]
     public function portletModificationStatisticsAction(
         GetModificationStatisticsHandler $handler,
-        EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), envelope: false);
+        return $this->apiJson($handler(), envelope: false);
     }
 }

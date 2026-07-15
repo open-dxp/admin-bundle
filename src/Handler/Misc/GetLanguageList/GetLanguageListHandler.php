@@ -17,12 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Misc\GetLanguageList;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Tool;
 
 final class GetLanguageListHandler
 {
-    public function __invoke(EmptyPayload $payload): GetLanguageListResult
+    public function __invoke(): GetLanguageListResult
     {
         $locales = Tool::getSupportedLocales();
 

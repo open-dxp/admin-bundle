@@ -22,7 +22,6 @@ use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Admin\Statistics\StatisticsHandler;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Controller\KernelResponseEventInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -64,7 +63,6 @@ class IndexController extends AdminAbstractController implements KernelResponseE
     #[Route('/index/statistics', name: 'opendxp_admin_index_statistics', methods: ['GET'])]
     public function statisticsAction(
         Request $request,
-        EmptyPayload $payload,
         StatisticsHandler $handler,
     ): JsonResponse {
 
@@ -72,7 +70,7 @@ class IndexController extends AdminAbstractController implements KernelResponseE
             throw $this->createAccessDeniedHttpException();
         }
 
-        $handler($payload);
+        $handler();
 
         return $this->apiOk();
     }

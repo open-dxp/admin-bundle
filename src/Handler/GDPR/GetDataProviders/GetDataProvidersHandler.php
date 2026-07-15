@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\GDPR\GetDataProviders;
 
 use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\Manager;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 
 final class GetDataProvidersHandler
 {
@@ -26,7 +25,7 @@ final class GetDataProvidersHandler
         private readonly Manager $manager,
     ) {}
 
-    public function __invoke(EmptyPayload $payload): GetDataProvidersResult
+    public function __invoke(): GetDataProvidersResult
     {
         $providers = [];
         foreach ($this->manager->getServices() as $service) {

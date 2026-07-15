@@ -31,7 +31,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\UpdateDocType\UpdateDoc
 use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocTypesByType\GetDocTypesByTypeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocTypesByType\GetDocTypesByTypePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\GetDocTypesList\GetDocTypesListHandler;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentData\GetDocumentDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentData\GetDocumentDataPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentIdForPath\GetDocumentIdForPathHandler;
@@ -180,11 +179,10 @@ class DocumentController extends ElementControllerBase
 
     #[Route('/doc-types', name: 'opendxp_admin_document_document_doctypesget', methods: ['GET'])]
     public function docTypesGetAction(
-        EmptyPayload $payload,
         GetDocTypesListHandler $handler,
     ): JsonResponse
     {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler());
     }
 
     #[IsGranted(CorePermission::Documents->value)]

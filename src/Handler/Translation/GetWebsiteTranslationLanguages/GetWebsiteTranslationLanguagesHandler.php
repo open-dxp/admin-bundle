@@ -16,14 +16,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\GetWebsiteTranslationLanguages;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class GetWebsiteTranslationLanguagesHandler
 {
     public function __construct(private readonly AdminUserContextInterface $userContext) {}
 
-    public function __invoke(EmptyPayload $payload): GetWebsiteTranslationLanguagesResult
+    public function __invoke(): GetWebsiteTranslationLanguagesResult
     {
         $user = $this->userContext->getAdminUser();
 

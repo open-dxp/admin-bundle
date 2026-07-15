@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\GetDocTypesList;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\Document\DocType;
 
@@ -27,7 +26,7 @@ final class GetDocTypesListHandler
     {
     }
 
-    public function __invoke(EmptyPayload $payload): GetDocTypesListResult
+    public function __invoke(): GetDocTypesListResult
     {
         $adminUser = $this->userContext->getAdminUser();
         $list = new DocType\Listing();

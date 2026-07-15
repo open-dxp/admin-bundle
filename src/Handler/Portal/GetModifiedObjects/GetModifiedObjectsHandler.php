@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\GetModifiedObjects;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
 
@@ -27,7 +26,7 @@ final class GetModifiedObjectsHandler
     {
     }
 
-    public function __invoke(EmptyPayload $payload): GetModifiedObjectsResult
+    public function __invoke(): GetModifiedObjectsResult
     {
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
         $list = DataObject::getList([

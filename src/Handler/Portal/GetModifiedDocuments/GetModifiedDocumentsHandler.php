@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\GetModifiedDocuments;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\Document;
 
@@ -27,7 +26,7 @@ final class GetModifiedDocumentsHandler
     {
     }
 
-    public function __invoke(EmptyPayload $payload): GetModifiedDocumentsResult
+    public function __invoke(): GetModifiedDocumentsResult
     {
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
         $list = Document::getList([

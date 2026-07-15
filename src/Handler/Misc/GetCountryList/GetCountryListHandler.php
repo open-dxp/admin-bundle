@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Misc\GetCountryList;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Localization\LocaleServiceInterface;
 
 final class GetCountryListHandler
@@ -26,7 +25,7 @@ final class GetCountryListHandler
         private readonly LocaleServiceInterface $localeService,
     ) {}
 
-    public function __invoke(EmptyPayload $payload): GetCountryListResult
+    public function __invoke(): GetCountryListResult
     {
         $countries = $this->localeService->getDisplayRegions();
         asort($countries);

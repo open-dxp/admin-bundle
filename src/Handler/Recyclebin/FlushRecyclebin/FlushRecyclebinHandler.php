@@ -16,12 +16,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\FlushRecyclebin;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Model\Element\Recyclebin;
 
 final class FlushRecyclebinHandler
 {
-    public function __invoke(EmptyPayload $payload): void
+    public function __invoke(): void
     {
         $bin = new Recyclebin();
         $bin->flush();

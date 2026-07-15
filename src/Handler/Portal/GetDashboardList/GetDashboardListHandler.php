@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\GetDashboardList;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService;
 
@@ -28,7 +27,7 @@ final class GetDashboardListHandler
     ) {
     }
 
-    public function __invoke(EmptyPayload $payload): GetDashboardListResult
+    public function __invoke(): GetDashboardListResult
     {
         $allDashboards = $this->dashboardService->getAllDashboards($this->userContext->getAdminUser());
 

@@ -18,14 +18,13 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Misc\AdminCss;
 
 use OpenDxp\Bundle\AdminBundle\CustomView\Config as CustomViewConfig;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
 use OpenDxp\Tool;
 use OpenDxp\Tool\Admin as AdminTool;
 
 final class AdminCssHandler
 {
-    public function __invoke(EmptyPayload $payload): AdminCssResult
+    public function __invoke(): AdminCssResult
     {
         $customviews = CustomViewConfig::get();
 

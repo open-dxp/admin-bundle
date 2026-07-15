@@ -16,14 +16,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\ResetMy2FaSecret;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 
 final class ResetMy2FaSecretHandler
 {
     public function __construct(private readonly AdminUserContextInterface $userContext) {}
 
-    public function __invoke(EmptyPayload $payload): void
+    public function __invoke(): void
     {
         $user = $this->userContext->getAdminUser();
         $user->setTwoFactorAuthentication('required', true);

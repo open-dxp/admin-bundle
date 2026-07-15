@@ -33,7 +33,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\ResetEditablesSession\Reset
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePageHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePagePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmode\RenderAreabrickIndexEditmodePayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -64,9 +63,9 @@ class PageController extends DocumentControllerBase
     }
 
     #[Route('/generate-previews', name: 'generatepreviews', methods: ['GET'])]
-    public function generatePreviewsAction(GeneratePagePreviewsHandler $handler, EmptyPayload $payload): JsonResponse
+    public function generatePreviewsAction(GeneratePagePreviewsHandler $handler): JsonResponse
     {
-        $handler($payload);
+        $handler();
 
         return $this->apiOk();
     }

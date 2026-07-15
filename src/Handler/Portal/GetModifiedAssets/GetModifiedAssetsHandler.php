@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Portal\GetModifiedAssets;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Model\Asset;
 
@@ -27,7 +26,7 @@ final class GetModifiedAssetsHandler
     {
     }
 
-    public function __invoke(EmptyPayload $payload): GetModifiedAssetsResult
+    public function __invoke(): GetModifiedAssetsResult
     {
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
         $list = Asset::getList([

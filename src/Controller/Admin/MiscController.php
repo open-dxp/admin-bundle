@@ -37,7 +37,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Misc\Maintenance\MaintenanceHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Misc\Maintenance\MaintenancePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Misc\ScriptProxy\ScriptProxyHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Misc\ScriptProxy\ScriptProxyPayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -54,18 +53,16 @@ class MiscController extends AdminAbstractController
 {
     #[Route('/get-available-controller-references', name: 'opendxp_admin_misc_getavailablecontroller_references', methods: ['GET'])]
     public function getAvailableControllerReferencesAction(
-        EmptyPayload $payload,
         GetAvailableControllerReferencesHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler());
     }
 
     #[Route('/get-available-templates', name: 'opendxp_admin_misc_getavailabletemplates', methods: ['GET'])]
     public function getAvailableTemplatesAction(
-        EmptyPayload $payload,
         GetAvailableTemplatesHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), envelope: false);
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[Route('/json-translations-system', name: 'opendxp_admin_misc_jsontranslationssystem', methods: ['GET'])]
@@ -104,10 +101,9 @@ class MiscController extends AdminAbstractController
 
     #[Route('/admin-css', name: 'opendxp_admin_misc_admincss', methods: ['GET'])]
     public function adminCssAction(
-        EmptyPayload $payload,
         AdminCssHandler $handler,
     ): Response {
-        $result = $handler($payload);
+        $result = $handler();
 
         $response = $this->render('@OpenDxpAdmin/admin/misc/admin_css.html.twig', [
             'customviews'   => $result->customviews,
@@ -122,10 +118,9 @@ class MiscController extends AdminAbstractController
 
     #[Route('/available-languages', name: 'opendxp_admin_misc_availablelanguages', methods: ['GET'])]
     public function availableLanguagesAction(
-        EmptyPayload $payload,
         GetAvailableLanguagesHandler $handler,
     ): Response {
-        $result = $handler($payload);
+        $result = $handler();
 
         $response = new Response('opendxp.available_languages = ' . $this->encodeJson($result->locales) . ';');
         $response->headers->set('Content-Type', 'text/javascript');
@@ -155,18 +150,16 @@ class MiscController extends AdminAbstractController
 
     #[Route('/country-list', name: 'opendxp_admin_misc_countrylist', methods: ['GET'])]
     public function countryListAction(
-        EmptyPayload $payload,
         GetCountryListHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), envelope: false);
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[Route('/language-list', name: 'opendxp_admin_misc_languagelist', methods: ['GET'])]
     public function languageListAction(
-        EmptyPayload $payload,
         GetLanguageListHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), envelope: false);
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[Route('/get-language-flag', name: 'opendxp_admin_misc_getlanguageflag', methods: ['GET'])]

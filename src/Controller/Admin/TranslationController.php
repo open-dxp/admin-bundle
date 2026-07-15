@@ -41,7 +41,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Translation\TranslationPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\UpdateTranslation\UpdateTranslationHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\UploadTranslationImportFile\UploadTranslationImportFileHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\UploadTranslationImportFile\UploadTranslationImportFilePayload;
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\TranslationImportSessionGateway;
 use OpenDxp\Model\Translation;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -197,16 +196,14 @@ class TranslationController extends AdminAbstractController
     #[Route('/get-website-translation-languages', name: 'opendxp_admin_translation_getwebsitetranslationlanguages', methods: ['GET'])]
     public function getWebsiteTranslationLanguagesAction(
         GetWebsiteTranslationLanguagesHandler $handler,
-        EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), envelope: false);
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[Route('/get-translation-domains', name: 'opendxp_admin_translation_gettranslationdomains', methods: ['GET'])]
     public function getTranslationDomainsAction(
         GetTranslationDomainsHandler $handler,
-        EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), envelope: false);
+        return $this->apiJson($handler(), envelope: false);
     }
 }

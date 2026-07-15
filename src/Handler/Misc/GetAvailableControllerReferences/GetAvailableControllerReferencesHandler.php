@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Misc\GetAvailableControllerReferences;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Controller\Config\ControllerDataProvider;
 
 final class GetAvailableControllerReferencesHandler
@@ -26,7 +25,7 @@ final class GetAvailableControllerReferencesHandler
     {
     }
 
-    public function __invoke(EmptyPayload $payload): GetAvailableControllerReferencesResult
+    public function __invoke(): GetAvailableControllerReferencesResult
     {
         $controllerReferences = $this->provider->getControllerReferences();
 

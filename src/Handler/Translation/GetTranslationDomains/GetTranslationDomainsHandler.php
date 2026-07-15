@@ -17,12 +17,11 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\GetTranslationDomains;
 
-use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
 use OpenDxp\Model\Translation;
 
 final class GetTranslationDomainsHandler
 {
-    public function __invoke(EmptyPayload $payload): GetTranslationDomainsResult
+    public function __invoke(): GetTranslationDomainsResult
     {
         $translation = new Translation();
 
