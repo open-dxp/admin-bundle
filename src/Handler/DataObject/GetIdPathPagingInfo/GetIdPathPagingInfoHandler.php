@@ -30,7 +30,7 @@ final class GetIdPathPagingInfoHandler
 
         $path = $payload->path;
         $limit = $payload->limit;
-        $pathParts = explode('/', $path ?? '');
+        $pathParts = explode('/', $path);
         $id = (int) array_pop($pathParts);
 
         $data = [];

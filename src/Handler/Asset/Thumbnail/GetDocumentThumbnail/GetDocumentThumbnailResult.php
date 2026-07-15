@@ -22,7 +22,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 final readonly class GetDocumentThumbnailResult implements ResultInterface
 {
     /**
-     * @param resource $stream
+     * @param resource|null $stream null when no thumbnail could be generated
      */
     public function __construct(
         public mixed $stream,

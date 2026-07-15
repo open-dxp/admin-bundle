@@ -80,8 +80,6 @@ class UserProfileController extends AdminAbstractController
         return $response;
     }
 
-    // no #[IsGranted]: acts only on the caller's own account (no attacker-controlled id),
-    // unlike 1.x whose whitelist entry for this action ('renew2FaSecretAction') was a dead typo
     #[Route('/user/reset-my-2fa-secret', name: 'opendxp_admin_user_reset_my_2fa_secret', methods: ['PUT'])]
     public function resetMy2FaSecretAction(
         EmptyPayload $payload,
