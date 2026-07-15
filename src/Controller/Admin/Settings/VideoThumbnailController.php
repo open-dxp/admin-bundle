@@ -22,6 +22,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Settings\AddVideoThumbnail\AddVideoThumbn
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteVideoThumbnail\DeleteVideoThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteVideoThumbnail\DeleteVideoThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetVideoThumbnail\GetVideoThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetVideoThumbnail\GetVideoThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetVideoThumbnailList\GetVideoThumbnailListHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetVideoThumbnailTree\GetVideoThumbnailTreeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateVideoThumbnail\UpdateVideoThumbnailPayload;
@@ -29,7 +30,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateVideoThumbnail\UpdateVideo
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -85,10 +85,10 @@ class VideoThumbnailController extends AdminAbstractController
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/video-thumbnail-get', name: 'opendxp_admin_settings_videothumbnailget', methods: ['GET'])]
     public function videoThumbnailGetAction(
-        #[MapQueryParameter] string $name,
+        GetVideoThumbnailPayload $payload,
         GetVideoThumbnailHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($name), rootProperty: 'data');
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]

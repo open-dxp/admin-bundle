@@ -44,8 +44,7 @@ final class PrepareHelperColumnConfigsHandler
         $this->gridColumnConfigSession->prependHelperColumns($helperColumns);
 
         return new PrepareHelperColumnConfigsResult(
-            columns:       $newData,
-            helperColumns: $helperColumns,
+            columns: $newData,
         );
     }
 }

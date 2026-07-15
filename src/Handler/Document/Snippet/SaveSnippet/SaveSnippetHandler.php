@@ -40,7 +40,7 @@ final class SaveSnippetHandler
 
         $snippet = $this->elementDraftService->resolveDraft($loadedSnippet);
 
-        $this->mapper->applyPagePayload($payload, $snippet);
+        $this->mapper->applyPagePayload($payload, $snippet, $payload->task);
 
         $persistenceData = $this->coordinator->save($snippet, $payload->task);
 

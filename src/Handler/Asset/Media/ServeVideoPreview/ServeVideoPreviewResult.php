@@ -21,6 +21,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class ServeVideoPreviewResult implements ResultInterface
 {
+    /**
+     * @param resource $stream
+     */
     public function __construct(
         public mixed $stream,
         public int $fileSize,

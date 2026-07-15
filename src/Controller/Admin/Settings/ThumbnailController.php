@@ -23,12 +23,12 @@ use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteThumbnail\DeleteThumbnailP
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteThumbnail\DeleteThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetDownloadableThumbnails\GetDownloadableThumbnailsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetThumbnail\GetThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetThumbnail\GetThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetThumbnailTree\GetThumbnailTreeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateThumbnail\UpdateThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateThumbnail\UpdateThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -69,10 +69,10 @@ class ThumbnailController extends AdminAbstractController
     #[IsGranted(CorePermission::Thumbnails->value)]
     #[Route('/settings/thumbnail-get', name: 'opendxp_admin_settings_thumbnailget', methods: ['GET'])]
     public function thumbnailGetAction(
-        #[MapQueryParameter] string $name,
+        GetThumbnailPayload $payload,
         GetThumbnailHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($name), rootProperty: 'data');
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[IsGranted(CorePermission::Thumbnails->value)]

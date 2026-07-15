@@ -21,9 +21,9 @@ use OpenDxp\Model\Asset;
 
 final class GetThumbnailHandler
 {
-    public function __invoke(string $name): GetThumbnailResult
+    public function __invoke(GetThumbnailPayload $payload): GetThumbnailResult
     {
-        $pipe = Asset\Image\Thumbnail\Config::getByName($name);
+        $pipe = Asset\Image\Thumbnail\Config::getByName($payload->name);
         $data = $pipe->getObjectVars();
         $data['writeable'] = $pipe->isWriteable();
 

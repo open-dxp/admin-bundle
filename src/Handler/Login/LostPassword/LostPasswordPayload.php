@@ -13,7 +13,6 @@ final readonly class LostPasswordPayload implements ExtJsPayloadInterface
         public readonly string $username,
         public readonly string $clientIp,
         public readonly bool $isPost,
-        public readonly ?array $resolverContext = null,
     ) {}
 
     public static function fromRequest(Request $request): static
@@ -22,7 +21,6 @@ final readonly class LostPasswordPayload implements ExtJsPayloadInterface
             username: (string) $request->request->get('username'),
             clientIp: (string) $request->getClientIp(),
             isPost: $request->isMethod('POST') && $request->request->has('username'),
-            resolverContext: ['source' => $request],
         );
     }
 }

@@ -46,7 +46,7 @@ class WorkflowController extends AdminAbstractController
         GetWorkflowFormHandler $handler,
     ): JsonResponse
     {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/submit-workflow-transition', name: 'opendxp_admin_workflow_submitworkflowtransition', methods: ['POST'])]

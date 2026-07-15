@@ -34,7 +34,7 @@ final readonly class SaveFolderPayload implements ExtJsPayloadInterface
             : null;
 
         return new static(
-            id: $request->request->getInt('id'),
+            id: (int) $request->request->getString('id'),
             properties: is_array($properties) ? $properties : null,
         );
     }

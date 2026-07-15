@@ -9,12 +9,12 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ShowEmailLogHandler
 {
-    public function __invoke(int $id): GetEmailLogResult
+    public function __invoke(ShowEmailLogPayload $payload): GetEmailLogResult
     {
-        $log = Log::getById($id);
+        $log = Log::getById($payload->id);
 
         if (!$log) {
-            throw new NotFoundHttpException(sprintf('Email log with id %d not found', $id));
+            throw new NotFoundHttpException(sprintf('Email log with id %d not found', $payload->id));
         }
 
         return new GetEmailLogResult(

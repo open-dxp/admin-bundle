@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetModalCustomHtml;
 
-use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\Workflow\WorkflowElementResolver;
 use OpenDxp\Model\Asset;
@@ -38,35 +37,31 @@ final class GetModalCustomHtmlHandler
 
     public function __invoke(GetModalCustomHtmlPayload $payload): GetModalCustomHtmlResult
     {
-        try {
-            $element = $this->elementResolver->resolve($payload->ctype, $payload->cid);
+        $element = $this->elementResolver->resolve($payload->ctype, $payload->cid);
 
-            $workflow = $this->workflowRegistry->get($element, $payload->workflowName);
+        $workflow = $this->workflowRegistry->get($element, $payload->workflowName);
 
-            if ($payload->isGlobalAction) {
-                $globalAction = $this->workflowManager->getGlobalAction($workflow->getName(), $payload->transition);
-                if ($globalAction) {
-                    return new GetModalCustomHtmlResult(
-                        customHtml: $this->buildCustomHtml($globalAction->getCustomHtmlService(), $element),
-                    );
-                }
-            } elseif ($workflow->can($element, $payload->transition)) {
-                $enabledTransitions = $workflow->getEnabledTransitions($element);
-                $matchedTransition = null;
-                foreach ($enabledTransitions as $_transition) {
-                    if ($_transition->getName() === $payload->transition) {
-                        $matchedTransition = $_transition;
-                    }
-                }
-
-                if ($matchedTransition instanceof Transition) {
-                    return new GetModalCustomHtmlResult(
-                        customHtml: $this->buildCustomHtml($matchedTransition->getCustomHtmlService(), $element),
-                    );
+        if ($payload->isGlobalAction) {
+            $globalAction = $this->workflowManager->getGlobalAction($workflow->getName(), $payload->transition);
+            if ($globalAction) {
+                return new GetModalCustomHtmlResult(
+                    customHtml: $this->buildCustomHtml($globalAction->getCustomHtmlService(), $element),
+                );
+            }
+        } elseif ($workflow->can($element, $payload->transition)) {
+            $enabledTransitions = $workflow->getEnabledTransitions($element);
+            $matchedTransition = null;
+            foreach ($enabledTransitions as $_transition) {
+                if ($_transition->getName() === $payload->transition) {
+                    $matchedTransition = $_transition;
                 }
             }
-        } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+
+            if ($matchedTransition instanceof Transition) {
+                return new GetModalCustomHtmlResult(
+                    customHtml: $this->buildCustomHtml($matchedTransition->getCustomHtmlService(), $element),
+                );
+            }
         }
 
         throw new AdminOperationFailedException('error validating the action on this element, element cannot perform this action');

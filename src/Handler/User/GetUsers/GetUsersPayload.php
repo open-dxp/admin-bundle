@@ -30,9 +30,7 @@ final readonly class GetUsersPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         return new static(
-            includeCurrentUser: $request->query->has('include_current_user')
-                ? $request->query->get('include_current_user') === '1'
-                : false,
+            includeCurrentUser: (bool) $request->query->get('include_current_user'),
             permission: $request->query->get('permission'),
         );
     }

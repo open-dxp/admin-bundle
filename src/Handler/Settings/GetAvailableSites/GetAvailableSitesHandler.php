@@ -30,7 +30,7 @@ final class GetAvailableSitesHandler
     ) {
     }
 
-    public function __invoke(bool $excludeMainSite): GetAvailableSitesResult
+    public function __invoke(GetAvailableSitesPayload $payload): GetAvailableSitesResult
     {
         $adminUser = $this->userContext->getAdminUser();
 
@@ -44,7 +44,7 @@ final class GetAvailableSitesHandler
         $sitesObjects = $sitesList->load();
         $sites = [];
 
-        if (!$excludeMainSite) {
+        if (!$payload->excludeMainSite) {
             $sites[] = [
                 'id' => 0,
                 'rootId' => 1,

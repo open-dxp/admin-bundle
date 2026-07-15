@@ -58,12 +58,15 @@ abstract class AdminAbstractController extends UserAwareController
      * single Result property (a raw array/list, no envelope) rather than an enveloped
      * `{success, ...}` object.
      *
+     * $envelope = false is for endpoints whose established wire contract has multiple
+     * top-level properties but no `success` key at all. Mutually exclusive with $rootProperty.
+     *
      * $context recognizes AbstractObjectNormalizer::SKIP_NULL_VALUES, reused here only as a
      * familiar name: the admin serializer never reaches Symfony's AbstractObjectNormalizer,
      * so the flag is interpreted directly below rather than delegated to it.
      * Pass it only for the specific action whose Result has a genuinely optional/conditional.
      */
-    protected function apiJson(ResultInterface $result, int $status = 200, ?string $rootProperty = null, array $context = []): JsonResponse
+    protected function apiJson(ResultInterface $result, int $status = 200, ?string $rootProperty = null, array $context = [], bool $envelope = true): JsonResponse
     {
         if ($rootProperty !== null) {
             if (!property_exists($result, $rootProperty)) {
@@ -73,12 +76,17 @@ abstract class AdminAbstractController extends UserAwareController
             return $this->adminJson($result->$rootProperty, $status);
         }
 
-        $success = $result instanceof ConditionalResultInterface ? $result->isSuccessful() : true;
         $data = get_object_vars($result);
 
         if ($context[AbstractObjectNormalizer::SKIP_NULL_VALUES] ?? false) {
             $data = array_filter($data, static fn (mixed $value): bool => $value !== null);
         }
+
+        if (!$envelope) {
+            return $this->adminJson($data, $status);
+        }
+
+        $success = $result instanceof ConditionalResultInterface ? $result->isSuccessful() : true;
 
         return $this->adminJson(['success' => $success, ...$data], $status);
     }

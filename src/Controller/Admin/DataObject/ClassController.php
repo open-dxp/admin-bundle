@@ -230,7 +230,7 @@ class ClassController extends AdminAbstractController
     #[Route('/suggest-class-identifier', name: 'suggestclassidentifier')]
     public function suggestClassIdentifierAction(SuggestClassIdentifierHandler $handler): JsonResponse
     {
-        return $this->apiJson($handler());
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[IsGranted(CorePermission::Classes->value)]

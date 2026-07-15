@@ -31,10 +31,11 @@ final class AssetPersistenceCoordinator
 
     public function save(Asset $asset, string $task): AssetPersistenceData
     {
+        $asset->setUserModification($this->userContext->getAdminUser()->getId());
+
         if ($task === 'session') {
             $this->elementDraftService->saveAsset($asset);
         } else {
-            $asset->setUserModification($this->userContext->getAdminUser()->getId());
             $asset->save();
         }
 

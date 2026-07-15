@@ -47,7 +47,7 @@ final class SavePageHandler
 
         $page = $this->elementDraftService->resolveDraft($loadedPage);
 
-        $this->mapper->applyPagePayload($payload, $page);
+        $this->mapper->applyPagePayload($payload, $page, $payload->task);
 
         $persistenceData = $this->coordinator->save($page, $payload->task);
 

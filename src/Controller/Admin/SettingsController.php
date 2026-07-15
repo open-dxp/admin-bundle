@@ -41,7 +41,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAdminLanguages\GetAv
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAlgorithms\GetAvailableAlgorithmsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableCountries\GetAvailableCountriesHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableSites\GetAvailableSitesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableSites\GetAvailableSitesPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetFilteredPredefinedMetadata\GetFilteredPredefinedMetadataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetFilteredPredefinedMetadata\GetFilteredPredefinedMetadataPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetPredefinedMetadataList\GetPredefinedMetadataListHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetPredefinedPropertiesList\GetPredefinedPropertiesListHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetSystemSettings\GetSystemSettingsHandler;
@@ -153,12 +155,10 @@ class SettingsController extends AdminAbstractController
 
     #[Route('/get-predefined-metadata', name: 'opendxp_admin_settings_getpredefinedmetadata', methods: ['GET'])]
     public function getPredefinedMetadataAction(
+        GetFilteredPredefinedMetadataPayload $payload,
         GetFilteredPredefinedMetadataHandler $handler,
-        #[MapQueryParameter] ?string $type = null,
-        #[MapQueryParameter] ?string $subType = null,
-        #[MapQueryParameter] ?string $group = null,
     ): JsonResponse {
-        return $this->apiJson($handler($type, $subType, $group));
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::PredefinedProperties->value)]
@@ -214,14 +214,14 @@ class SettingsController extends AdminAbstractController
     #[Route('/get-admin-system', name: 'opendxp_appearance_admin_settings_get', methods: ['GET'])]
     public function getAppearanceSystemAction(GetAppearanceSettingsHandler $handler): JsonResponse
     {
-        return $this->apiJson($handler());
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[IsGranted(CorePermission::SystemSettings->value)]
     #[Route('/get-system', name: 'opendxp_admin_settings_getsystem', methods: ['GET'])]
     public function getSystemAction(GetSystemSettingsHandler $handler): JsonResponse
     {
-        return $this->apiJson($handler());
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[IsGranted(AdminPermission::SystemAppearance->value)]
@@ -294,10 +294,10 @@ class SettingsController extends AdminAbstractController
 
     #[Route('/get-available-sites', name: 'opendxp_admin_settings_getavailablesites', methods: ['GET'])]
     public function getAvailableSitesAction(
+        GetAvailableSitesPayload $payload,
         GetAvailableSitesHandler $handler,
-        #[MapQueryParameter] ?string $excludeMainSite = null,
     ): JsonResponse {
-        return $this->apiJson($handler(excludeMainSite: (bool) $excludeMainSite), rootProperty: 'sites');
+        return $this->apiJson($handler($payload), rootProperty: 'sites');
     }
 
     #[Route('/get-available-countries', name: 'opendxp_admin_settings_getavailablecountries', methods: ['GET'])]

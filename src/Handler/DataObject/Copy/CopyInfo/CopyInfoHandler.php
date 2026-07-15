@@ -99,6 +99,6 @@ final class CopyInfoHandler
             ]];
         }
 
-        return new CopyInfoResult($transactionId, $pasteJobs);
+        return new CopyInfoResult($pasteJobs);
     }
 }

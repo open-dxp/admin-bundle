@@ -21,6 +21,7 @@ use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\Login\LoginRedirectEvent;
+use OpenDxp\Bundle\AdminBundle\Exception\Login\TwoFactorCodeInvalidException;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\Deeplink\DeeplinkHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\Deeplink\DeeplinkPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Login\GenerateTwoFactorSetup\GenerateTwoFactorSetupHandler;
@@ -225,7 +226,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
     ): RedirectResponse {
         try {
             $handler($payload);
-        } catch (\Throwable) {
+        } catch (TwoFactorCodeInvalidException) {
             return new RedirectResponse($this->generateUrl('opendxp_admin_2fa_setup', ['error' => '2fa_wrong']));
         }
 
@@ -246,7 +247,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
             $params['error'] = $payload->error;
         }
 
-        $result = $handler();
+        $result = $handler($payload);
         $params['image'] = $result->qrDataUri;
 
         return $this->render('@OpenDxpAdmin/admin/login/two_factor_setup.html.twig', $params);

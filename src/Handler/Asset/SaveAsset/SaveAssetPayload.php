@@ -42,20 +42,24 @@ final readonly class SaveAssetPayload implements ExtJsPayloadInterface
         $propertiesData = $request->request->has('properties')
             ? json_decode($request->request->getString('properties'), true)
             : null;
-        $schedulerData = $request->request->has('scheduler')
-            ? json_decode($request->request->getString('scheduler'), true)
-            : null;
+        $schedulerData = null;
+        if ($request->request->has('scheduler')) {
+            $decodedScheduler = json_decode($request->request->getString('scheduler'), true);
+            // a present-but-non-array value (e.g. JSON null) must still clear existing
+            // scheduled tasks, matching ApplySchedulerDataTrait's original behavior
+            $schedulerData = is_array($decodedScheduler) ? $decodedScheduler : [];
+        }
         $imageData = $hasImage
             ? json_decode($request->request->getString('image'), true)
             : null;
         $rawData = $request->request->get('data');
 
         return new static(
-            id:            $request->request->getInt('id'),
+            id:            (int) $request->request->getString('id'),
             task:          $request->request->getString('task'),
             metadata:      is_array($metadata) ? $metadata : null,
             propertiesData: is_array($propertiesData) ? $propertiesData : null,
-            schedulerData: is_array($schedulerData) ? $schedulerData : null,
+            schedulerData: $schedulerData,
             rawData:       $rawData !== null ? (string) $rawData : null,
             hasImage:      $hasImage,
             imageData:     is_array($imageData) ? $imageData : null,

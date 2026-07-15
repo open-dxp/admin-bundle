@@ -29,7 +29,14 @@ final class DeleteUserImageHandler
     public function __invoke(DeleteUserImagePayload $payload): void
     {
         $adminUser = $this->userContext->getAdminUser();
-        $targetUserId = $payload->targetUserId ?? (int) $adminUser?->getId();
+        $currentUserId = $adminUser?->getId();
+
+        // matches the old getUserId() helper: a differing target id requires the 'users' permission
+        if ($payload->targetUserId !== null && $payload->targetUserId !== $currentUserId && !$adminUser?->isAllowed('users')) {
+            throw new AccessDeniedHttpException();
+        }
+
+        $targetUserId = $payload->targetUserId ?? (int) $currentUserId;
 
         $userObj = User::getById($targetUserId);
         if (!$userObj) {

@@ -18,7 +18,7 @@ final readonly class ShowEmailLogPayload implements ExtJsPayloadInterface
     {
         return new static(
             type: $request->query->get('type'),
-            id: $request->query->getInt('id', 0),
+            id: (int) $request->query->getString('id'),
         );
     }
 }

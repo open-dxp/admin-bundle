@@ -29,7 +29,7 @@ final readonly class PublishVersionPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         return new static(
-            versionId: $request->request->getInt('id'),
+            versionId: (int) $request->request->getString('id'),
         );
     }
 }

@@ -29,11 +29,11 @@ final readonly class GetAssetTextPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
-        $page = $request->query->has('page') ? $request->query->getInt('page') : null;
+        $page = $request->query->getString('page');
 
         return new static(
-            id:   $request->query->getInt('id'),
-            page: $page,
+            id:   (int) $request->query->getString('id'),
+            page: empty($page) ? null : (int) $page,
         );
     }
 }

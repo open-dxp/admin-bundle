@@ -35,7 +35,7 @@ final readonly class GetTagTreeChildrenPayload implements ExtJsPayloadInterface
         return new static(
             showSelection: $request->query->get('showSelection') === 'true',
             assignmentCId: $request->query->has('assignmentCId') ? (int) $request->query->get('assignmentCId') : null,
-            assignmentCType: $request->query->get('assignmentCType', ''),
+            assignmentCType: strip_tags($request->query->get('assignmentCType', '')),
             node: $request->query->get('node'),
             filter: $request->query->get('filter'),
         );

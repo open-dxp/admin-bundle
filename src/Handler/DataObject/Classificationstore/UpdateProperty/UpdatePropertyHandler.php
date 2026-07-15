@@ -18,11 +18,15 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProperty;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetProperties\GetPropertiesHandler;
+use OpenDxp\Bundle\AdminBundle\Service\DataObject\ClassificationstoreKeyConfigService;
 use OpenDxp\Model\DataObject\Classificationstore;
 
 final class UpdatePropertyHandler
 {
+    public function __construct(
+        private readonly ClassificationstoreKeyConfigService $keyConfigService,
+    ) {}
+
     public function __invoke(UpdatePropertyPayload $payload): UpdatePropertyResult
     {
         if (!$payload->hasData) {
@@ -43,7 +47,7 @@ final class UpdatePropertyHandler
         }
 
         $config->save();
-        $item = GetPropertiesHandler::buildKeyConfigItem($config);
+        $item = $this->keyConfigService->buildKeyConfigItem($config);
 
         return new UpdatePropertyResult(data: $item);
     }

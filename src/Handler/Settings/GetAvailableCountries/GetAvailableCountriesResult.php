@@ -19,10 +19,10 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableCountries;
 
 use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final class GetAvailableCountriesResult implements ResultInterface
+final readonly class GetAvailableCountriesResult implements ResultInterface
 {
     public function __construct(
-        public readonly array $data,
-        public readonly int $total,
+        public array $data,
+        public int $total,
     ) {}
 }

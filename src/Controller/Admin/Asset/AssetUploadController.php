@@ -61,7 +61,7 @@ class AssetUploadController extends AdminAbstractController
         CheckAssetExistsPayload $payload,
         CheckAssetExistsHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[AsHtmlContentTypeResponse]

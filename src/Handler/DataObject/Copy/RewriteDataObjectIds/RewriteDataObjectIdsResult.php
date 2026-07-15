@@ -21,6 +21,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 final readonly class RewriteDataObjectIdsResult implements ResultInterface
 {
     public function __construct(
-        public int $objectId,
+        public int $id,
     ) {}
 }

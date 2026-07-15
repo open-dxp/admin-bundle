@@ -22,6 +22,5 @@ final readonly class PrepareHelperColumnConfigsResult implements ResultInterface
 {
     public function __construct(
         public readonly array $columns,
-        public readonly array $helperColumns,
     ) {}
 }

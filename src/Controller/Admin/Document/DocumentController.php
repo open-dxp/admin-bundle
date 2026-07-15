@@ -62,7 +62,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoHandle
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootPayload;
-use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -78,10 +77,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/document')]
 class DocumentController extends ElementControllerBase
 {
-    public function __construct(ElementServiceInterface $elementService)
-    {
-        parent::__construct($elementService);
-    }
 
     #[IsGranted(CorePermission::Documents->value)]
     #[Override]
@@ -134,7 +129,7 @@ class DocumentController extends ElementControllerBase
         TreeGetDocumentChildrenHandler $handler,
     ): JsonResponse
     {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -248,7 +243,7 @@ class DocumentController extends ElementControllerBase
         GetDocTypesByTypeHandler $handler,
     ): JsonResponse
     {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -258,7 +253,7 @@ class DocumentController extends ElementControllerBase
         GetSiteCustomSettingsHandler $handler,
     ): JsonResponse
     {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[IsGranted(CorePermission::Documents->value)]
@@ -310,7 +305,7 @@ class DocumentController extends ElementControllerBase
         GetLanguageTreeRootHandler $handler,
     ): JsonResponse
     {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[IsGranted(CorePermission::Documents->value)]

@@ -44,9 +44,13 @@ readonly class PagePayload implements ExtJsPayloadInterface
             ? json_decode($request->request->getString('properties'), true)
             : null;
 
-        $scheduler = $request->request->has('scheduler')
-            ? json_decode($request->request->getString('scheduler'), true)
-            : null;
+        $scheduler = null;
+        if ($request->request->has('scheduler')) {
+            $decodedScheduler = json_decode($request->request->getString('scheduler'), true);
+            // a present-but-non-array value (e.g. JSON null) must still clear existing
+            // scheduled tasks, matching ApplySchedulerDataTrait's original behavior
+            $scheduler = is_array($decodedScheduler) ? $decodedScheduler : [];
+        }
 
         return new static(
             id:   $request->request->getInt('id'),
@@ -57,7 +61,7 @@ readonly class PagePayload implements ExtJsPayloadInterface
             editables: is_array($editables) ? $editables : null,
             appendEditables: (bool) $request->request->get('appendEditables'),
             properties: is_array($properties) ? $properties : null,
-            scheduler: is_array($scheduler) ? $scheduler : null,
+            scheduler: $scheduler,
             missingRequiredEditable: $request->request->has('missingRequiredEditable')
                 ? $request->request->getString('missingRequiredEditable') === 'true'
                 : null,

@@ -199,7 +199,7 @@ class TranslationController extends AdminAbstractController
         GetWebsiteTranslationLanguagesHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/get-translation-domains', name: 'opendxp_admin_translation_gettranslationdomains', methods: ['GET'])]
@@ -207,6 +207,6 @@ class TranslationController extends AdminAbstractController
         GetTranslationDomainsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 }

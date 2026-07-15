@@ -31,8 +31,8 @@ final readonly class DeleteDocumentPayload implements ExtJsPayloadInterface
     {
         return new static(
             type: $request->request->getString('type'),
-            id: $request->request->getInt('id'),
-            amount: $request->request->getInt('amount'),
+            id: (int) $request->request->getString('id'),
+            amount: (int) $request->request->getString('amount'),
         );
     }
 }

@@ -29,7 +29,7 @@ final readonly class ConvertDocumentPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         return new static(
-            id: $request->request->getInt('id'),
+            id: (int) $request->request->getString('id'),
             type: $request->request->getString('type'),
         );
     }

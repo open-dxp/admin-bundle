@@ -30,6 +30,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Email\ResendEmail\ResendEmailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\SendTestEmail\SendTestEmailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\SendTestEmail\SendTestEmailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogParams\GetEmailLogParamsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogParams\GetEmailLogParamsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\ShowEmailLogHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\ShowEmailLogPayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
@@ -76,12 +77,12 @@ class EmailController extends AdminAbstractController
         }
 
         return match ($payload->type) {
-            'params' => $this->adminJson($getEmailLogParams($payload->id)),
-            'text' => $this->render('@OpenDxpAdmin/admin/email/text.html.twig', ['log' => $showEmailLog($payload->id)->textLog]),
-            'html' => new Response($showEmailLog($payload->id)->htmlLog, 200, [
+            'params' => $this->adminJson($getEmailLogParams(new GetEmailLogParamsPayload($payload->id))->params),
+            'text' => $this->render('@OpenDxpAdmin/admin/email/text.html.twig', ['log' => $showEmailLog($payload)->textLog]),
+            'html' => new Response($showEmailLog($payload)->htmlLog, 200, [
                 'Content-Security-Policy' => "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:",
             ]),
-            'details' => $this->adminJson($showEmailLog($payload->id)->objectVars),
+            'details' => $this->adminJson($showEmailLog($payload)->objectVars),
             default => new Response('No Type specified'),
         };
     }

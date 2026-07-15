@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptio
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
+use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -29,25 +30,31 @@ final class SaveSelectOptionsHandler
 
     public function __invoke(SaveSelectOptionsPayload $payload): SaveSelectOptionsResult
     {
-        if ($payload->task === 'add' && (new DataObject\SelectOptions\Config\Listing())->hasConfig($payload->id)) {
-            throw new AdminOperationFailedException('Select options with the same ID already exists (lower/upper cases may be different)');
+        try {
+            if ($payload->task === 'add' && (new DataObject\SelectOptions\Config\Listing())->hasConfig($payload->id)) {
+                throw new \Exception('Select options with the same ID already exists (lower/upper cases may be different)');
+            }
+
+            $selectOptionsConfiguration = DataObject\SelectOptions\Config::createFromData([
+                DataObject\SelectOptions\Config::PROPERTY_ID => $payload->id,
+                DataObject\SelectOptions\Config::PROPERTY_GROUP => $payload->group,
+                DataObject\SelectOptions\Config::PROPERTY_USE_TRAITS => $payload->useTraits,
+                DataObject\SelectOptions\Config::PROPERTY_IMPLEMENTS_INTERFACES => $payload->implementsInterfaces,
+                DataObject\SelectOptions\Config::PROPERTY_SELECT_OPTIONS => $payload->selectOptionsData,
+            ]);
+
+            $event = new GenericEvent(null, ['selectOptionsConfiguration' => $selectOptionsConfiguration]);
+            $this->eventDispatcher->dispatch($event, AdminEvents::CLASS_SELECTOPTIONS_UPDATE_CONFIGURATION);
+            /** @var DataObject\SelectOptions\Config $selectOptionsConfiguration */
+            $selectOptionsConfiguration = $event->getArgument('selectOptionsConfiguration');
+
+            $selectOptionsConfiguration->save();
+
+            return new SaveSelectOptionsResult(id: $selectOptionsConfiguration->getId());
+        } catch (\Exception $e) {
+            Logger::error($e->getMessage());
+
+            throw new AdminOperationFailedException($e->getMessage());
         }
-
-        $selectOptionsConfiguration = DataObject\SelectOptions\Config::createFromData([
-            DataObject\SelectOptions\Config::PROPERTY_ID => $payload->id,
-            DataObject\SelectOptions\Config::PROPERTY_GROUP => $payload->group,
-            DataObject\SelectOptions\Config::PROPERTY_USE_TRAITS => $payload->useTraits,
-            DataObject\SelectOptions\Config::PROPERTY_IMPLEMENTS_INTERFACES => $payload->implementsInterfaces,
-            DataObject\SelectOptions\Config::PROPERTY_SELECT_OPTIONS => $payload->selectOptionsData,
-        ]);
-
-        $event = new GenericEvent(null, ['selectOptionsConfiguration' => $selectOptionsConfiguration]);
-        $this->eventDispatcher->dispatch($event, AdminEvents::CLASS_SELECTOPTIONS_UPDATE_CONFIGURATION);
-        /** @var DataObject\SelectOptions\Config $selectOptionsConfiguration */
-        $selectOptionsConfiguration = $event->getArgument('selectOptionsConfiguration');
-
-        $selectOptionsConfiguration->save();
-
-        return new SaveSelectOptionsResult(id: $selectOptionsConfiguration->getId());
     }
 }

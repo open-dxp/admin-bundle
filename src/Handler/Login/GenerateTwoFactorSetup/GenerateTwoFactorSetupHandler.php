@@ -18,7 +18,7 @@ final class GenerateTwoFactorSetupHandler
         private readonly TwoFactorSetupSessionGateway $twoFactorSetupSession,
     ) {}
 
-    public function __invoke(): GenerateTwoFactorSetupResult
+    public function __invoke(GenerateTwoFactorSetupPayload $payload): GenerateTwoFactorSetupResult
     {
         $user = $this->userContext->getAdminUser();
         $proxyUser = $this->userContext->getAdminUserProxy();
@@ -40,7 +40,6 @@ final class GenerateTwoFactorSetupHandler
         $this->twoFactorSetupSession->storeSecret($secret);
 
         return new GenerateTwoFactorSetupResult(
-            secret: $secret,
             qrDataUri: $qrResult->getDataUri(),
         );
     }

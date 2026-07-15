@@ -15,10 +15,8 @@ final readonly class LoginCheckPayload implements ExtJsPayloadInterface
 
     public static function fromRequest(Request $request): static
     {
-        $perspective = $request->query->getString('perspective') ?: null;
-
         return new static(
-            perspective: $perspective !== null ? strip_tags($perspective) : null,
+            perspective: $request->query->has('perspective') ? strip_tags($request->query->getString('perspective')) : null,
         );
     }
 }

@@ -126,7 +126,7 @@ class PortalController extends AdminAbstractController
         GetModifiedDocumentsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/portlet-modified-assets', name: 'opendxp_admin_portal_portletmodifiedassets', methods: ['GET'])]
@@ -134,7 +134,7 @@ class PortalController extends AdminAbstractController
         GetModifiedAssetsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/portlet-modified-objects', name: 'opendxp_admin_portal_portletmodifiedobjects', methods: ['GET'])]
@@ -142,7 +142,7 @@ class PortalController extends AdminAbstractController
         GetModifiedObjectsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/portlet-modification-statistics', name: 'opendxp_admin_portal_portletmodificationstatistics', methods: ['GET'])]
@@ -150,6 +150,6 @@ class PortalController extends AdminAbstractController
         GetModificationStatisticsHandler $handler,
         EmptyPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 }

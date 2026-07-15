@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildre
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectChildren\GetDataObjectChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Db;
@@ -33,7 +32,6 @@ final class TreeGetDataObjectChildrenHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly ElementServiceInterface $elementService,
-        private readonly GetDataObjectChildrenHandler $childrenHandler,
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
@@ -65,6 +63,7 @@ final class TreeGetDataObjectChildrenHandler
 
             $filterForCondition = $filter;
             $effectiveLimit = $limit;
+
             if (!is_null($filterForCondition)) {
                 if (!str_ends_with($filterForCondition, '*')) {
                     $filterForCondition .= '*';
@@ -89,6 +88,7 @@ final class TreeGetDataObjectChildrenHandler
                     false
                 );
             }
+
             $childrenList->setObjectTypes($objectTypes);
 
             $cv = $view ? ($this->elementService->getCustomViewById($view) ?? []) : [];
@@ -103,23 +103,8 @@ final class TreeGetDataObjectChildrenHandler
             /** @var DataObject\Listing $childrenList */
             $childrenList = $beforeListLoadEvent->getArgument('list');
 
-            $result = ($this->childrenHandler)(
-                object: $object,
-                childrenList: $childrenList,
-                view: $view,
-                filter: $filter,
-                limit: $limit,
-                offset: $offset,
-                fromPaging: $fromPaging,
-                objectTypes: $objectTypes,
-            );
-
-            $objects = $result->objects;
-            $offset = $result->offset;
-            $limit = $result->limit;
-            $total = $result->total;
-            $filteredTotalCount = $result->filteredTotalCount;
-            $filter = $result->filter;
+            [$objects, $total, $filteredTotalCount] = $this->loadChildren($object, $childrenList, $view);
+            $limit = $effectiveLimit;
         }
 
         $event = new GenericEvent($this, ['objects' => $objects]);
@@ -140,6 +125,32 @@ final class TreeGetDataObjectChildrenHandler
             filter: $filter ?? '',
             inSearch: $payload->inSearch,
         );
+    }
+
+    private function loadChildren(DataObject\AbstractObject $object, DataObject\Listing $childrenList, string $view): array
+    {
+        $adminUser = $this->userContext->getAdminUser();
+        $objects = [];
+
+        $cv = $view ? ($this->elementService->getCustomViewById($view) ?? []) : [];
+
+        $children = $childrenList->load();
+        $filteredTotalCount = $childrenList->getTotalCount();
+
+        foreach ($children as $child) {
+            $objectTreeNode = $this->elementService->getElementTreeNodeConfig($child);
+            // this if is obsolete since as long as the change with #11714 about list on line 175-179 are working fine, we already filter the list=1 there
+            if ($objectTreeNode['permissions']['list'] == 1) {
+                $objects[] = $objectTreeNode;
+            }
+        }
+
+        //pagination for custom view
+        $total = $cv
+            ? $filteredTotalCount
+            : $object->getChildAmount(null, $adminUser);
+
+        return [$objects, $total, $filteredTotalCount];
     }
 
     private function buildChildrenCondition(DataObject\AbstractObject $object, ?string $filter, ?string $view): string

@@ -21,14 +21,14 @@ use OpenDxp\Model\Metadata;
 
 final class GetFilteredPredefinedMetadataHandler
 {
-    public function __invoke(?string $type, ?string $subType, ?string $group): GetFilteredPredefinedMetadataResult
+    public function __invoke(GetFilteredPredefinedMetadataPayload $payload): GetFilteredPredefinedMetadataResult
     {
-        $list = Metadata\Predefined\Listing::getByTargetType($type, [$subType]);
+        $list = Metadata\Predefined\Listing::getByTargetType($payload->type, [$payload->subType]);
         $result = [];
 
         foreach ($list as $item) {
             $itemGroup = $item->getGroup() ?? '';
-            if ($group === 'default' || $group === $itemGroup) {
+            if ($payload->group === 'default' || $payload->group === $itemGroup) {
                 $item->expand();
                 $data = $item->getObjectVars();
                 $data['writeable'] = $item->isWriteable();

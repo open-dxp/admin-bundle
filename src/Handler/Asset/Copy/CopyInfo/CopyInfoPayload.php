@@ -32,7 +32,7 @@ final readonly class CopyInfoPayload implements ExtJsPayloadInterface
     {
         return new static(
             type:     $request->query->getString('type') ?: null,
-            sourceId: $request->query->getInt('sourceId'),
+            sourceId: (int) $request->query->getString('sourceId'),
             targetId: $request->query->getString('targetId') ?: null,
         );
     }

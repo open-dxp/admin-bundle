@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAppearanceSettings;
 
 use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final class GetAppearanceSettingsResult implements ResultInterface
+final readonly class GetAppearanceSettingsResult implements ResultInterface
 {
-    public function __construct(public readonly array $values) {}
+    public function __construct(public array $values) {}
 }

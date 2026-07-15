@@ -127,6 +127,6 @@ class PageController extends DocumentControllerBase
         RenderAreabrickIndexEditmodePayload $payload,
         RenderAreabrickIndexEditmodeHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 }

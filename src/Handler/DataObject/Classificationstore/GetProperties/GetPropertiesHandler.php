@@ -18,12 +18,17 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetProperties;
 
 use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
+use OpenDxp\Bundle\AdminBundle\Service\DataObject\ClassificationstoreKeyConfigService;
 use OpenDxp\Db;
 use OpenDxp\Model\DataObject\Classificationstore;
 use stdClass;
 
 final class GetPropertiesHandler
 {
+    public function __construct(
+        private readonly ClassificationstoreKeyConfigService $keyConfigService,
+    ) {}
+
     public function __invoke(GetPropertiesPayload $payload): GetPropertiesResult
     {
         $db = Db::get();
@@ -139,42 +144,9 @@ final class GetPropertiesHandler
 
         $data = [];
         foreach ($configList as $config) {
-            $data[] = self::buildKeyConfigItem($config);
+            $data[] = $this->keyConfigService->buildKeyConfigItem($config);
         }
 
         return new GetPropertiesResult(data: $data, total: $list->getTotalCount());
-    }
-
-    public static function buildKeyConfigItem(Classificationstore\KeyConfig $config): array
-    {
-        $name = $config->getName();
-
-        $item = [
-            'storeId' => $config->getStoreId(),
-            'id' => $config->getId(),
-            'name' => $name,
-            'description' => $config->getDescription(),
-        ];
-
-        if ($config->getCreationDate()) {
-            $item['creationDate'] = $config->getCreationDate();
-        }
-
-        if ($config->getModificationDate()) {
-            $item['modificationDate'] = $config->getModificationDate();
-        }
-
-        $item['type'] = $config->getType() ?: 'input';
-        $definition = $config->getDefinition();
-        $item['definition'] = $definition;
-
-        if ($definition) {
-            $definition = json_decode($definition, true);
-            if ($definition) {
-                $item['title'] = $definition['title'];
-            }
-        }
-
-        return $item;
     }
 }

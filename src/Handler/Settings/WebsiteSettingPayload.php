@@ -53,8 +53,8 @@ final readonly class WebsiteSettingPayload implements ExtJsPayloadInterface
 
         return new static(
             hasData: false,
-            limit: $request->request->getInt('limit', 50),
-            offset: $request->request->getInt('start', 0),
+            limit: (int) $request->request->getString('limit', '50'),
+            offset: (int) $request->request->getString('start', '0'),
             orderKey: $sortingSettings['orderKey'] ?: null,
             order: $sortingSettings['order'] ?? null,
             filter: $request->request->has('filter') ? $request->request->getString('filter') : null,

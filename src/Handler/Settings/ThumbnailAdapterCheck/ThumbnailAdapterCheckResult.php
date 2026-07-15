@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\ThumbnailAdapterCheck;
 
 use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final class ThumbnailAdapterCheckResult implements ResultInterface
+final readonly class ThumbnailAdapterCheckResult implements ResultInterface
 {
-    public function __construct(public readonly string $content) {}
+    public function __construct(public string $content) {}
 }

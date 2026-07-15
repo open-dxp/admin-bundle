@@ -11,6 +11,7 @@ use OpenDxp\Logger;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
 use OpenDxp\Tool\Authentication;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
@@ -23,6 +24,7 @@ final class LostPasswordHandler
         private readonly RouterInterface $router,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly GeneralHostResolver $hostResolver,
+        private readonly RequestStack $requestStack,
     ) {}
 
     public function __invoke(LostPasswordPayload $payload): LostPasswordResult
@@ -62,7 +64,7 @@ final class LostPasswordHandler
             $token = Authentication::generateTokenByUser($user);
 
             try {
-                $domain = $this->hostResolver->resolve($payload->resolverContext ?? []) ?? '';
+                $domain = $this->hostResolver->resolve(['source' => $this->requestStack->getCurrentRequest()]) ?? '';
                 if (!$domain) {
                     throw new \Exception('No main domain set in system settings, unable to generate reset password link');
                 }

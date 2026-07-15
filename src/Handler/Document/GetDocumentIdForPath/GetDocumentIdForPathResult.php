@@ -17,12 +17,18 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentIdForPath;
 
-use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+use OpenDxp\Bundle\AdminBundle\Handler\ConditionalResultInterface;
 
-final readonly class GetDocumentIdForPathResult implements ResultInterface
+final readonly class GetDocumentIdForPathResult implements ConditionalResultInterface
 {
     public function __construct(
-        public int $id,
-        public string $type,
+        public bool $found,
+        public ?int $id = null,
+        public ?string $type = null,
     ) {}
+
+    public function isSuccessful(): bool
+    {
+        return $this->found;
+    }
 }

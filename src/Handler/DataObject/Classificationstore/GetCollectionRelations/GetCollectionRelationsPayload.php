@@ -28,7 +28,7 @@ final readonly class GetCollectionRelationsPayload implements ExtJsPayloadInterf
             limit: $rawLimit ?: 15,
             start: $request->query->getInt('start'),
             dir: $request->query->getString('dir') ?: null,
-            overrideSort: (bool) $request->query->get('overrideSort'),
+            overrideSort: $request->query->getBoolean('overrideSort'),
             filter: $request->query->getString('filter') ?: null,
             colId: $request->query->getInt('colId'),
         );

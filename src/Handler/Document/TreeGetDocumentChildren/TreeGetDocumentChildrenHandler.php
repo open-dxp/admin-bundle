@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentChildren\GetDocumentChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Db;
@@ -33,7 +32,6 @@ final class TreeGetDocumentChildrenHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly ElementServiceInterface $elementService,
-        private readonly GetDocumentChildrenHandler $childrenHandler,
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
@@ -104,8 +102,7 @@ final class TreeGetDocumentChildrenHandler
             /** @var Document\Listing $list */
             $list = $beforeListLoadEvent->getArgument('list');
 
-            $result = ($this->childrenHandler)($list);
-            $documents = $result->documents;
+            $documents = $this->loadChildren($list);
         }
 
         $event = new GenericEvent($this, ['documents' => $documents]);
@@ -124,5 +121,19 @@ final class TreeGetDocumentChildrenHandler
             filter: $filter ?? '',
             inSearch: $payload->inSearch,
         );
+    }
+
+    private function loadChildren(Document\Listing $list): array
+    {
+        $documents = [];
+        foreach ($list->getDocuments() as $childDocument) {
+            $documentTreeNode = $this->elementService->getElementTreeNodeConfig($childDocument);
+            // the !isset is for printContainer case, there are no permissions set there
+            if (!isset($documentTreeNode['permissions']['list']) || $documentTreeNode['permissions']['list'] == 1) {
+                $documents[] = $documentTreeNode;
+            }
+        }
+
+        return $documents;
     }
 }

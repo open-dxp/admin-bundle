@@ -19,10 +19,13 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\DisplayCustomLogo;
 
 use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final class DisplayCustomLogoResult implements ResultInterface
+final readonly class DisplayCustomLogoResult implements ResultInterface
 {
+    /**
+     * @param resource $stream
+     */
     public function __construct(
-        public readonly string $mime,
-        public readonly mixed $stream,
+        public string $mime,
+        public mixed $stream,
     ) {}
 }

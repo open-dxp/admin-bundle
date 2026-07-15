@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\GetFilteredPredefinedMetad
 
 use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final class GetFilteredPredefinedMetadataResult implements ResultInterface
+final readonly class GetFilteredPredefinedMetadataResult implements ResultInterface
 {
-    public function __construct(public readonly array $data) {}
+    public function __construct(public array $data) {}
 }

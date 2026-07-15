@@ -65,7 +65,7 @@ class MiscController extends AdminAbstractController
         EmptyPayload $payload,
         GetAvailableTemplatesHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/json-translations-system', name: 'opendxp_admin_misc_jsontranslationssystem', methods: ['GET'])]
@@ -138,7 +138,7 @@ class MiscController extends AdminAbstractController
         GetValidFilenamePayload $payload,
         GetValidFilenameHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[IsGranted(CorePermission::MaintenanceMode->value)]
@@ -158,7 +158,7 @@ class MiscController extends AdminAbstractController
         EmptyPayload $payload,
         GetCountryListHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/language-list', name: 'opendxp_admin_misc_languagelist', methods: ['GET'])]
@@ -166,7 +166,7 @@ class MiscController extends AdminAbstractController
         EmptyPayload $payload,
         GetLanguageListHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/get-language-flag', name: 'opendxp_admin_misc_getlanguageflag', methods: ['GET'])]

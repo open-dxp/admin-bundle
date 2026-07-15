@@ -30,7 +30,7 @@ final readonly class GetBatchAssignmentJobsPayload implements ExtJsPayloadInterf
     public static function fromRequest(Request $request): static
     {
         return new static(
-            elementType: $request->query->get('elementType', ''),
+            elementType: strip_tags($request->query->get('elementType', '')),
             elementId: $request->query->has('elementId') ? (int) $request->query->get('elementId') : 0,
         );
     }

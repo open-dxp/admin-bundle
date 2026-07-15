@@ -43,6 +43,13 @@ class AssetController extends AdminAbstractController
     #[Route('/export', name: 'opendxp_admin_gdpr_asset_exportassets', methods: ['GET'])]
     public function exportAssetsAction(ExportAssetHandler $handler, IdQueryPayload $payload): Response
     {
-        return $handler($payload)->response;
+        $result = $handler($payload);
+
+        $response = new Response($result->zipContent);
+        $response->headers->set('Content-Type', 'application/zip');
+        $response->headers->set('Content-Length', (string) strlen($result->zipContent));
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $result->suggestedFilename . '.zip"');
+
+        return $response;
     }
 }

@@ -30,9 +30,9 @@ final class GetWorkflowFormHandler
 
     public function __invoke(GetWorkflowFormPayload $payload): GetWorkflowFormResult
     {
-        try {
-            $element = $this->elementResolver->resolve($payload->ctype, $payload->cid);
+        $element = $this->elementResolver->resolve($payload->ctype, $payload->cid);
 
+        try {
             $workflow = $this->workflowManager->getWorkflowIfExists($element, $payload->workflowName);
 
             if (empty($workflow)) {

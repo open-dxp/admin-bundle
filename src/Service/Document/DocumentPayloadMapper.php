@@ -40,8 +40,17 @@ final class DocumentPayloadMapper
 {
     public function __construct(private readonly AdminUserContextInterface $userContext) {}
 
-    public function applyPagePayload(PagePayload $payload, Document\PageSnippet $document): void
+    public function applyPagePayload(PagePayload $payload, Document\PageSnippet $document, ?string $task = null): void
     {
+        // matches the original saveDocument() task switch: the scheduler task only ever
+        // applied scheduler data, never settings/editables/properties (setValuesToDocument()
+        // was called for publish/unpublish/save/version/autosave only)
+        if ($task === 'scheduler') {
+            $this->applyScheduler($payload->scheduler, $document);
+
+            return;
+        }
+
         if ($payload->missingRequiredEditable !== null) {
             $document->setMissingRequiredEditable($payload->missingRequiredEditable);
         }
@@ -90,10 +99,6 @@ final class DocumentPayloadMapper
 
     private function applyEditables(?array $editables, bool $appendEditables, Document\PageSnippet $document): void
     {
-        if ($editables === null) {
-            return;
-        }
-
         $isTargetSpecific = interface_exists(TargetingDocumentInterface::class)
             && $document instanceof TargetingDocumentInterface
             && $document->hasTargetGroupSpecificEditables();
@@ -101,7 +106,12 @@ final class DocumentPayloadMapper
         if ($appendEditables || $isTargetSpecific) {
             $document->getEditables();
         } else {
+            // ensure no editables (e.g. from session, version, ...) are still referenced
             $document->setEditables(null);
+        }
+
+        if ($editables === null) {
+            return;
         }
 
         foreach ($editables as $name => $editableData) {

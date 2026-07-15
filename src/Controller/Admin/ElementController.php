@@ -120,7 +120,7 @@ class ElementController extends AdminAbstractController
         GetNoteTypesPayload $payload,
         GetNoteTypesHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/element/note-list', name: 'opendxp_admin_element_notelist', methods: ['POST'])]
@@ -230,7 +230,7 @@ class ElementController extends AdminAbstractController
         GetVersionsHandler $handler,
         GetVersionsPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/element/delete-draft', name: 'opendxp_admin_element_deletedraft', methods: ['DELETE'])]
@@ -284,7 +284,7 @@ class ElementController extends AdminAbstractController
         GetPredefinedPropertiesHandler $handler,
         GetPredefinedPropertiesPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/element/analyze-permissions', name: 'opendxp_admin_element_analyzepermissions', methods: ['POST'])]

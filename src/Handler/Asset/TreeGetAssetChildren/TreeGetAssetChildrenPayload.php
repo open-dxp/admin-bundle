@@ -41,7 +41,7 @@ final readonly class TreeGetAssetChildrenPayload implements ExtJsPayloadInterfac
     public static function fromRequest(Request $request): static
     {
         $filter = $request->query->has('filter') ? $request->query->getString('filter') : null;
-        $limit = $request->query->getInt('limit', 0);
+        $limit = (int) $request->query->getString('limit');
         if ($filter !== null) {
             $limit = 100;
         } elseif (!$limit) {
@@ -49,13 +49,13 @@ final readonly class TreeGetAssetChildrenPayload implements ExtJsPayloadInterfac
         }
 
         return new static(
-            nodeId:       $request->query->getInt('node'),
+            nodeId:       (int) $request->query->getString('node'),
             customViewId: ($request->query->getString('view') ?: null),
             filter:       $filter,
             limit:        $limit,
-            offset:       $request->query->getInt('start'),
-            hasLimit:     $request->query->has('limit'),
-            inSearch:     $request->query->getInt('inSearch'),
+            offset:       (int) $request->query->getString('start'),
+            hasLimit:     !empty($request->query->get('limit')),
+            inSearch:     (int) $request->query->getString('inSearch'),
             queryAll:     $request->query->all(),
         );
     }

@@ -114,10 +114,11 @@ class UserController extends AdminAbstractController
         GetMinimalUserHandler $handler,
         GetMinimalUserPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[AsHtmlContentTypeResponse]
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/upload-image', name: 'opendxp_admin_user_uploadimage', methods: ['POST'])]
     public function uploadImageAction(
         UploadUserImageHandler $handler,

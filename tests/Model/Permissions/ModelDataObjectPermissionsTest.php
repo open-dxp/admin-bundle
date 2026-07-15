@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject\DataObjectController;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectChildren\GetDataObjectChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildren\TreeGetDataObjectChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildren\TreeGetDataObjectChildrenPayload;
 use OpenDxp\Model\DataObject;
@@ -221,8 +220,7 @@ class ModelDataObjectPermissionsTest extends AbstractPermissionTest
     ): void {
         $elementService = $this->buildElementService($user);
         $userContext = $this->buildUserContext($user);
-        $childrenHandler = new GetDataObjectChildrenHandler($userContext, $elementService);
-        $handler = new TreeGetDataObjectChildrenHandler($userContext, $elementService, $childrenHandler, new EventDispatcher());
+        $handler = new TreeGetDataObjectChildrenHandler($userContext, $elementService, new EventDispatcher());
 
         $controller = $this->buildController(DataObjectController::class, $user);
 

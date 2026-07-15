@@ -17,15 +17,18 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentIdForPath;
 
-use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\Document;
 
 final class GetDocumentIdForPathHandler
 {
     public function __invoke(GetDocumentIdForPathPayload $payload): GetDocumentIdForPathResult
     {
-        $document = Document::getByPath($payload->path) ?? throw new AdminOperationFailedException();
+        $document = Document::getByPath($payload->path);
 
-        return new GetDocumentIdForPathResult(id: $document->getId(), type: $document->getType());
+        if (!$document) {
+            return new GetDocumentIdForPathResult(found: false);
+        }
+
+        return new GetDocumentIdForPathResult(found: true, id: $document->getId(), type: $document->getType());
     }
 }

@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableSites;
 
 use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final class GetAvailableSitesResult implements ResultInterface
+final readonly class GetAvailableSitesResult implements ResultInterface
 {
-    public function __construct(public readonly array $sites) {}
+    public function __construct(public array $sites) {}
 }

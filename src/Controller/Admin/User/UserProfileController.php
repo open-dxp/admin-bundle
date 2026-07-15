@@ -29,6 +29,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUser\UpdateCurrentUserP
 use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImageHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImagePayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\EmptyPayload;
+use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Security\Voter\OwnUserVoter;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\PasswordResetSessionGateway;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -79,6 +80,8 @@ class UserProfileController extends AdminAbstractController
         return $response;
     }
 
+    // no #[IsGranted]: acts only on the caller's own account (no attacker-controlled id),
+    // unlike 1.x whose whitelist entry for this action ('renew2FaSecretAction') was a dead typo
     #[Route('/user/reset-my-2fa-secret', name: 'opendxp_admin_user_reset_my_2fa_secret', methods: ['PUT'])]
     public function resetMy2FaSecretAction(
         EmptyPayload $payload,
@@ -90,6 +93,7 @@ class UserProfileController extends AdminAbstractController
         return $this->apiOk();
     }
 
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/user/get-default-key-bindings', name: 'opendxp_admin_user_getdefaultkeybindings', methods: ['GET'])]
     public function getDefaultKeyBindingsAction(GetDefaultKeyBindingsHandler $handler): JsonResponse
     {

@@ -30,7 +30,7 @@ final readonly class UpdateAssetPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         return new static(
-            assetId:    $request->request->getInt('id'),
+            assetId:    (int) $request->request->getString('id'),
             updateData: [...$request->request->all(), ...$request->query->all()],
         );
     }

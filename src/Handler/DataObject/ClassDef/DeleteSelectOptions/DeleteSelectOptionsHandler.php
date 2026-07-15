@@ -29,6 +29,10 @@ final class DeleteSelectOptionsHandler
             throw new AdminOperationFailedException('Not Found');
         }
 
-        $selectOptions->delete();
+        try {
+            $selectOptions->delete();
+        } catch (\Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
     }
 }

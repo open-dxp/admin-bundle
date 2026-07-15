@@ -74,7 +74,7 @@ class ObjectBrickController extends AdminAbstractController
         $result = $handler($payload);
 
         if ($payload->forObjectEditor) {
-            return $this->apiJson($result);
+            return $this->apiJson($result, envelope: false);
         }
 
         return $this->apiJson($result, rootProperty: 'definitions');
@@ -83,7 +83,7 @@ class ObjectBrickController extends AdminAbstractController
     #[Route('/objectbrick-list', name: 'objectbricklist', methods: ['GET'])]
     public function objectbrickListAction(GetObjectBrickListHandler $handler, GetObjectBrickListPayload $payload): JsonResponse
     {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[IsGranted(CorePermission::Objectbricks->value)]

@@ -72,7 +72,12 @@ final class UpdateAssetHandler
                 }
 
                 $asset->setValues($updateData);
-                $asset->save();
+
+                try {
+                    $asset->save();
+                } catch (\Exception $e) {
+                    throw new AdminOperationFailedException($e->getMessage());
+                }
 
                 return new UpdateAssetResult($this->elementService->getElementTreeNodeConfig($asset));
             }
@@ -84,7 +89,12 @@ final class UpdateAssetHandler
 
         if ($asset->isAllowed('rename') && isset($updateData['filename'])) {
             $asset->setFilename($updateData['filename']);
-            $asset->save();
+
+            try {
+                $asset->save();
+            } catch (\Exception $e) {
+                throw new AdminOperationFailedException($e->getMessage());
+            }
 
             return new UpdateAssetResult($this->elementService->getElementTreeNodeConfig($asset));
         }

@@ -25,7 +25,7 @@ final readonly class GetImageThumbnailPayload implements ExtJsPayloadInterface
     public function __construct(
         public readonly int $id = 0,
         public readonly bool $hasFileinfo = false,
-        public readonly ?array $thumbnailParam = null,
+        public readonly array|string|null $thumbnailParam = null,
         public readonly ?array $configDecoded = null,
         public readonly array $queryAll = [],
         public readonly bool $hasThumbnailPreview = false,
@@ -44,12 +44,12 @@ final readonly class GetImageThumbnailPayload implements ExtJsPayloadInterface
         $decodedConfig = $config !== null ? json_decode($config, true) : null;
 
         return new static(
-            id:                  $request->query->getInt('id'),
-            hasFileinfo:         $request->query->has('fileinfo'),
-            thumbnailParam:      $request->query->all('thumbnail') ?: null,
+            id:                  (int) $request->query->getString('id'),
+            hasFileinfo:         (bool) $request->query->get('fileinfo'),
+            thumbnailParam:      $request->query->all()['thumbnail'] ?? null,
             configDecoded:       is_array($decodedConfig) ? $decodedConfig : null,
             queryAll:            $request->query->all(),
-            hasThumbnailPreview: $request->query->has('treepreview'),
+            hasThumbnailPreview: (bool) $request->query->get('treepreview'),
             origin:              $request->query->getString('origin') ?: null,
             hasCropPercent:      $cropPercent !== null && filter_var($cropPercent, FILTER_VALIDATE_BOOLEAN),
             cropWidth:           $request->query->getString('cropWidth') ?: null,

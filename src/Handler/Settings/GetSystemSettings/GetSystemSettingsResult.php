@@ -19,13 +19,13 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\GetSystemSettings;
 
 use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final class GetSystemSettingsResult implements ResultInterface
+final readonly class GetSystemSettingsResult implements ResultInterface
 {
     /**
      * @param array{languages: array} $config
      */
     public function __construct(
-        public readonly array $values,
-        public readonly array $config,
+        public array $values,
+        public array $config,
     ) {}
 }

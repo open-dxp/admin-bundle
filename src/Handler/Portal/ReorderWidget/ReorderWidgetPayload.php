@@ -34,7 +34,7 @@ final readonly class ReorderWidgetPayload implements ExtJsPayloadInterface
         return new static(
             dashboardId: (string) $request->request->get('key'),
             widgetId: $request->request->has('id') ? (int) $request->request->get('id') : null,
-            column: $request->request->getInt('column'),
+            column: (int) $request->request->getString('column'),
             row: $request->request->getInt('row'),
         );
     }

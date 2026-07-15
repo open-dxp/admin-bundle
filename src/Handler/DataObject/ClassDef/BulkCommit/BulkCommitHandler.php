@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\BulkCommit;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\BulkOperationSessionGateway;
+use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -120,10 +121,16 @@ final class BulkCommitHandler
                         $layoutDefinition->setClassId($classId);
                     }
 
-                    $layoutDefinition->setDescription($item['description']);
-                    $layoutDef = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($item['layoutDefinitions'], true);
-                    $layoutDefinition->setLayoutDefinitions($layoutDef);
-                    $layoutDefinition->save();
+                    try {
+                        $layoutDefinition->setDescription($item['description']);
+                        $layoutDef = DataObject\ClassDefinition\Service::generateLayoutTreeFromArray($item['layoutDefinitions'], true);
+                        $layoutDefinition->setLayoutDefinitions($layoutDef);
+                        $layoutDefinition->save();
+                    } catch (\Exception $e) {
+                        Logger::error($e->getMessage());
+
+                        throw new AdminOperationFailedException($e->getMessage());
+                    }
                 }
             }
         }

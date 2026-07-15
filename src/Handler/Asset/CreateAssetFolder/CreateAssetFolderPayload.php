@@ -30,7 +30,7 @@ final readonly class CreateAssetFolderPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         return new static(
-            parentId: $request->request->getInt('parentId'),
+            parentId: (int) $request->request->getString('parentId'),
             name:     $request->request->getString('name'),
         );
     }

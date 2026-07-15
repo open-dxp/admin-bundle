@@ -76,7 +76,7 @@ class FieldCollectionController extends AdminAbstractController
         $result = $handler($payload);
 
         if ($payload->forObjectEditor) {
-            return $this->apiJson($result);
+            return $this->apiJson($result, envelope: false);
         }
 
         return $this->apiJson($result, rootProperty: 'definitions');
@@ -85,7 +85,7 @@ class FieldCollectionController extends AdminAbstractController
     #[Route('/fieldcollection-list', name: 'fieldcollectionlist', methods: ['GET'])]
     public function fieldcollectionListAction(GetFieldCollectionListHandler $handler, GetFieldCollectionListPayload $payload): JsonResponse
     {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[IsGranted(CorePermission::Fieldcollections->value)]

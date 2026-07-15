@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetup;
 
 use Exception;
+use OpenDxp\Bundle\AdminBundle\Exception\Login\TwoFactorCodeInvalidException;
 use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\TwoFactorSetupSessionGateway;
 use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Google\GoogleAuthenticatorInterface;
@@ -33,7 +34,7 @@ final class SaveTwoFactorSetupHandler
         $user->setTwoFactorAuthentication('secret', $secret);
 
         if (!$this->twoFactor->checkCode($proxyUser, $payload->authCode)) {
-            throw new Exception('2fa_wrong');
+            throw new TwoFactorCodeInvalidException('2fa_wrong');
         }
 
         $user->save();

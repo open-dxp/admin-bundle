@@ -101,7 +101,7 @@ final class AssetPayloadMapper
 
     private function applyRawData(?string $rawData, Asset $asset): void
     {
-        if ($rawData !== null) {
+        if ($rawData) {
             $asset->setData($rawData);
         }
     }

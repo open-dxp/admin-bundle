@@ -31,7 +31,7 @@ final readonly class LoadTagsForElementPayload implements ExtJsPayloadInterface
     {
         return new static(
             assignmentCId: $request->query->has('assignmentCId') ? (int) $request->query->get('assignmentCId') : null,
-            assignmentCType: $request->query->get('assignmentCType', ''),
+            assignmentCType: strip_tags($request->query->get('assignmentCType', '')),
         );
     }
 }

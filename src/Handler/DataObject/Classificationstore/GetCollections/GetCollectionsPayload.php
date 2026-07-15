@@ -31,7 +31,7 @@ final readonly class GetCollectionsPayload implements ExtJsPayloadInterface
             limit: $rawLimit !== null ? (int) $rawLimit : 15,
             start: $request->query->getInt('start'),
             dir: $request->query->getString('dir') ?: null,
-            overrideSort: (bool) $request->query->get('overrideSort'),
+            overrideSort: $request->query->getBoolean('overrideSort'),
             oid: ($v = $request->query->get('oid')) !== null && is_numeric($v) ? (int) $v : null,
             fieldname: $request->query->getString('fieldname') ?: null,
             searchfilter: $request->query->getString('searchfilter') ?: null,

@@ -18,11 +18,11 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\GDPR\Asset\ExportAsset;
 
 use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
-use Symfony\Component\HttpFoundation\Response;
 
 final readonly class ExportAssetResult implements ResultInterface
 {
     public function __construct(
-        public Response $response,
+        public string $zipContent,
+        public string $suggestedFilename,
     ) {}
 }

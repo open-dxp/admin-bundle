@@ -30,7 +30,7 @@ final readonly class SaveImageEditorPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         return new static(
-            id:      $request->query->getInt('id'),
+            id:      (int) $request->query->getString('id'),
             dataUri: $request->request->getString('dataUri'),
         );
     }

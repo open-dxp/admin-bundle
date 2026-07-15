@@ -21,9 +21,9 @@ use OpenDxp\Model\Asset;
 
 final class GetVideoThumbnailHandler
 {
-    public function __invoke(string $name): GetVideoThumbnailResult
+    public function __invoke(GetVideoThumbnailPayload $payload): GetVideoThumbnailResult
     {
-        $pipe = Asset\Video\Thumbnail\Config::getByName($name);
+        $pipe = Asset\Video\Thumbnail\Config::getByName($payload->name);
         $data = $pipe->getObjectVars();
         $data['writeable'] = $pipe->isWriteable();
 

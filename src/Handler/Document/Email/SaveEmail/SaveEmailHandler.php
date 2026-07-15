@@ -40,7 +40,7 @@ final class SaveEmailHandler
 
         $email = $this->elementDraftService->resolveDraft($loadedEmail);
 
-        $this->mapper->applyPagePayload($payload, $email);
+        $this->mapper->applyPagePayload($payload, $email, $payload->task);
 
         $persistenceData = $this->coordinator->save($email, $payload->task);
 

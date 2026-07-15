@@ -19,10 +19,10 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAlgorithms;
 
 use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
-final class GetAvailableAlgorithmsResult implements ResultInterface
+final readonly class GetAvailableAlgorithmsResult implements ResultInterface
 {
     public function __construct(
-        public readonly array $data,
-        public readonly int $total,
+        public array $data,
+        public int $total,
     ) {}
 }

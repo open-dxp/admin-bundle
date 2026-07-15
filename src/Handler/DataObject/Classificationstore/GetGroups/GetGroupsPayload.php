@@ -33,7 +33,7 @@ final readonly class GetGroupsPayload implements ExtJsPayloadInterface
             start: $request->query->getInt('start'),
             dir: $request->query->getString('dir') ?: null,
             sort: $request->query->getString('sort') ?: null,
-            overrideSort: (bool) $request->query->get('overrideSort'),
+            overrideSort: $request->query->getBoolean('overrideSort'),
             searchfilter: $request->query->getString('searchfilter') ?: null,
             storeId: $request->query->getInt('storeId'),
             filter: $request->query->getString('filter') ?: null,

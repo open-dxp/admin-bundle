@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\Document\DocumentController;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentChildren\GetDocumentChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren\TreeGetDocumentChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren\TreeGetDocumentChildrenPayload;
 use OpenDxp\Model\Document;
@@ -167,8 +166,7 @@ class ModelDocumentPermissionsTest extends AbstractPermissionTest
     {
         $elementService = $this->buildElementService($user);
         $userContext = $this->buildUserContext($user);
-        $childrenHandler = new GetDocumentChildrenHandler($elementService);
-        $handler = new TreeGetDocumentChildrenHandler($userContext, $elementService, $childrenHandler, new EventDispatcher());
+        $handler = new TreeGetDocumentChildrenHandler($userContext, $elementService, new EventDispatcher());
 
         $controller = $this->buildController(DocumentController::class, $user);
 

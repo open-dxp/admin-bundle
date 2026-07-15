@@ -34,7 +34,7 @@ final readonly class GetPropertiesPayload implements ExtJsPayloadInterface
             limit: $rawLimit ?: 15,
             start: $request->query->getInt('start'),
             dir: $request->query->getString('dir') ?: null,
-            overrideSort: (bool) $request->query->get('overrideSort'),
+            overrideSort: $request->query->getBoolean('overrideSort'),
             groupIds: $request->query->getString('groupIds') ?: null,
             keyIds: $request->query->getString('keyIds') ?: null,
             searchfilter: $request->query->getString('searchfilter') ?: null,

@@ -22,7 +22,6 @@ use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
 use OpenDxp\Bundle\AdminBundle\Service\GridData;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
-use Symfony\Component\HttpFoundation\Response;
 use ZipArchive;
 
 /**
@@ -52,7 +51,7 @@ class Assets extends Elements implements DataProviderInterface
     /**
      * Exports data of given asset as json
      */
-    public function doExportData(Asset $asset): Response
+    public function doExportData(Asset $asset): string
     {
         $this->exportIds = [];
         $this->exportIds[$asset->getId()] = true;
@@ -77,16 +76,10 @@ class Assets extends Elements implements DataProviderInterface
 
         $zip->close();
 
-        $size = filesize($file);
         $content = file_get_contents($file);
         unlink($file);
 
-        $response = new Response($content);
-        $response->headers->set('Content-Type', 'application/zip');
-        $response->headers->set('Content-Length', (string) $size);
-        $response->headers->set('Content-Disposition', 'attachment; filename="' . $asset->getFilename() . '.zip"');
-
-        return $response;
+        return $content;
     }
 
     /**

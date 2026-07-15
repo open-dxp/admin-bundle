@@ -17,8 +17,8 @@ final readonly class GetClassIconsPayload implements ExtJsPayloadInterface
     public static function fromRequest(Request $request): static
     {
         return new static(
-            type: $request->query->getString('type') ?: null,
-            classId: $request->query->getString('classId') ?: null,
+            type: $request->query->has('type') ? $request->query->getString('type') : null,
+            classId: $request->query->get('classId'),
         );
     }
 }

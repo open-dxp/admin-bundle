@@ -15,7 +15,7 @@ final class DeleteNoteHandler
         $note = Note::getById($payload->id);
 
         if (!$note) {
-            return;
+            throw new AdminOperationFailedException('note_not_found');
         }
 
         if ($note->getLocked()) {

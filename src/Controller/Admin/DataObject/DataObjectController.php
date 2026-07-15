@@ -48,7 +48,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl\GetDat
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
-use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
@@ -76,12 +75,6 @@ class DataObjectController extends ElementControllerBase
     /** On active edit lock keep existing entry */
     public const string TASK_KEEP = 'keep';
 
-    public function __construct(
-        ElementServiceInterface $elementService,
-    ) {
-        parent::__construct($elementService);
-    }
-
     #[Route('/tree-get-children-by-id', name: 'treegetchildrenbyid', methods: ['GET'])]
     public function treeGetChildrenByIdAction(
         Request $request,
@@ -98,7 +91,7 @@ class DataObjectController extends ElementControllerBase
         TreeGetDataObjectChildrenPayload $payload,
         TreeGetDataObjectChildrenHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/tree-get-children-by-id-list', name: 'treegetchildrenbyidlist', methods: ['GET'])]

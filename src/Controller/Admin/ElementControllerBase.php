@@ -21,7 +21,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoHandle
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootPayload;
-use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -30,10 +29,6 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 abstract class ElementControllerBase extends AdminAbstractController
 {
-    public function __construct(protected ElementServiceInterface $elementService)
-    {
-    }
-
     #[Route('/tree-get-root', name: 'treegetroot', methods: ['GET'])]
     public function treeGetRootAction(
         GetTreeRootPayload $payload,
@@ -49,6 +44,6 @@ abstract class ElementControllerBase extends AdminAbstractController
         GetDeleteInfoPayload $payload,
     ): JsonResponse
     {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 }

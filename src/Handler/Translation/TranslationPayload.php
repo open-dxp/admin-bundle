@@ -52,8 +52,8 @@ final readonly class TranslationPayload implements ExtJsPayloadInterface
             domain: $domain,
             hasData: false,
             requestParams: [...$request->request->all(), ...$request->query->all()],
-            limit: $request->request->getInt('limit', 50),
-            offset: $request->request->getInt('start', 0),
+            limit: (int) $request->request->getString('limit', '50'),
+            offset: (int) $request->request->getString('start', '0'),
             filter: $request->request->has('filter') ? $request->request->getString('filter') : null,
             searchString: $request->request->has('searchString') ? $request->request->getString('searchString') : null,
         );

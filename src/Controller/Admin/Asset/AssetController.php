@@ -41,7 +41,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\UpdateAsset\UpdateAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
 use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -56,11 +55,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(CorePermission::Assets->value)]
 class AssetController extends ElementControllerBase
 {
-    public function __construct(
-        ElementServiceInterface $elementService,
-    ) {
-        parent::__construct($elementService);
-    }
 
     #[Route('/grid-proxy', name: 'opendxp_admin_asset_gridproxy', methods: ['GET', 'POST', 'PUT'])]
     public function gridProxyAction(
@@ -119,7 +113,7 @@ class AssetController extends ElementControllerBase
         TreeGetAssetChildrenPayload $payload,
         TreeGetAssetChildrenHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/tree-get-children-by-id-list', name: 'opendxp_admin_asset_treegetchildrenbyidlist', methods: ['GET'])]

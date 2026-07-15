@@ -123,7 +123,12 @@ final class AddDocumentHandler
     {
         $document = Document\Folder::create($parentDocument->getId(), $createValues);
         $document->setPublished(true);
-        $document->save();
+
+        try {
+            $document->save();
+        } catch (Exception $e) {
+            throw new AdminOperationFailedException($e->getMessage());
+        }
 
         return $document;
     }
@@ -134,7 +139,12 @@ final class AddDocumentHandler
 
         if ($classname !== null && Tool::classExists($classname)) {
             $document = $classname::create($parentDocument->getId(), $createValues);
-            $document->save();
+
+            try {
+                $document->save();
+            } catch (Exception $e) {
+                throw new AdminOperationFailedException($e->getMessage());
+            }
 
             return $document;
         }

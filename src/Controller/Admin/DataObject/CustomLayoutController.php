@@ -107,12 +107,12 @@ class CustomLayoutController extends AdminAbstractController
     #[Route('/get-all-layouts', name: 'getalllayouts', methods: ['GET'])]
     public function getAllLayoutsAction(GetAllLayoutsHandler $handler): JsonResponse
     {
-        return $this->apiJson($handler());
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[Route('/suggest-custom-layout-identifier', name: 'suggestcustomlayoutidentifier', methods: ['GET'])]
     public function suggestCustomLayoutIdentifierAction(SuggestCustomLayoutIdentifierHandler $handler, SuggestCustomLayoutIdentifierPayload $payload): JsonResponse
     {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 }

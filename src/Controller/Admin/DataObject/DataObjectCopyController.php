@@ -44,7 +44,7 @@ class DataObjectCopyController extends AdminAbstractController
         CopyInfoPayload $payload,
         CopyInfoHandler $handler,
     ): JsonResponse {
-        return $this->apiJson($handler($payload));
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[SessionGatewayAware(CopySessionGateway::class)]

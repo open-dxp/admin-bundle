@@ -39,7 +39,7 @@ final class ShowVersionHandler
         }
 
         if (!$asset->isAllowed('versions')) {
-            throw new AccessDeniedHttpException();
+            throw new AccessDeniedHttpException(sprintf('Permission denied, version id [%d]', $versionId));
         }
 
         if ($asset instanceof Asset\Document && $asset->getMimeType() === self::PDF_MIMETYPE) {

@@ -12,9 +12,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetEmailLogParamsHandler
 {
-    public function __invoke(int $id): array
+    public function __invoke(GetEmailLogParamsPayload $payload): GetEmailLogParamsResult
     {
-        $emailLog = Tool\Email\Log::getById($id);
+        $emailLog = Tool\Email\Log::getById($payload->id);
         if (!$emailLog) {
             throw new NotFoundHttpException();
         }
@@ -30,7 +30,7 @@ final class GetEmailLogParamsHandler
             $this->enhanceLoggingData($entry);
         }
 
-        return $params;
+        return new GetEmailLogParamsResult(params: $params);
     }
 
     private function enhanceLoggingData(?array &$data, ?array &$fullEntry = null): void

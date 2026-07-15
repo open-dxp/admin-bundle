@@ -33,7 +33,7 @@ final class GetTagTreeChildrenHandler
 
         $tagList = new Tag\Listing();
         if ($payload->node) {
-            $tagList->setCondition('parentId = ?', $payload->node);
+            $tagList->setCondition('parentId = ?', (int) $payload->node);
         } else {
             $tagList->setCondition('ISNULL(parentId) OR parentId = 0');
         }

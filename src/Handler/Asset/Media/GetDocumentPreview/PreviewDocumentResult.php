@@ -23,13 +23,15 @@ use OpenDxp\Model\Asset\Enum\PdfScanStatus;
 
 final readonly class PreviewDocumentResult implements ResultInterface
 {
+    /**
+     * @param resource|null $stream non-null means stream the PDF directly
+     */
     public function __construct(
         public Asset\Document $asset,
         public ?PdfScanStatus $scanStatus,
         /** non-null means render "open in new tab" template with this thumbnail path */
         public ?string $thumbnailPath,
         public string $assetPath,
-        /** non-null means stream the PDF directly */
         public mixed $stream,
     ) {}
 }

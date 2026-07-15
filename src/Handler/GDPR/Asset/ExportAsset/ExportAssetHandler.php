@@ -39,6 +39,11 @@ final class ExportAssetHandler
             throw new AccessDeniedHttpException('Export denied');
         }
 
-        return new ExportAssetResult($this->assets->doExportData($asset));
+        $zipContent = $this->assets->doExportData($asset);
+
+        return new ExportAssetResult(
+            zipContent: $zipContent,
+            suggestedFilename: $asset->getFilename(),
+        );
     }
 }
