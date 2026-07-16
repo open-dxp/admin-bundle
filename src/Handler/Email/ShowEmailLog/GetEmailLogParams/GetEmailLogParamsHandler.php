@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogParams;
 
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Logger;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Tool;
@@ -12,7 +13,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetEmailLogParamsHandler
 {
-    public function __invoke(GetEmailLogParamsPayload $payload): GetEmailLogParamsResult
+    public function __invoke(IdQueryPayload $payload): GetEmailLogParamsResult
     {
         $emailLog = Tool\Email\Log::getById($payload->id);
         if (!$emailLog) {

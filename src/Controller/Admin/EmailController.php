@@ -29,11 +29,12 @@ use OpenDxp\Bundle\AdminBundle\Handler\Email\ResendEmail\ResendEmailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\ResendEmail\ResendEmailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\SendTestEmail\SendTestEmailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\SendTestEmail\SendTestEmailPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogDetails\GetEmailLogDetailsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogHtml\GetEmailLogHtmlHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogParams\GetEmailLogParamsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogParams\GetEmailLogParamsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\ShowEmailLogHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\ShowEmailLogPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogText\GetEmailLogTextHandler;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
@@ -67,24 +68,57 @@ class EmailController extends AdminAbstractController
     #[IsGranted(CorePermission::Emails->value)]
     #[Route('/show-email-log', name: 'opendxp_admin_email_showemaillog', methods: ['GET'])]
     public function showEmailLogAction(
-        ShowEmailLogHandler $showEmailLog,
-        GetEmailLogParamsHandler $getEmailLogParams,
-        ShowEmailLogPayload $payload,
+        Request $request,
         ?Profiler $profiler,
-    ): JsonResponse|Response {
-        if ($profiler) {
-            $profiler->disable();
-        }
+        #[MapQueryParameter] ?string $type = null,
+    ): Response {
+        $profiler?->disable();
 
-        return match ($payload->type) {
-            'params' => $this->adminJson($getEmailLogParams(new GetEmailLogParamsPayload($payload->id))->params),
-            'text' => $this->render('@OpenDxpAdmin/admin/email/text.html.twig', ['log' => $showEmailLog($payload)->textLog]),
-            'html' => new Response($showEmailLog($payload)->htmlLog, 200, [
-                'Content-Security-Policy' => "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:",
-            ]),
-            'details' => $this->adminJson($showEmailLog($payload)->objectVars),
-            default => new Response('No Type specified'),
+        return match ($type) {
+            'params' => $this->forward(self::class . '::showEmailLogParamsAction', [], $request->query->all()),
+            'text' => $this->forward(self::class . '::showEmailLogTextAction', [], $request->query->all()),
+            'html' => $this->forward(self::class . '::showEmailLogHtmlAction', [], $request->query->all()),
+            'details' => $this->forward(self::class . '::showEmailLogDetailsAction', [], $request->query->all()),
+            default => throw new AdminOperationFailedException(sprintf('Invalid email log type "%s"', $type ?? '')),
         };
+    }
+
+    #[IsGranted(CorePermission::Emails->value)]
+    #[Route('/show-email-log/params', name: 'opendxp_admin_email_showemaillog_params', methods: ['GET'])]
+    public function showEmailLogParamsAction(
+        GetEmailLogParamsHandler $handler,
+        IdQueryPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), rootProperty: 'params');
+    }
+
+    #[IsGranted(CorePermission::Emails->value)]
+    #[Route('/show-email-log/text', name: 'opendxp_admin_email_showemaillog_text', methods: ['GET'])]
+    public function showEmailLogTextAction(
+        GetEmailLogTextHandler $handler,
+        IdQueryPayload $payload,
+    ): Response {
+        return $this->render('@OpenDxpAdmin/admin/email/text.html.twig', ['log' => $handler($payload)->textLog]);
+    }
+
+    #[IsGranted(CorePermission::Emails->value)]
+    #[Route('/show-email-log/html', name: 'opendxp_admin_email_showemaillog_html', methods: ['GET'])]
+    public function showEmailLogHtmlAction(
+        GetEmailLogHtmlHandler $handler,
+        IdQueryPayload $payload,
+    ): Response {
+        return new Response($handler($payload)->htmlLog, 200, [
+            'Content-Security-Policy' => "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:",
+        ]);
+    }
+
+    #[IsGranted(CorePermission::Emails->value)]
+    #[Route('/show-email-log/details', name: 'opendxp_admin_email_showemaillog_details', methods: ['GET'])]
+    public function showEmailLogDetailsAction(
+        GetEmailLogDetailsHandler $handler,
+        IdQueryPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), rootProperty: 'objectVars');
     }
 
     #[IsGranted(CorePermission::Emails->value)]
