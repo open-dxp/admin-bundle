@@ -111,5 +111,85 @@ final readonly class AdminSettingsDto
 
         // CSRF
         public string $csrfToken,
-    ) {}
+    ) {
+    }
+
+    public function asSettingsArray(): array
+    {
+        return [
+            'instanceId'      => $this->instanceId,
+            'version'         => $this->version,
+            'build'           => $this->build,
+            'debug'           => $this->debug,
+            'devmode'         => $this->devMode,
+            'disableMinifyJs' => $this->disableMinifyJs,
+            'environment'     => $this->environment,
+            'sessionId'       => $this->sessionId,
+
+            'language'          => $this->language,
+            'websiteLanguages'  => $this->websiteLanguages,
+            'requiredLanguages' => $this->requiredLanguages,
+
+            'showCloseConfirmation'          => true,
+            'debug_admin_translations'       => $this->debugAdminTranslations,
+            'document_generatepreviews'      => $this->generateDocumentPreviews,
+            'asset_disable_tree_preview'     => $this->disableAssetTreePreview,
+            'asset_hide_edit'                => $this->hideEditImage,
+            'asset_tree_paging_limit'        => $this->assetTreePagingLimit,
+            'asset_default_upload_path'      => $this->assetDefaultUploadPath,
+            'chromium'                       => $this->chromiumAvailable,
+            'videoconverter'                 => $this->videoConverterAvailable,
+            'main_domain'                    => $this->mainDomain,
+            'custom_admin_entrypoint_url'    => $this->customAdminEntrypointUrl,
+            'timezone'                       => $this->timezone,
+            'tile_layer_url_template'        => $this->tileLayerUrlTemplate,
+            'geocoding_url_template'         => $this->geocodingUrlTemplate,
+            'reverse_geocoding_url_template' => $this->reverseGeocodingUrlTemplate,
+            'document_tree_paging_limit'     => $this->documentTreePagingLimit,
+            'object_tree_paging_limit'       => $this->objectTreePagingLimit,
+            'hostname'                       => $this->hostname,
+            'dependency'                     => $this->dependencyEnabled,
+            'document_auto_save_interval'    => $this->documentAutoSaveInterval,
+            'object_auto_save_interval'      => $this->objectAutoSaveInterval,
+
+            'perspective'           => $this->perspective,
+            'availablePerspectives' => $this->availablePerspectives,
+            'disabledPortlets'      => $this->disabledPortlets,
+
+            'image-thumbnails-writeable'          => $this->imageThumbnailsWriteable,
+            'video-thumbnails-writeable'          => $this->videoThumbnailsWriteable,
+            'document-types-writeable'            => $this->documentTypesWriteable,
+            'predefined-properties-writeable'     => $this->predefinedPropertiesWriteable,
+            'predefined-asset-metadata-writeable' => $this->predefinedAssetMetadataWriteable,
+            'perspectives-writeable'              => $this->perspectivesWriteable,
+            'custom-views-writeable'              => $this->customViewsWriteable,
+            'class-definition-writeable'          => $this->classDefinitionWriteable,
+            'object-custom-layout-writeable'      => $this->objectCustomLayoutWriteable,
+            'select-options-writeable'            => $this->selectOptionsWriteable,
+
+            'asset_search_types'            => $this->assetSearchTypes,
+            'document_types_configuration'  => $this->documentTypesConfiguration,
+            'document_search_types'         => $this->documentSearchTypes,
+            'document_valid_types'          => $this->documentValidTypes,
+            'document_email_search_types'   => $this->documentEmailSearchTypes,
+            'select_options_provider_class' => $this->selectOptionsProviderClass,
+
+            'upload_max_filesize'    => $this->uploadMaxFilesize,
+            'session_gc_maxlifetime' => $this->sessionGcMaxlifetime,
+
+            'maintenance_active' => $this->maintenanceActive,
+            'maintenance_mode'   => $this->maintenanceMode,
+
+            'mail'               => $this->mailConfigured,
+            'mailDefaultAddress' => $this->mailDefaultAddress,
+
+            'customviews' => $this->customViews,
+
+            'notifications_enabled'         => $this->notificationsEnabled,
+            'checknewnotification_enabled'  => $this->checkNewNotificationEnabled,
+            'checknewnotification_interval' => $this->checkNewNotificationInterval,
+
+            'csrfToken' => $this->csrfToken,
+        ];
+    }
 }

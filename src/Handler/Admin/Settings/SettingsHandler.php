@@ -40,83 +40,8 @@ final class SettingsHandler
     public function __invoke(SettingsPayload $payload): SettingsResult
     {
         $user = $this->userContext->getAdminUser();
-        $dto = $this->adminSettingsService->createSettings($payload, $user);
-
-        $settings = [
-            'instanceId'          => $dto->instanceId,
-            'version'             => $dto->version,
-            'build'               => $dto->build,
-            'debug'               => $dto->debug,
-            'devmode'             => $dto->devMode,
-            'disableMinifyJs'     => $dto->disableMinifyJs,
-            'environment'         => $dto->environment,
-            'sessionId'           => $dto->sessionId,
-
-            'language'            => $dto->language,
-            'websiteLanguages'    => $dto->websiteLanguages,
-            'requiredLanguages'   => $dto->requiredLanguages,
-
-            'showCloseConfirmation'          => true,
-            'debug_admin_translations'       => $dto->debugAdminTranslations,
-            'document_generatepreviews'      => $dto->generateDocumentPreviews,
-            'asset_disable_tree_preview'     => $dto->disableAssetTreePreview,
-            'asset_hide_edit'                => $dto->hideEditImage,
-            'asset_tree_paging_limit'        => $dto->assetTreePagingLimit,
-            'asset_default_upload_path'      => $dto->assetDefaultUploadPath,
-            'chromium'                       => $dto->chromiumAvailable,
-            'videoconverter'                 => $dto->videoConverterAvailable,
-            'main_domain'                    => $dto->mainDomain,
-            'custom_admin_entrypoint_url'    => $dto->customAdminEntrypointUrl,
-            'timezone'                       => $dto->timezone,
-            'tile_layer_url_template'        => $dto->tileLayerUrlTemplate,
-            'geocoding_url_template'         => $dto->geocodingUrlTemplate,
-            'reverse_geocoding_url_template' => $dto->reverseGeocodingUrlTemplate,
-            'document_tree_paging_limit'     => $dto->documentTreePagingLimit,
-            'object_tree_paging_limit'       => $dto->objectTreePagingLimit,
-            'hostname'                       => $dto->hostname,
-            'dependency'                     => $dto->dependencyEnabled,
-            'document_auto_save_interval'    => $dto->documentAutoSaveInterval,
-            'object_auto_save_interval'      => $dto->objectAutoSaveInterval,
-
-            'perspective'           => $dto->perspective,
-            'availablePerspectives' => $dto->availablePerspectives,
-            'disabledPortlets'      => $dto->disabledPortlets,
-
-            'image-thumbnails-writeable'          => $dto->imageThumbnailsWriteable,
-            'video-thumbnails-writeable'          => $dto->videoThumbnailsWriteable,
-            'document-types-writeable'            => $dto->documentTypesWriteable,
-            'predefined-properties-writeable'     => $dto->predefinedPropertiesWriteable,
-            'predefined-asset-metadata-writeable' => $dto->predefinedAssetMetadataWriteable,
-            'perspectives-writeable'              => $dto->perspectivesWriteable,
-            'custom-views-writeable'              => $dto->customViewsWriteable,
-            'class-definition-writeable'          => $dto->classDefinitionWriteable,
-            'object-custom-layout-writeable'      => $dto->objectCustomLayoutWriteable,
-            'select-options-writeable'            => $dto->selectOptionsWriteable,
-
-            'asset_search_types'           => $dto->assetSearchTypes,
-            'document_types_configuration' => $dto->documentTypesConfiguration,
-            'document_search_types'        => $dto->documentSearchTypes,
-            'document_valid_types'         => $dto->documentValidTypes,
-            'document_email_search_types'  => $dto->documentEmailSearchTypes,
-            'select_options_provider_class' => $dto->selectOptionsProviderClass,
-
-            'upload_max_filesize'    => $dto->uploadMaxFilesize,
-            'session_gc_maxlifetime' => $dto->sessionGcMaxlifetime,
-
-            'maintenance_active' => $dto->maintenanceActive,
-            'maintenance_mode'   => $dto->maintenanceMode,
-
-            'mail'               => $dto->mailConfigured,
-            'mailDefaultAddress' => $dto->mailDefaultAddress,
-
-            'customviews' => $dto->customViews,
-
-            'notifications_enabled'          => $dto->notificationsEnabled,
-            'checknewnotification_enabled'   => $dto->checkNewNotificationEnabled,
-            'checknewnotification_interval'  => $dto->checkNewNotificationInterval,
-
-            'csrfToken' => $dto->csrfToken,
-        ];
+        $dto = $this->adminSettingsService->createSettings($payload->locale, $user);
+        $settings = $dto->asSettingsArray();
 
         $event = new IndexActionSettingsEvent($settings);
         $this->eventDispatcher->dispatch($event, AdminEvents::INDEX_ACTION_SETTINGS);

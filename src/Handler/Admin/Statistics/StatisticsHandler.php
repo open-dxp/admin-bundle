@@ -30,16 +30,7 @@ final class StatisticsHandler
     public function __invoke(): void
     {
         try {
-            $dto = $this->adminStatisticsService->createStatistics();
-            $data = [
-                'instance_id'   => $dto->instanceId,
-                'revision'      => $dto->revision,
-                'version'       => $dto->version,
-                'major_version' => $dto->majorVersion,
-                'php_version'   => $dto->phpVersion,
-                'db_version'    => $dto->dbVersion,
-                'bundles'       => $dto->bundles,
-            ];
+            $data = $this->adminStatisticsService->createStatistics()->asStatisticsArray();
         } catch (\Throwable) {
             $data = [];
         }

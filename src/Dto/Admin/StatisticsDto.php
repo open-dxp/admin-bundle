@@ -27,4 +27,17 @@ final readonly class StatisticsDto
         public ?string $dbVersion,
         public array $bundles,
     ) {}
+
+    public function asStatisticsArray(): array
+    {
+        return [
+            'instance_id'   => $this->instanceId,
+            'revision'      => $this->revision,
+            'version'       => $this->version,
+            'major_version' => $this->majorVersion,
+            'php_version'   => $this->phpVersion,
+            'db_version'    => $this->dbVersion,
+            'bundles'       => $this->bundles,
+        ];
+    }
 }

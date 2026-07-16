@@ -64,7 +64,7 @@ final class AdminSettingsService
         private readonly string $secret,
     ) {}
 
-    public function createSettings(SettingsPayload $payload, User $user): AdminSettingsDto
+    public function createSettings(string $locale, User $user): AdminSettingsDto
     {
         $config = $this->config;
         $systemSettings = SystemSettingsConfig::get();
@@ -120,7 +120,7 @@ final class AdminSettingsService
             environment: $this->kernel->getEnvironment(),
             sessionId: htmlentities($this->sessionIdentity->getId(), ENT_QUOTES, 'UTF-8'),
 
-            language: $payload->locale,
+            language: $locale,
             websiteLanguages: Admin::reorderWebsiteLanguages($user, $systemSettings['general']['valid_languages'], true),
             requiredLanguages: $requiredLanguages,
 
