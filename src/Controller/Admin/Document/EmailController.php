@@ -38,9 +38,7 @@ class EmailController extends DocumentControllerBase
         IdQueryPayload $payload,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->preSendDataActions($result->data, $result->email);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[SessionIdentityAware]

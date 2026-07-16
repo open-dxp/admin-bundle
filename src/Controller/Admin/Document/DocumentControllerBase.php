@@ -15,11 +15,8 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
-use Exception;
-use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\ChangeMainDocument\ChangeMainDocumentHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\ChangeMainDocument\ChangeMainDocumentPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\RemoveFromSession\RemoveFromSessionHandler;
@@ -28,9 +25,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionHandl
 use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
-use OpenDxp\Model;
 use OpenDxp\Model\Element\ElementInterface;
-use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -98,25 +93,5 @@ abstract class DocumentControllerBase extends AdminAbstractController
     public function getTreeNodeConfig(ElementInterface $element): array
     {
         return $this->elementService->getElementTreeNodeConfig($element);
-    }
-
-    /**
-     * @throws Exception
-     */
-    protected function preSendDataActions(array $data, Model\Document $document): JsonResponse
-    {
-        $event = new GenericEvent($this, [
-            'data'     => $data,
-            'document' => $document,
-        ]);
-
-        OpenDxp::getEventDispatcher()->dispatch($event, AdminEvents::DOCUMENT_GET_PRE_SEND_DATA);
-        $data = $event->getArgument('data');
-
-        if ($document->isAllowed('view')) {
-            return $this->adminJson($data);
-        }
-
-        throw $this->createAccessDeniedHttpException();
     }
 }

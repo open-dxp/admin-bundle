@@ -22,6 +22,8 @@ use OpenDxp\Bundle\AdminBundle\Enricher\Document\DraftEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\PropertiesEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\TranslationEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PhpMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PreSendDataEventEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\DocumentVersionHelper;
@@ -31,6 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
 use OpenDxp\Model\Document\Snippet;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\Schedule\Task;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetSnippetDataHandler
@@ -44,6 +47,8 @@ final class GetSnippetDataHandler
         private readonly PropertiesEnricher $propertiesEnricher,
         private readonly TranslationEnricher $translationEnricher,
         private readonly DraftEnricher $draftEnricher,
+        private readonly PhpMetaEnricher $phpMetaEnricher,
+        private readonly PreSendDataEventEnricher $preSendDataEventEnricher,
     ) {}
 
     public function __invoke(IdQueryPayload $payload): GetSnippetDataResult
@@ -51,6 +56,10 @@ final class GetSnippetDataHandler
         $snippet = Snippet::getById($payload->id);
         if (!$snippet) {
             throw new NotFoundHttpException('Snippet not found');
+        }
+
+        if (!$snippet->isAllowed('view')) {
+            throw new AccessDeniedHttpException();
         }
 
         if ($snippet->isAllowed('save') || $snippet->isAllowed('publish') || $snippet->isAllowed('unpublish') || $snippet->isAllowed('delete')) {
@@ -79,12 +88,15 @@ final class GetSnippetDataHandler
         }
 
         $this->documentMetaEnricher->enrich($snippet, $data);
+        $this->phpMetaEnricher->enrich($snippet, $data);
         $this->adminStyleEnricher->forEditor($snippet, $data);
         $this->userNamesEnricher->enrich($snippet, $data);
         $this->propertiesEnricher->enrich($snippet, $data);
         $this->translationEnricher->enrich($snippet, $data);
         $this->draftEnricher->enrich($snippet, $data, $draftVersion);
 
-        return new GetSnippetDataResult(snippet: $snippet, data: $data, draftVersion: $draftVersion);
+        $this->preSendDataEventEnricher->enrich($snippet, $data);
+
+        return new GetSnippetDataResult(data: $data);
     }
 }

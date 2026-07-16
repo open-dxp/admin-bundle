@@ -28,9 +28,5 @@ final class DocumentMetaEnricher
         $data['versionDate'] = $fresh->getModificationDate();
         $data['userPermissions'] = $document->getUserPermissions();
         $data['idPath'] = ElementService::getIdPath($document);
-        $data['php'] = [
-            'classes' => [$document::class, ...array_values(class_parents($document))],
-            'interfaces' => array_values(class_implements($document)),
-        ];
     }
 }

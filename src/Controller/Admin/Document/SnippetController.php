@@ -42,9 +42,7 @@ class SnippetController extends DocumentControllerBase
         IdQueryPayload $payload,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->preSendDataActions($result->data, $result->snippet);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     /**

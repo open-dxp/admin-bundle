@@ -21,8 +21,11 @@ use OpenDxp\Bundle\AdminBundle\Enricher\Document\DocumentMetaEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\PropertiesEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\TranslationEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PhpMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PreSendDataEventEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Model\Document\Folder;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetFolderDataHandler
@@ -33,6 +36,8 @@ final class GetFolderDataHandler
         private readonly UserNamesEnricher $userNamesEnricher,
         private readonly PropertiesEnricher $propertiesEnricher,
         private readonly TranslationEnricher $translationEnricher,
+        private readonly PhpMetaEnricher $phpMetaEnricher,
+        private readonly PreSendDataEventEnricher $preSendDataEventEnricher,
     ) {}
 
     public function __invoke(GetFolderDataPayload $payload): GetFolderDataResult
@@ -42,6 +47,10 @@ final class GetFolderDataHandler
             throw new NotFoundHttpException('Folder not found');
         }
 
+        if (!$folder->isAllowed('view')) {
+            throw new AccessDeniedHttpException();
+        }
+
         $folder = clone $folder;
         $folder->setParent(null);
 
@@ -49,11 +58,14 @@ final class GetFolderDataHandler
         $data['locked'] = $folder->isLocked();
 
         $this->documentMetaEnricher->enrich($folder, $data);
+        $this->phpMetaEnricher->enrich($folder, $data);
         $this->adminStyleEnricher->forEditor($folder, $data);
         $this->userNamesEnricher->enrich($folder, $data);
         $this->propertiesEnricher->enrich($folder, $data);
         $this->translationEnricher->enrich($folder, $data);
 
-        return new GetFolderDataResult(folder: $folder, data: $data);
+        $this->preSendDataEventEnricher->enrich($folder, $data);
+
+        return new GetFolderDataResult(data: $data);
     }
 }

@@ -20,6 +20,8 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObject;
 use OpenDxp\Bundle\AdminBundle\Enricher\DataObject\CustomLayoutEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\DataObject\DraftEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PhpMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PreSendDataEventEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\DataObjectVersionHelper;
@@ -33,10 +35,8 @@ use OpenDxp\Model\DataObject\ClassDefinition\Data\ReverseObjectRelation;
 use OpenDxp\Model\DataObject\ClassDefinition\PreviewGeneratorInterface;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\Schedule\Task;
-use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Throwable;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
@@ -51,7 +51,8 @@ final class GetDataObjectHandler
         private readonly UserNamesEnricher $userNamesEnricher,
         private readonly CustomLayoutEnricher $customLayoutEnricher,
         private readonly DraftEnricher $draftEnricher,
-        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly PhpMetaEnricher $phpMetaEnricher,
+        private readonly PreSendDataEventEnricher $preSendDataEventEnricher,
     ) {}
 
     public function __invoke(GetDataObjectPayload $payload): GetDataObjectResult
@@ -106,10 +107,6 @@ final class GetDataObjectHandler
         $objectData['general']['classTitle'] = $objectFromDatabase->getClass()->getTitle() ?: $objectFromDatabase->getClassName();
         $objectData['general']['fullpath'] = $objectFromDatabase->getRealFullPath();
         $objectData['general']['locked'] = $objectFromDatabase->isLocked();
-        $objectData['general']['php'] = [
-            'classes' => [$objectFromDatabase::class, ...array_values(class_parents($objectFromDatabase))],
-            'interfaces' => array_values(class_implements($objectFromDatabase)),
-        ];
         $objectData['general']['allowInheritance'] = $objectFromDatabase->getClass()->getAllowInherit();
         $objectData['general']['allowVariants'] = $objectFromDatabase->getClass()->getAllowVariants();
         $objectData['general']['showVariants'] = $objectFromDatabase->getClass()->getShowVariants();
@@ -215,6 +212,7 @@ final class GetDataObjectHandler
                 if ($layoutData2['id'] === '0') {
                     return 1;
                 }
+
                 if ($layoutData1['id'] === '0') {
                     return -1;
                 }
@@ -234,9 +232,8 @@ final class GetDataObjectHandler
 
         DataObject\Service::enrichLayoutDefinition($objectData['layout'], $object);
 
-        $event = new GenericEvent($this, ['data' => $objectData, 'object' => $object]);
-        $this->eventDispatcher->dispatch($event, AdminEvents::OBJECT_GET_PRE_SEND_DATA);
-        $objectData = $event->getArgument('data');
+        $this->phpMetaEnricher->enrich($objectFromDatabase, $objectData['general']);
+        $this->preSendDataEventEnricher->enrich($object, $objectData);
 
         $this->adminStyleEnricher->forEditor($object, $objectData['general']);
         $this->userNamesEnricher->enrich($object, $objectData['general']);

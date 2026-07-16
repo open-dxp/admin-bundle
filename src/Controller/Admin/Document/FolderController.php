@@ -40,9 +40,7 @@ class FolderController extends DocumentControllerBase
         GetFolderDataPayload $payload,
     ): JsonResponse
     {
-        $result = $handler($payload);
-
-        return $this->preSendDataActions($result->data, $result->folder);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     /**

@@ -15,13 +15,20 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Snippet\GetSnippetData;
+namespace OpenDxp\Bundle\AdminBundle\Enricher\Element;
 
-use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
+use OpenDxp\Model\Element\ElementInterface;
 
-final readonly class GetSnippetDataResult implements ResultInterface
+final class PhpMetaEnricher
 {
-    public function __construct(
-        public array $data,
-    ) {}
+    public function enrich(ElementInterface $element, array &$data): void
+    {
+        $data['php'] = [
+            'classes'    => [
+                $element::class,
+                ...array_values(class_parents($element))
+            ],
+            'interfaces' => array_values(class_implements($element)),
+        ];
+    }
 }

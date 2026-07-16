@@ -21,12 +21,15 @@ use OpenDxp\Bundle\AdminBundle\Enricher\Document\DocumentMetaEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\PropertiesEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\TranslationEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PhpMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PreSendDataEventEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
 use OpenDxp\Model\Document\Link;
 use OpenDxp\Model\Schedule\Task;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -40,6 +43,8 @@ final class GetLinkDataHandler
         private readonly UserNamesEnricher $userNamesEnricher,
         private readonly PropertiesEnricher $propertiesEnricher,
         private readonly TranslationEnricher $translationEnricher,
+        private readonly PhpMetaEnricher $phpMetaEnricher,
+        private readonly PreSendDataEventEnricher $preSendDataEventEnricher,
     ) {}
 
     public function __invoke(IdQueryPayload $payload): GetLinkDataResult
@@ -47,6 +52,10 @@ final class GetLinkDataHandler
         $link = Link::getById($payload->id);
         if (!$link) {
             throw new NotFoundHttpException('Link not found');
+        }
+
+        if (!$link->isAllowed('view')) {
+            throw new AccessDeniedHttpException();
         }
 
         if ($link->isAllowed('save') || $link->isAllowed('publish') || $link->isAllowed('unpublish') || $link->isAllowed('delete')) {
@@ -67,11 +76,14 @@ final class GetLinkDataHandler
         );
 
         $this->documentMetaEnricher->enrich($cloned, $data);
+        $this->phpMetaEnricher->enrich($cloned, $data);
         $this->adminStyleEnricher->forEditor($cloned, $data);
         $this->userNamesEnricher->enrich($cloned, $data);
         $this->propertiesEnricher->enrich($cloned, $data);
         $this->translationEnricher->enrich($cloned, $data);
 
-        return new GetLinkDataResult(original: $link, link: $cloned, data: $data);
+        $this->preSendDataEventEnricher->enrich($cloned, $data);
+
+        return new GetLinkDataResult(data: $data);
     }
 }

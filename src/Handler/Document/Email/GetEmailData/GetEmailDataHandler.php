@@ -22,6 +22,8 @@ use OpenDxp\Bundle\AdminBundle\Enricher\Document\DraftEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\PropertiesEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\TranslationEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PhpMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PreSendDataEventEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\DocumentVersionHelper;
@@ -30,6 +32,7 @@ use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Element;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetEmailDataHandler
@@ -43,6 +46,8 @@ final class GetEmailDataHandler
         private readonly PropertiesEnricher $propertiesEnricher,
         private readonly TranslationEnricher $translationEnricher,
         private readonly DraftEnricher $draftEnricher,
+        private readonly PhpMetaEnricher $phpMetaEnricher,
+        private readonly PreSendDataEventEnricher $preSendDataEventEnricher,
     ) {}
 
     public function __invoke(IdQueryPayload $payload): GetEmailDataResult
@@ -50,6 +55,10 @@ final class GetEmailDataHandler
         $email = Document\Email::getById($payload->id);
         if (!$email) {
             throw new NotFoundHttpException('Email not found');
+        }
+
+        if (!$email->isAllowed('view')) {
+            throw new AccessDeniedHttpException();
         }
 
         if ($email->isAllowed('save') || $email->isAllowed('publish') || $email->isAllowed('unpublish') || $email->isAllowed('delete')) {
@@ -73,12 +82,15 @@ final class GetEmailDataHandler
         $data['url'] = $email->getUrl();
 
         $this->documentMetaEnricher->enrich($email, $data);
+        $this->phpMetaEnricher->enrich($email, $data);
         $this->adminStyleEnricher->forEditor($email, $data);
         $this->userNamesEnricher->enrich($email, $data);
         $this->propertiesEnricher->enrich($email, $data);
         $this->translationEnricher->enrich($email, $data);
         $this->draftEnricher->enrich($email, $data, $draftVersion);
 
-        return new GetEmailDataResult(email: $email, data: $data, draftVersion: $draftVersion);
+        $this->preSendDataEventEnricher->enrich($email, $data);
+
+        return new GetEmailDataResult(data: $data);
     }
 }

@@ -20,14 +20,14 @@ use OpenDxp\Bundle\AdminBundle\Enricher\Document\DocumentMetaEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\PropertiesEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\TranslationEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PhpMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PreSendDataEventEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\Document\DocumentNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
 use OpenDxp\Model\Document;
-use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class GetDocumentDataHandler
 {
@@ -38,7 +38,8 @@ final class GetDocumentDataHandler
         private readonly UserNamesEnricher $userNamesEnricher,
         private readonly PropertiesEnricher $propertiesEnricher,
         private readonly TranslationEnricher $translationEnricher,
-        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly PhpMetaEnricher $phpMetaEnricher,
+        private readonly PreSendDataEventEnricher $preSendDataEventEnricher,
     ) {}
 
     public function __invoke(GetDocumentDataPayload $payload): GetDocumentDataResult
@@ -52,7 +53,12 @@ final class GetDocumentDataHandler
             throw new AccessDeniedHttpException();
         }
 
-        if ($document->isAllowed('save') || $document->isAllowed('publish') || $document->isAllowed('unpublish') || $document->isAllowed('delete')) {
+        if (
+            $document->isAllowed('save') ||
+            $document->isAllowed('publish') ||
+            $document->isAllowed('unpublish') ||
+            $document->isAllowed('delete')
+        ) {
             $this->editLockService->checkAndAcquire($document->getId(), 'document', AdminEvents::DOCUMENT_GET_IS_LOCKED, $document);
         }
 
@@ -60,14 +66,13 @@ final class GetDocumentDataHandler
         $data = $document->getObjectVars();
 
         $this->documentMetaEnricher->enrich($document, $data);
+        $this->phpMetaEnricher->enrich($document, $data);
         $this->adminStyleEnricher->forEditor($document, $data);
         $this->userNamesEnricher->enrich($document, $data);
         $this->propertiesEnricher->enrich($document, $data);
         $this->translationEnricher->enrich($document, $data);
 
-        $event = new GenericEvent($this, ['data' => $data, 'document' => $document]);
-        $this->eventDispatcher->dispatch($event, AdminEvents::DOCUMENT_GET_PRE_SEND_DATA);
-        $data = $event->getArgument('data');
+        $this->preSendDataEventEnricher->enrich($document, $data);
 
         return new GetDocumentDataResult($data);
     }

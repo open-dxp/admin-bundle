@@ -20,19 +20,18 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetData;
 use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PhpMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PreSendDataEventEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetData\GetAssetDataPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\Metadata;
 use OpenDxp\Model\Schedule\Task;
-use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class GetAssetDataHandler
@@ -41,11 +40,12 @@ final class GetAssetDataHandler
 
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
-        private readonly EventDispatcherInterface $eventDispatcher,
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly AdminStyleEnricher $adminStyleEnricher,
         private readonly UserNamesEnricher $userNamesEnricher,
         private readonly EditLockService $editLockService,
+        private readonly PhpMetaEnricher $phpMetaEnricher,
+        private readonly PreSendDataEventEnricher $preSendDataEventEnricher,
     ) {}
 
     public function __invoke(GetAssetDataPayload $payload): GetAssetDataResult
@@ -162,19 +162,8 @@ final class GetAssetDataHandler
 
         $this->userNamesEnricher->enrich($asset, $data);
         $this->adminStyleEnricher->forEditor($asset, $data);
-
-        $data['php'] = [
-            'classes' => [$asset::class, ...array_values(class_parents($asset))],
-            'interfaces' => array_values(class_implements($asset)),
-        ];
-
-        $event = new GenericEvent(null, [
-            'data' => $data,
-            'asset' => $asset,
-        ]);
-        $this->eventDispatcher->dispatch($event, AdminEvents::ASSET_GET_PRE_SEND_DATA);
-        $eventData = $event->getArgument('data');
-        $data = is_array($eventData) ? $eventData : $data;
+        $this->phpMetaEnricher->enrich($asset, $data);
+        $this->preSendDataEventEnricher->enrich($asset, $data);
 
         return new GetAssetDataResult($data);
     }

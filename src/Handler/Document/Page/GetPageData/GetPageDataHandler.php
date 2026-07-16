@@ -22,6 +22,8 @@ use OpenDxp\Bundle\AdminBundle\Enricher\Document\DraftEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\PropertiesEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Document\TranslationEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PhpMetaEnricher;
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PreSendDataEventEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\DocumentVersionHelper;
@@ -32,6 +34,7 @@ use OpenDxp\Document\StaticPageGenerator;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\Schedule\Task;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetPageDataHandler
@@ -46,6 +49,8 @@ final class GetPageDataHandler
         private readonly PropertiesEnricher $propertiesEnricher,
         private readonly TranslationEnricher $translationEnricher,
         private readonly DraftEnricher $draftEnricher,
+        private readonly PhpMetaEnricher $phpMetaEnricher,
+        private readonly PreSendDataEventEnricher $preSendDataEventEnricher,
     ) {}
 
     public function __invoke(GetPageDataPayload $payload): GetPageDataResult
@@ -53,6 +58,10 @@ final class GetPageDataHandler
         $page = Document\Page::getById($payload->id);
         if (!$page) {
             throw new NotFoundHttpException('Page not found');
+        }
+
+        if (!$page->isAllowed('view')) {
+            throw new AccessDeniedHttpException();
         }
 
         if ($page->isAllowed('save') || $page->isAllowed('publish') || $page->isAllowed('unpublish') || $page->isAllowed('delete')) {
@@ -89,12 +98,15 @@ final class GetPageDataHandler
         );
 
         $this->documentMetaEnricher->enrich($page, $data);
+        $this->phpMetaEnricher->enrich($page, $data);
         $this->adminStyleEnricher->forEditor($page, $data);
         $this->userNamesEnricher->enrich($page, $data);
         $this->propertiesEnricher->enrich($page, $data);
         $this->translationEnricher->enrich($page, $data);
         $this->draftEnricher->enrich($page, $data, $draftVersion);
 
-        return new GetPageDataResult(page: $page, data: $data, draftVersion: $draftVersion);
+        $this->preSendDataEventEnricher->enrich($page, $data);
+
+        return new GetPageDataResult(data: $data);
     }
 }

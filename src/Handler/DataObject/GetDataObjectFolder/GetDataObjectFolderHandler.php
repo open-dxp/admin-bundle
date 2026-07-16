@@ -17,23 +17,21 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectFolder;
 
+use OpenDxp\Bundle\AdminBundle\Enricher\Element\PreSendDataEventEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
-use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Element;
-use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class GetDataObjectFolderHandler
 {
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly UserNamesEnricher $userNamesEnricher,
-        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly PreSendDataEventEnricher $preSendDataEventEnricher,
     ) {}
 
     public function __invoke(IdQueryPayload $payload): GetDataObjectFolderResult
@@ -69,9 +67,7 @@ final class GetDataObjectFolderHandler
 
         $this->userNamesEnricher->enrich($object, $objectData['general']);
 
-        $event = new GenericEvent($this, ['data' => $objectData, 'object' => $object]);
-        $this->eventDispatcher->dispatch($event, AdminEvents::OBJECT_GET_PRE_SEND_DATA);
-        $objectData = $event->getArgument('data');
+        $this->preSendDataEventEnricher->enrich($object, $objectData);
 
         return new GetDataObjectFolderResult(data: $objectData);
     }

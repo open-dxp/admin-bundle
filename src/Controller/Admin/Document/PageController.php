@@ -50,9 +50,7 @@ class PageController extends DocumentControllerBase
         GetPageDataHandler $handler,
         GetPageDataPayload $payload,
     ): JsonResponse {
-        $result = $handler($payload);
-
-        return $this->preSendDataActions($result->data, $result->page);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[SessionIdentityAware]
