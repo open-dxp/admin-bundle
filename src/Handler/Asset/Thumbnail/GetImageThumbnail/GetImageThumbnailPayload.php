@@ -24,7 +24,6 @@ final readonly class GetImageThumbnailPayload implements ExtJsPayloadInterface
 {
     public function __construct(
         public readonly int $id = 0,
-        public readonly bool $hasFileinfo = false,
         public readonly array|string|null $thumbnailParam = null,
         public readonly ?array $configDecoded = null,
         public readonly array $queryAll = [],
@@ -45,7 +44,6 @@ final readonly class GetImageThumbnailPayload implements ExtJsPayloadInterface
 
         return new static(
             id:                  (int) $request->query->getString('id'),
-            hasFileinfo:         (bool) $request->query->get('fileinfo'),
             thumbnailParam:      $request->query->all()['thumbnail'] ?? null,
             configDecoded:       is_array($decodedConfig) ? $decodedConfig : null,
             queryAll:            $request->query->all(),

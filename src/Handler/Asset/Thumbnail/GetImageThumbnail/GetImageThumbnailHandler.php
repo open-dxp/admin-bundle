@@ -17,80 +17,16 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail;
 
-use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail\GetImageThumbnailPayload;
-use OpenDxp\Messenger\AssetPreviewImageMessage;
-use OpenDxp\Model\Asset;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\Messenger\MessageBusInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Asset\ImageThumbnailResolver;
 
 final class GetImageThumbnailHandler
 {
-    public function __construct(private readonly MessageBusInterface $messageBus) {}
+    public function __construct(private readonly ImageThumbnailResolver $resolver) {}
 
     public function __invoke(GetImageThumbnailPayload $payload): GetImageThumbnailResult
     {
-        $id = $payload->id;
-        $hasFileinfo = $payload->hasFileinfo;
-        $thumbnailParam = $payload->thumbnailParam;
-        $configDecoded = $payload->configDecoded;
-        $queryAll = $payload->queryAll;
-        $hasThumbnailPreview = $payload->hasThumbnailPreview;
-        $origin = $payload->origin;
-        $hasCropPercent = $payload->hasCropPercent;
-        $cropWidth = $payload->cropWidth;
-        $cropHeight = $payload->cropHeight;
-        $cropTop = $payload->cropTop;
-        $cropLeft = $payload->cropLeft;
-        $image = Asset\Image::getById($id) ?? throw new AssetNotFoundException($id);
+        $resolution = $this->resolver->resolve($payload);
 
-        if (!$image->isAllowed('view')) {
-            throw new AccessDeniedHttpException('not allowed to view thumbnail');
-        }
-
-        $thumbnailConfig = null;
-
-        if ($thumbnailParam) {
-            $thumbnailConfig = $image->getThumbnail($thumbnailParam)->getConfig();
-        }
-        if (!$thumbnailConfig) {
-            if ($configDecoded) {
-                $thumbnailConfig = $image->getThumbnail($configDecoded)->getConfig();
-            } else {
-                $thumbnailConfig = $image->getThumbnail($queryAll)->getConfig();
-            }
-        } else {
-            $thumbnailConfig->setHighResolution(1);
-        }
-
-        $format = strtolower($thumbnailConfig->getFormat());
-        if ($format === 'source' || $format === 'print') {
-            $thumbnailConfig->setFormat('PNG');
-            $thumbnailConfig->setRasterizeSVG(true);
-        }
-
-        if ($hasThumbnailPreview) {
-            $thumbnailConfig = Asset\Image\Thumbnail\Config::getPreviewConfig();
-            if (!$image->getThumbnail($thumbnailConfig)->exists()) {
-                $this->messageBus->dispatch(new AssetPreviewImageMessage($image->getId()));
-
-                return new GetImageThumbnailResult($image, null, $origin === 'folderPreview', false);
-            }
-        }
-
-        if ($hasCropPercent) {
-            $thumbnailConfig->addItemAt(0, 'cropPercent', [
-                'width' => $cropWidth,
-                'height' => $cropHeight,
-                'y' => $cropTop,
-                'x' => $cropLeft,
-            ]);
-
-            $thumbnailConfig->generateAutoName();
-        }
-
-        $thumbnailResult = $image->getThumbnail($thumbnailConfig);
-
-        return new GetImageThumbnailResult($image, $thumbnailResult, false, $hasFileinfo);
+        return new GetImageThumbnailResult($resolution->image, $resolution->thumbnailResult);
     }
 }

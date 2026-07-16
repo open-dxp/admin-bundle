@@ -28,6 +28,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderThumbnail\GetFol
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderThumbnail\GetFolderThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail\GetImageThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail\GetImageThumbnailHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnailFileinfo\GetImageThumbnailFileinfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetVideoThumbnail\GetVideoThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetVideoThumbnail\GetVideoThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
@@ -48,25 +49,14 @@ class AssetThumbnailController extends AdminAbstractController
     public function getImageThumbnailAction(
         GetImageThumbnailPayload $payload,
         GetImageThumbnailHandler $getImageThumbnail,
-    ): BinaryFileResponse|JsonResponse|StreamedResponse {
+    ): BinaryFileResponse|StreamedResponse {
         $result = $getImageThumbnail($payload);
 
-        if ($result->returnLoadingGif) {
+        if ($result->thumbnailResult === null) {
             $response = new BinaryFileResponse(OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/video-loading.gif');
             $response->headers->set('Cache-Control', 'no-store');
 
             return $response;
-        }
-
-        if ($result->thumbnailResult === null) {
-            throw $this->createNotFoundException(sprintf('Tree preview thumbnail not available for asset %s', $payload->id));
-        }
-
-        if ($result->returnFileinfo) {
-            return $this->adminJson([
-                'width' => $result->thumbnailResult->getWidth(),
-                'height' => $result->thumbnailResult->getHeight(),
-            ]);
         }
 
         $stream = $result->thumbnailResult->getStream();
@@ -80,9 +70,18 @@ class AssetThumbnailController extends AdminAbstractController
             'Content-Type' => $result->thumbnailResult->getMimeType(),
             'Access-Control-Allow-Origin' => '*',
         ]);
+
         $this->addThumbnailCacheHeaders($response);
 
         return $response;
+    }
+
+    #[Route('/get-image-thumbnail/fileinfo', name: 'opendxp_admin_asset_getimagethumbnail_fileinfo', methods: ['GET'])]
+    public function getImageThumbnailFileinfoAction(
+        GetImageThumbnailPayload $payload,
+        GetImageThumbnailFileinfoHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/get-folder-thumbnail', name: 'opendxp_admin_asset_getfolderthumbnail', methods: ['GET'])]

@@ -352,12 +352,14 @@ opendxp.object.tags.hotspotimage = Class.create(opendxp.object.tags.image, {
                 height = body.getHeight() - 10;
             }
 
-            var path = Routing.generate('opendxp_admin_asset_getimagethumbnail', Ext.merge({
+            var params = Ext.merge({
                 id: this.data.id,
                 width: width,
                 height: height,
                 contain: true
-            }, this.crop));
+            }, this.crop);
+
+            var path = Routing.generate('opendxp_admin_asset_getimagethumbnail', params);
 
             body.setStyle({
                 backgroundImage: "url(" + path + ")",
@@ -365,7 +367,7 @@ opendxp.object.tags.hotspotimage = Class.create(opendxp.object.tags.image, {
                 backgroundRepeat: "no-repeat"
             });
 
-            this.getFileInfo(path);
+            this.getFileInfo(params);
         } else {
             this.fileinfo = null;
             body.setStyle({});
@@ -377,13 +379,10 @@ opendxp.object.tags.hotspotimage = Class.create(opendxp.object.tags.image, {
         this.showPreview();
     },
 
-    getFileInfo: function (path) {
+    getFileInfo: function (params) {
         if (!this.fileinfo) {
             Ext.Ajax.request({
-                url: path,
-                params: {
-                    fileinfo: 1
-                },
+                url: Routing.generate('opendxp_admin_asset_getimagethumbnail_fileinfo', params),
                 success: function (response) {
                     this.fileinfo = Ext.decode(response.responseText);
                     this.showPreview();

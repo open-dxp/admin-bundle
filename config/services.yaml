@@ -135,6 +135,7 @@ services:
     OpenDxp\Bundle\AdminBundle\Service\Asset\AssetPersistenceCoordinator: ~
     OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService: ~
     OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Asset\ImageThumbnailResolver: ~
 
     OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService: ~
     OpenDxp\Bundle\AdminBundle\Service\Grid\AssetGridColumnConfigResolver: ~
