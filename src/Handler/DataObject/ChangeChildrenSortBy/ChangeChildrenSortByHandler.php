@@ -23,7 +23,7 @@ use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class ChangeChildrenSortByHandler
 {

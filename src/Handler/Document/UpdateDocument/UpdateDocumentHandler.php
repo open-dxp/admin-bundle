@@ -18,14 +18,14 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Document\UpdateDocument;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\Document\DocumentNotFoundException;
-use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Event\DocumentEvents;
 use OpenDxp\Event\Model\DocumentEvent;
 use OpenDxp\Logger;
 use OpenDxp\Model\Document;
 use RuntimeException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class UpdateDocumentHandler
 {

@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetAvailableVisibleFields;
 
-use OpenDxp\Bundle\AdminBundle\Service\Grid\DataObjectGridColumnConfigResolver;
+use OpenDxp\Bundle\AdminBundle\Resolver\Grid\DataObjectGridColumnConfigResolver;
 use OpenDxp\Model\DataObject;
 
 final class GetAvailableVisibleFieldsHandler

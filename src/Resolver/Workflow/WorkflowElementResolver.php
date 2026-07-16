@@ -15,10 +15,10 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service\Workflow;
+namespace OpenDxp\Bundle\AdminBundle\Resolver\Workflow;
 
 use Exception;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject\Concrete as ConcreteObject;
 use OpenDxp\Model\Document;

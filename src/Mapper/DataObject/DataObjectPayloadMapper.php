@@ -15,11 +15,11 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service\DataObject;
+namespace OpenDxp\Bundle\AdminBundle\Mapper\DataObject;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectPayload;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Logger;
 use OpenDxp\Model;
 use OpenDxp\Model\DataObject;

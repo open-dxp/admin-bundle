@@ -1,0 +1,9 @@
+# Deprecated service id aliases kept for BC
+services:
+    OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface:
+        alias: OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface
+        deprecated:
+            package: 'open-dxp/admin-bundle'
+            version: '1.4'
+            message: 'The "%alias_id%" service id is deprecated, use "OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface" instead. It will be removed in 2.0.'
+

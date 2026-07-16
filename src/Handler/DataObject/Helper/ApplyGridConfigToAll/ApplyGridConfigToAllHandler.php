@@ -21,7 +21,7 @@ use OpenDxp\Db;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class ApplyGridConfigToAllHandler
 {

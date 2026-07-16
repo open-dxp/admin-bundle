@@ -14,14 +14,15 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service;
+namespace OpenDxp\Bundle\AdminBundle\Dto\Asset;
 
-use OpenDxp\Model\User;
-use OpenDxp\Security\User\User as UserProxy;
+use OpenDxp\Model\Asset;
 
-interface AdminUserContextInterface
+final readonly class ImageThumbnailResolutionDto
 {
-    public function getAdminUser(): ?User;
-
-    public function getAdminUserProxy(): ?UserProxy;
+    public function __construct(
+        public Asset\Image $image,
+        // null means the preview is still being generated asynchronously; not an error
+        public ?Asset\Image\ThumbnailInterface $thumbnailResult,
+    ) {}
 }

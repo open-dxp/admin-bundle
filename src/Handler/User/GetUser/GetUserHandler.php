@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetUser;
 
 use OpenDxp\Bundle\AdminBundle\Perspective\Config;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\User;

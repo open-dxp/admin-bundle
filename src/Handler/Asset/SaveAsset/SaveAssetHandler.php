@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset;
 
-use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetPayloadMapper;
-use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetPersistenceCoordinator;
+use OpenDxp\Bundle\AdminBundle\Mapper\Asset\AssetPayloadMapper;
+use OpenDxp\Bundle\AdminBundle\Coordinator\Asset\AssetPersistenceCoordinator;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

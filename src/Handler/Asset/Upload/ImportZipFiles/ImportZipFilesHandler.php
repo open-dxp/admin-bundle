@@ -24,7 +24,7 @@ use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
 use Symfony\Component\Filesystem\Filesystem;
 use ZipArchive;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class ImportZipFilesHandler
 {

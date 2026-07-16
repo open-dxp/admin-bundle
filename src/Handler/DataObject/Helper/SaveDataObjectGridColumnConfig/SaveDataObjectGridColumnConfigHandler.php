@@ -25,7 +25,7 @@ use OpenDxp\Security\SecurityHelper;
 use OpenDxp\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class SaveDataObjectGridColumnConfigHandler
 {

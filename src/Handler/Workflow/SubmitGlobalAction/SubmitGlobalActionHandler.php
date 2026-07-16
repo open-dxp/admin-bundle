@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitGlobalAction;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Service\Workflow\WorkflowElementResolver;
+use OpenDxp\Bundle\AdminBundle\Resolver\Workflow\WorkflowElementResolver;
 use OpenDxp\Model\Element\ValidationException;
 use OpenDxp\Workflow\Manager;
 use Symfony\Component\Workflow\Registry;

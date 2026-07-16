@@ -19,8 +19,8 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildre
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
-use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Db;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Element;

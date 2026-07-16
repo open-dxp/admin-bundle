@@ -15,7 +15,7 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-namespace OpenDxp\Bundle\AdminBundle\Service\Translation;
+namespace OpenDxp\Bundle\AdminBundle\Resolver\Translation;
 
 use OpenDxp\Model\Translation;
 use OpenDxp\Model\Translation\Listing;

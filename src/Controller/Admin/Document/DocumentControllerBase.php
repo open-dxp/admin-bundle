@@ -27,7 +27,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\RemoveFromSession\RemoveFromSess
 use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionPayload;
 use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
-use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Model;
 use OpenDxp\Model\Element\ElementInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;

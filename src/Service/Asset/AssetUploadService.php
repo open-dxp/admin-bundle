@@ -20,7 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Service\Asset;
 use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAsset\AddAssetPayload;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Config;
 use OpenDxp\Event\AssetEvents;
 use OpenDxp\Event\Model\Asset\ResolveUploadTargetEvent;

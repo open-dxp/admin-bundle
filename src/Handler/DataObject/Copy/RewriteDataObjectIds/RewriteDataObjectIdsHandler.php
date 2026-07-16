@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\RewriteDataObjectIds;
 
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\CopySessionGateway;
 use OpenDxp\Model\DataObject;
 

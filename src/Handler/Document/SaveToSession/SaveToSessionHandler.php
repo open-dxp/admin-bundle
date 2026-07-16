@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession;
 
-use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
+use OpenDxp\Bundle\AdminBundle\Mapper\Document\DocumentPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\Document;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

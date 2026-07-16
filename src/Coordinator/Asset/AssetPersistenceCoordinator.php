@@ -14,11 +14,12 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service\Asset;
+namespace OpenDxp\Bundle\AdminBundle\Coordinator\Asset;
 
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Dto\Asset\AssetPersistenceDto;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
-use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Model\Asset;
 
 final class AssetPersistenceCoordinator
@@ -29,7 +30,7 @@ final class AssetPersistenceCoordinator
         private readonly ElementDraftService $elementDraftService,
     ) {}
 
-    public function save(Asset $asset, string $task): AssetPersistenceData
+    public function save(Asset $asset, string $task): AssetPersistenceDto
     {
         $asset->setUserModification($this->userContext->getAdminUser()->getId());
 
@@ -39,7 +40,7 @@ final class AssetPersistenceCoordinator
             $asset->save();
         }
 
-        return new AssetPersistenceData(
+        return new AssetPersistenceDto(
             data: [
                 'versionDate' => $asset->getModificationDate() ?? 0,
                 'versionCount' => $asset->getVersionCount(),

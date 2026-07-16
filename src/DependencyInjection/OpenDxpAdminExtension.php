@@ -53,6 +53,7 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
         );
 
         $loader->load('services.yaml');
+        $loader->load('legacy_services.yaml');
         $loader->load('security_services.yaml');
         $loader->load('event_listeners.yaml');
         $loader->load('export.yaml');

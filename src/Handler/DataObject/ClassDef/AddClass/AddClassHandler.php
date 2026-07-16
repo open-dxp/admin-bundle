@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\AddClass;
 
 use Exception;
 use OpenDxp\Model\DataObject;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class AddClassHandler
 {

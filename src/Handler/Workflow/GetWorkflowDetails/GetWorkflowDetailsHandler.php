@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowDetails;
 
 use InvalidArgumentException;
 use OpenDxp\Bundle\AdminBundle\Service\Workflow\ActionsButtonService;
-use OpenDxp\Bundle\AdminBundle\Service\Workflow\WorkflowElementResolver;
+use OpenDxp\Bundle\AdminBundle\Resolver\Workflow\WorkflowElementResolver;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject\Concrete as ConcreteObject;
 use OpenDxp\Model\Document;

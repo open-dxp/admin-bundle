@@ -8,23 +8,21 @@
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (https://pimcore.com)
- * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service\DataObject;
+namespace OpenDxp\Bundle\AdminBundle\Dto\Asset;
 
-final class DataObjectPersistenceData
+final class AssetPersistenceDto
 {
     /**
-     * @param array{modificationDate: int, versionDate: int, versionCount: int} $general
+     * @param array{versionDate: int, versionCount: int} $data
      */
     public function __construct(
-        public readonly array $general,
+        public readonly array $data,
         public readonly array $treeData,
-        public readonly ?array $draft = null,
     ) {}
 }

@@ -20,7 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectFolder;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Element;
 use Symfony\Component\EventDispatcher\GenericEvent;

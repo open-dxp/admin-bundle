@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowForm;
 
-use OpenDxp\Bundle\AdminBundle\Service\Workflow\WorkflowElementResolver;
+use OpenDxp\Bundle\AdminBundle\Resolver\Workflow\WorkflowElementResolver;
 use OpenDxp\Workflow\Manager;
 use OpenDxp\Workflow\Transition;
 

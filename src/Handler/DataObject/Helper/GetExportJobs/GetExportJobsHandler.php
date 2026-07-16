@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportJobs;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Tool\Storage;
 use Symfony\Component\EventDispatcher\GenericEvent;

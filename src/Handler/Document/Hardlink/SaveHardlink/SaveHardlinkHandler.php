@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Hardlink\SaveHardlink;
 
-use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper;
-use OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator;
+use OpenDxp\Bundle\AdminBundle\Mapper\Document\DocumentPayloadMapper;
+use OpenDxp\Bundle\AdminBundle\Coordinator\Document\DocumentPersistenceCoordinator;
 use OpenDxp\Model\Document\Hardlink;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

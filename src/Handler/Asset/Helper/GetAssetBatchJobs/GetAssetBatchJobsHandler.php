@@ -20,7 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridBatchService;
 use OpenDxp\Model\User;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class GetAssetBatchJobsHandler
 {

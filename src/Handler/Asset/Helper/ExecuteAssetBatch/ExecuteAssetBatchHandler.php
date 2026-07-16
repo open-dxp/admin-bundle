@@ -21,7 +21,7 @@ use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridBatchService;
 use OpenDxp\Model\User;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class ExecuteAssetBatchHandler
 {

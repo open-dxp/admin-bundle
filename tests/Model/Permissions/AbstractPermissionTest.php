@@ -18,8 +18,8 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use Codeception\Stub;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
-use OpenDxp\Bundle\AdminBundle\Service\ElementService;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementService;
 use OpenDxp\Config;
 use OpenDxp\Model\User;
 use OpenDxp\Security\User\UserLoader;

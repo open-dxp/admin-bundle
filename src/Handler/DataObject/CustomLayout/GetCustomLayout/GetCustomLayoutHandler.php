@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayout;
 
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayout\GetCustomLayoutPayload;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Exception\ConfigWriteException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

@@ -15,9 +15,9 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service\Document;
+namespace OpenDxp\Bundle\AdminBundle\Dto\Document;
 
-final class DocumentPersistenceData
+final class DocumentPersistenceDto
 {
     /**
      * @param array{versionDate: int, versionCount: int} $data

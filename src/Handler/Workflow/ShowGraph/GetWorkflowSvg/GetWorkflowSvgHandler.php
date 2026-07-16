@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\ShowGraph\GetWorkflowSvg;
 
 use InvalidArgumentException;
 use OpenDxp\Bundle\AdminBundle\Handler\Workflow\ShowGraph\ShowGraphPayload;
-use OpenDxp\Bundle\AdminBundle\Service\Workflow\WorkflowElementResolver;
+use OpenDxp\Bundle\AdminBundle\Resolver\Workflow\WorkflowElementResolver;
 use OpenDxp\Tool\Console;
 use OpenDxp\Workflow\Manager;
 use Symfony\Component\Process\Process;

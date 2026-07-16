@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\SearchRelations;
 
 use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
-use OpenDxp\Bundle\AdminBundle\Service\Translation\AdminSearchTermResolver;
+use OpenDxp\Bundle\AdminBundle\Resolver\Translation\AdminSearchTermResolver;
 use OpenDxp\Db;
 use OpenDxp\Model\DataObject\Classificationstore;
 use stdClass;

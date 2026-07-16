@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPayloadMapper;
+use OpenDxp\Bundle\AdminBundle\Mapper\DataObject\DataObjectPayloadMapper;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\ClassDefinition\Helper\OptionsProviderResolver;
 

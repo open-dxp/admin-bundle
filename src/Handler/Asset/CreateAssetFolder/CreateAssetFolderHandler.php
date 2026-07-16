@@ -20,7 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolder;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\CreateAssetFolder\CreateAssetFolderPayload;
 use OpenDxp\Model\Asset;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class CreateAssetFolderHandler
 {

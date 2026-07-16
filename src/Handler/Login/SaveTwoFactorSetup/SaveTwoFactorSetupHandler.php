@@ -6,7 +6,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Login\SaveTwoFactorSetup;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\Login\TwoFactorCodeInvalidException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\TwoFactorSetupSessionGateway;
 use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Google\GoogleAuthenticatorInterface;
 

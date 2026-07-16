@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Factory\ElementServiceFactory;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\CopySessionGateway;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;

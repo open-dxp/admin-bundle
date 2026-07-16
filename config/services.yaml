@@ -79,7 +79,7 @@ services:
     #
 
     OpenDxp\Model\DataObject\ClassDefinition\PreviewGeneratorInterface:
-        class: OpenDxp\Bundle\AdminBundle\Service\PreviewGenerator
+        class: OpenDxp\Bundle\AdminBundle\Generator\PreviewGenerator
 
     #
     # Twig Extensions
@@ -92,7 +92,7 @@ services:
     #
     
     OpenDxp\Bundle\AdminBundle\Service\Workflow\ActionsButtonService: ~
-    OpenDxp\Bundle\AdminBundle\Service\Workflow\WorkflowElementResolver: ~
+    OpenDxp\Bundle\AdminBundle\Resolver\Workflow\WorkflowElementResolver: ~
 
     #
     # Admin Config Services
@@ -102,13 +102,13 @@ services:
     #
     # Element Services
     #
-    OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface:
-        class: OpenDxp\Bundle\AdminBundle\Service\ElementService
+    OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface:
+        class: OpenDxp\Bundle\AdminBundle\Service\Element\ElementService
 
-    OpenDxp\Bundle\AdminBundle\Service\CustomLoginUrlGenerator: ~
+    OpenDxp\Bundle\AdminBundle\Generator\CustomLoginUrlGenerator: ~
 
-    OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface:
-        class: OpenDxp\Bundle\AdminBundle\Service\AdminUserContext
+    OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface:
+        class: OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContext
 
     OpenDxp\Bundle\AdminBundle\Session\SessionIdentityInterface:
         class: OpenDxp\Bundle\AdminBundle\Session\SessionIdentity
@@ -123,23 +123,23 @@ services:
 
     OpenDxp\Bundle\AdminBundle\Service\Notification\NotificationFilterParser: ~
 
-    OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPayloadMapper: ~
-    OpenDxp\Bundle\AdminBundle\Service\Document\DocumentPersistenceCoordinator: ~
+    OpenDxp\Bundle\AdminBundle\Mapper\Document\DocumentPayloadMapper: ~
+    OpenDxp\Bundle\AdminBundle\Coordinator\Document\DocumentPersistenceCoordinator: ~
 
-    OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPayloadMapper: ~
-    OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectPersistenceCoordinator: ~
+    OpenDxp\Bundle\AdminBundle\Mapper\DataObject\DataObjectPayloadMapper: ~
+    OpenDxp\Bundle\AdminBundle\Coordinator\DataObject\DataObjectPersistenceCoordinator: ~
     OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService: ~
-    OpenDxp\Bundle\AdminBundle\Service\DataObject\ClassificationstoreKeyConfigService: ~
+    OpenDxp\Bundle\AdminBundle\Mapper\DataObject\ClassificationstoreKeyConfigMapper: ~
 
-    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetPayloadMapper: ~
-    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetPersistenceCoordinator: ~
+    OpenDxp\Bundle\AdminBundle\Mapper\Asset\AssetPayloadMapper: ~
+    OpenDxp\Bundle\AdminBundle\Coordinator\Asset\AssetPersistenceCoordinator: ~
     OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService: ~
     OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService: ~
-    OpenDxp\Bundle\AdminBundle\Service\Asset\ImageThumbnailResolver: ~
+    OpenDxp\Bundle\AdminBundle\Resolver\Asset\ImageThumbnailResolver: ~
 
     OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService: ~
-    OpenDxp\Bundle\AdminBundle\Service\Grid\AssetGridColumnConfigResolver: ~
-    OpenDxp\Bundle\AdminBundle\Service\Grid\DataObjectGridColumnConfigResolver: ~
+    OpenDxp\Bundle\AdminBundle\Resolver\Grid\AssetGridColumnConfigResolver: ~
+    OpenDxp\Bundle\AdminBundle\Resolver\Grid\DataObjectGridColumnConfigResolver: ~
     OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService: ~
     OpenDxp\Bundle\AdminBundle\Service\Grid\GridBatchService: ~
 
@@ -147,7 +147,7 @@ services:
     OpenDxp\Bundle\AdminBundle\Service\Cache\SymfonyCacheClearingService: ~
 
     OpenDxp\Bundle\AdminBundle\Service\Translation\TranslationQueryService: ~
-    OpenDxp\Bundle\AdminBundle\Service\Translation\AdminSearchTermResolver: ~
+    OpenDxp\Bundle\AdminBundle\Resolver\Translation\AdminSearchTermResolver: ~
 
     OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService: ~
 

@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\GetTranslations;
 
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\TranslationPayload;
 use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Translation\TranslationQueryService;
 use OpenDxp\Model\Translation;
 use OpenDxp\Tool;

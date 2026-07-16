@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\GDPR\DataProvider;
 
 use Doctrine\DBAL\Exception;
 use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
-use OpenDxp\Bundle\AdminBundle\Service\GridData;
+use OpenDxp\Bundle\AdminBundle\Mapper\GridData;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
 use ZipArchive;

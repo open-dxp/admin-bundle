@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassBulkExp
 
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\User;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class GetClassBulkExportListHandler
 {

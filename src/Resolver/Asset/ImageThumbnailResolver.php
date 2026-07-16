@@ -14,8 +14,9 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service\Asset;
+namespace OpenDxp\Bundle\AdminBundle\Resolver\Asset;
 
+use OpenDxp\Bundle\AdminBundle\Dto\Asset\ImageThumbnailResolutionDto;
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail\GetImageThumbnailPayload;
 use OpenDxp\Messenger\AssetPreviewImageMessage;
@@ -28,7 +29,7 @@ final class ImageThumbnailResolver
 {
     public function __construct(private readonly MessageBusInterface $messageBus) {}
 
-    public function resolve(GetImageThumbnailPayload $payload): ImageThumbnailResolution
+    public function resolve(GetImageThumbnailPayload $payload): ImageThumbnailResolutionDto
     {
         $id = $payload->id;
         $thumbnailParam = $payload->thumbnailParam;
@@ -78,7 +79,7 @@ final class ImageThumbnailResolver
                     throw new NotFoundHttpException(sprintf('Tree preview thumbnail not available for asset %d', $id));
                 }
 
-                return new ImageThumbnailResolution($image, null);
+                return new ImageThumbnailResolutionDto($image, null);
             }
         }
 
@@ -93,6 +94,6 @@ final class ImageThumbnailResolver
             $thumbnailConfig->generateAutoName();
         }
 
-        return new ImageThumbnailResolution($image, $image->getThumbnail($thumbnailConfig));
+        return new ImageThumbnailResolutionDto($image, $image->getThumbnail($thumbnailConfig));
     }
 }

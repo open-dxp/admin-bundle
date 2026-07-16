@@ -15,11 +15,12 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service\DataObject;
+namespace OpenDxp\Bundle\AdminBundle\Coordinator\DataObject;
 
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Dto\DataObject\DataObjectPersistenceDto;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
-use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -32,12 +33,12 @@ final class DataObjectPersistenceCoordinator
     ) {
     }
 
-    public function save(DataObject\Concrete $object, string $task): DataObjectPersistenceData
+    public function save(DataObject\Concrete $object, string $task): DataObjectPersistenceDto
     {
         if ($task === 'session') {
             $this->elementDraftService->saveObject($object);
 
-            return new DataObjectPersistenceData(
+            return new DataObjectPersistenceDto(
                 general: [
                     'modificationDate' => 0,
                     'versionDate'      => 0,
@@ -71,7 +72,7 @@ final class DataObjectPersistenceCoordinator
                 $object->deleteAutoSaveVersions($adminUser->getId());
             }
 
-            return new DataObjectPersistenceData(
+            return new DataObjectPersistenceDto(
                 general: [
                     'modificationDate' => $object->getModificationDate() ?? 0,
                     'versionDate'      => $newObject->getModificationDate() ?? 0,
@@ -84,7 +85,7 @@ final class DataObjectPersistenceCoordinator
         if ($task === 'scheduler' && $object->isAllowed('settings')) {
             $object->saveScheduledTasks();
 
-            return new DataObjectPersistenceData(
+            return new DataObjectPersistenceDto(
                 general: [
                     'modificationDate' => $object->getModificationDate() ?? 0,
                     'versionDate'      => $object->getModificationDate() ?? 0,
@@ -116,7 +117,7 @@ final class DataObjectPersistenceCoordinator
             $treeData = $this->elementService->getElementTreeNodeConfig($object);
             $newObject = DataObject::getById($object->getId(), ['force' => true]);
 
-            return new DataObjectPersistenceData(
+            return new DataObjectPersistenceDto(
                 general: [
                     'modificationDate' => $object->getModificationDate() ?? 0,
                     'versionDate'      => $newObject->getModificationDate() ?? 0,

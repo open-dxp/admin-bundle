@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\User\SendInvitationLink;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Service\CustomLoginUrlGenerator;
+use OpenDxp\Bundle\AdminBundle\Generator\CustomLoginUrlGenerator;
 use OpenDxp\Http\Request\Host\GeneralHostResolver;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;

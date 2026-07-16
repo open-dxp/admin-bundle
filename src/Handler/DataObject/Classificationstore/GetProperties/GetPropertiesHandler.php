@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetProperties;
 
 use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
-use OpenDxp\Bundle\AdminBundle\Service\DataObject\ClassificationstoreKeyConfigService;
+use OpenDxp\Bundle\AdminBundle\Mapper\DataObject\ClassificationstoreKeyConfigMapper;
 use OpenDxp\Db;
 use OpenDxp\Model\DataObject\Classificationstore;
 use stdClass;
@@ -26,7 +26,7 @@ use stdClass;
 final class GetPropertiesHandler
 {
     public function __construct(
-        private readonly ClassificationstoreKeyConfigService $keyConfigService,
+        private readonly ClassificationstoreKeyConfigMapper $keyConfigService,
     ) {}
 
     public function __invoke(GetPropertiesPayload $payload): GetPropertiesResult

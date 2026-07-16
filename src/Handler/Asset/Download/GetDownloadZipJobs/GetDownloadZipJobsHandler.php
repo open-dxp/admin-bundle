@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\GetDownloadZipJobs;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\GetDownloadZipJobs\GetDownloadZipJobsPayload;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
 use Symfony\Component\Routing\RouterInterface;

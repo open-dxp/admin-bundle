@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUser;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\PasswordResetSessionGateway;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;

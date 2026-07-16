@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetCurrentUser;
 
 use OpenDxp\Bundle\AdminBundle\Helper\User as UserHelper;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\PasswordResetSessionGateway;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;

@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLink;
 
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
-use OpenDxp\Bundle\AdminBundle\Service\CustomLoginUrlGenerator;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Generator\CustomLoginUrlGenerator;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;

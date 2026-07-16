@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service;
+namespace OpenDxp\Bundle\AdminBundle\Service\Admin;
 
 use OpenDxp\Model\User;
 use OpenDxp\Security\User\TokenStorageUserResolver;

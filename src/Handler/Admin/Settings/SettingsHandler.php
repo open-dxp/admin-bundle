@@ -20,7 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\IndexActionSettingsEvent;
 use OpenDxp\Bundle\AdminBundle\Perspective\Config as PerspectiveConfig;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminSettingsService;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
 use OpenDxp\Config;
 use OpenDxp\Extension\Bundle\OpenDxpBundleManager;

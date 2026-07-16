@@ -22,7 +22,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\AssetResult;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\SaveImageEditor\SaveImageEditorPayload;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class SaveImageEditorHandler
 {

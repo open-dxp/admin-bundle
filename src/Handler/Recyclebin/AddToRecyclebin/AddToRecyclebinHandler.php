@@ -20,7 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\AddToRecyclebin;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\Element\Recyclebin;
 use OpenDxp\Model\Element\Service;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class AddToRecyclebinHandler
 {

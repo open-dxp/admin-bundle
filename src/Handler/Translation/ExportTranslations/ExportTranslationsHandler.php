@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\ExportTranslations;
 
 use Doctrine\DBAL\Exception\SyntaxErrorException;
 use InvalidArgumentException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Translation\TranslationQueryService;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\Translation;

@@ -10,7 +10,7 @@ use OpenDxp\Model\Document;
 use OpenDxp\Model\Element;
 use OpenDxp\Model\User;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class ReplaceAssignmentsHandler
 {

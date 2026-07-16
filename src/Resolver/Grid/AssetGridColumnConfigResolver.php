@@ -15,12 +15,13 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service\Grid;
+namespace OpenDxp\Bundle\AdminBundle\Resolver\Grid;
 
 use OpenDxp\Bundle\AdminBundle\Dto\Grid\AssetGridColumnConfig;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigFavourite;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Bundle\AdminBundle\Tool;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Metadata;

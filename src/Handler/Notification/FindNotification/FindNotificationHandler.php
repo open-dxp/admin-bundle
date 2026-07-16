@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Notification\FindNotification;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Model\Notification\Service\NotificationService;
 use UnexpectedValueException;
 

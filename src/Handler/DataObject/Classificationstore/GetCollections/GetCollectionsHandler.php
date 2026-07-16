@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetC
 
 use Doctrine\DBAL\ArrayParameterType;
 use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
-use OpenDxp\Bundle\AdminBundle\Service\Translation\AdminSearchTermResolver;
+use OpenDxp\Bundle\AdminBundle\Resolver\Translation\AdminSearchTermResolver;
 use OpenDxp\Db;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\Classificationstore;

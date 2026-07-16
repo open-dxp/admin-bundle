@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail;
 
-use OpenDxp\Bundle\AdminBundle\Service\Asset\ImageThumbnailResolver;
+use OpenDxp\Bundle\AdminBundle\Resolver\Asset\ImageThumbnailResolver;
 
 final class GetImageThumbnailHandler
 {

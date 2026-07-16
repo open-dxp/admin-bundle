@@ -20,13 +20,13 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderContentPre
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderContentPreview\GetFolderContentPreviewPayload;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
-use OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class GetFolderContentPreviewHandler
 {

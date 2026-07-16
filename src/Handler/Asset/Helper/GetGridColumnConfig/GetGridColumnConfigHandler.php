@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetGridColumnConfig;
 
-use OpenDxp\Bundle\AdminBundle\Service\Grid\AssetGridColumnConfigResolver;
+use OpenDxp\Bundle\AdminBundle\Resolver\Grid\AssetGridColumnConfigResolver;
 
 final class GetGridColumnConfigHandler
 {

@@ -25,7 +25,7 @@ use OpenDxp\Model\Element\Service;
 use OpenDxp\Model\User;
 use OpenDxp\Resolver\ResolverInterface;
 use OpenDxp\Tool;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class AddDocumentHandler
 {

@@ -18,13 +18,13 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProperty;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Service\DataObject\ClassificationstoreKeyConfigService;
+use OpenDxp\Bundle\AdminBundle\Mapper\DataObject\ClassificationstoreKeyConfigMapper;
 use OpenDxp\Model\DataObject\Classificationstore;
 
 final class UpdatePropertyHandler
 {
     public function __construct(
-        private readonly ClassificationstoreKeyConfigService $keyConfigService,
+        private readonly ClassificationstoreKeyConfigMapper $keyConfigService,
     ) {}
 
     public function __invoke(UpdatePropertyPayload $payload): UpdatePropertyResult

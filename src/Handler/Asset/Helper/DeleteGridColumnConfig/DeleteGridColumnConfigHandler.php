@@ -20,8 +20,8 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
-use OpenDxp\Bundle\AdminBundle\Service\Grid\AssetGridColumnConfigResolver;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Resolver\Grid\AssetGridColumnConfigResolver;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class DeleteGridColumnConfigHandler

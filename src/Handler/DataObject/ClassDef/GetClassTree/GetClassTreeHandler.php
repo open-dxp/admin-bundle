@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassTree;
 
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Translation;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Logger;
 
 final class GetClassTreeHandler

@@ -20,7 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectFolder;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class AddObjectFolderHandler
 {

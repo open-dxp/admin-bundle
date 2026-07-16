@@ -15,11 +15,11 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Service\DataObject;
+namespace OpenDxp\Bundle\AdminBundle\Mapper\DataObject;
 
 use OpenDxp\Model\DataObject\Classificationstore;
 
-final class ClassificationstoreKeyConfigService
+final class ClassificationstoreKeyConfigMapper
 {
     public function buildKeyConfigItem(Classificationstore\KeyConfig $config): array
     {

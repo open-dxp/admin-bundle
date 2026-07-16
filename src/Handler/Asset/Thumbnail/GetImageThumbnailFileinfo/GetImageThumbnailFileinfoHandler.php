@@ -17,7 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnailFileinfo;
 
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail\GetImageThumbnailPayload;
-use OpenDxp\Bundle\AdminBundle\Service\Asset\ImageThumbnailResolver;
+use OpenDxp\Bundle\AdminBundle\Resolver\Asset\ImageThumbnailResolver;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetImageThumbnailFileinfoHandler

@@ -23,7 +23,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZip\AddFilesToZi
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
 use ZipArchive;
-use OpenDxp\Bundle\AdminBundle\Service\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class AddFilesToZipHandler
 {
