@@ -612,11 +612,12 @@ Ext.onReady(function () {
     try {
         opendxp.viewport = Ext.create('Ext.container.Viewport', {
             id: 'opendxp_viewport',
-            layout: 'fit',
+            layout: 'border',
             items: [
                 {
                     xtype: 'panel',
                     id: 'opendxp_body',
+                    region: 'center',
                     cls: 'opendxp_body',
                     layout: 'border',
                     border: false,
