@@ -322,9 +322,14 @@ class GridHelperService
                         if (is_array($filter['value'])) {
                             $fieldConditions = [];
                             foreach ($filter['value'] as $filterValue) {
-                                $brickCondition = '(' . $brickField->getFilterCondition($filterValue, $operator,
+
+                                $brickFilterCondition = $brickField->getFilterCondition(
+                                    $filterValue,
+                                    $operator,
                                     ['brickPrefix' => $brickPrefix]
-                                ) . ' AND ' . $brickType . '.fieldname = ' . $db->quote($brickFilterField) . ')';
+                                );
+
+                                $brickCondition = '(' . $brickFilterCondition . ' AND ' . $brickType . '.fieldname = ' . $db->quote($brickFilterField) . ')';
                                 $fieldConditions[] = $brickCondition;
                             }
 
@@ -332,8 +337,14 @@ class GridHelperService
                                 $conditionPartsFilters[] = '(' . implode(' OR ', $fieldConditions) . ')';
                             }
                         } else {
-                            $brickCondition = '(' . $brickField->getFilterCondition($filter['value'], $operator,
-                                ['brickPrefix' => $brickPrefix]) . ' AND ' . $brickType . '.fieldname = ' . $db->quote($brickFilterField) . ')';
+
+                            $brickFilterCondition = $brickField->getFilterCondition(
+                                $filter['value'],
+                                $operator,
+                                ['brickPrefix' => $brickPrefix]
+                            );
+
+                            $brickCondition = '(' . $brickFilterCondition . ' AND ' . $brickType . '.fieldname = ' . $db->quote($brickFilterField) . ')';
                             $conditionPartsFilters[] = $brickCondition;
                         }
                     } elseif ($field instanceof ClassDefinition\Data\UrlSlug) {
@@ -343,14 +354,28 @@ class GridHelperService
                         if (is_array($filter['value'] ?? false)) {
                             $fieldConditions = [];
                             foreach ($filter['value'] as $filterValue) {
-                                $fieldConditions[] = $field->getFilterCondition($filterValue, $operator, ['brickPrefix' => ($tablePrefix ? $tablePrefix . '.' : null)]);
+                                $fieldConditions[] = $field->getFilterCondition(
+                                    $filterValue,
+                                    $operator,
+                                    [
+                                        'brickPrefix' => ($tablePrefix ? $tablePrefix . '.' : null),
+                                        'classId' => $class->getId()
+                                    ]
+                                );
                             }
 
                             if ($fieldConditions !== []) {
                                 $conditionPartsFilters[] = '(' . implode(' OR ', $fieldConditions) . ')';
                             }
                         } else {
-                            $conditionPartsFilters[] = $field->getFilterCondition($filter['value'] ?? null, $operator, ['brickPrefix' => ($tablePrefix ? $tablePrefix . '.' : null)]);
+                            $conditionPartsFilters[] = $field->getFilterCondition(
+                                $filter['value'] ?? null,
+                                $operator,
+                                [
+                                    'brickPrefix' => ($tablePrefix ? $tablePrefix . '.' : null),
+                                    'classId' => $class->getId()
+                                ]
+                            );
                         }
                     } elseif (in_array($filterField, $systemFields)) {
                         // system field
