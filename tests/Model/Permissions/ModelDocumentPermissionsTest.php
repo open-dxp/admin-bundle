@@ -166,7 +166,7 @@ class ModelDocumentPermissionsTest extends AbstractPermissionTest
     {
         $elementService = $this->buildElementService($user);
         $userContext = $this->buildUserContext($user);
-        $handler = new TreeGetDocumentChildrenHandler($userContext, $elementService, new EventDispatcher());
+        $handler = new TreeGetDocumentChildrenHandler($userContext, $elementService, new EventDispatcher(), $this->buildCurrentControllerContext());
 
         $controller = $this->buildController(DocumentController::class, $user);
 

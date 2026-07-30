@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use Codeception\Stub;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementService;
 use OpenDxp\Config;
 use OpenDxp\Model\User;
@@ -56,6 +57,11 @@ abstract class AbstractPermissionTest extends ModelTestCase
                 return $user;
             },
         ]);
+    }
+
+    protected function buildCurrentControllerContext(): CurrentControllerContextInterface
+    {
+        return Stub::makeEmpty(CurrentControllerContextInterface::class);
     }
 
     protected function buildController(string $classname, User $user): mixed

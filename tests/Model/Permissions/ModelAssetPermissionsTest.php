@@ -294,7 +294,7 @@ class ModelAssetPermissionsTest extends AbstractPermissionTest
     {
         $elementService = $this->buildElementService($user);
         $userContext = $this->buildUserContext($user);
-        $handler = new TreeGetAssetChildrenHandler($userContext, $elementService, new EventDispatcher());
+        $handler = new TreeGetAssetChildrenHandler($userContext, $elementService, new EventDispatcher(), $this->buildCurrentControllerContext());
 
         $controller = $this->buildController(AssetController::class, $user);
 

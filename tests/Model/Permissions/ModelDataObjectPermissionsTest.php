@@ -220,7 +220,7 @@ class ModelDataObjectPermissionsTest extends AbstractPermissionTest
     ): void {
         $elementService = $this->buildElementService($user);
         $userContext = $this->buildUserContext($user);
-        $handler = new TreeGetDataObjectChildrenHandler($userContext, $elementService, new EventDispatcher());
+        $handler = new TreeGetDataObjectChildrenHandler($userContext, $elementService, new EventDispatcher(), $this->buildCurrentControllerContext());
 
         $controller = $this->buildController(DataObjectController::class, $user);
 
