@@ -18,11 +18,11 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\LoadAssetForEditor\LoadAssetForEditorPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\LoadAssetForEditor\LoadAssetForEditorHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\SaveImageEditor\SaveImageEditorPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\LoadAssetForEditor\LoadAssetForEditorPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\SaveImageEditor\SaveImageEditorHandler;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Editor\SaveImageEditor\SaveImageEditorPayload;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;

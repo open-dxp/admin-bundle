@@ -38,6 +38,12 @@ services:
     OpenDxp\Bundle\AdminBundle\EventListener\ImportConfigListener: ~
 
     #
+    # REQUEST CONTEXT
+    #
+
+    OpenDxp\Bundle\AdminBundle\EventListener\CurrentControllerListener: ~
+
+    #
     # MISC
     #
 

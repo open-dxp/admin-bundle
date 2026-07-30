@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetField
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionTree\GetFieldCollectionTreePayload;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -29,6 +30,7 @@ final class GetFieldCollectionTreeHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(GetFieldCollectionTreePayload $payload): FieldCollectionTreeResult|FieldCollectionTreeEditorResult
@@ -92,7 +94,7 @@ final class GetFieldCollectionTreeHandler
             $definitions[] = $group;
         }
 
-        $event = new GenericEvent(null, [
+        $event = new GenericEvent($this->currentControllerContext->getController(), [
             'list' => $definitions,
             'objectId' => $objectId,
             'layoutDefinitions' => $layoutDefinitions,

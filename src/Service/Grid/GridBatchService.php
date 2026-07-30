@@ -20,6 +20,7 @@ use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Loader\ImplementationLoader\Exception\UnsupportedException;
 use OpenDxp\Logger;
 use OpenDxp\Model\Asset;
@@ -34,6 +35,7 @@ final class GridBatchService
     public function __construct(
         private readonly GridHelperService $gridHelperService,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     /**
@@ -66,7 +68,7 @@ final class GridBatchService
     {
         $loader = OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
 
-        $updateEvent = new GenericEvent(null, [
+        $updateEvent = new GenericEvent($this->currentControllerContext->getController(), [
             'data' => $data,
             'processed' => false,
         ]);
@@ -170,7 +172,7 @@ final class GridBatchService
             throw new Exception('AssetHelperController::batchAction => There is no asset left to update.');
         }
 
-        $metadataEvent = new GenericEvent(null, [
+        $metadataEvent = new GenericEvent($this->currentControllerContext->getController(), [
             'id' => $asset->getId(),
             'metadata' => $metadata,
         ]);

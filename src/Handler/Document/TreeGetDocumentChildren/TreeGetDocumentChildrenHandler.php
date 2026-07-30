@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Db;
 use OpenDxp\Model\Document;
@@ -33,6 +34,7 @@ final class TreeGetDocumentChildrenHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly ElementServiceInterface $elementService,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(TreeGetDocumentChildrenPayload $payload): TreeGetDocumentChildrenPaginatedResult|TreeGetDocumentChildrenListResult
@@ -93,7 +95,7 @@ final class TreeGetDocumentChildrenHandler
 
             Service::addTreeFilterJoins($cv, $list);
 
-            $beforeListLoadEvent = new GenericEvent($this, [
+            $beforeListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), [
                 'list' => $list,
                 'context' => $payload->allParams,
             ]);
@@ -105,7 +107,7 @@ final class TreeGetDocumentChildrenHandler
             $documents = $this->loadChildren($list);
         }
 
-        $event = new GenericEvent($this, ['documents' => $documents]);
+        $event = new GenericEvent($this->currentControllerContext->getController(), ['documents' => $documents]);
         $this->eventDispatcher->dispatch($event, AdminEvents::DOCUMENT_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA);
         $documents = $event->getArgument('documents');
 

@@ -22,6 +22,7 @@ use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Mapper\GridData;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use OpenDxp\Logger;
@@ -38,6 +39,7 @@ final class AssetGridService
         private readonly AdminUserContextInterface $userContext,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly GridHelperService $gridHelperService,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function gridProxy(array $allParams, ?string $effectiveLanguage): array
@@ -47,7 +49,7 @@ final class AssetGridService
                 try {
                     $data = json_decode($allParams['data'], true);
 
-                    $updateEvent = new GenericEvent(null, [
+                    $updateEvent = new GenericEvent($this->currentControllerContext->getController(), [
                         'data' => $data,
                         'processed' => false,
                     ]);
@@ -136,7 +138,7 @@ final class AssetGridService
                     }
 
                     if ($dirty) {
-                        $metadataEvent = new GenericEvent(null, [
+                        $metadataEvent = new GenericEvent($this->currentControllerContext->getController(), [
                             'id' => $asset->getId(),
                             'metadata' => $metadata,
                         ]);
@@ -158,7 +160,7 @@ final class AssetGridService
         } else {
             $list = $this->gridHelperService->prepareAssetListingForGrid($allParams, $this->userContext->getAdminUser());
 
-            $beforeListLoadEvent = new GenericEvent($this->gridHelperService, [
+            $beforeListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), [
                 'list' => $list,
                 'context' => $allParams,
             ]);
@@ -177,7 +179,7 @@ final class AssetGridService
 
             $result = ['success' => true, 'data' => $assets, 'total' => $list->getTotalCount()];
 
-            $afterListLoadEvent = new GenericEvent($this->gridHelperService, [
+            $afterListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), [
                 'list' => $result,
                 'context' => $allParams,
             ]);

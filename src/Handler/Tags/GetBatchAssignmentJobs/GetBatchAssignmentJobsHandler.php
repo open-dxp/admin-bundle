@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Tags\GetBatchAssignmentJobs;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Document;
@@ -30,6 +31,7 @@ final class GetBatchAssignmentJobsHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(GetBatchAssignmentJobsPayload $payload): GetBatchAssignmentJobsResult
@@ -97,10 +99,11 @@ final class GetBatchAssignmentJobsHandler
 
         $childrenList->setCondition($condition, $childrenList->escapeLike($object->getRealFullPath()) . '/%');
 
-        $beforeListLoadEvent = new GenericEvent(null, [
-            'list' => $childrenList,
+        $beforeListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), [
+            'list'    => $childrenList,
             'context' => [],
         ]);
+
         $this->eventDispatcher->dispatch($beforeListLoadEvent, AdminEvents::OBJECT_LIST_BEFORE_LIST_LOAD);
         /** @var DataObject\Listing $childrenList */
         $childrenList = $beforeListLoadEvent->getArgument('list');
@@ -127,7 +130,7 @@ final class GetBatchAssignmentJobsHandler
 
         $childrenList->setCondition($condition, $childrenList->escapeLike($asset->getRealFullPath()) . '/%');
 
-        $beforeListLoadEvent = new GenericEvent(null, [
+        $beforeListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), [
             'list' => $childrenList,
             'context' => [],
         ]);
@@ -157,7 +160,7 @@ final class GetBatchAssignmentJobsHandler
 
         $childrenList->setCondition($condition, $childrenList->escapeLike($document->getRealFullPath()) . '/%');
 
-        $beforeListLoadEvent = new GenericEvent(null, [
+        $beforeListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), [
             'list' => $childrenList,
             'context' => [],
         ]);

@@ -18,13 +18,17 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassIcons;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Helper\FileSystemHelper;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class GetClassIconsHandler
 {
-    public function __construct(private readonly EventDispatcherInterface $eventDispatcher) {}
+    public function __construct(
+        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
+    ) {}
 
     public function __invoke(GetClassIconsPayload $payload): GetClassIconsResult
     {
@@ -60,7 +64,7 @@ final class GetClassIconsHandler
             $icon = str_replace(OPENDXP_WEB_ROOT, '', $icon);
         }
 
-        $event = new GenericEvent(null, ['icons' => $icons, 'classId' => $classId]);
+        $event = new GenericEvent($this->currentControllerContext->getController(), ['icons' => $icons, 'classId' => $classId]);
         $this->eventDispatcher->dispatch($event, AdminEvents::CLASS_OBJECT_ICONS_PRE_SEND_DATA);
         $icons = $event->getArgument('icons');
 

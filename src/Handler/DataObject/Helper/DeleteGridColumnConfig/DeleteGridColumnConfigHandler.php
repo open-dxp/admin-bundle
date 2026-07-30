@@ -21,6 +21,7 @@ use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Resolver\Grid\DataObjectGridColumnConfigResolver;
 use OpenDxp\Config;
 use Symfony\Component\EventDispatcher\GenericEvent;
@@ -36,6 +37,7 @@ final class DeleteGridColumnConfigHandler
         private readonly Config $config,
         private readonly RequestStack $requestStack,
         private readonly AdminUserContextInterface $userContext,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(DeleteGridColumnConfigPayload $payload): DeleteGridColumnConfigResult
@@ -68,7 +70,7 @@ final class DeleteGridColumnConfigHandler
         $config = $this->gridConfigResolver->resolve($payload->locale, $params, true);
         $data = [...$config->toArray(), 'deleteSuccess' => true];
 
-        $event = new GenericEvent($this, [
+        $event = new GenericEvent($this->currentControllerContext->getController(), [
             'data'    => $data,
             'request' => $this->requestStack->getCurrentRequest(),
             'config'  => $this->config,

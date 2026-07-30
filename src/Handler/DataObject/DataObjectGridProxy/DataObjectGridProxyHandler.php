@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxy;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
@@ -28,12 +29,13 @@ final class DataObjectGridProxyHandler
     public function __construct(
         private readonly DataObjectGridService $gridService,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(DataObjectGridProxyPayload $payload): DataObjectGridProxyResult
     {
         $allParams = $payload->allParams;
-        $filterPrepareEvent = new GenericEvent($this, ['requestParams' => $allParams]);
+        $filterPrepareEvent = new GenericEvent($this->currentControllerContext->getController(), ['requestParams' => $allParams]);
         $this->eventDispatcher->dispatch($filterPrepareEvent, AdminEvents::OBJECT_LIST_BEFORE_FILTER_PREPARE);
         $allParams = $filterPrepareEvent->getArgument('requestParams');
 

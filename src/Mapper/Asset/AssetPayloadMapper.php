@@ -20,6 +20,7 @@ use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset\SaveAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Logger;
 use OpenDxp\Model;
 use OpenDxp\Model\Asset;
@@ -32,12 +33,13 @@ final class AssetPayloadMapper
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function applyPayload(SaveAssetPayload $payload, Asset $asset): void
     {
         if ($payload->metadata !== null) {
-            $metadataEvent = new GenericEvent(null, [
+            $metadataEvent = new GenericEvent($this->currentControllerContext->getController(), [
                 'id' => $asset->getId(),
                 'metadata' => $payload->metadata,
             ]);

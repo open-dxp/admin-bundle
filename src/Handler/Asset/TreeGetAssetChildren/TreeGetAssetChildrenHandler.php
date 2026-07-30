@@ -25,6 +25,7 @@ use OpenDxp\Model\Element;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 
 final class TreeGetAssetChildrenHandler
 {
@@ -32,6 +33,7 @@ final class TreeGetAssetChildrenHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly ElementServiceInterface $elementService,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(TreeGetAssetChildrenPayload $payload): TreeGetAssetChildrenPaginatedResult|TreeGetAssetChildrenListResult
@@ -80,7 +82,7 @@ final class TreeGetAssetChildrenHandler
 
             Element\Service::addTreeFilterJoins($cv, $childrenList);
 
-            $beforeListLoadEvent = new GenericEvent(null, [
+            $beforeListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), [
                 'list' => $childrenList,
                 'context' => $payload->queryAll,
             ]);
@@ -99,7 +101,7 @@ final class TreeGetAssetChildrenHandler
             }
         }
 
-        $event = new GenericEvent(null, ['assets' => $assets]);
+        $event = new GenericEvent($this->currentControllerContext->getController(), ['assets' => $assets]);
         $this->eventDispatcher->dispatch($event, AdminEvents::ASSET_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA);
         $eventAssets = $event->getArgument('assets');
         $assets = is_array($eventAssets) ? $eventAssets : $assets;

@@ -21,7 +21,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\GDPR\DataObject\ExportDataObject\ExportDa
 use OpenDxp\Bundle\AdminBundle\Handler\GDPR\DataObject\SearchDataObjects\SearchDataObjectsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\GDPR\SearchDataPayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
+use OpenDxp\Bundle\AdminBundle\Security\AdminPermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;

@@ -27,8 +27,8 @@ use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\ListRecyclebin\ListRecyclebinH
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RecyclebinPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RestoreRecyclebinItem\RestoreRecyclebinItemHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RestoreRecyclebinItem\RestoreRecyclebinItemPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Controller\KernelControllerEventInterface;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

@@ -19,11 +19,11 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersion\PublishVersionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersion\PublishVersionHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\ShowVersion\ShowVersionPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\PublishVersion\PublishVersionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\ShowVersion\ShowVersionHandler;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Version\ShowVersion\ShowVersionPayload;
+use OpenDxp\Security\CorePermission;
 use OpenDxp\Tool;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;

@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportJobs;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Tool\Storage;
 use Symfony\Component\EventDispatcher\GenericEvent;
@@ -32,6 +33,7 @@ final class GetExportJobsHandler
         private readonly GridExportService $gridExportService,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly AdminUserContextInterface $userContext,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(GetExportJobsPayload $payload): GetExportJobsResult
@@ -46,10 +48,11 @@ final class GetExportJobsHandler
 
         $list = $this->gridHelperService->prepareListingForGrid($allParams, $payload->requestedLanguage, $this->userContext->getAdminUser());
 
-        $beforeListPrepareEvent = new GenericEvent($this, [
-            'list' => $list,
+        $beforeListPrepareEvent = new GenericEvent($this->currentControllerContext->getController(), [
+            'list'    => $list,
             'context' => $allParams,
         ]);
+
         $this->eventDispatcher->dispatch($beforeListPrepareEvent, AdminEvents::OBJECT_LIST_BEFORE_EXPORT_PREPARE);
         $list = $beforeListPrepareEvent->getArgument('list');
 

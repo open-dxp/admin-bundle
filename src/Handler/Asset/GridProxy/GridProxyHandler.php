@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\GridProxy;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -29,13 +30,14 @@ final class GridProxyHandler
     public function __construct(
         private readonly AssetGridService $assetGridService,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(GridProxyPayload $payload): GridProxyResult
     {
         $params = $payload->params;
 
-        $filterPrepareEvent = new GenericEvent(null, ['requestParams' => $params]);
+        $filterPrepareEvent = new GenericEvent($this->currentControllerContext->getController(), ['requestParams' => $params]);
         $this->eventDispatcher->dispatch($filterPrepareEvent, AdminEvents::ASSET_LIST_BEFORE_FILTER_PREPARE);
         $params = $filterPrepareEvent->getArgument('requestParams');
 

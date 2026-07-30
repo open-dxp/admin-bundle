@@ -27,6 +27,7 @@ use OpenDxp\Model\Element;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 
 final class GetFolderContentPreviewHandler
 {
@@ -35,13 +36,14 @@ final class GetFolderContentPreviewHandler
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly GridHelperService $gridHelperService,
         private readonly ElementServiceInterface $elementService,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(GetFolderContentPreviewPayload $payload): GetFolderContentPreviewResult
     {
         $requestParams = $payload->requestParams;
         $adminUser = $this->userContext->getAdminUser();
-        $filterPrepareEvent = new GenericEvent(null, ['requestParams' => $requestParams]);
+        $filterPrepareEvent = new GenericEvent($this->currentControllerContext->getController(), ['requestParams' => $requestParams]);
         $this->eventDispatcher->dispatch($filterPrepareEvent, AdminEvents::ASSET_LIST_BEFORE_FILTER_PREPARE);
         $requestParams = $filterPrepareEvent->getArgument('requestParams');
 
@@ -63,7 +65,7 @@ final class GetFolderContentPreviewHandler
         $list->setOffset($start);
         $list->setOrderKey('CAST(filename AS CHAR CHARACTER SET utf8) COLLATE utf8_general_ci ASC', false);
 
-        $beforeListLoadEvent = new GenericEvent(null, ['list' => $list, 'context' => $requestParams]);
+        $beforeListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), ['list' => $list, 'context' => $requestParams]);
         $this->eventDispatcher->dispatch($beforeListLoadEvent, AdminEvents::ASSET_LIST_BEFORE_LIST_LOAD);
         /** @var Asset\Listing $list */
         $list = $beforeListLoadEvent->getArgument('list');
@@ -93,7 +95,7 @@ final class GetFolderContentPreviewHandler
 
         $result = ['data' => $assets, 'total' => $list->getTotalCount()];
 
-        $afterListLoadEvent = new GenericEvent(null, ['list' => $result, 'context' => $requestParams]);
+        $afterListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), ['list' => $result, 'context' => $requestParams]);
         $this->eventDispatcher->dispatch($afterListLoadEvent, AdminEvents::ASSET_LIST_AFTER_LIST_LOAD);
         $eventResult = $afterListLoadEvent->getArgument('list');
         $result = is_array($eventResult) ? $eventResult : $result;

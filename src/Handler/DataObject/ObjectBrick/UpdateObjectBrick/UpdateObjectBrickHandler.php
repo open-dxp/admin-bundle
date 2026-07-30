@@ -20,13 +20,17 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\UpdateObject
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\UpdateObjectBrick\UpdateObjectBrickPayload;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class UpdateObjectBrickHandler
 {
-    public function __construct(private readonly EventDispatcherInterface $eventDispatcher) {}
+    public function __construct(
+        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
+    ) {}
 
     public function __invoke(UpdateObjectBrickPayload $payload): UpdateObjectBrickResult
     {
@@ -65,7 +69,7 @@ final class UpdateObjectBrickHandler
             $brickDef->setLayoutDefinitions($layout);
         }
 
-        $event = new GenericEvent(null, ['brickDefinition' => $brickDef]);
+        $event = new GenericEvent($this->currentControllerContext->getController(), ['brickDefinition' => $brickDef]);
         $this->eventDispatcher->dispatch($event, AdminEvents::CLASS_OBJECTBRICK_UPDATE_DEFINITION);
         $brickDef = $event->getArgument('brickDefinition');
 

@@ -37,7 +37,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Misc\Maintenance\MaintenanceHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Misc\Maintenance\MaintenancePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Misc\ScriptProxy\ScriptProxyHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Misc\ScriptProxy\ScriptProxyPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;

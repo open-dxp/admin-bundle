@@ -19,12 +19,12 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset\CopyAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset\CopyAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyAsset\CopyAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyInfo\CopyInfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Copy\CopyInfo\CopyInfoPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\CopySessionGateway;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;

@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Enricher\Element;
 
 use LogicException;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Element\Service as ElementService;
 use Symfony\Component\EventDispatcher\GenericEvent;
@@ -28,6 +29,7 @@ final class PreSendDataEventEnricher
 {
     public function __construct(
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     /**
@@ -44,8 +46,8 @@ final class PreSendDataEventEnricher
             default => throw new LogicException(sprintf('No GET_PRE_SEND_DATA event known for element class "%s".', $element::class)),
         };
 
-        $event = new GenericEvent(null, [
-            'data' => $data,
+        $event = new GenericEvent($this->currentControllerContext->getController(), [
+            'data'       => $data,
             $elementType => $element,
         ]);
 

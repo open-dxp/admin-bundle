@@ -23,9 +23,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\RemoveFromSession\RemoveFromSess
 use OpenDxp\Bundle\AdminBundle\Handler\Document\RemoveFromSession\RemoveFromSessionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\SaveToSession\SaveToSessionPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Model\Element\ElementInterface;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;

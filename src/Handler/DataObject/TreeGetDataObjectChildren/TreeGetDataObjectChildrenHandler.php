@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildre
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Db;
 use OpenDxp\Model\DataObject;
@@ -33,6 +34,7 @@ final class TreeGetDataObjectChildrenHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly ElementServiceInterface $elementService,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(TreeGetDataObjectChildrenPayload $payload): TreeGetDataObjectChildrenPaginatedResult|TreeGetDataObjectChildrenListResult
@@ -94,7 +96,7 @@ final class TreeGetDataObjectChildrenHandler
             $cv = $view ? ($this->elementService->getCustomViewById($view) ?? []) : [];
             Element\Service::addTreeFilterJoins($cv, $childrenList);
 
-            $beforeListLoadEvent = new GenericEvent($this, [
+            $beforeListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), [
                 'list' => $childrenList,
                 'context' => $requestQueryAll,
             ]);
@@ -107,7 +109,7 @@ final class TreeGetDataObjectChildrenHandler
             $limit = $effectiveLimit;
         }
 
-        $event = new GenericEvent($this, ['objects' => $objects]);
+        $event = new GenericEvent($this->currentControllerContext->getController(), ['objects' => $objects]);
         $this->eventDispatcher->dispatch($event, AdminEvents::OBJECT_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA);
         $objects = $event->getArgument('objects');
 

@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Service\Element;
 
 use OpenDxp\Bundle\AdminBundle\Exception\ElementLockedException;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Session\SessionIdentityInterface;
 use OpenDxp\Model\Element\Editlock;
 use Symfony\Component\EventDispatcher\GenericEvent;
@@ -29,6 +30,7 @@ final class EditLockService
     public function __construct(
         private readonly SessionIdentityInterface $sessionIdentity,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     /**
@@ -55,7 +57,7 @@ final class EditLockService
             $eventArgs['object'] = $element;
         }
 
-        $event = new GenericEvent(null, $eventArgs);
+        $event = new GenericEvent($this->currentControllerContext->getController(), $eventArgs);
         $this->eventDispatcher->dispatch($event, $eventName);
         $task = $event->getArgument('data')['task'];
 

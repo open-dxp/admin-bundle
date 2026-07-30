@@ -21,6 +21,7 @@ use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Mapper\GridData;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 use OpenDxp\Localization\LocaleServiceInterface;
@@ -40,6 +41,7 @@ final class DataObjectGridService
         private readonly GridHelperService $gridHelperService,
         private readonly LocaleServiceInterface $localeService,
         private readonly GridColumnConfigSessionGateway $gridColumnConfigSession,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {
     }
 
@@ -108,7 +110,7 @@ final class DataObjectGridService
             $list = $this->gridHelperService->prepareListingForGrid($allParams, $requestedLanguage, $this->userContext->getAdminUser());
 
             if ($objectType === DataObject::OBJECT_TYPE_OBJECT) {
-                $beforeListLoadEvent = new GenericEvent($this->gridHelperService, [
+                $beforeListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), [
                     'list' => $list,
                     'context' => $allParams,
                 ]);
@@ -169,7 +171,7 @@ final class DataObjectGridService
             ];
 
             if ($objectType === DataObject::OBJECT_TYPE_OBJECT) {
-                $afterListLoadEvent = new GenericEvent($this->gridHelperService, [
+                $afterListLoadEvent = new GenericEvent($this->currentControllerContext->getController(), [
                     'list' => $result,
                     'context' => $allParams,
                 ]);

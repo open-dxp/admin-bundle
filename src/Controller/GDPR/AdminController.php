@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\GDPR\GetDataProviders\GetDataProvidersHandler;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
+use OpenDxp\Bundle\AdminBundle\Security\AdminPermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;

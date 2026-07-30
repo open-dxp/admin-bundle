@@ -24,7 +24,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PreviewVersion\Preview
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PreviewVersion\PreviewVersionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PublishVersion\PublishVersionHandler;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Security\CorePermission;
 use OpenDxp\Tool;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;

@@ -19,19 +19,15 @@ namespace OpenDxp\Bundle\AdminBundle;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Schema;
+use OpenDxp\Bundle\AdminBundle\Security\AdminPermission;
 use OpenDxp\Extension\Bundle\Installer\SettingsStoreAwareInstaller;
+use OpenDxp\Security\PermissionAttribute;
 use Override;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 
 class Installer extends SettingsStoreAwareInstaller
 {
     protected const string USER_PERMISSIONS_CATEGORY = 'OpenDxp Admin Bundle';
-
-    public const array USER_PERMISSIONS = [
-        'admin_translations',
-        'gdpr_data_extractor',
-        'system_appearance_settings',
-    ];
 
     private array $tablesToInstall = [
         'translations_admin' =>
@@ -64,13 +60,13 @@ class Installer extends SettingsStoreAwareInstaller
 
         $existingKeys = $db->fetchFirstColumn(sprintf('SELECT %s FROM users_permission_definitions', $db->quoteIdentifier('key')));
 
-        foreach (self::USER_PERMISSIONS as $permission) {
-            if (in_array($permission, $existingKeys)) {
+        foreach (AdminPermission::cases() as $permission) {
+            if (in_array(PermissionAttribute::for($permission->value), $existingKeys, true)) {
                 continue;
             }
 
             $db->insert('users_permission_definitions', [
-                $db->quoteIdentifier('key') => $permission,
+                $db->quoteIdentifier('key') => PermissionAttribute::for($permission->value),
                 $db->quoteIdentifier('category') => self::USER_PERMISSIONS_CATEGORY,
             ]);
         }
@@ -80,9 +76,9 @@ class Installer extends SettingsStoreAwareInstaller
     {
         $db = \OpenDxp\Db::get();
 
-        foreach (self::USER_PERMISSIONS as $permission) {
+        foreach (AdminPermission::cases() as $permission) {
             $db->delete('users_permission_definitions', [
-                $db->quoteIdentifier('key') => $permission,
+                $db->quoteIdentifier('key') => PermissionAttribute::for($permission->value),
             ]);
         }
     }

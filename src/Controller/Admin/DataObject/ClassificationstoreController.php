@@ -29,10 +29,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateGrou
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateGroup\CreateGroupPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateStore\CreateStoreHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateStore\CreateStorePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollection\DeleteCollectionHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollection\DeleteCollectionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollectionRelation\DeleteCollectionRelationHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollectionRelation\DeleteCollectionRelationPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollection\DeleteCollectionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollection\DeleteCollectionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteGroup\DeleteGroupHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteGroup\DeleteGroupPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteProperty\DeletePropertyHandler;
@@ -67,7 +67,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateGrou
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateGroup\UpdateGroupPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProperty\UpdatePropertyHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProperty\UpdatePropertyPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;

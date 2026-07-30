@@ -18,13 +18,17 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsTree;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class GetSelectOptionsTreeHandler
 {
-    public function __construct(private readonly EventDispatcherInterface $eventDispatcher) {}
+    public function __construct(
+        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
+    ) {}
 
     public function __invoke(GetSelectOptionsTreePayload $payload): GetSelectOptionsTreeResult
     {
@@ -67,7 +71,7 @@ final class GetSelectOptionsTreeHandler
             $configurations[] = $group;
         }
 
-        $event = new GenericEvent(null, ['list' => $configurations]);
+        $event = new GenericEvent($this->currentControllerContext->getController(), ['list' => $configurations]);
         $this->eventDispatcher->dispatch($event, AdminEvents::CLASS_SELECTOPTIONS_LIST_PRE_SEND_DATA);
         $configurations = $event->getArgument('list');
 

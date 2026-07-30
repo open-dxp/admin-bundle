@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Service\Login;
 use Browser;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
 use OpenDxp\Config;
 use OpenDxp\Extension\Bundle\OpenDxpBundleManager;
@@ -36,6 +37,7 @@ final class LoginPageService
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly AuthenticationUtils $authenticationUtils,
         private readonly RequestStack $requestStack,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     /**
@@ -57,7 +59,7 @@ final class LoginPageService
             'login_error' => $this->authenticationUtils->getLastAuthenticationError(),
         ];
 
-        $event = new GenericEvent(null, [
+        $event = new GenericEvent($this->currentControllerContext->getController(), [
             'parameters' => $params,
             'config' => $this->config,
             'request' => $request,

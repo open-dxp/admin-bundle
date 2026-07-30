@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetGridColumnConf
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Resolver\Grid\DataObjectGridColumnConfigResolver;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Config;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -31,6 +32,7 @@ final class GetGridColumnConfigHandler
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly Config $config,
         private readonly RequestStack $requestStack,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(GetGridColumnConfigPayload $payload): GetGridColumnConfigResult
@@ -50,7 +52,7 @@ final class GetGridColumnConfigHandler
 
         $config = $this->gridConfigResolver->resolve($payload->locale, $params);
 
-        $event = new GenericEvent($this, [
+        $event = new GenericEvent($this->currentControllerContext->getController(), [
             'data'    => $config->toArray(),
             'request' => $this->requestStack->getCurrentRequest(),
             'config'  => $this->config,

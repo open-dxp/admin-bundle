@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\CreateBlocklistEntry\CreateBlocklistEntryHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\DeleteBlocklistEntry\DeleteBlocklistEntryHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\UpdateBlocklistEntry\UpdateBlocklistEntryHandler;
@@ -35,10 +36,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogParams\GetE
 use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogText\GetEmailLogTextHandler;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\AdminPermission;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Bundle\AdminBundle\Security\AdminPermission;
 use OpenDxp\Http\RequestHelper;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

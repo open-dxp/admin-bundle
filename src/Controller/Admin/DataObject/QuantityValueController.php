@@ -34,7 +34,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ImportQuantityVa
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ImportQuantityValueUnits\ImportQuantityValueUnitsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\QuantityValueUnitPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\UpdateQuantityValueUnit\UpdateQuantityValueUnitHandler;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

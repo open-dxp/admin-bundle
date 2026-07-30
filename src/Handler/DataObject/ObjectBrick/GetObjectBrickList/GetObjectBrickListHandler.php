@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBri
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickList\GetObjectBrickListPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -29,6 +30,7 @@ final class GetObjectBrickListHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(GetObjectBrickListPayload $payload): ObjectBrickListResult
@@ -74,7 +76,7 @@ final class GetObjectBrickListHandler
             $list = $filteredList;
         }
 
-        $event = new GenericEvent(null, ['list' => $list, 'objectId' => $objectId]);
+        $event = new GenericEvent($this->currentControllerContext->getController(), ['list' => $list, 'objectId' => $objectId]);
         $this->eventDispatcher->dispatch($event, AdminEvents::CLASS_OBJECTBRICK_LIST_PRE_SEND_DATA);
 
         return new ObjectBrickListResult($event->getArgument('list'));

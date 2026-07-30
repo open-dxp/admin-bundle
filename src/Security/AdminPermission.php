@@ -15,11 +15,11 @@
 
 declare(strict_types=1);
 
-namespace OpenDxp\Bundle\AdminBundle\Security\Permission;
+namespace OpenDxp\Bundle\AdminBundle\Security;
 
 enum AdminPermission: string
 {
-    case AdminTranslations  = 'admin_translations';
-    case GdprDataExtractor  = 'gdpr_data_extractor';
-    case SystemAppearance   = 'system_appearance_settings';
+    case AdminTranslations  = 'opendxp:security:permission:admin_translations';
+    case GdprDataExtractor  = 'opendxp:security:permission:gdpr_data_extractor';
+    case SystemAppearance   = 'opendxp:security:permission:system_appearance_settings';
 }

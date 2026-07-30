@@ -17,7 +17,6 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\ConvertDocument\ConvertDocumentHandler;
@@ -27,10 +26,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\DeleteDocument\DeleteDocumentPay
 use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\CreateDocType\CreateDocTypeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\DeleteDocType\DeleteDocTypeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\DocTypePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\GetDocTypesList\GetDocTypesListHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\UpdateDocType\UpdateDocTypeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocTypesByType\GetDocTypesByTypeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocTypesByType\GetDocTypesByTypePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\DocTypes\GetDocTypesList\GetDocTypesListHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentData\GetDocumentDataHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentData\GetDocumentDataPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\GetDocumentIdForPath\GetDocumentIdForPathHandler;
@@ -47,10 +46,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\CheckTranslationLang
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\CheckTranslationLanguage\CheckTranslationLanguagePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\DetermineTranslationParent\DetermineTranslationParentHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\DetermineTranslationParent\DetermineTranslationParentPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTree\GetLanguageTreeHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTree\GetLanguageTreePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRoot\GetLanguageTreeRootHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRoot\GetLanguageTreeRootPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTree\GetLanguageTreeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTree\GetLanguageTreePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\RemoveDocumentTranslation\RemoveDocumentTranslationHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\RemoveDocumentTranslation\RemoveDocumentTranslationPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren\TreeGetDocumentChildrenHandler;
@@ -61,6 +60,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoHandle
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDeleteInfo\GetDeleteInfoPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot\GetTreeRootPayload;
+use OpenDxp\Security\CorePermission;
 use Override;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

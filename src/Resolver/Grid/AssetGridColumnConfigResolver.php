@@ -21,6 +21,7 @@ use OpenDxp\Bundle\AdminBundle\Dto\Grid\AssetGridColumnConfig;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfigFavourite;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Bundle\AdminBundle\Tool;
 use OpenDxp\Model\Asset;
@@ -34,6 +35,7 @@ final class AssetGridColumnConfigResolver
         private readonly GridColumnConfigService $gridColumnConfigService,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly AdminUserContextInterface $userContext,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function resolve(array $params, bool $isDelete = false): AssetGridColumnConfig
@@ -165,7 +167,7 @@ final class AssetGridColumnConfigResolver
             $result['layout']['subtype'] = $type;
         }
 
-        $event = new GenericEvent(null, [
+        $event = new GenericEvent($this->currentControllerContext->getController(), [
             'field' => $field,
             'result' => $result,
         ]);

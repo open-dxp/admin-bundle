@@ -18,10 +18,10 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTag\AddTagHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTag\AddTagPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTagToElement\AddTagToElementHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTagToElement\AddTagToElementPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTag\AddTagHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTag\AddTagPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\DeleteTag\DeleteTagHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\DeleteTag\DeleteTagPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\DoBatchAssignment\DoBatchAssignmentHandler;
@@ -36,7 +36,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Tags\RemoveTagFromElement\RemoveTagFromEl
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\RemoveTagFromElement\RemoveTagFromElementPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\UpdateTag\UpdateTagHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\UpdateTag\UpdateTagPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;

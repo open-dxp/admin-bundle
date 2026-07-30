@@ -30,7 +30,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Notification\MarkAsReadNotification\MarkA
 use OpenDxp\Bundle\AdminBundle\Handler\Notification\SendNotification\SendNotificationHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Notification\SendNotification\SendNotificationPayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;

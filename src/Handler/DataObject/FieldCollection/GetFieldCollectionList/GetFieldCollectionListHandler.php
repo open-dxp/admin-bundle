@@ -20,6 +20,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetField
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionList\GetFieldCollectionListPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -29,6 +30,7 @@ final class GetFieldCollectionListHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(GetFieldCollectionListPayload $payload): FieldCollectionListResult
@@ -69,7 +71,7 @@ final class GetFieldCollectionListHandler
             $list = $filteredList;
         }
 
-        $event = new GenericEvent(null, ['list' => $list, 'objectId' => $objectId]);
+        $event = new GenericEvent($this->currentControllerContext->getController(), ['list' => $list, 'objectId' => $objectId]);
         $this->eventDispatcher->dispatch($event, AdminEvents::CLASS_FIELDCOLLECTION_LIST_PRE_SEND_DATA);
 
         return new FieldCollectionListResult($event->getArgument('list'));

@@ -18,13 +18,13 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\User;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetRoleTreeChildren\GetRoleTreeChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetRoleTreeChildren\GetRoleTreeChildrenPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRole\GetRoleHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRole\GetRolePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRoles\GetRolesHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetRoles\GetRolesPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetRoleTreeChildren\GetRoleTreeChildrenHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetRoleTreeChildren\GetRoleTreeChildrenPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;

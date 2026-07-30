@@ -28,9 +28,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUser\UpdateCurrentUserH
 use OpenDxp\Bundle\AdminBundle\Handler\User\UpdateCurrentUser\UpdateCurrentUserPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImageHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\UploadUserImage\UploadUserImagePayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
 use OpenDxp\Bundle\AdminBundle\Security\Voter\OwnUserVoter;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\PasswordResetSessionGateway;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;

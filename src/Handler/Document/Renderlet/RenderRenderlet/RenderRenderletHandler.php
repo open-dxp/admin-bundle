@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Renderlet\RenderRenderlet;
 
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Renderlet\RenderRenderlet\RenderRenderletPayload;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Document\Editable\EditableHandler;
 use OpenDxp\Event\DocumentEvents;
 use OpenDxp\Localization\LocaleServiceInterface;
@@ -38,6 +39,7 @@ final class RenderRenderletHandler
         private readonly EditableHandler $editableHandler,
         private readonly LocaleServiceInterface $localeService,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(RenderRenderletPayload $payload): RenderRenderletResult
@@ -56,7 +58,13 @@ final class RenderRenderletHandler
         }
 
         $this->eventDispatcher->dispatch(
-            new GenericEvent(null, ['requestParams' => $payload->query, 'element' => $element]),
+            new GenericEvent(
+                $this->currentControllerContext->getController(),
+                [
+                    'requestParams' => $payload->query,
+                    'element'       => $element
+                ]
+            ),
             DocumentEvents::EDITABLE_RENDERLET_PRE_RENDER,
         );
 

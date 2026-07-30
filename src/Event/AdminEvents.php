@@ -67,6 +67,9 @@ class AdminEvents
      * }
      * ```
      *
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * @Event("Symfony\Component\EventDispatcher\GenericEvent")
      *
      * @var string
@@ -85,7 +88,9 @@ class AdminEvents
     /**
      * Fired before the request params are parsed. This event apply to the grid list.
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - requestParams | contains the request parameters
      *
@@ -98,7 +103,9 @@ class AdminEvents
     /**
      * Allows you to modify the object list before it is loaded. This is a global event (search list, grid list, tree list, ...).
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - list | the object list
      *  - context | contains contextual information
@@ -112,7 +119,9 @@ class AdminEvents
     /**
      * Allows you to modify the object list before it is prepared for export.
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - list | the object list
      *  - context | contains contextual information
@@ -126,7 +135,9 @@ class AdminEvents
     /**
      * Allows you to modify the object list before it is exported.
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - list | the object list
      *  - context | contains contextual information
@@ -140,7 +151,9 @@ class AdminEvents
     /**
      * Allows you to modify the result after the list was loaded. This event apply to the grid list.
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - list | raw result as an array
      *  - context | contains contextual information
@@ -169,7 +182,9 @@ class AdminEvents
     /**
      * Fired before the request params are parsed. This event apply to both the folder content preview list and the grid list.
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - requestParams | contains the request parameters
      *
@@ -182,7 +197,9 @@ class AdminEvents
     /**
      * Allows you to modify the asset list before it is loaded. This is a global event (folder content preview list, grid list, tree list, ...).
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - list | the object list
      *  - context | contains contextual information
@@ -207,7 +224,9 @@ class AdminEvents
     /**
      * Allows you to modify the result after the list was loaded. This event apply to both the folder content preview list and the grid list.
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - list | raw result as an array
      *  - context | contains contextual information
@@ -221,7 +240,9 @@ class AdminEvents
     /**
      * Allows you to modify the data from the listfolder grid before it gets processed
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - data | raw data as an array
      *  - processed | true to stop processing
@@ -235,7 +256,9 @@ class AdminEvents
     /**
      * Allows you to modify the batch update data from the listfolder grid before it gets processed
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - params |
      *  - processed | true to stop processing
@@ -249,7 +272,9 @@ class AdminEvents
     /**
      * Fired before the request params are parsed. This event apply to the seo panel tree.
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - requestParams | contains the request parameters
      *
@@ -262,7 +287,9 @@ class AdminEvents
     /**
      * Allows you to modify the document list before it is loaded. This is a global event (seo panel tree, tree list, ...).
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - list | the object list
      *  - context | contains contextual information
@@ -276,7 +303,9 @@ class AdminEvents
     /**
      * Allows you to modify the result after the list was loaded. This event apply to the seo panel tree.
      *
-     * Subject: A controller extending \OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - list | raw result as an array
      *  - context | contains contextual information
@@ -290,7 +319,9 @@ class AdminEvents
     /**
      * Fired before the request params are parsed.
      *
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset\AssetController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - data | array | the response data, this can be modified
      *  - asset | Asset | the current asset
@@ -302,7 +333,9 @@ class AdminEvents
     public const string ASSET_GET_PRE_SEND_DATA = 'opendxp.admin.asset.get.preSendData';
 
     /**
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset\AssetController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - assets | array | the list of asset tree nodes
      *
@@ -315,7 +348,9 @@ class AdminEvents
     /**
      * Fired before the request params are parsed.
      *
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - data | array | the response data, this can be modified
      *  - document | Document | the current document
@@ -327,7 +362,9 @@ class AdminEvents
     public const string DOCUMENT_GET_PRE_SEND_DATA = 'opendxp.admin.document.get.preSendData';
 
     /**
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\DocumentController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - documents | array | the list of document tree nodes
      *
@@ -339,6 +376,9 @@ class AdminEvents
 
     /**
      * Fired before the edit lock is handled for an asset.
+     *
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
      *
      * Arguments:
      *  - data  | array | editLock behaviour — set data['task'] = 'overwrite' to force-acquire the lock
@@ -353,6 +393,9 @@ class AdminEvents
     /**
      * Fired before the edit lock is handled for a document.
      *
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - data  | array | editLock behaviour — set data['task'] = 'overwrite' to force-acquire the lock
      *  - object | Document | the current document
@@ -365,6 +408,9 @@ class AdminEvents
 
     /**
      * Fired before the edit lock is handled for a data object.
+     *
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
      *
      * Arguments:
      *  - data  | array | editLock behaviour — set data['task'] = 'overwrite' to force-acquire the lock
@@ -379,7 +425,9 @@ class AdminEvents
     /**
      * Fired before the request params are parsed.
      *
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObjectController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - data | array | the response data, this can be modified
      *  - object | AbstractObject | the current object
@@ -391,7 +439,9 @@ class AdminEvents
     public const string OBJECT_GET_PRE_SEND_DATA = 'opendxp.admin.dataobject.get.preSendData';
 
     /**
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject\DataObjectHelperController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - data | array | the response data which this can be modified
      *  - request | Request | the Request object passed to the action
@@ -405,7 +455,9 @@ class AdminEvents
     public const string OBJECT_GRID_GET_COLUMN_CONFIG_PRE_SEND_DATA = 'opendxp.admin.dataobject.gridGetColumnConfig.preSendData';
 
     /**
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObjectController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - objects | array | the list of object tree nodes
      *
@@ -416,7 +468,9 @@ class AdminEvents
     public const string OBJECT_TREE_GET_CHILDREN_BY_ID_PRE_SEND_DATA = 'opendxp.admin.dataobject.treeGetChildrenById.preSendData';
 
     /**
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - list | array | the list of field collections
      *  - objectId | int | id of the origin object
@@ -428,7 +482,9 @@ class AdminEvents
     public const string CLASS_FIELDCOLLECTION_LIST_PRE_SEND_DATA = 'opendxp.admin.class.fieldcollectionList.preSendData';
 
     /**
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - icons | array | the list of selectable icons
      *  - classId | string | classid of class definition
@@ -440,7 +496,9 @@ class AdminEvents
     public const string CLASS_OBJECT_ICONS_PRE_SEND_DATA = 'opendxp.admin.class.dataobject.preSendData';
 
     /**
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - list | array | the list of object bricks
      *  - objectId | int | id of the origin object
@@ -452,7 +510,9 @@ class AdminEvents
     public const string CLASS_OBJECTBRICK_LIST_PRE_SEND_DATA = 'opendxp.admin.class.objectbrickList.preSendData';
 
     /**
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - brickDefinition | the brick definition
      *
@@ -463,7 +523,9 @@ class AdminEvents
     public const string CLASS_OBJECTBRICK_UPDATE_DEFINITION = 'opendxp.admin.class.objectbrick.updateDefinition';
 
     /**
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - list | array | the list of select options
      *
@@ -474,7 +536,9 @@ class AdminEvents
     public const string CLASS_SELECTOPTIONS_LIST_PRE_SEND_DATA = 'opendxp.admin.class.selectoptionsList.preSendData';
 
     /**
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ClassController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - selectOptionsConfiguration | \OpenDxp\Model\DataObject\SelectOptions\Config
      *
@@ -487,7 +551,6 @@ class AdminEvents
     /**
      * Fired before an element is opened
      *
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementController
      * Arguments:
      *  - type element type
      *  - id
@@ -501,7 +564,7 @@ class AdminEvents
     /**
      * Fired before an element is opened
      *
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementController
+     * Subject: \OpenDxp\Model\Element\ElementInterface
      * Arguments:
      *     none
      *
@@ -512,7 +575,9 @@ class AdminEvents
     public const string RESOLVE_ELEMENT_ADMIN_STYLE = 'opendxp.admin.resolve.elementAdminStyle';
 
     /**
-     * Subject: \OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset\AssetController
+     * Subject: The controller instance handling the current request.
+     * Note! Sending the controller as subject is deprecated since 1.4, will send null after 2.0.
+     *
      * Arguments:
      *  - id | int | asset id
      *  - metadata | array | contains the data received from the editor UI

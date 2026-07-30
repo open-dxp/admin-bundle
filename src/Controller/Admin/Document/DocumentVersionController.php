@@ -24,7 +24,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\DiffVersions\DiffVersion
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\PublishVersion\PublishVersionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Version\SaveVersionToSession\SaveVersionToSessionHandler;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
-use OpenDxp\Bundle\AdminBundle\Security\Permission\CorePermission;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;

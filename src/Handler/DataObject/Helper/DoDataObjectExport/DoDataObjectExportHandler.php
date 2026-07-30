@@ -21,6 +21,7 @@ use InvalidArgumentException;
 use League\Flysystem\UnableToReadFile;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Logger;
@@ -39,6 +40,7 @@ final class DoDataObjectExportHandler
         private readonly GridColumnConfigService $gridColumnConfigService,
         private readonly LocaleServiceInterface $localeService,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly CurrentControllerContextInterface $currentControllerContext,
     ) {}
 
     public function __invoke(DoDataObjectExportPayload $payload): void
@@ -65,7 +67,7 @@ final class DoDataObjectExportHandler
         $list->setCondition('id IN (' . implode(',', $quotedIds) . ')');
         $list->setOrderKey(' FIELD(id, ' . implode(',', $quotedIds) . ')', false);
 
-        $beforeListExportEvent = new GenericEvent(null, [
+        $beforeListExportEvent = new GenericEvent($this->currentControllerContext->getController(), [
             'list' => $list,
             'context' => $payload->allParams,
         ]);

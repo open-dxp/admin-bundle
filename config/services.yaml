@@ -110,6 +110,9 @@ services:
     OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface:
         class: OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContext
 
+    OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface:
+        class: OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContext
+
     OpenDxp\Bundle\AdminBundle\Session\SessionIdentityInterface:
         class: OpenDxp\Bundle\AdminBundle\Session\SessionIdentity
 
