@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
+use const FILTER_NULL_ON_FAILURE;
+use const FILTER_VALIDATE_INT;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Model\Element\Service;
 use OpenDxp\Model\Notification\Service\NotificationService;
@@ -65,7 +67,7 @@ class NotificationController extends AdminAbstractController
         $title = $request->request->get('title', '');
         $message = $request->request->get('message', '');
         $element = null;
-        $elementId = $request->request->filter('elementId', 0, \FILTER_VALIDATE_INT, \FILTER_NULL_ON_FAILURE) ?? 0;
+        $elementId = $request->request->filter('elementId', 0, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE) ?? 0;
         $elementType = $request->request->get('elementType');
 
         if ($elementId && $elementType) {
