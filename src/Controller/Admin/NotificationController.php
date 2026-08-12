@@ -65,7 +65,7 @@ class NotificationController extends AdminAbstractController
         $title = $request->request->get('title', '');
         $message = $request->request->get('message', '');
         $element = null;
-        $elementId = $request->request->getInt('elementId');
+        $elementId = $request->request->filter('elementId', 0, \FILTER_VALIDATE_INT, \FILTER_NULL_ON_FAILURE) ?? 0;
         $elementType = $request->request->get('elementType');
 
         if ($elementId && $elementType) {
