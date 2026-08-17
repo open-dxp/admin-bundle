@@ -35,6 +35,12 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ResetEditablesSessionHandler
 {
+    /**
+     * Mirrors TargetingDocumentInterface::TARGET_GROUP_EDITABLE_PREFIX.
+     * Hardcoded because the personalization bundle may not be installed
+     */
+    private const string TARGET_GROUP_EDITABLE_PREFIX = 'persona_-';
+
     public function __construct(private readonly ElementDraftService $elementDraftService)
     {
     }
@@ -49,8 +55,7 @@ final class ResetEditablesSessionHandler
 
         foreach ($doc->getEditables() as $editable) {
             // remove all but target group data
-            // Hardcoded the TARGET_GROUP_EDITABLE_PREFIX prefix here as we shouldn't remove the bundle specific editables even if bundle is not enabled/installed
-            if (!preg_match('/^' . preg_quote('persona_ -', '/') . '/', $editable->getName())) {
+            if (!str_starts_with($editable->getName(), self::TARGET_GROUP_EDITABLE_PREFIX)) {
                 $doc->removeEditable($editable->getName());
             }
         }
