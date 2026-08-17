@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class DeleteCollectionPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public int $id = 0,)
+    public function __construct(public int $id = 0)
     {
     }
 

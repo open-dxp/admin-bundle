@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class ConvertQuantityValueResult implements ResultInterface
 {
-    public function __construct(public float|int|string|null $value,)
+    public function __construct(public float|int|string|null $value)
     {
     }
 }

@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetClassDefinitionForColumnConfigResult implements ResultInterface
 {
-    public function __construct(public array $config,)
+    public function __construct(public array $config)
     {
     }
 }

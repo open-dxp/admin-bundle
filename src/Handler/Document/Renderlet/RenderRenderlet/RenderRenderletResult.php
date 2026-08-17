@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class RenderRenderletResult implements ResultInterface
 {
-    public function __construct(public string $html,)
+    public function __construct(public string $html)
     {
     }
 }

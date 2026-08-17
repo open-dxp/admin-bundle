@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetSiteCustomSettingsResult implements ResultInterface
 {
-    public function __construct(public readonly array $data,)
+    public function __construct(public readonly array $data)
     {
     }
 }

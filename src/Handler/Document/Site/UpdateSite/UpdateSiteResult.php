@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class UpdateSiteResult implements ResultInterface
 {
-    public function __construct(public array $siteVars,)
+    public function __construct(public array $siteVars)
     {
     }
 }

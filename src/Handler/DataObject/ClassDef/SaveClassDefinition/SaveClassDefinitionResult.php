@@ -34,7 +34,7 @@ use OpenDxp\Model\DataObject\ClassDefinition;
 
 final readonly class SaveClassDefinitionResult implements ResultInterface
 {
-    public function __construct(public ClassDefinition $class,)
+    public function __construct(public ClassDefinition $class)
     {
     }
 }

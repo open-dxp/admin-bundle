@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetExportJobsPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly array $allParams = [],)
+    public function __construct(public readonly array $allParams = [])
     {
     }
 

@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetClassResult implements ResultInterface
 {
-    public function __construct(public array $classData,)
+    public function __construct(public array $classData)
     {
     }
 }

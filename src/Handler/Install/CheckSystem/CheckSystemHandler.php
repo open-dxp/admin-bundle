@@ -21,7 +21,7 @@ use OpenDxp\Tool\Requirements;
 
 final class CheckSystemHandler
 {
-    public function __construct(private readonly Connection $db,)
+    public function __construct(private readonly Connection $db)
     {
     }
 

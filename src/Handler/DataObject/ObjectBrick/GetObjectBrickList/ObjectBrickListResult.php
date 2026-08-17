@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class ObjectBrickListResult implements ResultInterface
 {
-    public function __construct(public array $objectbricks,)
+    public function __construct(public array $objectbricks)
     {
     }
 }

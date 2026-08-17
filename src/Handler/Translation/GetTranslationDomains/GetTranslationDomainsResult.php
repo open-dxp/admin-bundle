@@ -36,7 +36,7 @@ final readonly class GetTranslationDomainsResult implements ResultInterface
     /**
      * @param array<int, array{name: string}> $domains
      */
-    public function __construct(public array $domains,)
+    public function __construct(public array $domains)
     {
     }
 }

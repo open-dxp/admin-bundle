@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class ExecuteAssetBatchPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly ?array $data = null,)
+    public function __construct(public readonly ?array $data = null)
     {
     }
 

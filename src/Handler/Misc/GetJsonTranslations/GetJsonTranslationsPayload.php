@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetJsonTranslationsPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly ?string $language = null,)
+    public function __construct(public readonly ?string $language = null)
     {
     }
 

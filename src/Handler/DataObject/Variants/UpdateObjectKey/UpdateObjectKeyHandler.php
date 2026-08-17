@@ -35,7 +35,7 @@ use OpenDxp\Model\DataObject;
 
 final class UpdateObjectKeyHandler
 {
-    public function __construct(private readonly DataObjectGridService $dataObjectGridService,)
+    public function __construct(private readonly DataObjectGridService $dataObjectGridService)
     {
     }
 

@@ -36,7 +36,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetVariantsHandler
 {
-    public function __construct(private readonly DataObjectGridService $dataObjectGridService,)
+    public function __construct(private readonly DataObjectGridService $dataObjectGridService)
     {
     }
 

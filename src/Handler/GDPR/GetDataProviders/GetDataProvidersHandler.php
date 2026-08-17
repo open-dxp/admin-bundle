@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\Manager;
 
 final class GetDataProvidersHandler
 {
-    public function __construct(private readonly Manager $manager,)
+    public function __construct(private readonly Manager $manager)
     {
     }
 

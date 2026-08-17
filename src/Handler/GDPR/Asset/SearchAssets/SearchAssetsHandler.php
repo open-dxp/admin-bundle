@@ -34,7 +34,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\GDPR\SearchDataPayload;
 
 final class SearchAssetsHandler
 {
-    public function __construct(private readonly Assets $assets,)
+    public function __construct(private readonly Assets $assets)
     {
     }
 

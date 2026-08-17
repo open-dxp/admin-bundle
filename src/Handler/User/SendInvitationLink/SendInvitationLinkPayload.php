@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class SendInvitationLinkPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly string $username,)
+    public function __construct(public readonly string $username)
     {
     }
 

@@ -34,7 +34,7 @@ use OpenDxp\Model\Asset;
 
 final readonly class AssetResult implements ResultInterface
 {
-    public function __construct(public Asset $asset,)
+    public function __construct(public Asset $asset)
     {
     }
 }

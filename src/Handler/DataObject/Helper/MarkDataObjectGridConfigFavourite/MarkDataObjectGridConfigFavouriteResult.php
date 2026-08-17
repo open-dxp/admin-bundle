@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class MarkDataObjectGridConfigFavouriteResult implements ResultInterface
 {
-    public function __construct(public bool $specializedConfigs,)
+    public function __construct(public bool $specializedConfigs)
     {
     }
 }

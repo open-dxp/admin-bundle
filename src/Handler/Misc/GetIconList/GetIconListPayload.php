@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetIconListPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly ?string $type = null,)
+    public function __construct(public readonly ?string $type = null)
     {
     }
 

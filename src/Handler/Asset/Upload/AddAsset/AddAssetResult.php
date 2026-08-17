@@ -1,6 +1,5 @@
 <?php
 
-
 declare(strict_types=1);
 
 /**
@@ -24,7 +23,7 @@ final readonly class AddAssetResult implements ResultInterface
     /**
      * @param array{id: int, path: string, type: string} $asset
      */
-    public function __construct(public readonly array $asset,)
+    public function __construct(public readonly array $asset)
     {
     }
 }

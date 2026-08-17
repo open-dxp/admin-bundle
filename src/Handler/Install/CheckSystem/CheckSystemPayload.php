@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class CheckSystemPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly bool $headless,)
+    public function __construct(public readonly bool $headless)
     {
     }
 

@@ -1,6 +1,5 @@
 <?php
 
-
 declare(strict_types=1);
 
 /**
@@ -21,7 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 
 final class RemoveFromSessionHandler
 {
-    public function __construct(private readonly ElementDraftService $elementDraftService,)
+    public function __construct(private readonly ElementDraftService $elementDraftService)
     {
     }
 

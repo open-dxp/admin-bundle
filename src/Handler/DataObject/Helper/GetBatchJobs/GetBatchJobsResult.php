@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetBatchJobsResult implements ResultInterface
 {
-    public function __construct(public array $jobs,)
+    public function __construct(public array $jobs)
     {
     }
 }

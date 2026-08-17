@@ -34,7 +34,7 @@ use OpenDxp\Model\Asset;
 
 final readonly class CopyAssetResult implements ResultInterface
 {
-    public function __construct(public ?Asset $newAsset = null,)
+    public function __construct(public ?Asset $newAsset = null)
     {
     }
 }

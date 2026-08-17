@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class PublishVersionPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly int $versionId = 0,)
+    public function __construct(public readonly int $versionId = 0)
     {
     }
 

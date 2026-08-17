@@ -20,7 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetEmailLogTextResult implements ResultInterface
 {
-    public function __construct(public readonly ?string $textLog,)
+    public function __construct(public readonly ?string $textLog)
     {
     }
 }

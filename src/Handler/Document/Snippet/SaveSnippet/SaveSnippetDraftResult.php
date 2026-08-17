@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class SaveSnippetDraftResult implements ResultInterface
 {
-    public function __construct(public array $draft,)
+    public function __construct(public array $draft)
     {
     }
 }

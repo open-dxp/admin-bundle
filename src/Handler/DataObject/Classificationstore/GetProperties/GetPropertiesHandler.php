@@ -37,7 +37,7 @@ use stdClass;
 
 final class GetPropertiesHandler
 {
-    public function __construct(private readonly ClassificationstoreKeyConfigMapper $keyConfigService,)
+    public function __construct(private readonly ClassificationstoreKeyConfigMapper $keyConfigService)
     {
     }
 

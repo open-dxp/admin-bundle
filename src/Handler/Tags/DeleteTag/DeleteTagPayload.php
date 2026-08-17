@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class DeleteTagPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public int $id,)
+    public function __construct(public int $id)
     {
     }
 

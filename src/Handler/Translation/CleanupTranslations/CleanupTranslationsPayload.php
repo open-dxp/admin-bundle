@@ -1,6 +1,5 @@
 <?php
 
-
 declare(strict_types=1);
 
 /**
@@ -23,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class CleanupTranslationsPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly string $domain,)
+    public function __construct(public readonly string $domain)
     {
     }
 

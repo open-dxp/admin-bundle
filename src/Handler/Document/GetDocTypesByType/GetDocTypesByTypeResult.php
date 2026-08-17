@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetDocTypesByTypeResult implements ResultInterface
 {
-    public function __construct(public readonly array $docTypes,)
+    public function __construct(public readonly array $docTypes)
     {
     }
 }

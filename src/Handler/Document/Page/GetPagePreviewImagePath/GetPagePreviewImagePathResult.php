@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetPagePreviewImagePathResult implements ResultInterface
 {
-    public function __construct(public string $filePath,)
+    public function __construct(public string $filePath)
     {
     }
 }

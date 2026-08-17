@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class SearchUsersPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly ?string $query,)
+    public function __construct(public readonly ?string $query)
     {
     }
 

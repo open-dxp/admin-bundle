@@ -36,7 +36,7 @@ final readonly class GetTagTreeChildrenResult implements ResultInterface
     /**
      * @param array<int, array<string, mixed>> $tags
      */
-    public function __construct(public array $tags,)
+    public function __construct(public array $tags)
     {
     }
 }

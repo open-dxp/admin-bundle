@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetValidFilenameResult implements ResultInterface
 {
-    public function __construct(public string $filename,)
+    public function __construct(public string $filename)
     {
     }
 }

@@ -33,7 +33,7 @@ use OpenDxp\Controller\Config\ControllerDataProvider;
 
 final class GetAvailableTemplatesHandler
 {
-    public function __construct(private readonly ControllerDataProvider $provider,)
+    public function __construct(private readonly ControllerDataProvider $provider)
     {
     }
 

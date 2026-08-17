@@ -1,6 +1,5 @@
 <?php
 
-
 declare(strict_types=1);
 
 /**
@@ -21,7 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class DeleteDocumentResult implements ResultInterface
 {
-    public function __construct(public readonly array $deleted = [],)
+    public function __construct(public readonly array $deleted = [])
     {
     }
 }

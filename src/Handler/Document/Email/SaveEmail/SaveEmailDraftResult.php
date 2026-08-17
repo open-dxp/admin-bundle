@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class SaveEmailDraftResult implements ResultInterface
 {
-    public function __construct(public array $draft,)
+    public function __construct(public array $draft)
     {
     }
 }

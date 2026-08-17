@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 final readonly class UnlockElementsPayload implements ExtJsPayloadInterface
 {
     /** @param array<array{id: int|string, type: string}> $elements */
-    public function __construct(public readonly array $elements,)
+    public function __construct(public readonly array $elements)
     {
     }
 

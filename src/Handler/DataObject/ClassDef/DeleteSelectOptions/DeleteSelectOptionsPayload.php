@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class DeleteSelectOptionsPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public ?string $id = null,)
+    public function __construct(public ?string $id = null)
     {
     }
 

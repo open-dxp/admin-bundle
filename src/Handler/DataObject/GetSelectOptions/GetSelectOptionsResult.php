@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetSelectOptionsResult implements ResultInterface
 {
-    public function __construct(public array $options,)
+    public function __construct(public array $options)
     {
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-
 declare(strict_types=1);
 
 /**
@@ -22,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class SettingsPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly string $locale,)
+    public function __construct(public readonly string $locale)
     {
     }
 

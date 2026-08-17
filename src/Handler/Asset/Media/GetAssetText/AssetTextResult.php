@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class AssetTextResult implements ResultInterface
 {
-    public function __construct(public ?string $text,)
+    public function __construct(public ?string $text)
     {
     }
 }

@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetStoreTreeResult implements ResultInterface
 {
-    public function __construct(public array $items,)
+    public function __construct(public array $items)
     {
     }
 }

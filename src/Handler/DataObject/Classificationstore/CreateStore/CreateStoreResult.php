@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class CreateStoreResult implements ResultInterface
 {
-    public function __construct(public int $storeId,)
+    public function __construct(public int $storeId)
     {
     }
 }

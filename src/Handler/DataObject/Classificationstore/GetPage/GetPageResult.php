@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetPageResult implements ResultInterface
 {
-    public function __construct(public int $page,)
+    public function __construct(public int $page)
     {
     }
 }

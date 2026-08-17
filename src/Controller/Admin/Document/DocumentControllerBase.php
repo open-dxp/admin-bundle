@@ -50,7 +50,7 @@ abstract class DocumentControllerBase extends AdminAbstractController
 
     public const string TASK_DELETE = 'delete';
 
-    public function __construct(protected ElementServiceInterface $elementService,)
+    public function __construct(protected ElementServiceInterface $elementService)
     {
     }
 

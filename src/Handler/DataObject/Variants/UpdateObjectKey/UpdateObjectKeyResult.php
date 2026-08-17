@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class UpdateObjectKeyResult implements ResultInterface
 {
-    public function __construct(public array $data,)
+    public function __construct(public array $data)
     {
     }
 }

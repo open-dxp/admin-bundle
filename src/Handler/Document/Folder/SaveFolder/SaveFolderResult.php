@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class SaveFolderResult implements ResultInterface
 {
-    public function __construct(public array $treeData,)
+    public function __construct(public array $treeData)
     {
     }
 }

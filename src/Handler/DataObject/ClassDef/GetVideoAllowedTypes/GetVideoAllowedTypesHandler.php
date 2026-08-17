@@ -34,7 +34,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class GetVideoAllowedTypesHandler
 {
-    public function __construct(private readonly TranslatorInterface $translator,)
+    public function __construct(private readonly TranslatorInterface $translator)
     {
     }
 

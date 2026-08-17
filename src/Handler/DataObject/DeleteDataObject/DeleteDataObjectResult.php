@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class DeleteDataObjectResult implements ResultInterface
 {
-    public function __construct(public array $deleted = [],)
+    public function __construct(public array $deleted = [])
     {
     }
 }

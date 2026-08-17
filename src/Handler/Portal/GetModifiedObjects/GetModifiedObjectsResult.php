@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetModifiedObjectsResult implements ResultInterface
 {
-    public function __construct(public array $objects,)
+    public function __construct(public array $objects)
     {
     }
 }

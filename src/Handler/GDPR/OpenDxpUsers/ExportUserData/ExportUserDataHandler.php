@@ -34,7 +34,7 @@ use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 
 final class ExportUserDataHandler
 {
-    public function __construct(private readonly OpenDxpUsers $openDxpUsers,)
+    public function __construct(private readonly OpenDxpUsers $openDxpUsers)
     {
     }
 

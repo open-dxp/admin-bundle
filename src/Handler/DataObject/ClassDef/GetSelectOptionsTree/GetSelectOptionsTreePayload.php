@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetSelectOptionsTreePayload implements ExtJsPayloadInterface
 {
-    public function __construct(public int $grouped = 0,)
+    public function __construct(public int $grouped = 0)
     {
     }
 

@@ -36,7 +36,7 @@ final readonly class GetClassIconsResult implements ResultInterface
     /**
      * @param array<int, array{text: string, value: string}> $icons
      */
-    public function __construct(public array $icons,)
+    public function __construct(public array $icons)
     {
     }
 }

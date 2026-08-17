@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class BulkExportPreparePayload implements ExtJsPayloadInterface
 {
-    public function __construct(public string $data = '',)
+    public function __construct(public string $data = '')
     {
     }
 

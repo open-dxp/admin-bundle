@@ -36,7 +36,7 @@ final readonly class GetUserImageResult implements ResultInterface
     /**
      * @param resource $image
      */
-    public function __construct(public mixed $image,)
+    public function __construct(public mixed $image)
     {
     }
 }

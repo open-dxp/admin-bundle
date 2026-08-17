@@ -36,7 +36,7 @@ final readonly class GetUserTreeChildrenResult implements ResultInterface
     /**
      * @param array<int, array<string, mixed>> $users
      */
-    public function __construct(public array $users,)
+    public function __construct(public array $users)
     {
     }
 }

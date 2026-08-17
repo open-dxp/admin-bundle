@@ -20,7 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class CreateBlocklistEntryResult implements ResultInterface
 {
-    public function __construct(public array $data,)
+    public function __construct(public array $data)
     {
     }
 }

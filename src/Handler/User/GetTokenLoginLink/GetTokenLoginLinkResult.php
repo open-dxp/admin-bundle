@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetTokenLoginLinkResult implements ResultInterface
 {
-    public function __construct(public string $link,)
+    public function __construct(public string $link)
     {
     }
 }

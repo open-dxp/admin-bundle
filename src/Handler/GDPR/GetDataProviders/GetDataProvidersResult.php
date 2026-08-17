@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetDataProvidersResult implements ResultInterface
 {
-    public function __construct(public array $providers,)
+    public function __construct(public array $providers)
     {
     }
 }

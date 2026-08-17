@@ -36,7 +36,7 @@ final readonly class GetCurrentUserResult implements ResultInterface
     /**
      * @param array<string, mixed> $userData
      */
-    public function __construct(public array $userData,)
+    public function __construct(public array $userData)
     {
     }
 }

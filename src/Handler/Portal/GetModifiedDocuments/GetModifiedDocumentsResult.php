@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetModifiedDocumentsResult implements ResultInterface
 {
-    public function __construct(public array $documents,)
+    public function __construct(public array $documents)
     {
     }
 }

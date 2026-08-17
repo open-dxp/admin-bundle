@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class ScriptProxyPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly ?string $storageFile = null,)
+    public function __construct(public readonly ?string $storageFile = null)
     {
     }
 

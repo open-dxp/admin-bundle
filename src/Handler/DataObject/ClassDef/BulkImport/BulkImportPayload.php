@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class BulkImportPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public string $json = '',)
+    public function __construct(public string $json = '')
     {
     }
 

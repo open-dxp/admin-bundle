@@ -1,6 +1,5 @@
 <?php
 
-
 declare(strict_types=1);
 
 /**
@@ -27,7 +26,7 @@ final class OwnUserVoter extends Voter
 {
     public const string OWN_USER = 'OWN_USER';
 
-    public function __construct(private readonly TokenStorageUserResolver $tokenResolver,)
+    public function __construct(private readonly TokenStorageUserResolver $tokenResolver)
     {
     }
 

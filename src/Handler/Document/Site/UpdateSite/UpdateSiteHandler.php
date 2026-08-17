@@ -37,7 +37,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class UpdateSiteHandler
 {
-    public function __construct(private readonly EventDispatcherInterface $eventDispatcher,)
+    public function __construct(private readonly EventDispatcherInterface $eventDispatcher)
     {
     }
 

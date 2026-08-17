@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetAvailableVisibleFieldsPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public ?string $classes = null,)
+    public function __construct(public ?string $classes = null)
     {
     }
 

@@ -35,7 +35,7 @@ use OpenDxp\Model\DataObject\Classificationstore;
 
 final class UpdatePropertyHandler
 {
-    public function __construct(private readonly ClassificationstoreKeyConfigMapper $keyConfigService,)
+    public function __construct(private readonly ClassificationstoreKeyConfigMapper $keyConfigService)
     {
     }
 

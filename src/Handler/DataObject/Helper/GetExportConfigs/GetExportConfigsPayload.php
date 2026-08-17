@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetExportConfigsPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public ?string $classId = null,)
+    public function __construct(public ?string $classId = null)
     {
     }
 

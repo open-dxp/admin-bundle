@@ -1,6 +1,5 @@
 <?php
 
-
 declare(strict_types=1);
 
 /**
@@ -22,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class FindLastUnreadNotificationsPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly ?int $lastUpdate = null,)
+    public function __construct(public readonly ?int $lastUpdate = null)
     {
     }
 

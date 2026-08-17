@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class CreateStorePayload implements ExtJsPayloadInterface
 {
-    public function __construct(public string $name = '',)
+    public function __construct(public string $name = '')
     {
     }
 

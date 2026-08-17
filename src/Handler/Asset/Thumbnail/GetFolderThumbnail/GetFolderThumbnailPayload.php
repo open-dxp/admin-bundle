@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetFolderThumbnailPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly ?int $id = null,)
+    public function __construct(public readonly ?int $id = null)
     {
     }
 

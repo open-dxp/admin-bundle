@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetAvailableLanguagesResult implements ResultInterface
 {
-    public function __construct(public array $locales,)
+    public function __construct(public array $locales)
     {
     }
 }

@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class AddPropertyResult implements ResultInterface
 {
-    public function __construct(public string $id,)
+    public function __construct(public string $id)
     {
     }
 }

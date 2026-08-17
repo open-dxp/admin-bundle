@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetFolderContentPreviewPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly array $requestParams = [],)
+    public function __construct(public readonly array $requestParams = [])
     {
     }
 

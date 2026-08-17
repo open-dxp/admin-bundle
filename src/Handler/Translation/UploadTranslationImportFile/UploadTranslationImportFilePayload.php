@@ -1,6 +1,5 @@
 <?php
 
-
 declare(strict_types=1);
 
 /**
@@ -23,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class UploadTranslationImportFilePayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly ?UploadedFile $file,)
+    public function __construct(public readonly ?UploadedFile $file)
     {
     }
 

@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GenerateTwoFactorSetupPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly ?string $error = null,)
+    public function __construct(public readonly ?string $error = null)
     {
     }
 

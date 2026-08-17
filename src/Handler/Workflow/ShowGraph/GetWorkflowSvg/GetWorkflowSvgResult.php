@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetWorkflowSvgResult implements ResultInterface
 {
-    public function __construct(public string $svg,)
+    public function __construct(public string $svg)
     {
     }
 }

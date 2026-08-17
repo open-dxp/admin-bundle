@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetLanguageFlagPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly ?string $language = null,)
+    public function __construct(public readonly ?string $language = null)
     {
     }
 

@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class RemoveTagFromElementResult implements ResultInterface
 {
-    public function __construct(public int $id,)
+    public function __construct(public int $id)
     {
     }
 }

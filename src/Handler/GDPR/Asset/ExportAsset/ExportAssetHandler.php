@@ -37,7 +37,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ExportAssetHandler
 {
-    public function __construct(private readonly Assets $assets,)
+    public function __construct(private readonly Assets $assets)
     {
     }
 

@@ -35,7 +35,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class GeneratePagePreviewsHandler
 {
-    public function __construct(private readonly MessageBusInterface $messengerBusOpendxpCore,)
+    public function __construct(private readonly MessageBusInterface $messengerBusOpendxpCore)
     {
     }
 

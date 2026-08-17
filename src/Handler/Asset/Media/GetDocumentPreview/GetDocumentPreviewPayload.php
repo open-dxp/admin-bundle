@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetDocumentPreviewPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly int $id = 0,)
+    public function __construct(public readonly int $id = 0)
     {
     }
 

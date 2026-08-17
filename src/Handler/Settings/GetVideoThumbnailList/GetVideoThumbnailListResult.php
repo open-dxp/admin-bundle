@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetVideoThumbnailListResult implements ResultInterface
 {
-    public function __construct(public array $thumbnails,)
+    public function __construct(public array $thumbnails)
     {
     }
 }

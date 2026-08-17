@@ -36,7 +36,7 @@ final readonly class GetRoleTreeChildrenResult implements ResultInterface
     /**
      * @param array<int, array<string, mixed>> $roles
      */
-    public function __construct(public array $roles,)
+    public function __construct(public array $roles)
     {
     }
 }

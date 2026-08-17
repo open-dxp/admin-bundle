@@ -37,7 +37,7 @@ final readonly class DeleteAssetResult implements ResultInterface
      * @param ?array<int, string> $deleted asset id => real full path of each deleted asset;
      *                                      null unless this was a batch ("children") delete
      */
-    public function __construct(public ?array $deleted = null,)
+    public function __construct(public ?array $deleted = null)
     {
     }
 }

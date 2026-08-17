@@ -36,7 +36,7 @@ final readonly class BulkImportResult implements ResultInterface
     /**
      * @param array<int, array{icon: ?string, checked: bool, type: string, name: string, displayName: string}> $data
      */
-    public function __construct(public array $data,)
+    public function __construct(public array $data)
     {
     }
 }

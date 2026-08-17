@@ -20,7 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetNoteTypesResult implements ResultInterface
 {
-    public function __construct(public readonly array $noteTypes,)
+    public function __construct(public readonly array $noteTypes)
     {
     }
 }

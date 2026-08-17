@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetUserTreeChildrenPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly int $node,)
+    public function __construct(public readonly int $node)
     {
     }
 

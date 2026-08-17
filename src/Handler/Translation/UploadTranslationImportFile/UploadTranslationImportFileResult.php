@@ -36,7 +36,7 @@ final readonly class UploadTranslationImportFileResult implements ResultInterfac
     /**
      * @param array{csvSettings: object} $config
      */
-    public function __construct(public array $config,)
+    public function __construct(public array $config)
     {
     }
 }

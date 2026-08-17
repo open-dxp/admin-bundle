@@ -34,7 +34,7 @@ use OpenDxp\Translation\Translator;
 
 final class GetJsonTranslationsHandler
 {
-    public function __construct(private readonly Translator $translator,)
+    public function __construct(private readonly Translator $translator)
     {
     }
 

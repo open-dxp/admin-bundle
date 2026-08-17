@@ -33,7 +33,7 @@ use OpenDxp\Localization\LocaleServiceInterface;
 
 final class GetCountryListHandler
 {
-    public function __construct(private readonly LocaleServiceInterface $localeService,)
+    public function __construct(private readonly LocaleServiceInterface $localeService)
     {
     }
 

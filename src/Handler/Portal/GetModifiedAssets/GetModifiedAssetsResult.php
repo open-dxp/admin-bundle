@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetModifiedAssetsResult implements ResultInterface
 {
-    public function __construct(public array $assets,)
+    public function __construct(public array $assets)
     {
     }
 }

@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class SaveTwoFactorSetupPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly string $authCode,)
+    public function __construct(public readonly string $authCode)
     {
     }
 

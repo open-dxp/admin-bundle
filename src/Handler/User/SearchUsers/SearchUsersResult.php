@@ -36,7 +36,7 @@ final readonly class SearchUsersResult implements ResultInterface
     /**
      * @param array<int, array{id: ?int, name: ?string, email: ?string, firstname: ?string, lastname: ?string}> $users
      */
-    public function __construct(public array $users,)
+    public function __construct(public array $users)
     {
     }
 }

@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class TreeGetDocumentChildrenListResult implements ResultInterface
 {
-    public function __construct(public array $nodes,)
+    public function __construct(public array $nodes)
     {
     }
 }

@@ -36,7 +36,7 @@ final readonly class GetDocumentTypesResult implements ResultInterface
     /**
      * @param array<int, array{text: string}> $types
      */
-    public function __construct(public array $types,)
+    public function __construct(public array $types)
     {
     }
 }

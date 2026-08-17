@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class DoBulkExportResult implements ResultInterface
 {
-    public function __construct(public string $json,)
+    public function __construct(public string $json)
     {
     }
 }

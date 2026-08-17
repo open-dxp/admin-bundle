@@ -36,7 +36,7 @@ final readonly class GetSelectOptionsUsagesResult implements ResultInterface
     /**
      * @param array<int, array{class: string, field: string}> $usages
      */
-    public function __construct(public array $usages,)
+    public function __construct(public array $usages)
     {
     }
 }

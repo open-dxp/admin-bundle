@@ -36,7 +36,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class GetSiteCustomSettingsHandler
 {
-    public function __construct(private readonly EventDispatcherInterface $eventDispatcher,)
+    public function __construct(private readonly EventDispatcherInterface $eventDispatcher)
     {
     }
 

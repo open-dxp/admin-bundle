@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class ExportClassPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public ?string $id = null,)
+    public function __construct(public ?string $id = null)
     {
     }
 

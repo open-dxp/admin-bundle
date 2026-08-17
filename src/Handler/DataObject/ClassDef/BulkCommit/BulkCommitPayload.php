@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class BulkCommitPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public array $data = [],)
+    public function __construct(public array $data = [])
     {
     }
 

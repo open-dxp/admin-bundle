@@ -36,7 +36,7 @@ final readonly class GetVideoAllowedTypesResult implements ResultInterface
     /**
      * @param array<int, array{key: string, value: string}> $types
      */
-    public function __construct(public array $types,)
+    public function __construct(public array $types)
     {
     }
 }

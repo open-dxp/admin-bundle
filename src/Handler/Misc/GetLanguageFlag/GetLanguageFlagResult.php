@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetLanguageFlagResult implements ResultInterface
 {
-    public function __construct(public string $iconPath,)
+    public function __construct(public string $iconPath)
     {
     }
 }

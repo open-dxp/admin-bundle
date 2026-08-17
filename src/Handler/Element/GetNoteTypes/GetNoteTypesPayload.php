@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetNoteTypesPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly ?string $ctype = null,)
+    public function __construct(public readonly ?string $ctype = null)
     {
     }
 

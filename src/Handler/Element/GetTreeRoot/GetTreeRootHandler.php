@@ -1,6 +1,5 @@
 <?php
 
-
 declare(strict_types=1);
 
 /**
@@ -25,7 +24,7 @@ final class GetTreeRootHandler
 {
     private const array ALLOWED_TYPES = ['asset', 'document', 'object'];
 
-    public function __construct(private readonly ElementServiceInterface $elementService,)
+    public function __construct(private readonly ElementServiceInterface $elementService)
     {
     }
 

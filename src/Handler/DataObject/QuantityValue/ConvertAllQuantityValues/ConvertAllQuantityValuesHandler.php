@@ -36,7 +36,7 @@ use OpenDxp\Model\DataObject\QuantityValue\UnitConversionService;
 
 final class ConvertAllQuantityValuesHandler
 {
-    public function __construct(private readonly UnitConversionService $conversionService,)
+    public function __construct(private readonly UnitConversionService $conversionService)
     {
     }
 

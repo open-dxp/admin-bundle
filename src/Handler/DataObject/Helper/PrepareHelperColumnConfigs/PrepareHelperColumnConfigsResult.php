@@ -37,7 +37,7 @@ final readonly class PrepareHelperColumnConfigsResult implements ResultInterface
     /**
      * @param stdClass[] $columns
      */
-    public function __construct(public array $columns,)
+    public function __construct(public array $columns)
     {
     }
 }

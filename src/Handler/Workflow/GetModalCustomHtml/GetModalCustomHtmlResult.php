@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetModalCustomHtmlResult implements ResultInterface
 {
-    public function __construct(public array $customHtml,)
+    public function __construct(public array $customHtml)
     {
     }
 }

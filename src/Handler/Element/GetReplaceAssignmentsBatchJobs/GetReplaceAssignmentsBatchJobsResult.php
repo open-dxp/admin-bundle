@@ -20,7 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetReplaceAssignmentsBatchJobsResult implements ResultInterface
 {
-    public function __construct(public readonly array $jobs,)
+    public function __construct(public readonly array $jobs)
     {
     }
 }

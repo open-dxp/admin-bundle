@@ -36,7 +36,7 @@ final readonly class CreateTranslationResult implements ResultInterface
     /**
      * @param array<string, mixed> $data
      */
-    public function __construct(public array $data,)
+    public function __construct(public array $data)
     {
     }
 }

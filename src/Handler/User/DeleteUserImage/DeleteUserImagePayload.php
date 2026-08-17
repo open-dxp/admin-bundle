@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class DeleteUserImagePayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly int|null $targetUserId,)
+    public function __construct(public readonly int|null $targetUserId)
     {
     }
 

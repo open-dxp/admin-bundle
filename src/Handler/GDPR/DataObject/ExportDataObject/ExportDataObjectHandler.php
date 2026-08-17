@@ -37,7 +37,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ExportDataObjectHandler
 {
-    public function __construct(private readonly DataObjects $dataObjects,)
+    public function __construct(private readonly DataObjects $dataObjects)
     {
     }
 

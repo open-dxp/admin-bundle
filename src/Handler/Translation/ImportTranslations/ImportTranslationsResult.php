@@ -33,7 +33,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class ImportTranslationsResult implements ResultInterface
 {
-    public function __construct(public ?string $delta = null,)
+    public function __construct(public ?string $delta = null)
     {
     }
 }

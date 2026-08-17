@@ -1,6 +1,5 @@
 <?php
 
-
 declare(strict_types=1);
 
 /**
@@ -22,7 +21,7 @@ use OpenDxp\Model\Document;
 
 final class RemoveDocumentTranslationHandler
 {
-    public function __construct(private readonly ElementServiceFactory $serviceFactory,)
+    public function __construct(private readonly ElementServiceFactory $serviceFactory)
     {
     }
 

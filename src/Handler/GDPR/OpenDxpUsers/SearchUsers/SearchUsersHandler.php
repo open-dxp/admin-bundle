@@ -34,7 +34,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\GDPR\SearchDataPayload;
 
 final class SearchUsersHandler
 {
-    public function __construct(private readonly OpenDxpUsers $openDxpUsers,)
+    public function __construct(private readonly OpenDxpUsers $openDxpUsers)
     {
     }
 

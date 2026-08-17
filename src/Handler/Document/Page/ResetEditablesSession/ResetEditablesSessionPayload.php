@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class ResetEditablesSessionPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly int $id,)
+    public function __construct(public readonly int $id)
     {
     }
 

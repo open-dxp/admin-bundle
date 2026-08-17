@@ -20,7 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetVersionsResult implements ResultInterface
 {
-    public function __construct(public readonly array $versions,)
+    public function __construct(public readonly array $versions)
     {
     }
 }

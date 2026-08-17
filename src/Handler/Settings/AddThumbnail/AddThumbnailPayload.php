@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class AddThumbnailPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly string $name,)
+    public function __construct(public readonly string $name)
     {
     }
 
