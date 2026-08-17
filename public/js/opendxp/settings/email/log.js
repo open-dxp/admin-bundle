@@ -578,7 +578,7 @@ opendxp.settings.email.log = Class.create({
 
             var win =  new Ext.Window({
                 width: 800,
-                height: 700,
+                height: 600,
                 modal: true,
                 title: t('email_log_forward'),
                 layout: 'fit',
