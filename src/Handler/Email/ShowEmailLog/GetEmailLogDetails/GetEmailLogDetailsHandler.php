@@ -17,11 +17,16 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogDetails;
 
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
+use OpenDxp\Bundle\AdminBundle\Service\Email\UnusableRecipientDetector;
 use OpenDxp\Model\Tool\Email\Log;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetEmailLogDetailsHandler
 {
+    public function __construct(private readonly UnusableRecipientDetector $unusableRecipientDetector)
+    {
+    }
+
     public function __invoke(IdQueryPayload $payload): GetEmailLogDetailsResult
     {
         $log = Log::getById($payload->id);
@@ -30,6 +35,9 @@ final class GetEmailLogDetailsHandler
             throw new NotFoundHttpException(sprintf('Email log with id %d not found', $payload->id));
         }
 
-        return new GetEmailLogDetailsResult(objectVars: $log->getObjectVars());
+        return new GetEmailLogDetailsResult(
+            objectVars: $log->getObjectVars(),
+            documentHasUnusableRecipients: $this->unusableRecipientDetector->hasUnusableRecipients($log->getDocumentId()),
+        );
     }
 }

@@ -118,7 +118,7 @@ class EmailController extends AdminAbstractController
         GetEmailLogDetailsHandler $handler,
         IdQueryPayload $payload,
     ): JsonResponse {
-        return $this->apiJson($handler($payload), rootProperty: 'objectVars');
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[IsGranted(CorePermission::Emails->value)]

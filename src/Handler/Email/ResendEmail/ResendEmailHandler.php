@@ -18,6 +18,8 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Email\ResendEmail;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
+use OpenDxp\Bundle\AdminBundle\Service\Email\UnusableRecipientDetector;
+use OpenDxp\Helper\Mail as MailHelper;
 use OpenDxp\Logger;
 use OpenDxp\Mail;
 use OpenDxp\Model\Element\ElementInterface;
@@ -27,6 +29,10 @@ use Symfony\Component\Mime\Address;
 
 final class ResendEmailHandler
 {
+    public function __construct(private readonly UnusableRecipientDetector $unusableRecipientDetector)
+    {
+    }
+
     public function __invoke(ResendEmailPayload $payload): void
     {
         $emailLog = Tool\Email\Log::getById($payload->id);
@@ -38,12 +44,22 @@ final class ResendEmailHandler
         $mail->preventDebugInformationAppending();
         $mail->setIgnoreDebugMode(true);
 
-        if (!empty($payload->fieldOverrides['to'])) {
+        $isForward = !empty($payload->fieldOverrides['to']);
+
+        if ($isForward) {
             $emailLog->setTo(null);
             $emailLog->setCc(null);
             $emailLog->setBcc(null);
         } else {
             $mail->disableLogging();
+        }
+
+        $skipDocumentRecipients = $isForward
+            || $payload->useOriginalRecipients
+            || $this->unusableRecipientDetector->hasUnusableRecipients($emailLog->getDocumentId());
+
+        if ($skipDocumentRecipients) {
+            $mail->clearRecipients();
         }
 
         if ($html = $emailLog->getHtmlLog()) {
@@ -54,20 +70,14 @@ final class ResendEmailHandler
             $mail->text($text);
         }
 
-        foreach (['From', 'To', 'Cc', 'Bcc', 'ReplyTo'] as $field) {
-            $overrideKey = strtolower($field);
-            if (!empty($payload->fieldOverrides[$overrideKey])) {
-                $values = $payload->fieldOverrides[$overrideKey];
-            } else {
-                $getter = 'get' . $field;
-                $values = $emailLog->{$getter}();
-            }
+        // an email has a single sender, same as Mail::setDocumentSettings() picks it
+        $sender = $this->resolveAddresses($payload, $emailLog, 'From')[0] ?? null;
 
-            $values = \OpenDxp\Helper\Mail::parseEmailAddressField($values);
+        foreach (['To', 'Cc', 'Bcc', 'ReplyTo'] as $field) {
+            $addresses = $this->resolveAddresses($payload, $emailLog, $field);
 
-            if ($values) {
-                [$value] = $values;
-                $mail->{'add' . $field}(new Address($value['email'], $value['name']));
+            if ($addresses) {
+                $mail->{'add' . $field}(...$addresses);
             }
         }
 
@@ -75,6 +85,12 @@ final class ResendEmailHandler
 
         if ($emailLog->getDocumentId()) {
             $mail->setDocument($emailLog->getDocumentId());
+        }
+
+        // Mail::setDocumentSettings() replaces the sender with the document's one
+        // and clearRecipients() does not guard that block
+        if ($sender instanceof Address && ($skipDocumentRecipients || $mail->getFrom() === [])) {
+            $mail->from($sender);
         }
 
         try {
@@ -102,6 +118,22 @@ final class ResendEmailHandler
         }
 
         $mail->send();
+    }
+
+    /**
+     * @return list<Address>
+     */
+    private function resolveAddresses(ResendEmailPayload $payload, Tool\Email\Log $emailLog, string $field): array
+    {
+        $override = $payload->fieldOverrides[strtolower($field)] ?? null;
+        $values = empty($override) ? $emailLog->{'get' . $field}() : $override;
+
+        $addresses = [];
+        foreach (MailHelper::parseEmailAddressField($values) as $value) {
+            $addresses[] = new Address($value['email'], $value['name']);
+        }
+
+        return $addresses;
     }
 
     private function parseLoggingParamObject(array $params): mixed

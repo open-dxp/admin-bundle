@@ -275,7 +275,7 @@ opendxp.settings.email.log = Class.create({
                                     renderer: function(value, metadata, record) {
 
                                         var data = record.data.data;
-                                        if (data.type == 'simple') {
+                                        if (data.type === 'simple') {
                                             return data.value;
                                         } else {
                                             //when the objectPath is set -> the object is still available otherwise it was
@@ -283,7 +283,7 @@ opendxp.settings.email.log = Class.create({
                                             if (data.objectPath) {
                                                 var type = data.type;
                                                 var subtype = data.objectClassSubType.toLowerCase();
-                                                metadata.tdAttr = 'data-qtip="' + t("open") + '"';
+                                                metadata.tdAttr = 'data-qtip="' + t('open') + '"';
                                                 return '<span onclick="opendxp.helpers.openElement(' + data.objectId + ', \'' + type + '\' , \''
                                                     + subtype + '\'); Ext.getCmp(\'email_log_params_panel\').close();" class="x-grid-cell-inner input_drop_target" style="display: block;">'
                                                     + data.objectPath + '</span>';
@@ -297,10 +297,10 @@ opendxp.settings.email.log = Class.create({
                         });
 
                         this.window = new Ext.Window({
-                            id: "email_log_params_panel",
+                            id: 'email_log_params_panel',
                             modal: true,
                             width: 620,
-                            height: "90%",
+                            height: '90%',
                             title: t('parameters'),
                             items: [this.tree],
                             layout: 'fit'
@@ -347,30 +347,21 @@ opendxp.settings.email.log = Class.create({
                         icon: '/bundles/opendxpadmin/img/flat-color-icons/email.svg',
                         handler: function (grid, rowIndex) {
                             var rec = grid.getStore().getAt(rowIndex);
-                            Ext.Msg.confirm(t('email_log_resend'), t('email_log_resend_window_msg'),
-                                function(btn){
-                                    if (btn == 'yes'){
-                                        Ext.Ajax.request({
-                                            url: Routing.generate('opendxp_admin_email_resendemail'),
-                                            method: 'POST',
-                                            success: function(response){
-                                                var data = Ext.decode( response.responseText );
-                                                if(data.success){
-                                                    Ext.Msg.alert(t('email_log_resend'),
-                                                        t('email_log_resend_window_success_message'));
-                                                }else{
-                                                    Ext.Msg.alert(t('email_log_resend'),
-                                                        t('email_log_resend_window_error_message'));
-                                                }
-                                            },
-                                            failure: function () {
-                                                Ext.Msg.alert(t('email_log_resend'),
-                                                    t('email_log_resend_window_error_message'));
-                                            },
-                                            params: { id : rec.get('id') }
-                                        });
-                                    }
-                                });
+
+                            Ext.Ajax.request({
+                                url: Routing.generate('opendxp_admin_email_showemaillog', {id: rec.get('id'), type: 'details'}),
+                                success: function(response){
+
+                                    var data = Ext.decode( response.responseText ),
+                                        win = this.getResendEmailWindow(rec.get('id'), data.documentHasUnusableRecipients);
+
+                                    win.show();
+
+                                }.bind(this),
+                                failure: function () {
+                                    Ext.Msg.alert(t('email_log_resend'), t('email_log_resend_window_error_message'));
+                                },
+                            });
                         }.bind(this),
                         getClass: function(v, meta, rec) {
                             if(!rec.get('emailLogExistsHtml') && !rec.get('emailLogExistsText') ){
@@ -394,13 +385,15 @@ opendxp.settings.email.log = Class.create({
                             Ext.Ajax.request({
                                 url: Routing.generate('opendxp_admin_email_showemaillog', {id: rec.get('id'), type: 'details'}),
                                 success: function(response){
-                                    var data = Ext.decode( response.responseText );
-                                    var win = this.getForwardEmailWindow(data);
+
+                                    var data = Ext.decode( response.responseText ),
+                                        win = this.getForwardEmailWindow(data.objectVars);
+
                                     win.show();
+
                                 }.bind(this),
                                 failure: function () {
-                                    Ext.Msg.alert(t('email_log_forward'),
-                                        t('email_log_resend_window_error_message'));
+                                    Ext.Msg.alert(t('email_log_forward'), t('email_log_resend_window_error_message'));
                                 },
                             });
                         }.bind(this),
@@ -449,9 +442,11 @@ opendxp.settings.email.log = Class.create({
             }
         ];
 
-        var storeFields = ["id","documentId","subject","emailLogExistsHtml","params","sentDate","params",
-            "modificationDate","requestUri","from","to","cc","bcc","emailLogExistsHtml",
-            "emailLogExistsText", 'error'];
+        var storeFields = [
+            'id', 'documentId', 'subject', 'emailLogExistsHtml', 'params', 'sentDate', 'params',
+            'modificationDate', 'requestUri', 'from', 'to', 'cc', 'bcc', 'emailLogExistsHtml',
+            'emailLogExistsText', 'error'
+        ];
 
         this.store = opendxp.helpers.grid.buildDefaultStore(
             Routing.generate('opendxp_admin_email_emaillogs'),
@@ -508,6 +503,74 @@ opendxp.settings.email.log = Class.create({
 
     },
 
+    getResendEmailWindow: function (id, documentHasUnusableRecipients) {
+        var win = new Ext.Window({
+            width: 600,
+            modal: true,
+            title: t('email_log_resend'),
+            layout: 'fit',
+            closeAction: 'close',
+            items: [{
+                xtype: 'form',
+                bodyStyle: 'padding:10px;',
+                itemId: 'form',
+                items: [
+                    {
+                        xtype: 'hiddenfield',
+                        name: 'id',
+                        value: id
+                    },
+                    {
+                        xtype: 'displayfield',
+                        value: t('email_log_resend_window_msg')
+                    },
+                    {
+                        xtype: 'checkbox',
+                        name: 'useOriginalRecipients',
+                        fieldLabel: t('email_log_resend_use_original_recipients'),
+                        checked: documentHasUnusableRecipients,
+                        readOnly: documentHasUnusableRecipients
+                    },
+                    {
+                        xtype: 'displayfield',
+                        hidden: !documentHasUnusableRecipients,
+                        value: t('email_log_resend_use_original_recipients_forced')
+                    }
+                ],
+                defaults: {
+                    width: 580,
+                    labelWidth: 250
+                }
+            }],
+            buttons: [{
+                text: t('send'),
+                iconCls: 'opendxp_icon_email',
+                handler: function () {
+                    var params = win.getComponent('form').getForm().getFieldValues();
+                    Ext.Ajax.request({
+                        url: Routing.generate('opendxp_admin_email_resendemail'),
+                        method: 'POST',
+                        success: function (response) {
+                            var data = Ext.decode(response.responseText);
+                            if (data.success) {
+                                Ext.Msg.alert(t('email_log_resend'), t('email_log_resend_window_success_message'));
+                                win.close();
+                            } else {
+                                Ext.Msg.alert(t('email_log_resend'), t('email_log_resend_window_error_message'));
+                            }
+                        },
+                        failure: function () {
+                            Ext.Msg.alert(t('email_log_resend'), t('email_log_resend_window_error_message'));
+                        },
+                        params: params
+                    });
+                }
+            }]
+        });
+
+        return win;
+    },
+
     getForwardEmailWindow: function (data) {
         if (data) {
             var emailType = data.emailLogExistsHtml ? 'html' : 'text';
@@ -517,13 +580,13 @@ opendxp.settings.email.log = Class.create({
                 width: 800,
                 height: 600,
                 modal: true,
-                title: t("email_log_forward"),
-                layout: "fit",
-                closeAction: "close",
+                title: t('email_log_forward'),
+                layout: 'fit',
+                closeAction: 'close',
                 items: [{
-                    xtype: "form",
-                    bodyStyle: "padding:10px;",
-                    itemId: "form",
+                    xtype: 'form',
+                    bodyStyle: 'padding:10px;',
+                    itemId: 'form',
                     items: [
                         {
                             xtype: 'hiddenfield',
@@ -534,26 +597,26 @@ opendxp.settings.email.log = Class.create({
                             xtype: 'textfield',
                             value: data.subject,
                             readOnly: true,
-                            fieldLabel: t("subject"),
+                            fieldLabel: t('subject'),
                         },
                         {
                             xtype: 'textfield',
                             value: data.from,
                             readOnly: true,
-                            fieldLabel: t("from"),
+                            fieldLabel: t('from'),
                         },
                         {
                             xtype: 'textfield',
                             value: data.replyTo,
                             hidden: empty(data.replyTo),
                             readOnly: true,
-                            fieldLabel: t("replyTo"),
+                            fieldLabel: t('replyTo'),
                         },
                         {
                             xtype: 'textfield',
-                            name: "to",
+                            name: 'to',
                             allowBlank: false,
-                            fieldLabel: t("to"),
+                            fieldLabel: t('to'),
                         },
                         {
                             xtype: 'panel',
@@ -561,20 +624,22 @@ opendxp.settings.email.log = Class.create({
                             layout: 'fit',
                             items : [{
                                 xtype : 'box',
-                                autoEl: {tag: 'iframe', src: emailPreviewUrl}
+                                autoEl: {
+                                    tag: 'iframe',
+                                    src: emailPreviewUrl
+                                }
                             }]
                         }
-
                     ],
                     defaults: {
                         width: 780
                     }
                 }],
                 buttons: [{
-                    text: t("send"),
-                    iconCls: "opendxp_icon_email",
+                    text: t('send'),
+                    iconCls: 'opendxp_icon_email',
                     handler: function () {
-                        var form = win.getComponent("form").getForm();
+                        var form = win.getComponent('form').getForm();
                         var params = form.getFieldValues();
                         if (form.isValid()) {
                             Ext.Ajax.request({

@@ -122,6 +122,8 @@ services:
     OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService: ~
     OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService: ~
 
+    OpenDxp\Bundle\AdminBundle\Service\Email\UnusableRecipientDetector: ~
+
     OpenDxp\Bundle\AdminBundle\Service\Login\LoginPageService: ~
 
     OpenDxp\Bundle\AdminBundle\Service\Notification\NotificationFilterParser: ~
