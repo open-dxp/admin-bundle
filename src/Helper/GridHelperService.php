@@ -1013,6 +1013,14 @@ class GridHelperService
         $path = implode('/', $pathParts);
         $queryColumn = $type === 'asset' ? '`filename`' : '`key`';
 
+        //special case for the root folder: "/" is the whole tree, so excluding it excludes everything.
+        //Only the root row itself is left over when its children are excluded, and that is the one row with an empty key.
+        if ($fullpath === '/') {
+            return $onlyChildren
+                ? '(`path` = "/" AND ' . $queryColumn . ' = "")'
+                : '1 = 0';
+        }
+
         if ($onlyChildren) {
             return '`path` NOT LIKE "' . $fullpath . '/%"';
         }
