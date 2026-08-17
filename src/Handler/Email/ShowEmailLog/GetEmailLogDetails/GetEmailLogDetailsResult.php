@@ -20,7 +20,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetEmailLogDetailsResult implements ResultInterface
 {
-    public function __construct(public readonly array $objectVars)
-    {
+    public function __construct(
+        public readonly array $objectVars,
+        public readonly bool $documentHasUnusableRecipients,
+    ) {
     }
 }

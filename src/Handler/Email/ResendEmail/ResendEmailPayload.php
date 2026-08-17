@@ -21,14 +21,12 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class ResendEmailPayload implements ExtJsPayloadInterface
 {
-    /** @var array<string, string|null> */
-    public readonly array $fieldOverrides;
-
+    /** @param array<string, string|null> $fieldOverrides */
     public function __construct(
         public readonly int $id,
-        ?array $fieldOverrides,
+        public readonly array $fieldOverrides = [],
+        public readonly bool $useOriginalRecipients = false,
     ) {
-        $this->fieldOverrides = $fieldOverrides ?? [];
     }
 
     public static function fromRequest(Request $request): static
@@ -42,6 +40,7 @@ final readonly class ResendEmailPayload implements ExtJsPayloadInterface
                 'bcc' => $request->request->get('bcc') ?: null,
                 'replyto' => $request->request->get('replyto') ?: null,
             ],
+            useOriginalRecipients: $request->request->getBoolean('useOriginalRecipients'),
         );
     }
 }
