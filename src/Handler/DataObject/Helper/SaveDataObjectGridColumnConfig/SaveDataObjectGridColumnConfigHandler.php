@@ -15,24 +15,38 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfig;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Security\SecurityHelper;
 use OpenDxp\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class SaveDataObjectGridColumnConfigHandler
 {
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly GridColumnConfigService $gridColumnConfigService,
-    ) {}
+    ) {
+    }
 
     public function __invoke(SaveDataObjectGridColumnConfigPayload $payload): SaveDataObjectGridColumnConfigResult
     {
@@ -66,14 +80,14 @@ final class SaveDataObjectGridColumnConfigHandler
 
         try {
             $this->gridColumnConfigService->updateGridConfigShares($gridConfig, $metadata ?? [], $adminUser, adminCanEditAll: true);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new AdminOperationFailedException($e->getMessage());
         }
 
         if ($gridConfig && !empty($metadata['setAsFavourite']) && $adminUser->isAdmin()) {
             try {
                 $this->gridColumnConfigService->updateGridConfigFavourites($gridConfig, $metadata, $adminUser, $payload->objectId);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 throw new AdminOperationFailedException($e->getMessage());
             }
         }

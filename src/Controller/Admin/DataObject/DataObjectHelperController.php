@@ -49,6 +49,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColum
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfig\SaveDataObjectGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -62,10 +63,12 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/object-helper', name: 'opendxp_admin_dataobject_dataobjecthelper_')]
 class DataObjectHelperController extends AdminAbstractController
 {
-    public function __construct(private readonly GridExportService $gridExportService) {}
+    public function __construct(private readonly GridExportService $gridExportService)
+    {
+    }
 
-    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/load-object-data', name: 'loadobjectdata', methods: ['GET'])]
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     public function loadObjectDataAction(
         LoadObjectDataPayload $payload,
         LoadObjectDataHandler $handler,
@@ -81,8 +84,8 @@ class DataObjectHelperController extends AdminAbstractController
         return $this->apiJson($handler($payload));
     }
 
-    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/grid-delete-column-config', name: 'griddeletecolumnconfig', methods: ['DELETE'])]
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     public function gridDeleteColumnConfigAction(
         DeleteGridColumnConfigPayload $payload,
         DeleteGridColumnConfigHandler $handler,
@@ -90,8 +93,8 @@ class DataObjectHelperController extends AdminAbstractController
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
-    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/grid-get-column-config', name: 'gridgetcolumnconfig', methods: ['GET'])]
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     public function gridGetColumnConfigAction(
         GetGridColumnConfigPayload $payload,
         GetGridColumnConfigHandler $handler,
@@ -99,8 +102,8 @@ class DataObjectHelperController extends AdminAbstractController
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
-    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/prepare-helper-column-configs', name: 'preparehelpercolumnconfigs', methods: ['POST'])]
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     public function prepareHelperColumnConfigs(
         PrepareHelperColumnConfigsPayload $payload,
         PrepareHelperColumnConfigsHandler $handler,
@@ -182,7 +185,7 @@ class DataObjectHelperController extends AdminAbstractController
     ): Response {
         try {
             return $this->gridExportService->downloadCsvFile($fileHandle ?? '');
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
             throw $this->createNotFoundException('CSV file not found');
         }
     }
@@ -193,7 +196,7 @@ class DataObjectHelperController extends AdminAbstractController
     ): BinaryFileResponse {
         try {
             return $this->gridExportService->downloadXlsxFile($fileHandle ?? '');
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
             throw $this->createNotFoundException('XLSX file not found');
         }
     }

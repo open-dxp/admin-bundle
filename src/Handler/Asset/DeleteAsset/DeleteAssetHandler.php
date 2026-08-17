@@ -15,14 +15,25 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAsset;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\DeleteAsset\DeleteAssetPayload;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class DeleteAssetHandler
 {

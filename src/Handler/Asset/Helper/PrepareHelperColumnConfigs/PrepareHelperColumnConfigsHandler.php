@@ -16,13 +16,13 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsResult;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 
 final class PrepareHelperColumnConfigsHandler
 {
-    public function __construct(private readonly GridColumnConfigSessionGateway $gridColumnConfigSession) {}
+    public function __construct(private readonly GridColumnConfigSessionGateway $gridColumnConfigSession)
+    {
+    }
 
     public function __invoke(PrepareHelperColumnConfigsPayload $payload): PrepareHelperColumnConfigsResult
     {

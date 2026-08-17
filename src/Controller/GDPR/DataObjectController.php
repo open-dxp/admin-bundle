@@ -29,8 +29,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * @internal
  */
-#[Route('/data-object')]
 #[IsGranted(AdminPermission::GdprDataExtractor->value)]
+#[Route('/data-object')]
 class DataObjectController extends AdminAbstractController
 {
     #[Route('/search-data-objects', name: 'opendxp_admin_gdpr_dataobject_searchdataobjects', methods: ['GET'])]

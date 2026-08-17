@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -11,8 +14,6 @@
  * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
-
-declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\UpdateFieldCollection;
 
@@ -28,7 +29,8 @@ final readonly class UpdateFieldCollectionPayload implements ExtJsPayloadInterfa
         public readonly bool $isAdd = false,
         public readonly ?array $values = null,
         public readonly ?array $configuration = null,
-    ) {}
+    ) {
+    }
 
     public static function fromRequest(Request $request): static
     {

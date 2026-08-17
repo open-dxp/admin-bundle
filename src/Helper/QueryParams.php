@@ -58,14 +58,14 @@ class QueryParams
                     'groupId' => $groupId,
                     'keyId' => $keyid,
                     'order' => $order,
-                    'isFeature' => 1
+                    'isFeature' => 1,
                 ];
             }
         }
 
         return [
             'orderKey' => $orderKey,
-            'order' => $order
+            'order' => $order,
         ];
     }
 

@@ -15,6 +15,18 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\User;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
@@ -54,8 +66,8 @@ class UserProfileController extends AdminAbstractController
     }
 
     #[IsGranted(OwnUserVoter::OWN_USER, subject: 'payload')]
-    #[SessionGatewayAware(PasswordResetSessionGateway::class)]
     #[Route('/user/update-current-user', name: 'opendxp_admin_user_updatecurrentuser', methods: ['PUT'])]
+    #[SessionGatewayAware(PasswordResetSessionGateway::class)]
     public function updateCurrentUserAction(
         UpdateCurrentUserPayload $payload,
         UpdateCurrentUserHandler $handler,
@@ -65,8 +77,8 @@ class UserProfileController extends AdminAbstractController
         return $this->apiOk();
     }
 
-    #[SessionGatewayAware(PasswordResetSessionGateway::class)]
     #[Route('/user/get-current-user', name: 'opendxp_admin_user_getcurrentuser', methods: ['GET'])]
+    #[SessionGatewayAware(PasswordResetSessionGateway::class)]
     public function getCurrentUserAction(
         GetCurrentUserPayload $payload,
         GetCurrentUserHandler $handler,

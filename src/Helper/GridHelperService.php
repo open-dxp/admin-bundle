@@ -359,7 +359,7 @@ class GridHelperService
                                     $operator,
                                     [
                                         'brickPrefix' => ($tablePrefix ? $tablePrefix . '.' : null),
-                                        'classId' => $class->getId()
+                                        'classId' => $class->getId(),
                                     ]
                                 );
                             }
@@ -373,7 +373,7 @@ class GridHelperService
                                 $operator,
                                 [
                                     'brickPrefix' => ($tablePrefix ? $tablePrefix . '.' : null),
-                                    'classId' => $class->getId()
+                                    'classId' => $class->getId(),
                                 ]
                             );
                         }

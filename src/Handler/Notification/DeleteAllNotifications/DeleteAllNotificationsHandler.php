@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\Notification\DeleteAllNotifications;
 
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
@@ -24,7 +25,8 @@ final class DeleteAllNotificationsHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly NotificationService $notificationService,
-    ) {}
+    ) {
+    }
 
     public function __invoke(): void
     {

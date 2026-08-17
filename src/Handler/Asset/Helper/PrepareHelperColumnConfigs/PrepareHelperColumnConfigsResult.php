@@ -20,7 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class PrepareHelperColumnConfigsResult implements ResultInterface
 {
-    public function __construct(
-        public readonly array $columns,
-    ) {}
+    public function __construct(public readonly array $columns,)
+    {
+    }
 }

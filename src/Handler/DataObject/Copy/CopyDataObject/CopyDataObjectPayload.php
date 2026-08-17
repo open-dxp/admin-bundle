@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Copy\CopyDataObject;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
@@ -22,14 +23,15 @@ use Symfony\Component\HttpFoundation\Request;
 final readonly class CopyDataObjectPayload implements ExtJsPayloadInterface
 {
     public function __construct(
-        public readonly int     $sourceId,
-        public readonly int     $targetId,
-        public readonly string  $type,
-        public readonly ?int    $sourceParentId,
-        public readonly ?int    $targetParentId,
-        public readonly string  $transactionId,
-        public readonly bool    $saveParentId,
-    ) {}
+        public readonly int $sourceId,
+        public readonly int $targetId,
+        public readonly string $type,
+        public readonly ?int $sourceParentId,
+        public readonly ?int $targetParentId,
+        public readonly string $transactionId,
+        public readonly bool $saveParentId,
+    ) {
+    }
 
     public static function fromRequest(Request $request): static
     {

@@ -76,8 +76,8 @@ use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
  */
 class ElementController extends AdminAbstractController
 {
-    #[SessionIdentityAware]
     #[Route('/element/lock-element', name: 'opendxp_admin_element_lockelement', methods: ['PUT'])]
+    #[SessionIdentityAware]
     public function lockElementAction(
         LockElementHandler $handler,
         LockElementPayload $payload,
@@ -123,8 +123,8 @@ class ElementController extends AdminAbstractController
         return $this->apiJson($handler($payload), envelope: false);
     }
 
-    #[Route('/element/note-list', name: 'opendxp_admin_element_notelist', methods: ['POST'])]
     #[IsGranted(CorePermission::NotesEvents->value)]
+    #[Route('/element/note-list', name: 'opendxp_admin_element_notelist', methods: ['POST'])]
     public function noteListAction(
         Request $request,
         NoteListPayload $payload,
@@ -141,8 +141,8 @@ class ElementController extends AdminAbstractController
         return $this->apiJson($handler($payload));
     }
 
-    #[Route('/element/note-list-destroy', name: 'opendxp_admin_element_notelist_destroy', methods: ['POST'])]
     #[IsGranted(CorePermission::NotesEvents->value)]
+    #[Route('/element/note-list-destroy', name: 'opendxp_admin_element_notelist_destroy', methods: ['POST'])]
     public function noteListDestroyAction(
         NoteListPayload $payload,
         DeleteNoteHandler $handler,
@@ -152,8 +152,8 @@ class ElementController extends AdminAbstractController
         return $this->apiOk();
     }
 
-    #[Route('/element/note-add', name: 'opendxp_admin_element_noteadd', methods: ['POST'])]
     #[IsGranted(CorePermission::NotesEvents->value)]
+    #[Route('/element/note-add', name: 'opendxp_admin_element_noteadd', methods: ['POST'])]
     public function noteAddAction(
         AddNoteHandler $handler,
         AddNotePayload $payload,

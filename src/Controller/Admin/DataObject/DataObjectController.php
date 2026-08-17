@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -13,36 +16,34 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\ElementControllerBase;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectFolder\AddObjectFolderHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectFolder\AddObjectFolderPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObject\AddObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObject\AddObjectPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectFolder\AddObjectFolderHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\AddObjectFolder\AddObjectFolderPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ChangeChildrenSortBy\ChangeChildrenSortByHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ChangeChildrenSortBy\ChangeChildrenSortByPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxy\DataObjectGridProxyHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxy\DataObjectGridProxyPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DeleteDataObject\DeleteDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DeleteDataObject\DeleteDataObjectPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObject\GetDataObjectHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObject\GetDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectFolder\GetDataObjectFolderHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl\GetDataObjectPreviewUrlHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl\GetDataObjectPreviewUrlPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObject\GetDataObjectHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObject\GetDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo\GetIdPathPagingInfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo\GetIdPathPagingInfoPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions\GetSelectOptionsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions\GetSelectOptionsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObjectFolder\SaveDataObjectFolderHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObjectFolder\SaveDataObjectFolderPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObjectFolder\SaveDataObjectFolderHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObjectFolder\SaveDataObjectFolderPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildren\TreeGetDataObjectChildrenHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildren\TreeGetDataObjectChildrenPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\UpdateDataObject\UpdateDataObjectHandler;
@@ -62,8 +63,8 @@ use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 /**
  * @internal
  */
-#[Route('/object', name: 'opendxp_admin_dataobject_dataobject_')]
 #[IsGranted(CorePermission::Objects->value)]
+#[Route('/object', name: 'opendxp_admin_dataobject_dataobject_')]
 class DataObjectController extends ElementControllerBase
 {
     /** On active edit lock answer with editlock response */
@@ -108,8 +109,8 @@ class DataObjectController extends ElementControllerBase
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
-    #[SessionIdentityAware]
     #[Route('/get', name: 'get', methods: ['GET'])]
+    #[SessionIdentityAware]
     public function getAction(
         GetDataObjectPayload $payload,
         GetDataObjectHandler $handler,
@@ -184,8 +185,8 @@ class DataObjectController extends ElementControllerBase
         return $this->apiJson($handler($payload));
     }
 
-    #[SessionIdentityAware]
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
+    #[SessionIdentityAware]
     public function saveAction(SaveDataObjectHandler $handler, SaveDataObjectPayload $payload): JsonResponse
     {
         $result = $handler($payload);
@@ -207,8 +208,8 @@ class DataObjectController extends ElementControllerBase
         return $this->apiOk();
     }
 
-    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/grid-proxy', name: 'gridproxy', methods: ['GET', 'POST', 'PUT'])]
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     public function gridProxyAction(
         DataObjectGridProxyPayload $payload,
         DataObjectGridProxyHandler $handler,
@@ -225,8 +226,8 @@ class DataObjectController extends ElementControllerBase
         return $this->apiJson($result, rootProperty: 'data');
     }
 
-    #[SessionIdentityAware]
     #[Route('/preview', name: 'preview', methods: ['GET'])]
+    #[SessionIdentityAware]
     public function previewAction(
         GetDataObjectPreviewUrlPayload $payload,
         GetDataObjectPreviewUrlHandler $handler,

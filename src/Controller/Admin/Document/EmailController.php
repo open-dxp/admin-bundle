@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
-
-declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
@@ -31,18 +32,17 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/email', name: 'opendxp_admin_document_email_')]
 class EmailController extends DocumentControllerBase
 {
-    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
+    #[SessionIdentityAware]
     public function getDataByIdAction(
         GetEmailDataHandler $handler,
         IdQueryPayload $payload,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
-    #[SessionIdentityAware]
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
+    #[SessionIdentityAware]
     public function saveAction(SaveEmailPayload $payload, SaveEmailHandler $handler): JsonResponse
     {
         return $this->apiJson($handler($payload));

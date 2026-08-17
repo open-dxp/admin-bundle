@@ -18,27 +18,28 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetMetadataForColumnConfig\GetAssetMetadataForColumnConfigHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetGridColumnConfig\GetGridColumnConfigPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetGridColumnConfig\GetGridColumnConfigHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\MarkGridConfigFavouritePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetGridColumnConfig\GetGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\MarkGridConfigFavouriteHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\MarkGridConfigFavouritePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -68,8 +69,8 @@ class AssetHelperController extends AdminAbstractController
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
-    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/prepare-helper-column-configs', name: 'opendxp_admin_asset_assethelper_preparehelpercolumnconfigs', methods: ['POST'])]
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     public function prepareHelperColumnConfigs(
         PrepareHelperColumnConfigsPayload $payload,
         PrepareHelperColumnConfigsHandler $handler,
@@ -114,7 +115,7 @@ class AssetHelperController extends AdminAbstractController
     ): Response {
         try {
             return $gridExportService->downloadCsvFile($fileHandle ?? '');
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
             throw $this->createNotFoundException('CSV file not found');
         }
     }
@@ -126,7 +127,7 @@ class AssetHelperController extends AdminAbstractController
     ): BinaryFileResponse {
         try {
             return $gridExportService->downloadXlsxFile($fileHandle ?? '');
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
             throw $this->createNotFoundException('XLSX file not found');
         }
     }

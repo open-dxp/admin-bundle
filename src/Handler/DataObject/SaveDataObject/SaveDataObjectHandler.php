@@ -15,13 +15,25 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject;
 
+use OpenDxp\Bundle\AdminBundle\Coordinator\DataObject\DataObjectPersistenceCoordinator;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Helper\DataObjectVersionHelper;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Mapper\DataObject\DataObjectPayloadMapper;
-use OpenDxp\Bundle\AdminBundle\Coordinator\DataObject\DataObjectPersistenceCoordinator;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\ClassDefinition\Data\EqualComparisonInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -32,7 +44,8 @@ final class SaveDataObjectHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly DataObjectPayloadMapper $mapper,
         private readonly DataObjectPersistenceCoordinator $coordinator,
-    ) {}
+    ) {
+    }
 
     public function __invoke(SaveDataObjectPayload $payload): SaveDataObjectResult
     {

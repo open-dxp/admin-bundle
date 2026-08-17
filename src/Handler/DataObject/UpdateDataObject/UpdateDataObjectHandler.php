@@ -15,11 +15,24 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\UpdateDataObject;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Db;
@@ -27,7 +40,6 @@ use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Element\Service;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class UpdateDataObjectHandler
 {
@@ -35,7 +47,8 @@ final class UpdateDataObjectHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly DataObjectGridService $dataObjectGridService,
         private readonly ElementServiceInterface $elementService,
-    ) {}
+    ) {
+    }
 
     public function __invoke(UpdateDataObjectPayload $payload): UpdateDataObjectResult
     {

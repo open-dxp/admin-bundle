@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
-
-declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
@@ -28,11 +29,11 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPageData\GetPageDataPayl
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPagePreviewImagePath\GetPagePreviewImagePathHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\GetPagePreviewImagePath\GetPagePreviewImagePathPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmode\RenderAreabrickIndexEditmodeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmode\RenderAreabrickIndexEditmodePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\ResetEditablesSession\ResetEditablesSessionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\ResetEditablesSession\ResetEditablesSessionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePageHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePagePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\RenderAreabrickIndexEditmode\RenderAreabrickIndexEditmodePayload;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -44,8 +45,8 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/page', name: 'opendxp_admin_document_page_')]
 class PageController extends DocumentControllerBase
 {
-    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
+    #[SessionIdentityAware]
     public function getDataByIdAction(
         GetPageDataHandler $handler,
         GetPageDataPayload $payload,
@@ -53,8 +54,8 @@ class PageController extends DocumentControllerBase
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
-    #[SessionIdentityAware]
     #[Route('/save', name: 'save', methods: ['PUT', 'POST'])]
+    #[SessionIdentityAware]
     public function saveAction(SavePagePayload $payload, SavePageHandler $handler): JsonResponse
     {
         return $this->apiJson($handler($payload));
@@ -88,8 +89,8 @@ class PageController extends DocumentControllerBase
         return $this->apiOk();
     }
 
-    #[SessionIdentityAware]
     #[Route('/clear-editable-data', name: 'cleareditabledata', methods: ['PUT'])]
+    #[SessionIdentityAware]
     public function clearEditableDataAction(ResetEditablesSessionPayload $payload, ResetEditablesSessionHandler $handler): JsonResponse
     {
         $handler($payload);

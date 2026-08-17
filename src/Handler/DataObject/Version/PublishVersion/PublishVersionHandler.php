@@ -15,8 +15,21 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Version\PublishVersion;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
@@ -31,7 +44,8 @@ final class PublishVersionHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly AdminStyleEnricher $adminStyleEnricher,
-    ) {}
+    ) {
+    }
 
     public function __invoke(IdBodyPayload $payload): PublishVersionResult
     {
@@ -53,7 +67,7 @@ final class PublishVersionHandler
 
         try {
             $object->save();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new AdminOperationFailedException($e->getMessage());
         }
 

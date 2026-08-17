@@ -2,8 +2,21 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Login\LostPassword;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\Login\LostPasswordEvent;
 use OpenDxp\Http\Request\Host\GeneralHostResolver;
@@ -25,7 +38,8 @@ final class LostPasswordHandler
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly GeneralHostResolver $hostResolver,
         private readonly RequestStack $requestStack,
-    ) {}
+    ) {
+    }
 
     public function __invoke(LostPasswordPayload $payload): LostPasswordResult
     {
@@ -66,7 +80,7 @@ final class LostPasswordHandler
             try {
                 $domain = $this->hostResolver->resolve(['source' => $this->requestStack->getCurrentRequest()]) ?? '';
                 if (!$domain) {
-                    throw new \Exception('No main domain set in system settings, unable to generate reset password link');
+                    throw new Exception('No main domain set in system settings, unable to generate reset password link');
                 }
 
                 $context = $this->router->getContext();
@@ -90,7 +104,7 @@ final class LostPasswordHandler
                 if ($event->hasResponse()) {
                     $eventResponse = $event->getResponse();
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Logger::error('Error sending password recovery email: ' . $e->getMessage());
                 $error = 'lost_password_email_error';
             }

@@ -15,8 +15,21 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowForm;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Resolver\Workflow\WorkflowElementResolver;
 use OpenDxp\Workflow\Manager;
 use OpenDxp\Workflow\Transition;
@@ -26,7 +39,8 @@ final class GetWorkflowFormHandler
     public function __construct(
         private readonly Manager $workflowManager,
         private readonly WorkflowElementResolver $elementResolver,
-    ) {}
+    ) {
+    }
 
     public function __invoke(GetWorkflowFormPayload $payload): GetWorkflowFormResult
     {
@@ -67,7 +81,7 @@ final class GetWorkflowFormHandler
                 notes_required: $transition->getNotesCommentRequired(),
                 additional_fields: [],
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return new GetWorkflowFormResult(
                 message: $e->getMessage(),
                 notes_enabled: false,

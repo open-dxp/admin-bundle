@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\Notification\FindAllNotifications;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
@@ -25,7 +26,8 @@ final readonly class FindAllNotificationsPayload implements ExtJsPayloadInterfac
         public readonly int $offset = 0,
         public readonly int $limit = 40,
         public readonly array $filter = [],
-    ) {}
+    ) {
+    }
 
     public static function fromRequest(Request $request): static
     {

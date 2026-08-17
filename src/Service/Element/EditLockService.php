@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -11,8 +14,6 @@
  * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
-
-declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\Element;
 
@@ -31,7 +32,8 @@ final class EditLockService
         private readonly SessionIdentityInterface $sessionIdentity,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly CurrentControllerContextInterface $currentControllerContext,
-    ) {}
+    ) {
+    }
 
     /**
      * Checks whether the element is locked by another session and acquires the lock if not.
@@ -68,6 +70,7 @@ final class EditLockService
         }
 
         $lock = Editlock::getByElement($id, $type);
+
         throw new ElementLockedException($id, $type, $lock);
     }
 }

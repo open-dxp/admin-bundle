@@ -35,21 +35,20 @@ class SnippetController extends DocumentControllerBase
     /**
      * @throws Exception
      */
-    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
+    #[SessionIdentityAware]
     public function getDataByIdAction(
         GetSnippetDataHandler $handler,
         IdQueryPayload $payload,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     /**
      * @throws Exception
      */
-    #[SessionIdentityAware]
     #[Route('/save', name: 'save', methods: ['POST', 'PUT'])]
+    #[SessionIdentityAware]
     public function saveAction(SaveSnippetPayload $payload, SaveSnippetHandler $handler): JsonResponse
     {
         return $this->apiJson($handler($payload));

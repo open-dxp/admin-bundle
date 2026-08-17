@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Dto\Asset;
 
 use OpenDxp\Model\Asset;
@@ -24,5 +25,6 @@ final readonly class ImageThumbnailResolutionDto
         public Asset\Image $image,
         // null means the preview is still being generated asynchronously; not an error
         public ?Asset\Image\ThumbnailInterface $thumbnailResult,
-    ) {}
+    ) {
+    }
 }

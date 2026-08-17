@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,13 +15,11 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRoot;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Factory\ElementServiceFactory;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\User;
@@ -30,7 +31,8 @@ final class GetLanguageTreeRootHandler
         private readonly ElementServiceInterface $elementService,
         private readonly ElementServiceFactory $serviceFactory,
         private readonly AdminUserContextInterface $userContext,
-    ) {}
+    ) {
+    }
 
     public function __invoke(GetLanguageTreeRootPayload $payload): GetLanguageTreeRootResult
     {

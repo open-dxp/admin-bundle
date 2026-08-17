@@ -15,6 +15,18 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
@@ -32,12 +44,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * @internal
  */
-#[Route('/asset')]
 #[IsGranted(CorePermission::Assets->value)]
+#[Route('/asset')]
 class AssetCopyController extends AdminAbstractController
 {
-    #[SessionGatewayAware(CopySessionGateway::class)]
     #[Route('/copy-info', name: 'opendxp_admin_asset_copyinfo', methods: ['GET'])]
+    #[SessionGatewayAware(CopySessionGateway::class)]
     public function copyInfoAction(
         CopyInfoPayload $payload,
         CopyInfoHandler $handler,
@@ -45,8 +57,8 @@ class AssetCopyController extends AdminAbstractController
         return $this->apiJson($handler($payload), envelope: false);
     }
 
-    #[SessionGatewayAware(CopySessionGateway::class)]
     #[Route('/copy', name: 'opendxp_admin_asset_copy', methods: ['POST'])]
+    #[SessionGatewayAware(CopySessionGateway::class)]
     public function copyAction(
         CopyAssetPayload $payload,
         CopyAssetHandler $handler,

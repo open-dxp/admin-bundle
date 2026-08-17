@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
-
-declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
@@ -36,8 +37,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class IndexController extends AdminAbstractController implements KernelResponseEventInterface
 {
-    #[SessionIdentityAware]
     #[Route('/', name: 'opendxp_admin_index', methods: ['GET'])]
+    #[SessionIdentityAware]
     public function indexAction(
         Request $request,
         SettingsPayload $payload,

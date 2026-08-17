@@ -35,13 +35,12 @@ class LinkController extends DocumentControllerBase
     /**
      * @throws Exception
      */
-    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'getdatabyid', methods: ['GET'])]
+    #[SessionIdentityAware]
     public function getDataByIdAction(
         GetLinkDataHandler $handler,
         IdQueryPayload $payload,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 

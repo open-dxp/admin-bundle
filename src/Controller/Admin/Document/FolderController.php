@@ -19,8 +19,8 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Document;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\GetFolderData\GetFolderDataHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\SaveFolder\SaveFolderHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\GetFolderData\GetFolderDataPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\SaveFolder\SaveFolderHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Folder\SaveFolder\SaveFolderPayload;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -38,8 +38,7 @@ class FolderController extends DocumentControllerBase
     public function getDataByIdAction(
         GetFolderDataHandler $handler,
         GetFolderDataPayload $payload,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 

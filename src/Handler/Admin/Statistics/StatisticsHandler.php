@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,26 +15,26 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\Admin\Statistics;
 
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminStatisticsService;
+use Throwable;
 
 final class StatisticsHandler
 {
     public function __construct(
         private readonly AdminStatisticsService $adminStatisticsService,
         private readonly ClientInterface $httpClient,
-    ) {}
+    ) {
+    }
 
     public function __invoke(): void
     {
         try {
             $data = $this->adminStatisticsService->createStatistics()->asStatisticsArray();
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $data = [];
         }
 

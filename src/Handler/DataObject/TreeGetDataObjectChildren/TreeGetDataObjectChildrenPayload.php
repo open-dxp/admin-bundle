@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -11,8 +14,6 @@
  * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
-
-declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildren;
 
@@ -30,7 +31,8 @@ final readonly class TreeGetDataObjectChildrenPayload implements ExtJsPayloadInt
         public int $fromPaging = 0,
         public array $allParams = [],
         public int $inSearch = 0,
-    ) {}
+    ) {
+    }
 
     public function hasPagination(): bool
     {

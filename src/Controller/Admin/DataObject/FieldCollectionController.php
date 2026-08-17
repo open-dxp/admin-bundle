@@ -10,8 +10,7 @@ declare(strict_types=1);
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (https://pimcore.com)
- * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
@@ -22,14 +21,14 @@ use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\DeleteFieldCollection\DeleteFieldCollectionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ExportFieldCollection\ExportFieldCollectionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ExportFieldCollection\ExportFieldCollectionPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollection\GetFieldCollectionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollection\GetFieldCollectionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionList\GetFieldCollectionListHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionList\GetFieldCollectionListPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionTree\GetFieldCollectionTreeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionTree\GetFieldCollectionTreePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionUsages\GetFieldCollectionUsagesHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollectionUsages\GetFieldCollectionUsagesPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollection\GetFieldCollectionHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\GetFieldCollection\GetFieldCollectionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ImportFieldCollection\ImportFieldCollectionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\ImportFieldCollection\ImportFieldCollectionPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FieldCollection\UpdateFieldCollection\UpdateFieldCollectionHandler;
@@ -88,8 +87,8 @@ class FieldCollectionController extends AdminAbstractController
         return $this->apiJson($handler($payload), envelope: false);
     }
 
-    #[IsGranted(CorePermission::Fieldcollections->value)]
     #[AsHtmlContentTypeResponse]
+    #[IsGranted(CorePermission::Fieldcollections->value)]
     #[Route('/import-fieldcollection', name: 'importfieldcollection', methods: ['POST'])]
     public function importFieldcollectionAction(ImportFieldCollectionHandler $handler, ImportFieldCollectionPayload $payload): Response
     {

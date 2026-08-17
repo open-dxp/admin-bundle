@@ -9,8 +9,7 @@ declare(strict_types=1);
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (https://pimcore.com)
- * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
@@ -21,10 +20,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\Settings\AddVideoThumbnail\AddVideoThumbn
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\AddVideoThumbnail\AddVideoThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteVideoThumbnail\DeleteVideoThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteVideoThumbnail\DeleteVideoThumbnailPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetVideoThumbnailList\GetVideoThumbnailListHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetVideoThumbnailTree\GetVideoThumbnailTreeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetVideoThumbnail\GetVideoThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetVideoThumbnail\GetVideoThumbnailPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetVideoThumbnailList\GetVideoThumbnailListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetVideoThumbnailTree\GetVideoThumbnailTreeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateVideoThumbnail\UpdateVideoThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateVideoThumbnail\UpdateVideoThumbnailPayload;
 use OpenDxp\Security\CorePermission;

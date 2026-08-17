@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -11,8 +14,6 @@
  * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
-
-declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions;
 
@@ -26,7 +27,8 @@ final readonly class GetSelectOptionsPayload implements ExtJsPayloadInterface
         public ?array $changedData = null,
         public array $fieldDefinitionConfig = [],
         public array $context = [],
-    ) {}
+    ) {
+    }
 
     public static function fromRequest(Request $request): static
     {

@@ -21,9 +21,9 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetAvailableSitesPayload implements ExtJsPayloadInterface
 {
-    public function __construct(
-        public readonly bool $excludeMainSite,
-    ) {}
+    public function __construct(public readonly bool $excludeMainSite,)
+    {
+    }
 
     public static function fromRequest(Request $request): static
     {

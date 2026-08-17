@@ -25,7 +25,8 @@ final readonly class ClearCachePayload implements ExtJsPayloadInterface
         public readonly bool $onlySymfonyCache,
         public readonly bool $onlyOpendxpCache,
         public readonly string $env,
-    ) {}
+    ) {
+    }
 
     public static function fromRequest(Request $request): static
     {

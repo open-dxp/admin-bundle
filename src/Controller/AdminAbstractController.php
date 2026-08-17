@@ -16,6 +16,7 @@
 namespace OpenDxp\Bundle\AdminBundle\Controller;
 
 use JsonSerializable;
+use LogicException;
 use OpenDxp\Bundle\AdminBundle\Handler\ConditionalResultInterface;
 use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 use OpenDxp\Controller\Traits\JsonHelperTrait;
@@ -70,7 +71,7 @@ abstract class AdminAbstractController extends UserAwareController
     {
         if ($rootProperty !== null) {
             if (!property_exists($result, $rootProperty)) {
-                throw new \LogicException(sprintf('%s has no property "%s" to use as apiJson() rootProperty.', $result::class, $rootProperty));
+                throw new LogicException(sprintf('%s has no property "%s" to use as apiJson() rootProperty.', $result::class, $rootProperty));
             }
 
             return $this->adminJson($result->$rootProperty, $status);

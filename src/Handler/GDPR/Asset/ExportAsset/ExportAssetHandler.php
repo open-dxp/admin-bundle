@@ -15,6 +15,18 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\GDPR\Asset\ExportAsset;
 
 use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\Assets;
@@ -25,9 +37,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ExportAssetHandler
 {
-    public function __construct(
-        private readonly Assets $assets,
-    ) {}
+    public function __construct(private readonly Assets $assets,)
+    {
+    }
 
     public function __invoke(IdQueryPayload $payload): ExportAssetResult
     {

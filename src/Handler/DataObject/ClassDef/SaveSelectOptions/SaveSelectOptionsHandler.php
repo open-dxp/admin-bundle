@@ -15,8 +15,21 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\SaveSelectOptions;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
@@ -30,13 +43,14 @@ final class SaveSelectOptionsHandler
     public function __construct(
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly CurrentControllerContextInterface $currentControllerContext,
-    ) {}
+    ) {
+    }
 
     public function __invoke(SaveSelectOptionsPayload $payload): SaveSelectOptionsResult
     {
         try {
             if ($payload->task === 'add' && (new DataObject\SelectOptions\Config\Listing())->hasConfig($payload->id)) {
-                throw new \Exception('Select options with the same ID already exists (lower/upper cases may be different)');
+                throw new Exception('Select options with the same ID already exists (lower/upper cases may be different)');
             }
 
             $selectOptionsConfiguration = DataObject\SelectOptions\Config::createFromData([
@@ -55,7 +69,7 @@ final class SaveSelectOptionsHandler
             $selectOptionsConfiguration->save();
 
             return new SaveSelectOptionsResult(id: $selectOptionsConfiguration->getId());
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Logger::error($e->getMessage());
 
             throw new AdminOperationFailedException($e->getMessage());

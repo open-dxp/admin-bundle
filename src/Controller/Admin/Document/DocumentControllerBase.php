@@ -50,13 +50,12 @@ abstract class DocumentControllerBase extends AdminAbstractController
 
     public const string TASK_DELETE = 'delete';
 
-    public function __construct(
-        protected ElementServiceInterface $elementService,
-    ) {
+    public function __construct(protected ElementServiceInterface $elementService,)
+    {
     }
 
-    #[SessionIdentityAware]
     #[Route('/save-to-session', name: 'savetosession', methods: ['POST'])]
+    #[SessionIdentityAware]
     public function saveToSessionAction(
         SaveToSessionPayload $payload,
         SaveToSessionHandler $handler,
@@ -66,8 +65,8 @@ abstract class DocumentControllerBase extends AdminAbstractController
         return $this->apiOk();
     }
 
-    #[SessionIdentityAware]
     #[Route('/remove-from-session', name: 'removefromsession', methods: ['DELETE'])]
+    #[SessionIdentityAware]
     public function removeFromSessionAction(
         RemoveFromSessionPayload $payload,
         RemoveFromSessionHandler $handler,

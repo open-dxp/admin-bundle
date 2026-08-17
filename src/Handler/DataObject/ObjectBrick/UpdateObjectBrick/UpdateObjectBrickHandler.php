@@ -15,11 +15,22 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\UpdateObjectBrick;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\UpdateObjectBrick\UpdateObjectBrickPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
@@ -30,7 +41,8 @@ final class UpdateObjectBrickHandler
     public function __construct(
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly CurrentControllerContextInterface $currentControllerContext,
-    ) {}
+    ) {
+    }
 
     public function __invoke(UpdateObjectBrickPayload $payload): UpdateObjectBrickResult
     {

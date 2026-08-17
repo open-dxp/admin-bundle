@@ -15,6 +15,18 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
@@ -36,8 +48,8 @@ use Twig\Extension\CoreExtension;
 /**
  * @internal
  */
-#[Route('/object', name: 'opendxp_admin_dataobject_dataobject_')]
 #[IsGranted(CorePermission::Objects->value)]
+#[Route('/object', name: 'opendxp_admin_dataobject_dataobject_')]
 class DataObjectVersionController extends AdminAbstractController
 {
     #[Route('/publish-version', name: 'publishversion', methods: ['POST'])]
@@ -51,8 +63,7 @@ class DataObjectVersionController extends AdminAbstractController
         Environment $twig,
         PreviewVersionHandler $handler,
         PreviewVersionPayload $payload,
-    ): Response
-    {
+    ): Response {
         $result = $handler($payload);
 
         Tool\UserTimezone::setUserTimezone($payload->userTimezone);
@@ -72,8 +83,7 @@ class DataObjectVersionController extends AdminAbstractController
         Environment $twig,
         DiffVersionsHandler $handler,
         DiffVersionsPayload $payload,
-    ): Response
-    {
+    ): Response {
         $result = $handler($payload);
 
         Tool\UserTimezone::setUserTimezone($payload->userTimezone);

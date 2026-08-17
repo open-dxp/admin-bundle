@@ -15,6 +15,18 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Service\Translation;
 
 use Doctrine\DBAL\Connection;
@@ -41,7 +53,7 @@ final class TranslationQueryService
                 $alreadyJoined = [];
 
                 foreach ($joins as $join) {
-                   $fieldName = $join['language'];
+                    $fieldName = $join['language'];
 
                     if (isset($alreadyJoined[$fieldName])) {
                         continue;
@@ -53,7 +65,7 @@ final class TranslationQueryService
                     $select->leftJoin(
                         $tableName,
                         $tableName,
-                       $fieldName,
+                        $fieldName,
                         '('
                         .$fieldName . '.key = ' . $tableName . '.key'
                         . ' and ' .$fieldName . '.language = ' . $this->db->quote($fieldName)
@@ -90,11 +102,11 @@ final class TranslationQueryService
                 $field = null;
                 $value = null;
 
-               $fieldName = $filter[$propertyField];
+                $fieldName = $filter[$propertyField];
                 if (in_array(ltrim($fieldName, '_'), $validLanguages)) {
-                   $fieldName = ltrim($fieldName, '_');
+                    $fieldName = ltrim($fieldName, '_');
                 }
-               $fieldName = str_replace('--', '',$fieldName);
+                $fieldName = str_replace('--', '', $fieldName);
                 if (!$languageMode && in_array($fieldName, $validLanguages)) {
                     continue;
                 }
@@ -108,7 +120,7 @@ final class TranslationQueryService
                 }
 
                 if (!$languageMode) {
-                   $fieldName = $tableName . '.' .$fieldName;
+                    $fieldName = $tableName . '.' .$fieldName;
                 }
 
                 if (!empty($filter['value'])) {
@@ -124,7 +136,7 @@ final class TranslationQueryService
                             $operator = '>';
                         } elseif ($filter[$operatorField] === 'eq') {
                             $operator = '=';
-                           $fieldName = "UNIX_TIMESTAMP(DATE(FROM_UNIXTIME({$fieldName})))";
+                            $fieldName = "UNIX_TIMESTAMP(DATE(FROM_UNIXTIME({$fieldName})))";
                         }
                         $filter['value'] = strtotime($filter['value']);
                         $field =$fieldName;

@@ -15,11 +15,22 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport;
 
 use League\Flysystem\UnableToReadFile;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Logger;
@@ -32,7 +43,8 @@ final class DoAssetExportHandler
     public function __construct(
         private readonly GridExportService $gridExportService,
         private readonly GridColumnConfigService $gridColumnConfigService,
-    ) {}
+    ) {
+    }
 
     public function __invoke(DoAssetExportPayload $payload): void
     {
@@ -78,6 +90,7 @@ final class DoAssetExportHandler
             $storage->writeStream($csvFile, $temp);
         } catch (UnableToReadFile $exception) {
             Logger::err($exception->getMessage());
+
             throw new AdminOperationFailedException(sprintf('export file not found: %s', $fileHandle));
         } finally {
             if (is_resource($temp)) {

@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
-
-declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
@@ -44,8 +45,7 @@ class WorkflowController extends AdminAbstractController
     public function getWorkflowFormAction(
         GetWorkflowFormPayload $payload,
         GetWorkflowFormHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), envelope: false);
     }
 
@@ -90,8 +90,7 @@ class WorkflowController extends AdminAbstractController
     public function getModalCustomHtml(
         GetModalCustomHtmlPayload $payload,
         GetModalCustomHtmlHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload));
     }
 }

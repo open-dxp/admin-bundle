@@ -10,8 +10,7 @@ declare(strict_types=1);
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (https://pimcore.com)
- * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
@@ -25,10 +24,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\DeleteCustomLayou
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ExportCustomLayout\ExportCustomLayoutHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ExportCustomLayout\ExportCustomLayoutPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetAllLayouts\GetAllLayoutsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayoutDefinitions\GetCustomLayoutDefinitionsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayoutDefinitions\GetCustomLayoutDefinitionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayout\GetCustomLayoutHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayout\GetCustomLayoutPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayoutDefinitions\GetCustomLayoutDefinitionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\GetCustomLayoutDefinitions\GetCustomLayoutDefinitionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ImportCustomLayout\ImportCustomLayoutHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\ImportCustomLayout\ImportCustomLayoutPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\CustomLayout\SaveCustomLayout\SaveCustomLayoutHandler;
@@ -45,8 +44,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * @internal
  */
-#[Route('/class', name: 'opendxp_admin_dataobject_class_')]
 #[IsGranted(CorePermission::Classes->value)]
+#[Route('/class', name: 'opendxp_admin_dataobject_class_')]
 class CustomLayoutController extends AdminAbstractController
 {
     #[Route('/get-custom-layout', name: 'getcustomlayout', methods: ['GET'])]

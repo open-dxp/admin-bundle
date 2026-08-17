@@ -26,7 +26,8 @@ final class ClearCacheHandler
         private readonly OpenDxpCacheClearingService $openDxpCache,
         private readonly SymfonyCacheClearingService $symfonyCache,
         private readonly KernelInterface $kernel,
-    ) {}
+    ) {
+    }
 
     public function __invoke(ClearCachePayload $payload): void
     {

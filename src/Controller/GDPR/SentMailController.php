@@ -27,8 +27,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * @internal
  */
-#[Route('/sent-mail')]
 #[IsGranted(AdminPermission::GdprDataExtractor->value)]
+#[Route('/sent-mail')]
 class SentMailController extends AdminAbstractController
 {
     #[Route('/export', name: 'opendxp_admin_gdpr_sentmail_exportdataobject', methods: ['GET'])]

@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnailFileinfo;
 
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail\GetImageThumbnailPayload;
@@ -22,7 +23,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class GetImageThumbnailFileinfoHandler
 {
-    public function __construct(private readonly ImageThumbnailResolver $resolver) {}
+    public function __construct(private readonly ImageThumbnailResolver $resolver)
+    {
+    }
 
     public function __invoke(GetImageThumbnailPayload $payload): GetImageThumbnailFileinfoResult
     {

@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -11,8 +14,6 @@
  * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
-
-declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\GetQuantityValueUnits;
 
@@ -26,7 +27,8 @@ final readonly class GetQuantityValueUnitsPayload implements ExtJsPayloadInterfa
         public readonly int $limit = 25,
         public readonly int $start = 0,
         public readonly ?string $filter = null,
-    ) {}
+    ) {
+    }
 
     public static function fromRequest(Request $request): static
     {

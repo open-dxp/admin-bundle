@@ -28,7 +28,8 @@ final class OpenDxpCacheClearingService
         private readonly CoreCacheHandler $cache,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly Filesystem $filesystem,
-    ) {}
+    ) {
+    }
 
     public function clear(): void
     {

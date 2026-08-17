@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -11,8 +14,6 @@
  * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
-
-declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Mapper\Asset;
 
@@ -34,7 +35,8 @@ final class AssetPayloadMapper
         private readonly AdminUserContextInterface $userContext,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly CurrentControllerContextInterface $currentControllerContext,
-    ) {}
+    ) {
+    }
 
     public function applyPayload(SaveAssetPayload $payload, Asset $asset): void
     {

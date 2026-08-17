@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,20 +15,17 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Factory\ElementServiceFactory;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Logger;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Element\Service;
-use OpenDxp\Model\User;
 use OpenDxp\Resolver\ResolverInterface;
 use OpenDxp\Tool;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class AddDocumentHandler
 {
@@ -34,9 +34,11 @@ final class AddDocumentHandler
         private readonly ElementServiceFactory $serviceFactory,
         private readonly ResolverInterface $documentClassResolver,
         private readonly string $defaultDocumentController,
-    ) {}
+    ) {
+    }
 
-    public function __invoke(AddDocumentPayload $payload): AddDocumentResult {
+    public function __invoke(AddDocumentPayload $payload): AddDocumentResult
+    {
         $adminUser = $this->userContext->getAdminUser();
         $parentDocument = Document::getById($payload->parentId);
 

@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObject;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
@@ -24,7 +25,8 @@ final readonly class GetDataObjectPayload implements ExtJsPayloadInterface
     public function __construct(
         public int $id = 0,
         public ?int $layoutId = null,
-    ) {}
+    ) {
+    }
 
     public static function fromRequest(Request $request): static
     {

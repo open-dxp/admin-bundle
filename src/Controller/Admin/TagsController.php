@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -13,15 +16,13 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTagToElement\AddTagToElementHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTagToElement\AddTagToElementPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTag\AddTagHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTag\AddTagPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTagToElement\AddTagToElementHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Tags\AddTagToElement\AddTagToElementPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\DeleteTag\DeleteTagHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\DeleteTag\DeleteTagPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Tags\DoBatchAssignment\DoBatchAssignmentHandler;

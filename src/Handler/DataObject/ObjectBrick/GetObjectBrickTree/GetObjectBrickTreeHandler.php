@@ -15,10 +15,21 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickTree;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickTree\GetObjectBrickTreePayload;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Model\DataObject;
@@ -31,7 +42,8 @@ final class GetObjectBrickTreeHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly CurrentControllerContextInterface $currentControllerContext,
-    ) {}
+    ) {
+    }
 
     public function __invoke(GetObjectBrickTreePayload $payload): ObjectBrickTreeResult|ObjectBrickTreeEditorResult
     {
@@ -71,6 +83,7 @@ final class GetObjectBrickTreeHandler
                 foreach ($item->getClassDefinitions() as $cd) {
                     if ($cd['classname'] == $className && $cd['fieldname'] == $fieldname) {
                         $keep = true;
+
                         break;
                     }
                 }

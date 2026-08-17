@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
-
-declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
@@ -46,10 +47,10 @@ use OpenDxp\Model\Translation;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 
 /**
  * @internal
@@ -58,8 +59,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class TranslationController extends AdminAbstractController
 {
     #[AsHtmlContentTypeResponse]
-    #[SessionGatewayAware(TranslationImportSessionGateway::class)]
     #[Route('/import', name: 'opendxp_admin_translation_import', methods: ['POST'])]
+    #[SessionGatewayAware(TranslationImportSessionGateway::class)]
     public function importAction(
         ImportTranslationsHandler $handler,
         ImportTranslationsPayload $payload,
@@ -69,8 +70,8 @@ class TranslationController extends AdminAbstractController
         return $this->apiJson($handler($payload), context: [AbstractObjectNormalizer::SKIP_NULL_VALUES => true]);
     }
 
-    #[SessionGatewayAware(TranslationImportSessionGateway::class)]
     #[Route('/upload-import', name: 'opendxp_admin_translation_uploadimportfile', methods: ['POST'])]
+    #[SessionGatewayAware(TranslationImportSessionGateway::class)]
     public function uploadImportFileAction(
         UploadTranslationImportFileHandler $handler,
         UploadTranslationImportFilePayload $payload,

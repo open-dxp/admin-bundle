@@ -33,8 +33,7 @@ abstract class ElementControllerBase extends AdminAbstractController
     public function treeGetRootAction(
         GetTreeRootPayload $payload,
         GetTreeRootHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), rootProperty: 'treeNodeConfig');
     }
 
@@ -42,8 +41,7 @@ abstract class ElementControllerBase extends AdminAbstractController
     public function deleteInfoAction(
         GetDeleteInfoHandler $handler,
         GetDeleteInfoPayload $payload,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), envelope: false);
     }
 }

@@ -25,7 +25,8 @@ final readonly class GetFilteredPredefinedMetadataPayload implements ExtJsPayloa
         public readonly ?string $type = null,
         public readonly ?string $subType = null,
         public readonly ?string $group = null,
-    ) {}
+    ) {
+    }
 
     public static function fromRequest(Request $request): static
     {

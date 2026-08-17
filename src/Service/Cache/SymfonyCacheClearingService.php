@@ -27,7 +27,8 @@ final class SymfonyCacheClearingService
         private readonly KernelInterface $kernel,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly CacheClearer $cacheClearer,
-    ) {}
+    ) {
+    }
 
     public function clear(string $environment): void
     {

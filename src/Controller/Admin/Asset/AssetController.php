@@ -51,11 +51,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * @internal
  */
-#[Route('/asset')]
 #[IsGranted(CorePermission::Assets->value)]
+#[Route('/asset')]
 class AssetController extends ElementControllerBase
 {
-
     #[Route('/grid-proxy', name: 'opendxp_admin_asset_gridproxy', methods: ['GET', 'POST', 'PUT'])]
     public function gridProxyAction(
         Request $request,
@@ -88,8 +87,8 @@ class AssetController extends ElementControllerBase
         return parent::deleteInfoAction($handler, $payload);
     }
 
-    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'opendxp_admin_asset_getdatabyid', methods: ['GET'])]
+    #[SessionIdentityAware]
     public function getDataByIdAction(
         GetAssetDataPayload $payload,
         GetAssetDataHandler $handler,
@@ -150,8 +149,8 @@ class AssetController extends ElementControllerBase
         return $this->apiJson($handler($payload));
     }
 
-    #[SessionIdentityAware]
     #[Route('/save', name: 'opendxp_admin_asset_save', methods: ['PUT', 'POST'])]
+    #[SessionIdentityAware]
     public function saveAction(SaveAssetHandler $handler, SaveAssetPayload $payload): JsonResponse
     {
         return $this->apiJson($handler($payload));
@@ -164,5 +163,4 @@ class AssetController extends ElementControllerBase
 
         return $this->apiOk();
     }
-
 }

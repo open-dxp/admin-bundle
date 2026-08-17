@@ -15,6 +15,18 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DoDataObjectExport;
 
 use InvalidArgumentException;
@@ -24,8 +36,8 @@ use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
-use OpenDxp\Logger;
 use OpenDxp\Localization\LocaleServiceInterface;
+use OpenDxp\Logger;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\DataObject\Listing;
 use OpenDxp\Tool\Storage;
@@ -41,7 +53,8 @@ final class DoDataObjectExportHandler
         private readonly LocaleServiceInterface $localeService,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly CurrentControllerContextInterface $currentControllerContext,
-    ) {}
+    ) {
+    }
 
     public function __invoke(DoDataObjectExportPayload $payload): void
     {
@@ -122,6 +135,7 @@ final class DoDataObjectExportHandler
             $storage->writeStream($csvFile, $temp);
         } catch (UnableToReadFile $exception) {
             Logger::err($exception->getMessage());
+
             throw new AdminOperationFailedException(sprintf('export file not found: %s', $payload->fileHandle));
         } finally {
             if (is_resource($temp)) {

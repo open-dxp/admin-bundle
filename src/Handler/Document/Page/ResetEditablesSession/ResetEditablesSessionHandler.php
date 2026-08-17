@@ -15,16 +15,29 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Page\ResetEditablesSession;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\ResetEditablesSession\ResetEditablesSessionPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 use OpenDxp\Model\Document;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ResetEditablesSessionHandler
 {
-    public function __construct(private readonly ElementDraftService $elementDraftService) {}
+    public function __construct(private readonly ElementDraftService $elementDraftService)
+    {
+    }
 
     public function __invoke(ResetEditablesSessionPayload $payload): void
     {

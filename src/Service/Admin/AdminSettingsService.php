@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,13 +15,11 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Service\Admin;
 
+use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Dto\Admin\AdminSettingsDto;
-use OpenDxp\Bundle\AdminBundle\Handler\Admin\Settings\SettingsPayload;
 use OpenDxp\Bundle\AdminBundle\Perspective\Config as PerspectiveConfig;
 use OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler;
 use OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService;
@@ -62,7 +63,8 @@ final class AdminSettingsService
         private readonly string $customAdminRouteName,
         #[Autowire('%secret%')]
         private readonly string $secret,
-    ) {}
+    ) {
+    }
 
     public function createSettings(string $locale, User $user): AdminSettingsDto
     {
@@ -78,7 +80,7 @@ final class AdminSettingsService
                 [],
                 UrlGeneratorInterface::ABSOLUTE_URL
             );
-        } catch (\Exception) {
+        } catch (Exception) {
             $adminEntrypointUrl = null;
         }
 
@@ -194,7 +196,7 @@ final class AdminSettingsService
     {
         try {
             return sha1(substr($this->secret, 3, -3));
-        } catch (\Exception) {
+        } catch (Exception) {
             return 'not-set';
         }
     }

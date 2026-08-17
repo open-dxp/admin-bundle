@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\ChangeMainDocument;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
@@ -22,9 +23,10 @@ use Symfony\Component\HttpFoundation\Request;
 final readonly class ChangeMainDocumentPayload implements ExtJsPayloadInterface
 {
     public function __construct(
-        public readonly int    $id,
+        public readonly int $id,
         public readonly string $contentMainDocumentPath,
-    ) {}
+    ) {
+    }
 
     public static function fromRequest(Request $request): static
     {

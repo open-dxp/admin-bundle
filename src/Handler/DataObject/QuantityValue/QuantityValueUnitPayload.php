@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue;
 
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
@@ -22,7 +23,9 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final readonly class QuantityValueUnitPayload implements ExtJsPayloadInterface
 {
-    public function __construct(public readonly array $data) {}
+    public function __construct(public readonly array $data)
+    {
+    }
 
     public static function fromRequest(Request $request): static
     {

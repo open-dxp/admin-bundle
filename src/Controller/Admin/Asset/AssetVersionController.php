@@ -15,6 +15,18 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp;
@@ -35,8 +47,8 @@ use Twig\Extension\CoreExtension;
 /**
  * @internal
  */
-#[Route('/asset')]
 #[IsGranted(CorePermission::Assets->value)]
+#[Route('/asset')]
 class AssetVersionController extends AdminAbstractController
 {
     #[Route('/publish-version', name: 'opendxp_admin_asset_publishversion', methods: ['POST'])]
@@ -60,7 +72,7 @@ class AssetVersionController extends AdminAbstractController
                 '@OpenDxpAdmin/admin/asset/get_preview_pdf_open_in_new_tab.html.twig',
                 [
                     'thumbnailPath' => '',
-                    'assetPath' => $result->pdfPath
+                    'assetPath' => $result->pdfPath,
                 ],
             );
         }

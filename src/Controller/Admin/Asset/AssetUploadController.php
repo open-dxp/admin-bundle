@@ -15,19 +15,31 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAssetCompatibility\AddAssetCompatibilityHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAsset\AddAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAsset\AddAssetPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\AddAssetCompatibility\AddAssetCompatibilityHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\CheckAssetExists\CheckAssetExistsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\CheckAssetExists\CheckAssetExistsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles\ImportZipFilesHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles\ImportZipFilesPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZip\ImportZipHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZip\ImportZipPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles\ImportZipFilesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles\ImportZipFilesPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ReplaceAsset\ReplaceAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ReplaceAsset\ReplaceAssetPayload;
 use OpenDxp\Security\CorePermission;
@@ -39,8 +51,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * @internal
  */
-#[Route('/asset')]
 #[IsGranted(CorePermission::Assets->value)]
+#[Route('/asset')]
 class AssetUploadController extends AdminAbstractController
 {
     #[Route('/add-asset', name: 'opendxp_admin_asset_addasset', methods: ['POST'])]

@@ -18,10 +18,10 @@ namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\CreateBlocklistEntry\CreateBlocklistEntryHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\DeleteBlocklistEntry\DeleteBlocklistEntryHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\UpdateBlocklistEntry\UpdateBlocklistEntryHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\DeleteEmailLog\DeleteEmailLogHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\GetBlocklist\GetBlocklistHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\GetEmailLogs\GetEmailLogsHandler;

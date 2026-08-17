@@ -15,9 +15,20 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Renderlet\RenderRenderlet;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Renderlet\RenderRenderlet\RenderRenderletPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Document\Editable\EditableHandler;
 use OpenDxp\Event\DocumentEvents;
@@ -40,7 +51,8 @@ final class RenderRenderletHandler
         private readonly LocaleServiceInterface $localeService,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly CurrentControllerContextInterface $currentControllerContext,
-    ) {}
+    ) {
+    }
 
     public function __invoke(RenderRenderletPayload $payload): RenderRenderletResult
     {
@@ -62,7 +74,7 @@ final class RenderRenderletHandler
                 $this->currentControllerContext->getController(),
                 [
                     'requestParams' => $payload->query,
-                    'element'       => $element
+                    'element'       => $element,
                 ]
             ),
             DocumentEvents::EDITABLE_RENDERLET_PRE_RENDER,

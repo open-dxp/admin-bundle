@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,15 +15,13 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element\GetTreeRoot;
 
 use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class GetTreeRootResult implements ResultInterface
 {
-    public function __construct(
-        public readonly array $treeNodeConfig,
-    ) {}
+    public function __construct(public readonly array $treeNodeConfig,)
+    {
+    }
 }

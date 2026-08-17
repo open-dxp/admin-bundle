@@ -35,6 +35,8 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\DoBulkExport\DoBulkEx
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ExportClass\ExportClassHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\ExportClass\ExportClassPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetAssetTypes\GetAssetTypesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClass\GetClassHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClass\GetClassPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassBulkExportList\GetClassBulkExportListHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassDefinitionForColumnConfig\GetClassDefinitionForColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassDefinitionForColumnConfig\GetClassDefinitionForColumnConfigPayload;
@@ -42,15 +44,13 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassIcons\GetClas
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassIcons\GetClassIconsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassTree\GetClassTreeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassTree\GetClassTreePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClass\GetClassHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClass\GetClassPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetDocumentTypes\GetDocumentTypesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptions\GetSelectOptionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptions\GetSelectOptionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsTree\GetSelectOptionsTreeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsTree\GetSelectOptionsTreePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsUsages\GetSelectOptionsUsagesHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptionsUsages\GetSelectOptionsUsagesPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptions\GetSelectOptionsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetSelectOptions\GetSelectOptionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetTextLayoutPreview\GetTextLayoutPreviewHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetTextLayoutPreview\GetTextLayoutPreviewPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetVideoAllowedTypes\GetVideoAllowedTypesHandler;
@@ -124,8 +124,8 @@ class ClassController extends AdminAbstractController
         return $this->apiJson($handler($payload));
     }
 
-    #[IsGranted(CorePermission::Classes->value)]
     #[AsHtmlContentTypeResponse]
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/import-class', name: 'importclass', methods: ['POST', 'PUT'])]
     public function importClassAction(ImportClassPayload $payload, ImportClassHandler $handler): Response
     {
@@ -158,10 +158,10 @@ class ClassController extends AdminAbstractController
     /**
      * Add option to export/import all class definitions/brick definitions etc. at once
      */
-    #[IsGranted(CorePermission::Classes->value)]
     #[AsHtmlContentTypeResponse]
-    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
+    #[IsGranted(CorePermission::Classes->value)]
     #[Route('/bulk-import', name: 'bulkimport', methods: ['POST'])]
+    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
     public function bulkImportAction(BulkImportPayload $payload, BulkImportHandler $handler): JsonResponse
     {
         return $this->apiJson($handler($payload));
@@ -170,8 +170,8 @@ class ClassController extends AdminAbstractController
     /**
      * Add option to export/import all class definitions/brick definitions etc. at once
      */
-    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
     #[Route('/bulk-commit', name: 'bulkcommit', methods: ['POST'])]
+    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
     public function bulkCommitAction(BulkCommitPayload $payload, BulkCommitHandler $handler): JsonResponse
     {
         $handler($payload);
@@ -183,8 +183,8 @@ class ClassController extends AdminAbstractController
      * Add option to export/import all class definitions/brick definitions etc. at once
      */
     #[IsGranted(CorePermission::Classes->value)]
-    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
     #[Route('/bulk-export-prepare', name: 'bulkexportprepare', methods: ['POST'])]
+    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
     public function bulkExportPrepareAction(BulkExportPreparePayload $payload, BulkExportPrepareHandler $handler): JsonResponse
     {
         $handler($payload);
@@ -198,8 +198,8 @@ class ClassController extends AdminAbstractController
         return $this->apiJson($handler());
     }
 
-    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
     #[Route('/do-bulk-export', name: 'dobulkexport', methods: ['GET'])]
+    #[SessionGatewayAware(BulkOperationSessionGateway::class)]
     public function doBulkExportAction(DoBulkExportHandler $handler): Response
     {
         $result = $handler();

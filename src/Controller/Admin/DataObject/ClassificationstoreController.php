@@ -29,10 +29,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateGrou
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateGroup\CreateGroupPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateStore\CreateStoreHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateStore\CreateStorePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollectionRelation\DeleteCollectionRelationHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollectionRelation\DeleteCollectionRelationPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollection\DeleteCollectionHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollection\DeleteCollectionPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollectionRelation\DeleteCollectionRelationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollectionRelation\DeleteCollectionRelationPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteGroup\DeleteGroupHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteGroup\DeleteGroupPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteProperty\DeletePropertyHandler;

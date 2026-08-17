@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -13,32 +16,30 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
 use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\User\AddUser\AddUserHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\AddUser\AddUserPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUserImage\DeleteUserImageHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUserImage\DeleteUserImagePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUser\DeleteUserHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUser\DeleteUserPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUserImage\DeleteUserImageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\DeleteUserImage\DeleteUserImagePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\Disable2Fa\Disable2FaHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\Disable2Fa\Disable2FaPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetMinimalUser\GetMinimalUserHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetMinimalUser\GetMinimalUserPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLink\GetTokenLoginLinkHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLink\GetTokenLoginLinkPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserImage\GetUserImageHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserImage\GetUserImagePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserTreeChildren\GetUserTreeChildrenHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserTreeChildren\GetUserTreeChildrenPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetUser\GetUserHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetUser\GetUserPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserImage\GetUserImageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserImage\GetUserImagePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetUsers\GetUsersHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\GetUsers\GetUsersPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserTreeChildren\GetUserTreeChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\User\GetUserTreeChildren\GetUserTreeChildrenPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\Reset2FaSecret\Reset2FaSecretHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\Reset2FaSecret\Reset2FaSecretPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\User\SearchUsers\SearchUsersHandler;

@@ -26,7 +26,8 @@ final readonly class UpdateThumbnailPayload implements ExtJsPayloadInterface
         public readonly array $settingsData,
         public readonly array $mediaData,
         public readonly array $mediaOrder,
-    ) {}
+    ) {
+    }
 
     public static function fromRequest(Request $request): static
     {

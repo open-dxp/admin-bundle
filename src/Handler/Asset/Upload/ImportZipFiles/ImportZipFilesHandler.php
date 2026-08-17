@@ -15,8 +15,21 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles;
 
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService;
 use OpenDxp\File;
 use OpenDxp\Logger;
@@ -24,7 +37,6 @@ use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
 use Symfony\Component\Filesystem\Filesystem;
 use ZipArchive;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class ImportZipFilesHandler
 {
@@ -32,7 +44,8 @@ final class ImportZipFilesHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly AssetUploadService $assetUploadService,
         private readonly Filesystem $filesystem,
-    ) {}
+    ) {
+    }
 
     public function __invoke(ImportZipFilesPayload $payload): void
     {

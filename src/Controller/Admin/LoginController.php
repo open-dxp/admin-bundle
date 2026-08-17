@@ -73,6 +73,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
         foreach ($event->getRequest()->getLanguages() as $userLocale) {
             if (in_array($userLocale, $availableLocales)) {
                 $locale = $userLocale;
+
                 break;
             }
         }
@@ -218,8 +219,8 @@ class LoginController extends AdminAbstractController implements KernelControlle
         return $this->forward(self::class . '::twoFactorSetupGenerateAction', [], $request->query->all());
     }
 
-    #[SessionGatewayAware(TwoFactorSetupSessionGateway::class)]
     #[Route('/login/2fa-setup-save', name: 'opendxp_admin_2fa_setup_save')]
+    #[SessionGatewayAware(TwoFactorSetupSessionGateway::class)]
     public function twoFactorSetupSaveAction(
         SaveTwoFactorSetupPayload $payload,
         SaveTwoFactorSetupHandler $handler,
@@ -233,8 +234,8 @@ class LoginController extends AdminAbstractController implements KernelControlle
         return new RedirectResponse($this->generateUrl('opendxp_admin_login'));
     }
 
-    #[SessionGatewayAware(TwoFactorSetupSessionGateway::class)]
     #[Route('/login/2fa-setup-generate', name: 'opendxp_admin_2fa_setup_generate')]
+    #[SessionGatewayAware(TwoFactorSetupSessionGateway::class)]
     public function twoFactorSetupGenerateAction(
         GenerateTwoFactorSetupPayload $payload,
         GenerateTwoFactorSetupHandler $handler,

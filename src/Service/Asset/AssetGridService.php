@@ -15,23 +15,35 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Service\Asset;
 
 use Exception;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
+use OpenDxp\Bundle\AdminBundle\Mapper\GridData;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
-use OpenDxp\Bundle\AdminBundle\Mapper\GridData;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use OpenDxp\Logger;
 use OpenDxp\Loader\ImplementationLoader\Exception\UnsupportedException;
+use OpenDxp\Logger;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Metadata;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class AssetGridService
 {
@@ -40,7 +52,8 @@ final class AssetGridService
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly GridHelperService $gridHelperService,
         private readonly CurrentControllerContextInterface $currentControllerContext,
-    ) {}
+    ) {
+    }
 
     public function gridProxy(array $allParams, ?string $effectiveLanguage): array
     {
@@ -92,6 +105,7 @@ final class AssetGridService
                                 }
                                 $em['data'] = $value;
                                 $dirty = true;
+
                                 break;
                             }
                         }
@@ -106,6 +120,7 @@ final class AssetGridService
                                     'type' => 'input',
                                     'data' => $value,
                                 ];
+
                                 try {
                                     $dataImpl = $loader->build($newEm['type']);
                                     $newEm['data'] = $dataImpl->getDataFromListfolderGrid($value, $newEm);
@@ -124,6 +139,7 @@ final class AssetGridService
                                         'type' => $predefined->getType(),
                                         'data' => $value,
                                     ];
+
                                     try {
                                         $dataImpl = $loader->build($newEm['type']);
                                         $newEm['data'] = $dataImpl->getDataFromListfolderGrid($value, $newEm);

@@ -31,8 +31,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  *
  * @internal
  */
-#[Route('/opendxp-users')]
 #[IsGranted(AdminPermission::GdprDataExtractor->value)]
+#[Route('/opendxp-users')]
 class OpenDxpUsersController extends AdminAbstractController
 {
     #[Route('/search-users', name: 'opendxp_admin_gdpr_opendxpusers_searchusers', methods: ['GET'])]

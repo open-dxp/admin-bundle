@@ -46,10 +46,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\CheckTranslationLang
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\CheckTranslationLanguage\CheckTranslationLanguagePayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\DetermineTranslationParent\DetermineTranslationParentHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\DetermineTranslationParent\DetermineTranslationParentPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRoot\GetLanguageTreeRootHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRoot\GetLanguageTreeRootPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTree\GetLanguageTreeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTree\GetLanguageTreePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRoot\GetLanguageTreeRootHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\GetLanguageTreeRoot\GetLanguageTreeRootPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\RemoveDocumentTranslation\RemoveDocumentTranslationHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\RemoveDocumentTranslation\RemoveDocumentTranslationPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren\TreeGetDocumentChildrenHandler;
@@ -76,7 +76,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/document')]
 class DocumentController extends ElementControllerBase
 {
-
     #[IsGranted(CorePermission::Documents->value)]
     #[Override]
     #[Route('/tree-get-root', name: 'opendxp_admin_document_document_treegetroot', methods: ['GET'])]
@@ -98,13 +97,12 @@ class DocumentController extends ElementControllerBase
     }
 
     #[IsGranted(CorePermission::Documents->value)]
-    #[SessionIdentityAware]
     #[Route('/get-data-by-id', name: 'opendxp_admin_document_document_getdatabyid', methods: ['GET'])]
+    #[SessionIdentityAware]
     public function getDataByIdAction(
         GetDocumentDataHandler $handler,
         GetDocumentDataPayload $payload,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
@@ -113,8 +111,7 @@ class DocumentController extends ElementControllerBase
     public function treeGetChildrenByIdAction(
         Request $request,
         TreeGetDocumentChildrenPayload $payload,
-    ): Response
-    {
+    ): Response {
         return match ($payload->hasPagination()) {
             true  => $this->forward(self::class . '::treeGetChildrenByIdPaginatedAction', [], $request->query->all()),
             false => $this->forward(self::class . '::treeGetChildrenByIdListAction', [], $request->query->all()),
@@ -126,8 +123,7 @@ class DocumentController extends ElementControllerBase
     public function treeGetChildrenByIdPaginatedAction(
         TreeGetDocumentChildrenPayload $payload,
         TreeGetDocumentChildrenHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), envelope: false);
     }
 
@@ -136,8 +132,7 @@ class DocumentController extends ElementControllerBase
     public function treeGetChildrenByIdListAction(
         TreeGetDocumentChildrenPayload $payload,
         TreeGetDocumentChildrenHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), rootProperty: 'nodes');
     }
 
@@ -146,8 +141,7 @@ class DocumentController extends ElementControllerBase
     public function addAction(
         AddDocumentPayload $payload,
         AddDocumentHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload));
     }
 
@@ -156,8 +150,7 @@ class DocumentController extends ElementControllerBase
     public function deleteAction(
         DeleteDocumentPayload $payload,
         DeleteDocumentHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $result = $handler($payload);
 
         if ($payload->type === 'children') {
@@ -172,16 +165,14 @@ class DocumentController extends ElementControllerBase
     public function updateAction(
         UpdateDocumentPayload $payload,
         UpdateDocumentHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload));
     }
 
     #[Route('/doc-types', name: 'opendxp_admin_document_document_doctypesget', methods: ['GET'])]
     public function docTypesGetAction(
         GetDocTypesListHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler());
     }
 
@@ -191,8 +182,7 @@ class DocumentController extends ElementControllerBase
     public function docTypesAction(
         Request $request,
         #[MapQueryParameter] ?string $xaction = null,
-    ): Response
-    {
+    ): Response {
         return match ($xaction) {
             'destroy' => $this->forward(self::class . '::docTypesDestroyAction', [], $request->query->all()),
             'update'  => $this->forward(self::class . '::docTypesUpdateAction', [], $request->query->all()),
@@ -207,8 +197,7 @@ class DocumentController extends ElementControllerBase
     public function docTypesDestroyAction(
         DocTypePayload $payload,
         DeleteDocTypeHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload));
     }
 
@@ -218,8 +207,7 @@ class DocumentController extends ElementControllerBase
     public function docTypesUpdateAction(
         DocTypePayload $payload,
         UpdateDocTypeHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload));
     }
 
@@ -229,8 +217,7 @@ class DocumentController extends ElementControllerBase
     public function docTypesCreateAction(
         DocTypePayload $payload,
         CreateDocTypeHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload));
     }
 
@@ -239,8 +226,7 @@ class DocumentController extends ElementControllerBase
     public function getDocTypesAction(
         GetDocTypesByTypePayload $payload,
         GetDocTypesByTypeHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), envelope: false);
     }
 
@@ -249,8 +235,7 @@ class DocumentController extends ElementControllerBase
     public function getSiteCustomSettingsAction(
         GetSiteCustomSettingsPayload $payload,
         GetSiteCustomSettingsHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), envelope: false);
     }
 
@@ -259,8 +244,7 @@ class DocumentController extends ElementControllerBase
     public function updateSiteAction(
         UpdateSitePayload $payload,
         UpdateSiteHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), rootProperty: 'siteVars');
     }
 
@@ -269,8 +253,7 @@ class DocumentController extends ElementControllerBase
     public function removeSiteAction(
         RemoveSitePayload $payload,
         RemoveSiteHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $handler($payload);
 
         return $this->apiOk();
@@ -281,8 +264,7 @@ class DocumentController extends ElementControllerBase
     public function getIdForPathAction(
         GetDocumentIdForPathPayload $payload,
         GetDocumentIdForPathHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload));
     }
 
@@ -291,8 +273,7 @@ class DocumentController extends ElementControllerBase
     public function languageTreeAction(
         GetLanguageTreePayload $payload,
         GetLanguageTreeHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), rootProperty: 'nodes');
     }
 
@@ -301,8 +282,7 @@ class DocumentController extends ElementControllerBase
     public function languageTreeRootAction(
         GetLanguageTreeRootPayload $payload,
         GetLanguageTreeRootHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload), envelope: false);
     }
 
@@ -311,8 +291,7 @@ class DocumentController extends ElementControllerBase
     public function convertAction(
         ConvertDocumentPayload $payload,
         ConvertDocumentHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $handler($payload);
 
         return $this->apiOk();
@@ -323,8 +302,7 @@ class DocumentController extends ElementControllerBase
     public function translationDetermineParentAction(
         DetermineTranslationParentPayload $payload,
         DetermineTranslationParentHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload));
     }
 
@@ -333,8 +311,7 @@ class DocumentController extends ElementControllerBase
     public function translationAddAction(
         AddDocumentTranslationPayload $payload,
         AddDocumentTranslationHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $handler($payload);
 
         return $this->apiOk();
@@ -345,8 +322,7 @@ class DocumentController extends ElementControllerBase
     public function translationRemoveAction(
         RemoveDocumentTranslationPayload $payload,
         RemoveDocumentTranslationHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $handler($payload);
 
         return $this->apiOk();
@@ -357,9 +333,7 @@ class DocumentController extends ElementControllerBase
     public function translationCheckLanguageAction(
         CheckTranslationLanguagePayload $payload,
         CheckTranslationLanguageHandler $handler,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         return $this->apiJson($handler($payload));
     }
-
 }

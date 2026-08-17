@@ -15,19 +15,30 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderContentPreview;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderContentPreview\GetFolderContentPreviewPayload;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 
 final class GetFolderContentPreviewHandler
 {
@@ -37,7 +48,8 @@ final class GetFolderContentPreviewHandler
         private readonly GridHelperService $gridHelperService,
         private readonly ElementServiceInterface $elementService,
         private readonly CurrentControllerContextInterface $currentControllerContext,
-    ) {}
+    ) {
+    }
 
     public function __invoke(GetFolderContentPreviewPayload $payload): GetFolderContentPreviewResult
     {

@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -13,16 +16,14 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Service\DataObject;
 
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
+use OpenDxp\Bundle\AdminBundle\Mapper\GridData;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
-use OpenDxp\Bundle\AdminBundle\Mapper\GridData;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Logger;
@@ -150,11 +151,11 @@ final class DataObjectGridService
 
                     $o = GridData\DataObject::getData(
                         $object,
-                            $allParams['fields'] ?? null,
+                        $allParams['fields'] ?? null,
                         $requestedLanguage,
                         [
                             'csvMode' => $csvMode,
-                            'helperDefinitions' => $this->gridColumnConfigSession->getHelperColumns()
+                            'helperDefinitions' => $this->gridColumnConfigSession->getHelperColumns(),
                         ]
                     );
 

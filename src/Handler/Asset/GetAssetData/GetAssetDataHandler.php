@@ -15,16 +15,28 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\GetAssetData;
 
 use Exception;
-use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\AdminStyleEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\PhpMetaEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\PreSendDataEventEnricher;
 use OpenDxp\Bundle\AdminBundle\Enricher\Element\UserNamesEnricher;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Element;
@@ -32,7 +44,6 @@ use OpenDxp\Model\Metadata;
 use OpenDxp\Model\Schedule\Task;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class GetAssetDataHandler
 {
@@ -46,7 +57,8 @@ final class GetAssetDataHandler
         private readonly EditLockService $editLockService,
         private readonly PhpMetaEnricher $phpMetaEnricher,
         private readonly PreSendDataEventEnricher $preSendDataEventEnricher,
-    ) {}
+    ) {
+    }
 
     public function __invoke(GetAssetDataPayload $payload): GetAssetDataResult
     {
@@ -191,6 +203,4 @@ final class GetAssetDataHandler
 
         return $stream;
     }
-
 }
-

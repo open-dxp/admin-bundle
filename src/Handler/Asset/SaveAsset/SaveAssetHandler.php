@@ -15,10 +15,22 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\SaveAsset;
 
-use OpenDxp\Bundle\AdminBundle\Mapper\Asset\AssetPayloadMapper;
 use OpenDxp\Bundle\AdminBundle\Coordinator\Asset\AssetPersistenceCoordinator;
+use OpenDxp\Bundle\AdminBundle\Mapper\Asset\AssetPayloadMapper;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -28,7 +40,8 @@ final class SaveAssetHandler
     public function __construct(
         private readonly AssetPayloadMapper $payloadMapper,
         private readonly AssetPersistenceCoordinator $coordinator,
-    ) {}
+    ) {
+    }
 
     public function __invoke(SaveAssetPayload $payload): SaveAssetResult
     {

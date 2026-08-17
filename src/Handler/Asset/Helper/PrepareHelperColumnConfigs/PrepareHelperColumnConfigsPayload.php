@@ -21,9 +21,9 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class PrepareHelperColumnConfigsPayload implements ExtJsPayloadInterface
 {
-    public function __construct(
-        public readonly array $columns,
-    ) {}
+    public function __construct(public readonly array $columns,)
+    {
+    }
 
     public static function fromRequest(Request $request): static
     {

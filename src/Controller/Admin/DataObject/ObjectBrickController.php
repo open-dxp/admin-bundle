@@ -10,8 +10,7 @@ declare(strict_types=1);
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (https://pimcore.com)
- * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
@@ -24,12 +23,12 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ExportObjectBrick\
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ExportObjectBrick\ExportObjectBrickPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetBrickUsages\GetBrickUsagesHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetBrickUsages\GetBrickUsagesPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrick\GetObjectBrickHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrick\GetObjectBrickPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickList\GetObjectBrickListHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickList\GetObjectBrickListPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickTree\GetObjectBrickTreeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrickTree\GetObjectBrickTreePayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrick\GetObjectBrickHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\GetObjectBrick\GetObjectBrickPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ImportObjectBrick\ImportObjectBrickHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\ImportObjectBrick\ImportObjectBrickPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ObjectBrick\UpdateObjectBrick\UpdateObjectBrickHandler;
@@ -86,8 +85,8 @@ class ObjectBrickController extends AdminAbstractController
         return $this->apiJson($handler($payload), envelope: false);
     }
 
-    #[IsGranted(CorePermission::Objectbricks->value)]
     #[AsHtmlContentTypeResponse]
+    #[IsGranted(CorePermission::Objectbricks->value)]
     #[Route('/import-objectbrick', name: 'importobjectbrick', methods: ['POST'])]
     public function importObjectbrickAction(ImportObjectBrickHandler $handler, ImportObjectBrickPayload $payload): JsonResponse
     {

@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,15 +15,15 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Service\Admin;
 
 use Doctrine\DBAL\Connection;
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Dto\Admin\StatisticsDto;
 use OpenDxp\Version;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Throwable;
 
 final class AdminStatisticsService
 {
@@ -29,13 +32,14 @@ final class AdminStatisticsService
         private readonly KernelInterface $kernel,
         #[Autowire('%secret%')]
         private readonly string $secret,
-    ) {}
+    ) {
+    }
 
     public function createStatistics(): StatisticsDto
     {
         try {
             $dbVersion = $this->db->fetchOne('SELECT VERSION()');
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $dbVersion = null;
         }
 
@@ -54,7 +58,7 @@ final class AdminStatisticsService
     {
         try {
             return sha1(substr($this->secret, 3, -3));
-        } catch (\Exception) {
+        } catch (Exception) {
             return 'not-set';
         }
     }

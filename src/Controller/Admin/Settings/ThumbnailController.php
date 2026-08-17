@@ -9,8 +9,7 @@ declare(strict_types=1);
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (https://pimcore.com)
- * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
@@ -22,9 +21,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\Settings\AddThumbnail\AddThumbnailPayload
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteThumbnail\DeleteThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteThumbnail\DeleteThumbnailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetDownloadableThumbnails\GetDownloadableThumbnailsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetThumbnailTree\GetThumbnailTreeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetThumbnail\GetThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetThumbnail\GetThumbnailPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetThumbnailTree\GetThumbnailTreeHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateThumbnail\UpdateThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateThumbnail\UpdateThumbnailPayload;
 use OpenDxp\Security\CorePermission;

@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,17 +15,15 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\RemoveFromSession;
 
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
 
 final class RemoveFromSessionHandler
 {
-    public function __construct(
-        private readonly ElementDraftService $elementDraftService,
-    ) {}
+    public function __construct(private readonly ElementDraftService $elementDraftService,)
+    {
+    }
 
     public function __invoke(RemoveFromSessionPayload $payload): void
     {

@@ -15,20 +15,35 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\UpdateAsset;
 
+use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\UpdateAsset\UpdateAssetPayload;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
 use OpenDxp\Logger;
 use OpenDxp\Model\Asset;
 use RuntimeException;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 
 final class UpdateAssetHandler
 {
     public function __construct(
-        private readonly AdminUserContextInterface $userContext,private readonly ElementServiceInterface $elementService) {}
+        private readonly AdminUserContextInterface $userContext,
+        private readonly ElementServiceInterface $elementService
+    ) {
+    }
 
     public function __invoke(UpdateAssetPayload $payload): UpdateAssetResult
     {
@@ -75,7 +90,7 @@ final class UpdateAssetHandler
 
                 try {
                     $asset->save();
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     throw new AdminOperationFailedException($e->getMessage());
                 }
 
@@ -84,6 +99,7 @@ final class UpdateAssetHandler
 
             $msg = 'prevented moving asset, asset with same path+key already exists at target location or the asset is locked. ID: ' . $asset->getId();
             Logger::debug($msg);
+
             throw new AdminOperationFailedException($msg);
         }
 
@@ -92,7 +108,7 @@ final class UpdateAssetHandler
 
             try {
                 $asset->save();
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 throw new AdminOperationFailedException($e->getMessage());
             }
 
@@ -100,6 +116,7 @@ final class UpdateAssetHandler
         }
 
         Logger::debug('prevented update asset because of missing permissions');
+
         throw new AdminOperationFailedException('prevented update asset because of missing permissions');
     }
 }

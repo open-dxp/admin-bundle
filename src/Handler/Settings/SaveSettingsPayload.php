@@ -24,7 +24,8 @@ final readonly class SaveSettingsPayload implements ExtJsPayloadInterface
     public function __construct(
         public readonly array $values,
         public readonly string $env,
-    ) {}
+    ) {
+    }
 
     public static function fromRequest(Request $request): static
     {

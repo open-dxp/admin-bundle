@@ -15,14 +15,24 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs;
 
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
-use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
-use OpenDxp\Model\User;
-use OpenDxp\Tool\Storage;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
+use OpenDxp\Tool\Storage;
 
 final class GetExportJobsHandler
 {
@@ -30,7 +40,8 @@ final class GetExportJobsHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly GridHelperService $gridHelperService,
         private readonly GridExportService $gridExportService,
-    ) {}
+    ) {
+    }
 
     public function __invoke(GetExportJobsPayload $payload): GetExportJobsResult
     {

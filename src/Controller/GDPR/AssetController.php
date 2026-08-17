@@ -30,8 +30,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * @internal
  */
-#[Route('/asset')]
 #[IsGranted(AdminPermission::GdprDataExtractor->value)]
+#[Route('/asset')]
 class AssetController extends AdminAbstractController
 {
     #[Route('/search-assets', name: 'opendxp_admin_gdpr_asset_searchasset', methods: ['GET'])]

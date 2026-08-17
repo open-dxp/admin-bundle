@@ -15,6 +15,18 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
 use DateInterval;
@@ -26,9 +38,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderContentPreview\G
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderContentPreview\GetFolderContentPreviewPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderThumbnail\GetFolderThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetFolderThumbnail\GetFolderThumbnailPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnailFileinfo\GetImageThumbnailFileinfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail\GetImageThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail\GetImageThumbnailPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnailFileinfo\GetImageThumbnailFileinfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetVideoThumbnail\GetVideoThumbnailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetVideoThumbnail\GetVideoThumbnailPayload;
 use OpenDxp\Security\CorePermission;
@@ -84,8 +96,8 @@ class AssetThumbnailController extends AdminAbstractController
         return $this->apiJson($handler($payload));
     }
 
-    #[Route('/get-folder-thumbnail', name: 'opendxp_admin_asset_getfolderthumbnail', methods: ['GET'])]
     #[IsGranted(CorePermission::Assets->value)]
+    #[Route('/get-folder-thumbnail', name: 'opendxp_admin_asset_getfolderthumbnail', methods: ['GET'])]
     public function getFolderThumbnailAction(GetFolderThumbnailPayload $payload, GetFolderThumbnailHandler $handler): StreamedResponse
     {
         $result = $handler($payload);
@@ -139,8 +151,8 @@ class AssetThumbnailController extends AdminAbstractController
         return $response;
     }
 
-    #[Route('/get-folder-content-preview', name: 'opendxp_admin_asset_getfoldercontentpreview', methods: ['GET'])]
     #[IsGranted(CorePermission::Assets->value)]
+    #[Route('/get-folder-content-preview', name: 'opendxp_admin_asset_getfoldercontentpreview', methods: ['GET'])]
     public function getFolderContentPreviewAction(
         GetFolderContentPreviewPayload $payload,
         GetFolderContentPreviewHandler $handler,

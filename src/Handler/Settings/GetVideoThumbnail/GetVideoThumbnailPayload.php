@@ -21,9 +21,9 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetVideoThumbnailPayload implements ExtJsPayloadInterface
 {
-    public function __construct(
-        public readonly string $name,
-    ) {}
+    public function __construct(public readonly string $name,)
+    {
+    }
 
     public static function fromRequest(Request $request): static
     {

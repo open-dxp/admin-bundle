@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,16 +15,15 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Service\Grid;
 
 use Exception;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\UnableToReadFile;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
-use OpenDxp\Tool\Storage;
 use OpenDxp\File;
+use OpenDxp\Tool\Storage;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Response;
@@ -57,7 +59,7 @@ final class GridExportService
 
             return $response;
         } catch (FilesystemException | UnableToReadFile) {
-            throw new \RuntimeException('CSV file not found');
+            throw new RuntimeException('CSV file not found');
         }
     }
 
@@ -72,7 +74,7 @@ final class GridExportService
         try {
             return $this->gridHelperService->createXlsxExportFile($storage, File::getValidFilename($fileHandle), $csvFile);
         } catch (Exception | FilesystemException | UnableToReadFile) {
-            throw new \RuntimeException('XLSX file not found');
+            throw new RuntimeException('XLSX file not found');
         }
     }
 }

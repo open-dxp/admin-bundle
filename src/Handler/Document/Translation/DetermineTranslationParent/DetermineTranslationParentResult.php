@@ -1,5 +1,8 @@
 <?php
 
+
+declare(strict_types=1);
+
 /**
  * OpenDXP
  *
@@ -12,8 +15,6 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-declare(strict_types=1);
-
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Translation\DetermineTranslationParent;
 
 use OpenDxp\Bundle\AdminBundle\Handler\ConditionalResultInterface;
@@ -24,7 +25,8 @@ final readonly class DetermineTranslationParentResult implements ConditionalResu
         public readonly bool $found,
         public readonly ?string $targetPath,
         public readonly ?int $targetId,
-    ) {}
+    ) {
+    }
 
     public function isSuccessful(): bool
     {
