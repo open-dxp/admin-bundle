@@ -37,27 +37,30 @@ Symfony autoconfiguration registers the subscriber automatically when `EventSubs
 
 ### Document Events
 
-| Constant                         | Event Class | Description                                  |
-|----------------------------------|-------------|----------------------------------------------|
-| `DOCUMENT_GET_PRE_SEND_DATA`     | —           | Before document data is sent to the frontend |
-| `DOCUMENT_LIST_BEFORE_LIST_LOAD` | —           | Before document listing is loaded            |
-| `DOCUMENT_LIST_AFTER_LIST_LOAD`  | —           | After document listing is loaded             |
+| Constant                         | Event Class | Description                                    |
+|----------------------------------|-------------|------------------------------------------------|
+| `DOCUMENT_GET_PRE_SEND_DATA`     | —           | Before document data is sent to the frontend   |
+| `DOCUMENT_LIST_BEFORE_LIST_LOAD` | —           | Before document listing is loaded              |
+| `DOCUMENT_LIST_AFTER_LIST_LOAD`  | —           | After document listing is loaded               |
+| `DOCUMENT_GET_IS_LOCKED`         | —           | Before the edit lock is handled for a document |
 
 ### Asset Events
 
-| Constant                      | Event Class | Description                               |
-|-------------------------------|-------------|-------------------------------------------|
-| `ASSET_GET_PRE_SEND_DATA`     | —           | Before asset data is sent to the frontend |
-| `ASSET_LIST_BEFORE_LIST_LOAD` | —           | Before asset listing is loaded            |
-| `ASSET_LIST_AFTER_LIST_LOAD`  | —           | After asset listing is loaded             |
+| Constant                      | Event Class | Description                                  |
+|-------------------------------|-------------|----------------------------------------------|
+| `ASSET_GET_PRE_SEND_DATA`     | —           | Before asset data is sent to the frontend    |
+| `ASSET_LIST_BEFORE_LIST_LOAD` | —           | Before asset listing is loaded               |
+| `ASSET_LIST_AFTER_LIST_LOAD`  | —           | After asset listing is loaded                |
+| `ASSET_GET_IS_LOCKED`         | —           | Before the edit lock is handled for an asset |
 
 ### Object Events
 
-| Constant                       | Event Class | Description                                     |
-|--------------------------------|-------------|-------------------------------------------------|
-| `OBJECT_GET_PRE_SEND_DATA`     | —           | Before data object data is sent to the frontend |
-| `OBJECT_LIST_BEFORE_LIST_LOAD` | —           | Before object listing is loaded                 |
-| `OBJECT_LIST_AFTER_LIST_LOAD`  | —           | After object listing is loaded                  |
+| Constant                       | Event Class | Description                                       |
+|--------------------------------|-------------|---------------------------------------------------|
+| `OBJECT_GET_PRE_SEND_DATA`     | —           | Before data object data is sent to the frontend   |
+| `OBJECT_LIST_BEFORE_LIST_LOAD` | —           | Before object listing is loaded                   |
+| `OBJECT_LIST_AFTER_LIST_LOAD`  | —           | After object listing is loaded                    |
+| `OBJECT_GET_IS_LOCKED`         | —           | Before the edit lock is handled for a data object |
 
 ### Element Style Events
 

@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * OpenDXP
@@ -14,27 +13,37 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
+declare(strict_types=1);
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use InvalidArgumentException;
-use Locale;
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
-use OpenDxp\Bundle\AdminBundle\Tool as AdminTool;
-use OpenDxp\Config;
-use OpenDxp\Controller\Config\ControllerDataProvider;
-use OpenDxp\Helper\FileSystemHelper;
-use OpenDxp\Localization\LocaleServiceInterface;
-use OpenDxp\Tool;
-use OpenDxp\Tool\Storage;
-use OpenDxp\Translation\Translator;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\AdminCss\AdminCssHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetAvailableControllerReferences\GetAvailableControllerReferencesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetAvailableLanguages\GetAvailableLanguagesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetAvailableTemplates\GetAvailableTemplatesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetCountryList\GetCountryListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetIconList\GetIconListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetIconList\GetIconListPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetJsonTranslations\GetJsonTranslationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetJsonTranslations\GetJsonTranslationsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetLanguageFlag\GetLanguageFlagHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetLanguageFlag\GetLanguageFlagPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetLanguageList\GetLanguageListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetValidFilename\GetValidFilenameHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\GetValidFilename\GetValidFilenamePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\Maintenance\MaintenanceHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\Maintenance\MaintenancePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\ScriptProxy\ScriptProxyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Misc\ScriptProxy\ScriptProxyPayload;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
@@ -43,71 +52,27 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class MiscController extends AdminAbstractController
 {
     #[Route('/get-available-controller-references', name: 'opendxp_admin_misc_getavailablecontroller_references', methods: ['GET'])]
-    public function getAvailableControllerReferencesAction(Request $request, ControllerDataProvider $provider): JsonResponse
-    {
-        $controllerReferences = $provider->getControllerReferences();
-
-        $result = array_map(fn ($controller) => [
-            'name' => $controller,
-        ], $controllerReferences);
-
-        return $this->adminJson([
-            'success' => true,
-            'data' => $result,
-            'total' => count($result),
-        ]);
+    public function getAvailableControllerReferencesAction(
+        GetAvailableControllerReferencesHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler());
     }
 
     #[Route('/get-available-templates', name: 'opendxp_admin_misc_getavailabletemplates', methods: ['GET'])]
-    public function getAvailableTemplatesAction(ControllerDataProvider $provider): JsonResponse
-    {
-        $templates = $provider->getTemplates();
-
-        sort($templates, SORT_NATURAL | SORT_FLAG_CASE);
-
-        $result = array_map(static fn ($template) => [
-            'path' => $template,
-        ], $templates);
-
-        return $this->adminJson([
-            'data' => $result,
-        ]);
+    public function getAvailableTemplatesAction(
+        GetAvailableTemplatesHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[Route('/json-translations-system', name: 'opendxp_admin_misc_jsontranslationssystem', methods: ['GET'])]
-    public function jsonTranslationsSystemAction(Request $request, TranslatorInterface $translator): Response
-    {
-        $language = $request->query->get('language');
+    public function jsonTranslationsSystemAction(
+        GetJsonTranslationsPayload $payload,
+        GetJsonTranslationsHandler $handler,
+    ): Response {
+        $result = $handler($payload);
 
-        /** @var Translator $translator */
-        $translator->lazyInitialize('admin', $language);
-
-        $translations = [];
-
-        $fallbackLanguages = [];
-        if (null !== Locale::getRegion($language)) {
-            // if language is region specific, add the primary language as fallback
-            $fallbackLanguages[] = Locale::getPrimaryLanguage($language);
-        }
-        if ($language != 'en') {
-            // add en as a fallback
-            $fallbackLanguages[] = 'en';
-        }
-
-        foreach (['admin', 'admin_ext'] as $domain) {
-            $translations = array_replace($translations, $translator->getCatalogue($language)->all($domain));
-
-            foreach ($fallbackLanguages as $fallbackLanguage) {
-                $translator->lazyInitialize($domain, $fallbackLanguage);
-                foreach ($translator->getCatalogue($fallbackLanguage)->all($domain) as $key => $value) {
-                    if (empty($translations[$key])) {
-                        $translations[$key] = $value;
-                    }
-                }
-            }
-        }
-
-        $response = new Response('opendxp.system_i18n = ' . $this->encodeJson($translations) . ';');
+        $response = new Response('opendxp.system_i18n = ' . $this->encodeJson($result->translations) . ';');
         $response->headers->set('Content-Type', 'text/javascript');
 
         return $response;
@@ -117,220 +82,132 @@ class MiscController extends AdminAbstractController
      * @internal
      */
     #[Route('/script-proxy', name: 'opendxp_admin_misc_scriptproxy', methods: ['GET'])]
-    public function scriptProxyAction(Request $request): Response
-    {
-        $storageFile = $request->query->get('storageFile');
-        if (!$storageFile) {
-            throw new InvalidArgumentException('The parameter storageFile is required');
-        }
+    public function scriptProxyAction(
+        ScriptProxyPayload $payload,
+        ScriptProxyHandler $handler,
+    ): Response {
+        $result = $handler($payload);
 
-        $fileExtension = pathinfo($storageFile, PATHINFO_EXTENSION);
-        $storage = Storage::get('admin');
-        $scriptsContent = $storage->read($storageFile);
+        $lifetime = 86400;
 
-        if (!empty($scriptsContent)) {
-            $contentType = 'text/javascript';
-            if ($fileExtension === 'css') {
-                $contentType = 'text/css';
-            }
+        $response = new Response($result->content);
+        $response->headers->set('Cache-Control', 'max-age=' . $lifetime);
+        $response->headers->set('Pragma', '');
+        $response->headers->set('Content-Type', $result->contentType);
+        $response->headers->set('Expires', gmdate('D, d M Y H:i:s', time() + $lifetime) . ' GMT');
 
-            $lifetime = 86400;
-
-            $response = new Response($scriptsContent);
-            $response->headers->set('Cache-Control', 'max-age=' . $lifetime);
-            $response->headers->set('Pragma', '');
-            $response->headers->set('Content-Type', $contentType);
-            $response->headers->set('Expires', gmdate('D, d M Y H:i:s', time() + $lifetime) . ' GMT');
-
-            return $response;
-        }
-
-        throw $this->createNotFoundException('Scripts not found');
+        return $response;
     }
 
     #[Route('/admin-css', name: 'opendxp_admin_misc_admincss', methods: ['GET'])]
-    public function adminCssAction(Request $request, Config $config): Response
-    {
-        // customviews config
-        $cvData = \OpenDxp\Bundle\AdminBundle\CustomView\Config::get();
-
-        // languages
-        $languages = \OpenDxp\Tool::getValidLanguages();
-        $adminLanguages = \OpenDxp\Tool\Admin::getLanguages();
-        $languages = array_unique([...$languages, ...$adminLanguages]);
+    public function adminCssAction(
+        AdminCssHandler $handler,
+    ): Response {
+        $result = $handler();
 
         $response = $this->render('@OpenDxpAdmin/admin/misc/admin_css.html.twig', [
-            'customviews' => $cvData,
-            'adminSettings' => AdminConfig::get(),
-            'languages' => $languages,
+            'customviews'   => $result->customviews,
+            'adminSettings' => $result->adminSettings,
+            'languages'     => $result->languages,
         ]);
+
         $response->headers->set('Content-Type', 'text/css; charset=UTF-8');
 
         return $response;
     }
 
-    #[Route('/ping', name: 'opendxp_admin_misc_ping', methods: ['GET'])]
-    public function pingAction(Request $request): JsonResponse
-    {
-        $response = [
-            'success' => true,
-        ];
-
-        return $this->adminJson($response);
-    }
-
     #[Route('/available-languages', name: 'opendxp_admin_misc_availablelanguages', methods: ['GET'])]
-    public function availableLanguagesAction(Request $request): Response
-    {
-        $locales = Tool::getSupportedLocales();
-        $response = new Response('opendxp.available_languages = ' . $this->encodeJson($locales) . ';');
+    public function availableLanguagesAction(
+        GetAvailableLanguagesHandler $handler,
+    ): Response {
+        $result = $handler();
+
+        $response = new Response('opendxp.available_languages = ' . $this->encodeJson($result->locales) . ';');
         $response->headers->set('Content-Type', 'text/javascript');
 
         return $response;
     }
 
     #[Route('/get-valid-filename', name: 'opendxp_admin_misc_getvalidfilename', methods: ['GET'])]
-    public function getValidFilenameAction(Request $request): JsonResponse
-    {
-        return $this->adminJson([
-            'filename' => \OpenDxp\Model\Element\Service::getValidKey($request->query->get('value'), $request->query->get('type')),
-        ]);
+    public function getValidFilenameAction(
+        GetValidFilenamePayload $payload,
+        GetValidFilenameHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
+    #[IsGranted(CorePermission::MaintenanceMode->value)]
+    #[SessionIdentityAware]
     #[Route('/maintenance', name: 'opendxp_admin_misc_maintenance', methods: ['POST'])]
-    public function maintenanceAction(Request $request, Tool\MaintenanceModeHelperInterface $maintenanceModeHelper): JsonResponse
-    {
-        $this->checkPermission('maintenance_mode');
+    public function maintenanceAction(
+        MaintenancePayload $payload,
+        MaintenanceHandler $handler,
+    ): JsonResponse {
+        $handler($payload);
 
-        if ($request->query->get('activate')) {
-            $maintenanceModeHelper->activate($request->getSession()->getId());
-        }
-
-        if ($request->query->get('deactivate')) {
-            $maintenanceModeHelper->deactivate();
-        }
-
-        return $this->adminJson([
-            'success' => true,
-        ]);
+        return $this->apiOk();
     }
 
     #[Route('/country-list', name: 'opendxp_admin_misc_countrylist', methods: ['GET'])]
-    public function countryListAction(LocaleServiceInterface $localeService): JsonResponse
-    {
-        $countries = $localeService->getDisplayRegions();
-        asort($countries);
-        $options = [];
-
-        foreach ($countries as $short => $translation) {
-            if (strlen($short) === 2) {
-                $options[] = [
-                    'name' => $translation,
-                    'code' => $short,
-                ];
-            }
-        }
-
-        return $this->adminJson(['data' => $options]);
+    public function countryListAction(
+        GetCountryListHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[Route('/language-list', name: 'opendxp_admin_misc_languagelist', methods: ['GET'])]
-    public function languageListAction(Request $request): JsonResponse
-    {
-        $locales = Tool::getSupportedLocales();
-        $options = [];
-
-        foreach ($locales as $short => $translation) {
-            $options[] = [
-                'name' => $translation,
-                'code' => $short,
-            ];
-        }
-
-        return $this->adminJson(['data' => $options]);
+    public function languageListAction(
+        GetLanguageListHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler(), envelope: false);
     }
 
     #[Route('/get-language-flag', name: 'opendxp_admin_misc_getlanguageflag', methods: ['GET'])]
-    public function getLanguageFlagAction(Request $request): BinaryFileResponse
-    {
-        $iconPath = AdminTool::getLanguageFlagFile($request->query->get('language'));
+    public function getLanguageFlagAction(
+        GetLanguageFlagPayload $payload,
+        GetLanguageFlagHandler $handler,
+    ): BinaryFileResponse {
+        $result = $handler($payload);
 
-        $response = new BinaryFileResponse($iconPath);
+        $response = new BinaryFileResponse($result->iconPath);
         $response->headers->set('Content-Type', 'image/svg+xml');
 
         return $response;
     }
 
     #[Route('/icon-list', name: 'opendxp_admin_misc_iconlist', methods: ['GET'])]
-    public function iconListAction(Request $request, ?Profiler $profiler): Response
-    {
+    public function iconListAction(
+        GetIconListPayload $payload,
+        GetIconListHandler $handler,
+        ?Profiler $profiler,
+    ): Response {
         if ($profiler) {
             $profiler->disable();
         }
 
-        $type = $request->query->get('type');
-        $publicDir = OPENDXP_WEB_ROOT . '/bundles/opendxpadmin';
-        $iconDir = $publicDir . '/img';
-        $extraInfo = null;
-
-        $icons = match ($type) {
-            'color' => FileSystemHelper::scanDirectory($iconDir . '/flat-color-icons/'),
-            'white' => FileSystemHelper::scanDirectory($iconDir . '/flat-white-icons/'),
-            'twemoji' => FileSystemHelper::scanDirectory($iconDir . '/twemoji/'),
-            'flags' => $this->getFlags(),
-            default => []
-        };
-
-        $source = match ($type) {
-            'color', 'white' =>
-                'based on the ' .
-                '<a href="https://github.com/google/material-design-icons/blob/master/LICENSE" target="_blank">Material Design Icons</a>',
-            'twemoji' =>
-                'based on the ' .
-                '<a href="https://github.com/twitter/twemoji/blob/master/LICENSE" target="_blank">Twemoji icons</a>',
-            default => ''
-        };
-
-        if ($type === 'twemoji') {
-            $extraInfo = 'ℹ Click on icon with green border to display all its related variants. Click on the letter to display flags with the clicked initial';
-        }
-
-        $iconsCss = file_get_contents($publicDir . '/css/icons.css');
-
-        if ($type === null) {
+        if ($payload->type === null) {
             return $this->render('@OpenDxpAdmin/admin/misc/icon_library_reload.html.twig');
         }
 
+        $result = $handler($payload);
+
         return $this->render('@OpenDxpAdmin/admin/misc/icon_list.html.twig', [
-            'icons' => $icons,
-            'iconsCss' => $iconsCss,
-            'type' => $type,
-            'extraInfo' => $extraInfo,
-            'source' => $source,
+            'icons'     => $result->icons,
+            'iconsCss'  => $result->iconsCss,
+            'type'      => $result->type,
+            'extraInfo' => $result->extraInfo,
+            'source'    => $result->source,
         ]);
     }
 
-    private function getFlags(): array
+    #[Route('/ping', name: 'opendxp_admin_misc_ping', methods: ['GET'])]
+    public function pingAction(): JsonResponse
     {
-        $locales = Tool::getSupportedLocales();
-        $languageOptions = [];
-        foreach (array_keys($locales) as $short) {
-            if (!empty($short)) {
-                $flag = AdminTool::getLanguageFlagFile($short, true, false);
-                if ($flag) {
-                    $languageOptions[] = $flag;
-                }
-            }
-        }
-
-        $languageOptions = array_unique($languageOptions);
-        sort($languageOptions);
-
-        return $languageOptions;
+        return $this->apiOk();
     }
 
     #[Route('/test', name: 'opendxp_admin_misc_test')]
-    public function testAction(Request $request): Response
+    public function testAction(): Response
     {
         return new Response('done');
     }

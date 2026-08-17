@@ -16,19 +16,31 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
-use Exception;
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Model\DataObject\Data\QuantityValue;
-use OpenDxp\Model\DataObject\QuantityValue\Service as QuantityValueService;
-use OpenDxp\Model\DataObject\QuantityValue\Unit;
-use OpenDxp\Model\DataObject\QuantityValue\UnitConversionService;
-use OpenDxp\Model\Translation;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValues\ConvertAllQuantityValuesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertAllQuantityValues\ConvertAllQuantityValuesPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertQuantityValue\ConvertQuantityValueHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ConvertQuantityValue\ConvertQuantityValuePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\CreateQuantityValueUnit\CreateQuantityValueUnitHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\DeleteQuantityValueUnit\DeleteQuantityValueUnitHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ExportQuantityValueUnits\ExportQuantityValueUnitsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\GetQuantityValueUnitList\GetQuantityValueUnitListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\GetQuantityValueUnitList\GetQuantityValueUnitListPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\GetQuantityValueUnits\GetQuantityValueUnitsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\GetQuantityValueUnits\GetQuantityValueUnitsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ImportQuantityValueUnits\ImportQuantityValueUnitsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\ImportQuantityValueUnits\ImportQuantityValueUnitsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\QuantityValueUnitPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\QuantityValue\UpdateQuantityValueUnit\UpdateQuantityValueUnitHandler;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
@@ -36,254 +48,90 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/quantity-value', name: 'opendxp_admin_dataobject_quantityvalue_')]
 class QuantityValueController extends AdminAbstractController
 {
-    public function __construct(protected QuantityValueService $service)
-    {
-    }
-
+    #[AsHtmlContentTypeResponse]
     #[Route('/unit-import', name: 'unitimport', methods: ['POST', 'PUT'])]
-    public function unitImportAction(Request $request): JsonResponse
+    public function unitImportAction(ImportQuantityValueUnitsPayload $payload, ImportQuantityValueUnitsHandler $handler): JsonResponse
     {
-        /** @var UploadedFile $uploadFile */
-        $uploadFile = $request->files->get('Filedata');
+        $handler($payload);
 
-        $json = file_get_contents($uploadFile->getPathname());
-        if ($json === false) {
-            throw new BadRequestHttpException('Failed to read file');
-        }
-        $success = $this->service->importDefinitionFromJson($json);
-        $response = $this->adminJson(['success' => $success]);
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->apiOk();
     }
 
     #[Route('/unit-export', name: 'unitexport', methods: ['GET'])]
-    public function unitExportAction(Request $request): Response
+    public function unitExportAction(ExportQuantityValueUnitsHandler $handler): Response
     {
-        $result = $this->service->generateDefinitionJson();
-        $response = new Response($result);
+        $response = new Response($handler());
         $response->headers->set('Content-Type', 'application/json');
         $response->headers->set('Content-Disposition', 'attachment; filename="quantityvalue_unit_export.json"');
 
         return $response;
     }
 
-    /**
-     * @throws Exception
-     */
     #[Route('/unit-proxy', name: 'unitproxyget', methods: ['GET'])]
-    public function unitProxyGetAction(Request $request): JsonResponse
+    #[IsGranted(CorePermission::QuantityValueUnits->value)]
+    public function unitProxyGetAction(GetQuantityValueUnitsHandler $handler, GetQuantityValueUnitsPayload $payload): JsonResponse
     {
-        $this->checkPermission('quantityValueUnits');
-
-        $list = new Unit\Listing();
-
-        $order = ['ASC', 'ASC', 'ASC'];
-        $orderKey = ['baseunit', 'factor', 'abbreviation'];
-
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->query->all());
-
-        // Prepend user-requested sorting settings but keep the others to keep secondary order of quantity values in respective order
-        if ($sortingSettings['orderKey']) {
-            array_unshift($orderKey, $sortingSettings['orderKey']);
-        }
-        if ($sortingSettings['order']) {
-            array_unshift($order, $sortingSettings['order']);
-        }
-
-        $list->setOrder($order);
-        $list->setOrderKey($orderKey);
-
-        $list->setLimit((int)$request->query->get('limit', '25'));
-        $list->setOffset((int)$request->query->get('start', '0'));
-
-        $condition = '1 = 1';
-        if ($request->query->get('filter')) {
-            $filterString = $request->query->get('filter');
-            $filters = json_decode($filterString);
-            $db = \OpenDxp\Db::get();
-            foreach ($filters as $f) {
-                if ($f->type === 'string') {
-                    $condition .= ' AND ' . $db->quoteIdentifier($f->property) . ' LIKE ' . $db->quote('%' . $f->value . '%');
-                } elseif ($f->type === 'numeric') {
-                    $operator = $this->getOperator($f->comparison);
-                    $condition .= ' AND ' . $db->quoteIdentifier($f->property) . ' ' . $operator . ' ' . $db->quote($f->value);
-                }
-            }
-            $list->setCondition($condition);
-        }
-
-        $units = [];
-        foreach ($list->getUnits() as $u) {
-            $units[] = $u->getObjectVars();
-        }
-
-        return $this->adminJson(['data' => $units, 'success' => true, 'total' => $list->getTotalCount()]);
+        return $this->apiJson($handler($payload));
     }
 
-    /**
-     * @throws Exception
-     */
     #[Route('/unit-proxy', name: 'unitproxy', methods: ['POST', 'PUT'])]
-    public function unitProxyAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('quantityValueUnits');
-
-        if ($request->request->has('data')) {
-            $data = json_decode($request->request->get('data'), true);
-            if (!is_array($data)) {
-                throw new BadRequestHttpException('Invalid data format');
-            }
-            $id = $data['id'];
-            $unit = Unit::getById($id);
-
-            if ($request->query->get('xaction') === 'destroy') {
-                if (!empty($unit)) {
-                    $unit->delete();
-
-                    return $this->adminJson(['data' => [], 'success' => true]);
-                }
-
-                throw new Exception('Unit with id ' . $id . ' not found.');
-            }
-            if ($request->query->get('xaction') === 'update') {
-                if (!empty($unit)) {
-                    if (($data['baseunit'] ?? null) == -1) {
-                        $data['baseunit'] = null;
-                    }
-                    $unit->setValues($data);
-                    $unit->save();
-
-                    return $this->adminJson(['data' => $unit->getObjectVars(), 'success' => true]);
-                }
-
-                throw new Exception('Unit with id ' . $id . ' not found.');
-            }
-            if ($request->query->get('xaction') === 'create') {
-                if (isset($data['baseunit']) && $data['baseunit'] === -1) {
-                    $data['baseunit'] = null;
-                }
-
-                if ($unit instanceof Unit) {
-                    throw new Exception('unit with ID [' . $id . '] already exists');
-                }
-                if (mb_strlen($id) > 50) {
-                    throw new Exception('The maximal character length for the unit ID is 50 characters, the provided ID has ' . mb_strlen($id) . ' characters.');
-                }
-                $unit = new Unit();
-                $unit->setValues($data);
-                $unit->save();
-
-                return $this->adminJson(['data' => $unit->getObjectVars(), 'success' => true]);
-            }
-        }
-
-        return $this->adminJson(['success' => false]);
+    #[IsGranted(CorePermission::QuantityValueUnits->value)]
+    public function unitProxyAction(
+        Request $request,
+        #[MapQueryParameter] ?string $xaction = null,
+    ): Response {
+        return match ($xaction) {
+            'destroy' => $this->forward(self::class . '::unitProxyDestroyAction', [], $request->query->all()),
+            'update'  => $this->forward(self::class . '::unitProxyUpdateAction', [], $request->query->all()),
+            'create'  => $this->forward(self::class . '::unitProxyCreateAction', [], $request->query->all()),
+            default   => throw new AdminOperationFailedException(),
+        };
     }
 
-    private function getOperator(string $comparison): string
-    {
-        $mapper = [
-            'lt' => '<',
-            'gt' => '>',
-            'eq' => '=',
-        ];
+    #[Route('/unit-proxy-destroy', name: 'unitproxy_destroy', methods: ['POST', 'PUT'])]
+    #[IsGranted(CorePermission::QuantityValueUnits->value)]
+    public function unitProxyDestroyAction(
+        QuantityValueUnitPayload $payload,
+        DeleteQuantityValueUnitHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
+    }
 
-        return $mapper[$comparison];
+    #[Route('/unit-proxy-update', name: 'unitproxy_update', methods: ['POST', 'PUT'])]
+    #[IsGranted(CorePermission::QuantityValueUnits->value)]
+    public function unitProxyUpdateAction(
+        QuantityValueUnitPayload $payload,
+        UpdateQuantityValueUnitHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
+    }
+
+    #[Route('/unit-proxy-create', name: 'unitproxy_create', methods: ['POST', 'PUT'])]
+    #[IsGranted(CorePermission::QuantityValueUnits->value)]
+    public function unitProxyCreateAction(
+        QuantityValueUnitPayload $payload,
+        CreateQuantityValueUnitHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/unit-list', name: 'unitlist', methods: ['GET'])]
-    public function unitListAction(Request $request): JsonResponse
+    public function unitListAction(GetQuantityValueUnitListHandler $handler, GetQuantityValueUnitListPayload $payload): JsonResponse
     {
-        $list = new Unit\Listing();
-        $list->setOrderKey(['baseunit', 'factor', 'abbreviation']);
-        $list->setOrder(['ASC', 'ASC', 'ASC']);
-        if ($request->query->get('filter')) {
-            $array = explode(',', $request->query->get('filter'));
-            $quotedArray = [];
-            $db = \OpenDxp\Db::get();
-            foreach ($array as $a) {
-                $quotedArray[] = $db->quote($a);
-            }
-            $string = implode(',', $quotedArray);
-            $list->setCondition('id IN (' . $string . ')');
-        }
-
-        $result = [];
-        $units = $list->getUnits();
-        foreach ($units as &$unit) {
-            try {
-                if ($unit->getAbbreviation()) {
-                    $unit->setAbbreviation(Translation::getByKeyLocalized($unit->getAbbreviation(), Translation::DOMAIN_ADMIN,
-                        true, true));
-                }
-                if ($unit->getLongname()) {
-                    $unit->setLongname(Translation::getByKeyLocalized($unit->getLongname(), Translation::DOMAIN_ADMIN, true,
-                        true));
-                }
-                $result[] = $unit->getObjectVars();
-            } catch (Exception) {
-                // nothing to do ...
-            }
-        }
-
-        return $this->adminJson(['data' => $result, 'success' => true, 'total' => $list->getTotalCount()]);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/convert', name: 'convert', methods: ['GET'])]
-    public function convertAction(Request $request, UnitConversionService $conversionService): JsonResponse
+    #[IsGranted(CorePermission::Objects->value)]
+    public function convertAction(ConvertQuantityValueHandler $handler, ConvertQuantityValuePayload $payload): JsonResponse
     {
-        $this->checkPermission('objects');
-
-        $fromUnitId = $request->query->get('fromUnit');
-        $toUnitId = $request->query->get('toUnit');
-
-        $fromUnit = Unit::getById($fromUnitId);
-        $toUnit = Unit::getById($toUnitId);
-        if (!$fromUnit instanceof Unit || !$toUnit instanceof Unit) {
-            return $this->adminJson(['success' => false]);
-        }
-
-        try {
-            $convertedValue = $conversionService->convert(new QuantityValue($request->query->get('value'), $fromUnit), $toUnit);
-        } catch (Exception) {
-            return $this->adminJson(['success' => false]);
-        }
-
-        return $this->adminJson(['value' => $convertedValue->getValue(), 'success' => true]);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/convert-all', name: 'convertall', methods: ['GET'])]
-    public function convertAllAction(Request $request, UnitConversionService $conversionService): JsonResponse
+    #[IsGranted(CorePermission::Objects->value)]
+    public function convertAllAction(ConvertAllQuantityValuesHandler $handler, ConvertAllQuantityValuesPayload $payload): JsonResponse
     {
-        $this->checkPermission('objects');
-
-        $unitId = $request->query->get('unit');
-
-        $fromUnit = Unit::getById($unitId);
-        if (!$fromUnit instanceof Unit) {
-            return $this->adminJson(['success' => false]);
-        }
-        $baseUnit = $fromUnit->getBaseunit() ?? $fromUnit;
-
-        $units = new Unit\Listing();
-        $units->setCondition('baseunit = '.$units->quote($baseUnit->getId()).' AND id != '.$units->quote($fromUnit->getId()));
-
-        $convertedValues = [];
-        foreach ($units->getUnits() as $targetUnit) {
-            try {
-                $convertedValue = $conversionService->convert(new QuantityValue($request->query->get('value'), $fromUnit), $targetUnit);
-
-                $convertedValues[] = ['unit' => $targetUnit->getAbbreviation(), 'unitName' => $targetUnit->getLongname(), 'value' => round($convertedValue->getValue(), 4)];
-            } catch (Exception $e) {
-                return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-            }
-        }
-
-        return $this->adminJson([
-            'value' => $request->query->get('value'),
-            'fromUnit' => $fromUnit->getAbbreviation(),
-            'values' => $convertedValues, 'success' => true]
-        );
+        return $this->apiJson($handler($payload));
     }
 }

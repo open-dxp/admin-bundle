@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * OpenDXP
@@ -14,408 +13,85 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
+declare(strict_types=1);
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use Exception;
-use InvalidArgumentException;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Service\Workflow\ActionsButtonService;
-use OpenDxp\Controller\KernelControllerEventInterface;
-use OpenDxp\Model\Asset;
-use OpenDxp\Model\DataObject;
-use OpenDxp\Model\DataObject\Concrete as ConcreteObject;
-use OpenDxp\Model\Document;
-use OpenDxp\Model\Element\ValidationException;
-use OpenDxp\Tool\Console;
-use OpenDxp\Workflow\Manager;
-use OpenDxp\Workflow\Notes\CustomHtmlServiceInterface;
-use OpenDxp\Workflow\Place\StatusInfo;
-use OpenDxp\Workflow\Transition;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetModalCustomHtml\GetModalCustomHtmlHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetModalCustomHtml\GetModalCustomHtmlPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowDetails\GetWorkflowDetailsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowDetails\GetWorkflowDetailsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowForm\GetWorkflowFormHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\GetWorkflowForm\GetWorkflowFormPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\ShowGraph\GetWorkflowSvg\GetWorkflowSvgHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\ShowGraph\ShowGraphPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitGlobalAction\SubmitGlobalActionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitGlobalAction\SubmitGlobalActionPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitWorkflowTransition\SubmitWorkflowTransitionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Workflow\SubmitWorkflowTransition\SubmitWorkflowTransitionPayload;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
-use Symfony\Component\Process\Process;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\RouterInterface;
-use Symfony\Component\Workflow\Registry;
-use Symfony\Component\Workflow\WorkflowInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @internal
  */
 #[Route('/workflow')]
-class WorkflowController extends AdminAbstractController implements KernelControllerEventInterface
+class WorkflowController extends AdminAbstractController
 {
-    private ConcreteObject|Document|Asset|null $element = null;
-
-    public function __construct(protected TranslatorInterface $translator)
-    {
-    }
-
-    /**
-     * Returns a JSON of the available workflow actions to the admin panel
-     */
     #[Route('/get-workflow-form', name: 'opendxp_admin_workflow_getworkflowform', methods: ['POST'])]
-    public function getWorkflowFormAction(Request $request, Manager $workflowManager): JsonResponse
+    public function getWorkflowFormAction(
+        GetWorkflowFormPayload $payload,
+        GetWorkflowFormHandler $handler,
+    ): JsonResponse
     {
-        try {
-            $workflow = $workflowManager->getWorkflowIfExists($this->element, (string) $request->request->get('workflowName'));
-
-            if (empty($workflow)) {
-                $wfConfig = [
-                    'message' => 'workflow not found',
-                ];
-            } else {
-                //this is the default returned workflow data
-                $wfConfig = [
-                    'message' => '',
-                    'notes_enabled' => false,
-                    'notes_required' => false,
-                    'additional_fields' => [],
-                ];
-
-                $enabledTransitions = $workflow->getEnabledTransitions($this->element);
-                $transition = null;
-                foreach ($enabledTransitions as $_transition) {
-                    if ($_transition->getName() === $request->request->get('transitionName')) {
-                        $transition = $_transition;
-                    }
-                }
-
-                if (!$transition instanceof Transition) {
-                    $wfConfig['message'] = sprintf('transition %s currently not allowed', (string) $request->request->get('transitionName'));
-                } else {
-                    $wfConfig['notes_required'] = $transition->getNotesCommentRequired();
-                    $wfConfig['additional_fields'] = [];
-                }
-            }
-        } catch (Exception $e) {
-            $wfConfig['message'] = $e->getMessage();
-        }
-
-        return $this->adminJson($wfConfig);
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/submit-workflow-transition', name: 'opendxp_admin_workflow_submitworkflowtransition', methods: ['POST'])]
-    public function submitWorkflowTransitionAction(Request $request, Registry $workflowRegistry, Manager $workflowManager): JsonResponse
-    {
-        $workflowOptions = $request->request->all('workflow');
-        $workflow = $workflowRegistry->get($this->element, $request->request->get('workflowName'));
-
-        if ($workflow->can($this->element, $request->request->get('transition'))) {
-            try {
-                $workflowManager->applyWithAdditionalData($workflow, $this->element, $request->request->get('transition'), $workflowOptions, true);
-
-                $data = [
-                    'success' => true,
-                    'callback' => 'reloadObject',
-                ];
-            } catch (ValidationException $e) {
-                $reason = '';
-                if (count($e->getSubItems()) > 0) {
-                    $reason = '<ul>' . implode('', array_map(static fn ($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
-                }
-
-                $data = [
-                    'success' => false,
-                    'message' => $e->getMessage(),
-                    'reasons' => [$reason],
-
-                ];
-            } catch (Exception $e) {
-                $data = [
-                    'success' => false,
-                    'message' => 'error performing action on this element',
-                    'reasons' => [$e->getMessage()],
-                ];
-            }
-        } else {
-            $blockTransitionList = $workflow->buildTransitionBlockerList($this->element, $request->request->get('transition'));
-
-            $reasons = array_map(static fn ($blockTransitionItem) => $blockTransitionItem->getMessage(), iterator_to_array($blockTransitionList->getIterator(), true));
-
-            $data = [
-                'success' => false,
-                'message' => 'transition failed',
-                'reasons' => $reasons,
-            ];
-        }
-
-        return $this->adminJson($data);
+    public function submitWorkflowTransitionAction(
+        SubmitWorkflowTransitionPayload $payload,
+        SubmitWorkflowTransitionHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/submit-global-action', name: 'opendxp_admin_workflow_submitglobal', methods: ['POST'])]
     public function submitGlobalAction(
-        Request $request,
-        Registry $workflowRegistry,
-        Manager $workflowManager
+        SubmitGlobalActionPayload $payload,
+        SubmitGlobalActionHandler $handler,
     ): JsonResponse {
-        $workflowOptions = $request->request->all('workflow');
-        $workflow = $workflowRegistry->get($this->element, $request->request->get('workflowName'));
-
-        $globalAction = $workflowManager->getGlobalAction(
-            $request->request->get('workflowName'),
-            $request->request->get('transition')
-        );
-        $saveSubject = !$globalAction || $globalAction->getSaveSubject();
-
-        try {
-            $workflowManager->applyGlobalAction(
-                $workflow,
-                $this->element, $request->request->get('transition'),
-                $workflowOptions, $saveSubject
-            );
-
-            $data = [
-                'success' => true,
-                'callback' => 'reloadObject',
-            ];
-        } catch (ValidationException $e) {
-            $reason = '';
-            if (count($e->getSubItems()) > 0) {
-                $reason = '<ul>' . implode('', array_map(static fn ($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
-            }
-
-            $data = [
-                'success' => false,
-                'message' => $e->getMessage(),
-                'reasons' => [$reason],
-
-            ];
-        } catch (Exception $e) {
-            $data = [
-                'success' => false,
-                'message' => 'error performing action on this element',
-                'reasons' => [$e->getMessage()],
-            ];
-        }
-
-        return $this->adminJson($data);
+        return $this->apiJson($handler($payload));
     }
 
-    /**
-     * Returns the JSON needed by the workflow elements detail tab store
-     *
-     * @throws Exception
-     */
     #[Route('/get-workflow-details', name: 'opendxp_admin_workflow_getworkflowdetailsstore')]
-    public function getWorkflowDetailsStore(Request $request, Manager $workflowManager, StatusInfo $placeStatusInfo, RouterInterface $router, ActionsButtonService $actionsButtonService): JsonResponse
-    {
-        $data = [];
-
-        foreach ($workflowManager->getAllWorkflowsForSubject($this->element) as $workflow) {
-            $workflowConfig = $workflowManager->getWorkflowConfig($workflow->getName());
-
-            $svg = null;
-            $msg = '';
-
-            try {
-                $svg = $this->getWorkflowSvg($workflow);
-            } catch (InvalidArgumentException $e) {
-                $msg = $e->getMessage();
-            }
-
-            $url = $router->generate(
-                'opendxp_admin_workflow_show_graph',
-                [
-                    'cid' => $request->query->get('cid'),
-                    'ctype' => $request->query->get('ctype'),
-                    'workflow' => $workflow->getName(),
-                ]
-            );
-
-            $allowedTransitions = $actionsButtonService->getAllowedTransitions($workflow, $this->element);
-            $globalActions = $actionsButtonService->getGlobalActions($workflow, $this->element);
-
-            $data[] = [
-                'workflowName' => $this->translator->trans($workflowConfig->getLabel(), [], 'admin'),
-                'placeInfo' => $placeStatusInfo->getAllPalacesHtml($this->element, $workflow->getName()),
-                'graph' => $msg ?: '<a href="' . $url .'" target="_blank"><div class="workflow-graph-preview">'.$svg.'</div></a>',
-                'allowedTransitions' => $allowedTransitions,
-                'globalActions' => $globalActions,
-            ];
-        }
-
-        return $this->adminJson([
-            'data' => $data,
-            'success' => true,
-            'total' => count($data),
-        ]);
+    public function getWorkflowDetailsStore(
+        GetWorkflowDetailsPayload $payload,
+        GetWorkflowDetailsHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
-    /**
-     * Returns the JSON needed by the workflow elements detail tab store
-     *
-     * @throws Exception
-     */
     #[Route('/show-graph', name: 'opendxp_admin_workflow_show_graph', methods: ['GET'])]
-    public function showGraph(Request $request, Manager $workflowManager): Response
-    {
-        $workflow = $workflowManager->getWorkflowByName($request->query->get('workflow'));
+    public function showGraph(
+        ShowGraphPayload $payload,
+        GetWorkflowSvgHandler $handler,
+    ): Response {
+        $result = $handler($payload);
 
-        $response = new Response($this->getWorkflowSvg($workflow));
+        $response = new Response($result->svg);
         $response->headers->set('Content-Type', 'image/svg+xml');
 
         return $response;
     }
 
-    /**
-     * Get custom HTML for the workflow transition submit modal, depending whether it is configured or not.
-     *
-     * @throws Exception
-     */
     #[Route('/modal-custom-html', name: 'opendxp_admin_workflow_modal_custom_html', methods: ['POST'])]
-    public function getModalCustomHtml(Request $request, Registry $workflowRegistry, Manager $manager): JsonResponse
+    public function getModalCustomHtml(
+        GetModalCustomHtmlPayload $payload,
+        GetModalCustomHtmlHandler $handler,
+    ): JsonResponse
     {
-        $workflow = $workflowRegistry->get($this->element, $request->request->get('workflowName'));
-
-        if ($request->request->get('isGlobalAction') === 'true') {
-            $globalAction = $manager->getGlobalAction($workflow->getName(), $request->request->get('transition'));
-            if ($globalAction) {
-                return $this->customHtmlResponse($globalAction->getCustomHtmlService());
-            }
-        } elseif ($workflow->can($this->element, $request->request->get('transition'))) {
-            $enabledTransitions = $workflow->getEnabledTransitions($this->element);
-            $transition = null;
-            foreach ($enabledTransitions as $_transition) {
-                if ($_transition->getName() === $request->request->get('transition')) {
-                    $transition = $_transition;
-                }
-            }
-
-            if ($transition instanceof Transition) {
-                return $this->customHtmlResponse($transition->getCustomHtmlService());
-            }
-        }
-
-        $data = [
-            'success' => false,
-            'message' => 'error validating the action on this element, element cannot peform this action',
-        ];
-
-        return new JsonResponse($data);
-    }
-
-    private function customHtmlResponse(?CustomHtmlServiceInterface $customHtmlService): JsonResponse
-    {
-        $data = [
-            'success' => true,
-            'customHtml' => [],
-        ];
-
-        if ($customHtmlService) {
-            foreach (['top', 'center', 'bottom'] as $position) {
-                $data['customHtml'][$position] = $customHtmlService->renderHtmlForRequestedPosition($this->element, $position);
-            }
-        }
-
-        return new JsonResponse($data);
-    }
-
-    /**
-     * @throws Exception
-     */
-    private function getWorkflowSvg(WorkflowInterface $workflow): string
-    {
-        $marking = $workflow->getMarking($this->element);
-
-        $php = Console::getExecutable('php');
-        $dot = Console::getExecutable('dot');
-
-        if (!$php) {
-            throw new InvalidArgumentException($this->translator->trans('workflow_cmd_not_found', ['php'], 'admin'));
-        }
-
-        if (!$dot) {
-            throw new InvalidArgumentException($this->translator->trans('workflow_cmd_not_found', ['dot'], 'admin'));
-        }
-
-        $cmd = $php . ' ' . OPENDXP_PROJECT_ROOT . '/bin/console opendxp:workflow:dump ${WNAME} ${WPLACES} | ${DOT} -Tsvg';
-        $params = [
-            'WNAME' => $workflow->getName(),
-            'WPLACES' => implode(' ', array_keys($marking->getPlaces())),
-            'DOT' => $dot,
-        ];
-
-        Console::addLowProcessPriority($cmd);
-        $process = Process::fromShellCommandline($cmd);
-        $process->run(null, $params);
-
-        return $process->getOutput();
-    }
-
-    /**
-     * @template T of Document|Asset|DataObject
-     *
-     * @param T $element
-     *
-     * @return T
-     */
-    protected function getLatestVersion(mixed $element): mixed
-    {
-        if (
-            $element instanceof Document\Folder
-            || $element instanceof Asset\Folder
-            || $element instanceof DataObject\Folder
-            || $element instanceof Document\Hardlink
-            || $element instanceof Document\Link
-        ) {
-            return $element;
-        }
-
-        //TODO move this maybe to a service method, since this is also used in DataObjectController and DocumentControllers
-        if ($element instanceof Document\PageSnippet) {
-            $latestVersion = $element->getLatestVersion();
-            if ($latestVersion) {
-                $latestDoc = $latestVersion->loadData();
-                if ($latestDoc instanceof Document\PageSnippet) {
-                    $element = $latestDoc;
-                }
-            }
-        }
-
-        if ($element instanceof DataObject\Concrete) {
-            $latestVersion = $element->getLatestVersion();
-            if ($latestVersion) {
-                $latestObj = $latestVersion->loadData();
-                if ($latestObj instanceof ConcreteObject) {
-                    $element = $latestObj;
-                }
-            }
-        }
-
-        return $element;
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        $request = $event->getRequest();
-
-        $ctype = $request->request->get('ctype') ?? $request->query->get('ctype');
-        $cid = $request->request->get('cid') ?? $request->query->get('cid');
-
-        $this->element = match ($ctype) {
-            'document' => Document::getById((int) $cid),
-            'asset' => Asset::getById((int) $cid),
-            'object' => ConcreteObject::getById((int) $cid),
-            default => null,
-        };
-
-        if ($this->element === null) {
-            throw new Exception('Cannot load element' . $cid . ' of type \'' . $ctype . '\'');
-        }
-
-        //get the latest available version of the element -
-        $this->element = $this->getLatestVersion($this->element);
-        $this->element->setUserModification($this->getAdminUser()->getId());
+        return $this->apiJson($handler($payload));
     }
 }

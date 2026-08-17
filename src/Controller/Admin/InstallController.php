@@ -16,10 +16,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use Doctrine\DBAL\Connection;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Tool\Requirements;
-use Symfony\Component\HttpFoundation\Request;
+use OpenDxp\Bundle\AdminBundle\Handler\Install\CheckSystem\CheckSystemHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Install\CheckSystem\CheckSystemPayload;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Symfony\Component\Routing\Attribute\Route;
@@ -31,15 +30,17 @@ use Symfony\Component\Routing\Attribute\Route;
 class InstallController extends AdminAbstractController
 {
     #[Route('/check', name: 'opendxp_admin_install_check', methods: ['GET', 'POST'])]
-    public function checkAction(Request $request, Connection $db, ?Profiler $profiler): Response
-    {
+    public function checkAction(
+        CheckSystemPayload $payload,
+        CheckSystemHandler $handler,
+        ?Profiler $profiler,
+    ): Response {
         if ($profiler) {
             $profiler->disable();
         }
 
-        $viewParams = Requirements::checkAll($db);
-        $viewParams['headless'] = $request->query->getBoolean('headless') || $request->request->getBoolean('headless');
+        $result = $handler($payload);
 
-        return $this->render('@OpenDxpAdmin/admin/install/check.html.twig', $viewParams);
+        return $this->render('@OpenDxpAdmin/admin/install/check.html.twig', $result->viewParams);
     }
 }

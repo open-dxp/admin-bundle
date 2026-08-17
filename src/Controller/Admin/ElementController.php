@@ -16,856 +16,282 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use Exception;
-use OpenDxp;
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionIdentityAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\DependencyInjection\OpenDxpAdminExtension;
-use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Db;
-use OpenDxp\Event\Model\ResolveElementEvent;
-use OpenDxp\Logger;
-use OpenDxp\Model;
-use OpenDxp\Model\Asset;
-use OpenDxp\Model\DataObject;
-use OpenDxp\Model\Document;
-use OpenDxp\Model\Element;
-use OpenDxp\Model\Version;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\AddNote\AddNoteHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\AddNote\AddNotePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\AnalyzePermissions\AnalyzePermissionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\AnalyzePermissions\AnalyzePermissionsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\DeleteAllVersions\DeleteAllVersionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\DeleteAllVersions\DeleteAllVersionsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\DeleteDraft\DeleteDraftHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\DeleteNote\DeleteNoteHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\DeleteVersion\DeleteVersionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\FindUsages\FindUsagesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\FindUsages\FindUsagesPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetDependenciesPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetNicePath\GetNicePathHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetNicePath\GetNicePathPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetNoteList\GetNoteListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetNoteTypes\GetNoteTypesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetNoteTypes\GetNoteTypesPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetPredefinedProperties\GetPredefinedPropertiesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetPredefinedProperties\GetPredefinedPropertiesPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetReplaceAssignmentsBatchJobs\GetReplaceAssignmentsBatchJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetReplaceAssignmentsBatchJobs\GetReplaceAssignmentsBatchJobsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetRequiredByDependencies\GetRequiredByDependenciesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetRequiresDependencies\GetRequiresDependenciesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetSubtype\GetSubtypeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetSubtype\GetSubtypePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetVersions\GetVersionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\GetVersions\GetVersionsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\LockElement\LockElementHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\LockElement\LockElementPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\NoteListPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\ReplaceAssignments\ReplaceAssignmentsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\ReplaceAssignments\ReplaceAssignmentsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\TypePath\TypePathHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\TypePath\TypePathPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\UnlockElement\UnlockElementHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\UnlockElement\UnlockElementPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\UnlockElements\UnlockElementsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\UnlockElements\UnlockElementsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\UnlockPropagate\UnlockPropagateHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\UnlockPropagate\UnlockPropagatePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\VersionUpdate\VersionUpdateHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\VersionUpdate\VersionUpdatePayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 
 /**
  * @internal
  */
 class ElementController extends AdminAbstractController
 {
+    #[SessionIdentityAware]
     #[Route('/element/lock-element', name: 'opendxp_admin_element_lockelement', methods: ['PUT'])]
-    public function lockElementAction(Request $request): Response
-    {
-        Element\Editlock::lock($request->request->getInt('id'), $request->request->get('type'), $request->getSession()->getId());
+    public function lockElementAction(
+        LockElementHandler $handler,
+        LockElementPayload $payload,
+    ): Response {
+        $handler($payload);
 
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
     #[Route('/element/unlock-element', name: 'opendxp_admin_element_unlockelement', methods: ['PUT'])]
-    public function unlockElementAction(Request $request): Response
-    {
-        Element\Editlock::unlock((int)$request->request->get('id'), $request->request->get('type'));
+    public function unlockElementAction(
+        UnlockElementHandler $handler,
+        UnlockElementPayload $payload,
+    ): Response {
+        $handler($payload);
 
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
     #[Route('/element/unlock-elements', name: 'opendxp_admin_element_unlockelements', methods: ['POST'])]
-    public function unlockElementsAction(Request $request): Response
-    {
-        $request = json_decode($request->getContent(), true) ?? [];
-        foreach ($request['elements'] as $elementIdentifierData) {
-            Element\Editlock::unlock((int)$elementIdentifierData['id'], $elementIdentifierData['type']);
-        }
+    public function unlockElementsAction(
+        UnlockElementsHandler $handler,
+        UnlockElementsPayload $payload,
+    ): Response {
+        $handler($payload);
 
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
-    /**
-     * Returns the element data denoted by the given type and ID or path.
-     */
     #[Route('/element/get-subtype', name: 'opendxp_admin_element_getsubtype', methods: ['GET'])]
-    public function getSubtypeAction(Request $request): JsonResponse
-    {
-        $idOrPath = trim($request->query->get('id', ''));
-        $type = $request->query->get('type');
-
-        $event = new ResolveElementEvent($type, $idOrPath);
-        OpenDxp::getEventDispatcher()->dispatch($event, AdminEvents::RESOLVE_ELEMENT);
-        $idOrPath = $event->getId();
-        $type = $event->getType();
-
-        if (is_numeric($idOrPath)) {
-            $el = Element\Service::getElementById($type, (int) $idOrPath);
-        } elseif ($type === 'document') {
-            $el = Document\Service::getByUrl($idOrPath);
-        } else {
-            $el = Element\Service::getElementByPath($type, $idOrPath);
-        }
-
-        if ($el) {
-            $subtype = null;
-            if ($el instanceof Asset || $el instanceof Document) {
-                $subtype = $el->getType();
-            } elseif ($el instanceof DataObject\Concrete) {
-                $subtype = $el->getClassName();
-            } elseif ($el instanceof DataObject\Folder) {
-                $subtype = 'folder';
-            }
-
-            return $this->adminJson([
-                'subtype' => $subtype,
-                'id' => $el->getId(),
-                'type' => $type,
-                'success' => true,
-            ]);
-        }
-
-        return $this->adminJson([
-            'success' => false,
-        ]);
-    }
-
-    protected function processNoteTypesFromParameters(string $parameterName): JsonResponse
-    {
-        $config = $this->getParameter($parameterName);
-        $result = [];
-        foreach ($config as $configEntry) {
-            $result[] = [
-                'name' => $configEntry,
-            ];
-        }
-
-        return $this->adminJson(['noteTypes' => $result]);
+    public function getSubtypeAction(
+        GetSubtypeHandler $handler,
+        GetSubtypePayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/element/note-types', name: 'opendxp_admin_element_notetypes', methods: ['GET'])]
-    public function noteTypes(Request $request): JsonResponse
-    {
-        return match ($request->query->get('ctype')) {
-            'document' => $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_DOCUMENTS_NOTES_EVENTS_TYPES),
-            'asset' => $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_ASSETS_NOTES_EVENTS_TYPES),
-            'object' => $this->processNoteTypesFromParameters(OpenDxpAdminExtension::PARAM_DATAOBJECTS_NOTES_EVENTS_TYPES),
-            default => $this->adminJson(['noteTypes' => []]),
-        };
+    public function noteTypesAction(
+        GetNoteTypesPayload $payload,
+        GetNoteTypesHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/element/note-list', name: 'opendxp_admin_element_notelist', methods: ['POST'])]
-    public function noteListAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('notes_events');
-
-        if ($request->query->get('xaction') === 'destroy') {
-            $data = $this->decodeJson($request->request->get('data'));
-            $success = false;
-            if (($note = Element\Note::getById($data['id'])) && !$note->getLocked()) {
-                $note->delete();
-                $success = true;
-            }
-
-            return $this->adminJson(['success' => $success]);
+    #[IsGranted(CorePermission::NotesEvents->value)]
+    public function noteListAction(
+        Request $request,
+        NoteListPayload $payload,
+        GetNoteListHandler $handler,
+        #[MapQueryParameter] ?string $xaction = null,
+    ): Response {
+        if ($payload->hasData) {
+            return match ($xaction) {
+                'destroy' => $this->forward(self::class . '::noteListDestroyAction', [], $request->query->all()),
+                default   => throw new BadRequestHttpException(),
+            };
         }
 
-        $list = new Element\Note\Listing();
+        return $this->apiJson($handler($payload));
+    }
 
-        $offset = (int) $request->request->get('start', 0);
-        $limit = $request->request->get('limit');
-        $limit = $limit ? (int) $limit : null;
+    #[Route('/element/note-list-destroy', name: 'opendxp_admin_element_notelist_destroy', methods: ['POST'])]
+    #[IsGranted(CorePermission::NotesEvents->value)]
+    public function noteListDestroyAction(
+        NoteListPayload $payload,
+        DeleteNoteHandler $handler,
+    ): JsonResponse {
+        $handler($payload);
 
-        $list->setLimit($limit);
-        $list->setOffset($offset);
-
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->request->all());
-        if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
-            $list->setOrderKey($sortingSettings['orderKey']);
-            $list->setOrder($sortingSettings['order']);
-        } else {
-            $list->setOrderKey(['date', 'id']);
-            $list->setOrder(['DESC', 'DESC']);
-        }
-
-        $conditions = [];
-        $filterText = $request->request->get('filterText');
-
-        if ($filterText) {
-            $conditions[] = '('
-                . '`title` LIKE ' . $list->quote('%'. $filterText .'%')
-                . ' OR `description` LIKE ' . $list->quote('%'.$filterText.'%')
-                . ' OR `type` LIKE ' . $list->quote('%'.$filterText.'%')
-                . ' OR `user` IN (SELECT `id` FROM `users` WHERE `name` LIKE ' . $list->quote('%'.$filterText.'%') . ')'
-                . " OR DATE_FORMAT(FROM_UNIXTIME(`date`), '%Y-%m-%d') LIKE " . $list->quote('%'.$filterText.'%')
-                . ')';
-        }
-
-        $filterJson = $request->request->get('filter');
-        if ($filterJson) {
-            $db = Db::get();
-            $filters = $this->decodeJson($filterJson);
-            $propertyKey = 'property';
-            $comparisonKey = 'operator';
-
-            foreach ($filters as $filter) {
-                $operator = '=';
-
-                if ($filter['type'] === 'string') {
-                    $operator = 'LIKE';
-                } elseif ($filter['type'] === 'numeric') {
-                    if ($filter[$comparisonKey] === 'lt') {
-                        $operator = '<';
-                    } elseif ($filter[$comparisonKey] === 'gt') {
-                        $operator = '>';
-                    } elseif ($filter[$comparisonKey] === 'eq') {
-                        $operator = '=';
-                    }
-                } elseif ($filter['type'] === 'date') {
-                    if ($filter[$comparisonKey] === 'lt') {
-                        $operator = '<';
-                    } elseif ($filter[$comparisonKey] === 'gt') {
-                        $operator = '>';
-                    } elseif ($filter[$comparisonKey] === 'eq') {
-                        $operator = '=';
-                    }
-                    $filter['value'] = strtotime($filter['value']);
-                } elseif ($filter[$comparisonKey] === 'list') {
-                    $operator = '=';
-                } elseif ($filter[$comparisonKey] === 'boolean') {
-                    $operator = '=';
-                    $filter['value'] = (int) $filter['value'];
-                }
-                // system field
-                $value = ($filter['value']??'');
-                if ($operator === 'LIKE') {
-                    $value = '%' . $value . '%';
-                }
-
-                if ($filter[$propertyKey] === 'user') {
-                    $conditions[] = '`user` IN (SELECT `id` FROM `users` WHERE `name` LIKE ' . $list->quote($value) . ')';
-                } elseif ($filter['type'] === 'date' && $filter[$comparisonKey] === 'eq') {
-                    $maxTime = $value + (86400 - 1);
-                    //specifies the top point of the range used in the condition
-                    $dateCondition = '`' . $filter[$propertyKey] . '` ' . ' BETWEEN ' . $db->quote($value) . ' AND ' . $db->quote($maxTime);
-                    $conditions[] = $dateCondition;
-                } else {
-                    $conditions[] = $db->quoteIdentifier($filter[$propertyKey]).' '.$operator.' '.$db->quote($value);
-                }
-            }
-        }
-
-        if ($request->request->has('cid') && $request->request->has('ctype')) {
-            $conditions[] = '(cid = ' . $list->quote($request->request->get('cid')) . ' AND ctype = ' . $list->quote($request->request->get('ctype')) . ')';
-        }
-
-        if ($conditions !== []) {
-            $condition = implode(' AND ', $conditions);
-            $list->setCondition($condition);
-        }
-
-        $list->load();
-
-        $notes = [];
-
-        foreach ($list->getNotes() as $note) {
-            $e = Element\Service::getNoteData($note);
-            $notes[] = $e;
-        }
-
-        return $this->adminJson([
-            'data' => $notes,
-            'success' => true,
-            'total' => $list->getTotalCount(),
-        ]);
+        return $this->apiOk();
     }
 
     #[Route('/element/note-add', name: 'opendxp_admin_element_noteadd', methods: ['POST'])]
-    public function noteAddAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('notes_events');
+    #[IsGranted(CorePermission::NotesEvents->value)]
+    public function noteAddAction(
+        AddNoteHandler $handler,
+        AddNotePayload $payload,
+    ): JsonResponse {
+        $handler($payload);
 
-        $note = new Element\Note();
-        $note->setCid((int) $request->request->get('cid'));
-        $note->setCtype($request->request->get('ctype'));
-        $note->setDate(time());
-        $note->setTitle($request->request->get('title'));
-        $note->setDescription($request->request->get('description'));
-        $note->setType($request->request->get('type'));
-        $note->setLocked(false);
-        $note->save();
-
-        return $this->adminJson([
-            'success' => true,
-        ]);
+        return $this->apiOk();
     }
 
     #[Route('/element/find-usages', name: 'opendxp_admin_element_findusages', methods: ['GET'])]
-    public function findUsagesAction(Request $request): JsonResponse
-    {
-        $element = null;
-        if ($request->query->get('id')) {
-            $element = Element\Service::getElementById($request->query->get('type'), $request->query->getInt('id'));
-        } elseif ($request->query->get('path')) {
-            $element = Element\Service::getElementByPath($request->query->get('type'), $request->query->get('path'));
-        }
-
-        $results = [];
-        $success = false;
-        $hasHidden = false;
-        $total = 0;
-        $limit = (int)$request->query->get('limit', '50');
-        $offset = (int)$request->query->get('start', '0');
-
-        if ($element instanceof Element\ElementInterface) {
-            $total = $element->getDependencies()->getRequiredByTotalCount();
-
-            if ($request->query->has('sort')) {
-                $sort = json_decode($request->query->get('sort'))[0];
-                $orderBy = $sort->property;
-                $orderDirection = $sort->direction;
-            } else {
-                $orderBy = null;
-                $orderDirection = null;
-            }
-
-            $queryOffset = $offset;
-            $queryLimit = $limit;
-
-            while (count($results) < min($limit, $total) && $queryOffset < $total) {
-                $elements = $element->getDependencies()
-                    ->getRequiredByWithPath($queryOffset, $queryLimit, $orderBy, $orderDirection);
-
-                foreach ($elements as $el) {
-                    $item = Element\Service::getElementById($el['type'], (int) $el['id']);
-
-                    if ($item instanceof Element\ElementInterface) {
-                        if ($item->isAllowed('list')) {
-                            $results[] = $el;
-                        } else {
-                            $hasHidden = true;
-                        }
-                    }
-                }
-
-                $queryOffset += count($elements);
-                $queryLimit = $limit - count($results);
-            }
-
-            $success = true;
-        }
-
-        return $this->adminJson([
-            'data' => $results,
-            'total' => $total,
-            'hasHidden' => $hasHidden,
-            'success' => $success,
-        ]);
+    public function findUsagesAction(
+        FindUsagesHandler $handler,
+        FindUsagesPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/element/get-replace-assignments-batch-jobs', name: 'opendxp_admin_element_getreplaceassignmentsbatchjobs', methods: ['GET'])]
-    public function getReplaceAssignmentsBatchJobsAction(Request $request): JsonResponse
-    {
-        $element = null;
-
-        if ($request->query->get('id')) {
-            $element = Element\Service::getElementById($request->query->get('type'), $request->query->getInt('id'));
-        } elseif ($request->query->get('path')) {
-            $element = Element\Service::getElementByPath($request->query->get('type'), $request->query->get('path'));
-        }
-
-        if ($element instanceof Element\ElementInterface) {
-            return $this->adminJson([
-                'success' => true,
-                'jobs' => $element->getDependencies()->getRequiredBy(),
-            ]);
-        }
-
-        return $this->adminJson(['success' => false], Response::HTTP_NOT_FOUND);
+    public function getReplaceAssignmentsBatchJobsAction(
+        GetReplaceAssignmentsBatchJobsHandler $handler,
+        GetReplaceAssignmentsBatchJobsPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/element/replace-assignments', name: 'opendxp_admin_element_replaceassignments', methods: ['POST'])]
-    public function replaceAssignmentsAction(Request $request): JsonResponse
-    {
-        $success = false;
-        $message = '';
-        $element = Element\Service::getElementById($request->request->get('type'), $request->request->getInt('id'));
-        $sourceEl = Element\Service::getElementById($request->request->get('sourceType'), $request->request->getInt('sourceId'));
-        $targetEl = Element\Service::getElementById($request->request->get('targetType'), $request->request->getInt('targetId'));
+    public function replaceAssignmentsAction(
+        ReplaceAssignmentsHandler $handler,
+        ReplaceAssignmentsPayload $payload,
+    ): JsonResponse {
+        $handler($payload);
 
-        if ($element && $sourceEl && $targetEl
-            && $request->request->get('sourceType') === $request->request->get('targetType')
-            && $sourceEl->getType() === $targetEl->getType()
-            && $element->isAllowed('save')
-        ) {
-            $rewriteConfig = [
-                $request->request->get('sourceType') => [
-                    $sourceEl->getId() => $targetEl->getId(),
-                ],
-            ];
-
-            if ($element instanceof Document) {
-                $element = Document\Service::rewriteIds($element, $rewriteConfig);
-            } elseif ($element instanceof DataObject\AbstractObject) {
-                $element = DataObject\Service::rewriteIds($element, $rewriteConfig);
-            } elseif ($element instanceof Asset) {
-                $element = Asset\Service::rewriteIds($element, $rewriteConfig);
-            }
-
-            $element->setUserModification($this->getAdminUser()->getId());
-            $element->save();
-
-            $success = true;
-        } else {
-            $message = 'source-type and target-type do not match';
-        }
-
-        return $this->adminJson([
-            'success' => $success,
-            'message' => $message,
-        ]);
+        return $this->apiOk();
     }
 
     #[Route('/element/unlock-propagate', name: 'opendxp_admin_element_unlockpropagate', methods: ['PUT'])]
-    public function unlockPropagateAction(Request $request): JsonResponse
-    {
-        $success = false;
+    public function unlockPropagateAction(
+        UnlockPropagateHandler $handler,
+        UnlockPropagatePayload $payload,
+    ): JsonResponse {
+        $handler($payload);
 
-        $element = Element\Service::getElementById($request->request->get('type'), $request->request->getInt('id'));
-        if ($element) {
-            $element->unlockPropagate();
-            $success = true;
-        }
-
-        return $this->adminJson([
-            'success' => $success,
-        ]);
+        return $this->apiOk();
     }
 
     #[Route('/element/type-path', name: 'opendxp_admin_element_typepath', methods: ['GET'])]
-    public function typePathAction(Request $request): JsonResponse
-    {
-        $id = $request->query->getInt('id');
-        $type = $request->query->get('type');
-        $data = [];
-
-        if ($type === 'asset') {
-            $element = Asset::getById($id);
-        } elseif ($type === 'document') {
-            $element = Document::getById($id);
-        } else {
-            $element = DataObject::getById($id);
-        }
-
-        if (!$element) {
-            $data['success'] = false;
-
-            return $this->adminJson($data);
-        }
-
-        $typePath = Element\Service::getTypePath($element);
-
-        $data['success'] = true;
-        $data['index'] = method_exists($element, 'getIndex') ? (int) $element->getIndex() : 0;
-        $data['idPath'] = Element\Service::getIdPath($element);
-        $data['typePath'] = $typePath;
-        $data['fullpath'] = $element->getRealFullPath();
-
-        if ($type !== 'asset') {
-            $sortIndexPath = Element\Service::getSortIndexPath($element);
-            $data['sortIndexPath'] = $sortIndexPath;
-        }
-
-        return $this->adminJson($data);
+    public function typePathAction(
+        TypePathHandler $handler,
+        TypePathPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), context: [AbstractObjectNormalizer::SKIP_NULL_VALUES => true]);
     }
 
     #[Route('/element/version-update', name: 'opendxp_admin_element_versionupdate', methods: ['PUT'])]
-    public function versionUpdateAction(Request $request): JsonResponse
-    {
-        $data = $this->decodeJson($request->request->get('data'));
+    public function versionUpdateAction(
+        VersionUpdateHandler $handler,
+        VersionUpdatePayload $payload,
+    ): JsonResponse {
+        $handler($payload);
 
-        $version = Version::getById($data['id']);
-
-        if ($data['public'] != $version->getPublic() || $data['note'] != $version->getNote()) {
-            $version->setPublic($data['public']);
-            $version->setNote($data['note']);
-            $version->save();
-        }
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
-    /**
-     * @throws Exception
-     */
     #[Route('/element/get-nice-path', name: 'opendxp_admin_element_getnicepath', methods: ['POST'])]
-    public function getNicePathAction(Request $request): JsonResponse
-    {
-        $source = $this->decodeJson($request->request->get('source'));
-
-        if ($source['type'] !== 'object') {
-            throw new Exception('currently only objects as source elements are supported');
-        }
-
-        $result = [];
-        $id = $source['id'];
-        $source = DataObject\Concrete::getById($id);
-        $context = $request->request->has('context') ? $this->decodeJson($request->request->get('context')) : [];
-
-        $ownerType = $context['containerType'];
-        $fieldname = $context['fieldname'];
-
-        $fd = $this->getNicePathFormatterFieldDefinition($source, $context);
-
-        $targets = $this->decodeJson($request->request->get('targets'));
-
-        $result = $this->convertResultWithPathFormatter($source, $context, $result, $targets);
-
-        if ($request->request->getBoolean('loadEditModeData')) {
-            $idProperty = $request->request->get('idProperty', 'id');
-            $methodName = 'get' . ucfirst($fieldname);
-            if ($ownerType === 'object' && method_exists($source, $methodName)) {
-                $data = DataObject\Service::useInheritedValues(true, [$source, $methodName]);
-                $editModeData = $fd->getDataForEditmode($data, $source);
-                // Inherited values show as an empty array
-                if (is_array($editModeData) && $editModeData !== []) {
-                    foreach ($editModeData as $relationObjectAttribute) {
-
-                        $relationObjectAttribute['$$nicepath'] = isset($relationObjectAttribute[$idProperty], $result[$relationObjectAttribute[$idProperty]])
-                            ? $result[$relationObjectAttribute[$idProperty]]
-                            : null;
-
-                        $result[$relationObjectAttribute[$idProperty]] = $relationObjectAttribute;
-                    }
-                } else {
-                    foreach ($result as $resultItemId => $resultItem) {
-                        $result[$resultItemId] = ['$$nicepath' => $resultItem];
-                    }
-                }
-            } else {
-                Logger::error('Loading edit mode data is not supported for ownertype: ' . $ownerType);
-            }
-        }
-
-        return $this->adminJson(['success' => true, 'data' => $result]);
+    public function getNicePathAction(
+        GetNicePathHandler $handler,
+        GetNicePathPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
-    /**
-     * @throws Exception
-     */
     #[Route('/element/get-versions', name: 'opendxp_admin_element_getversions', methods: ['GET'])]
-    public function getVersionsAction(Request $request): JsonResponse
-    {
-        $id = (int)$request->query->get('id');
-        $type = $request->query->get('elementType');
-        $allowedTypes = ['asset', 'document', 'object'];
-
-        if ($id && in_array($type, $allowedTypes)) {
-            $element = Model\Element\Service::getElementById($type, $id);
-            if ($element) {
-                if ($element->isAllowed('versions')) {
-                    $schedule = $element->getScheduledTasks();
-                    $schedules = [];
-                    foreach ($schedule as $task) {
-                        if ($task->getActive()) {
-                            $schedules[$task->getVersion()] = $task->getDate();
-                        }
-                    }
-
-                    //only load auto-save versions from current user
-                    $list = new Version\Listing();
-                    $list->setLoadAutoSave(true);
-                    $list->setCondition('cid = ? AND ctype = ? AND (autoSave=0 OR (autoSave=1 AND userId = ?)) ', [
-                        $element->getId(),
-                        Element\Service::getElementType($element),
-                        $this->getAdminUser()->getId(),
-                    ])
-                        ->setOrderKey('date')
-                        ->setOrder('ASC');
-
-                    $versions = $list->load();
-
-                    $versions = Model\Element\Service::getSafeVersionInfo($versions);
-                    $versions = array_reverse($versions); //reverse array to sort by ID DESC
-                    foreach ($versions as &$version) {
-                        $version['scheduled'] = null;
-                        if (array_key_exists($version['id'], $schedules)) {
-                            $version['scheduled'] = $schedules[$version['id']];
-                        }
-                    }
-
-                    return $this->adminJson(['versions' => $versions]);
-                }
-
-                throw $this->createAccessDeniedException('Permission denied, ' . $type . ' id [' . $id . ']');
-            }
-
-            throw $this->createNotFoundException($type . ' with id [' . $id . "] doesn't exist");
-        }
-
-        throw $this->createNotFoundException('Element type not found');
+    public function getVersionsAction(
+        GetVersionsHandler $handler,
+        GetVersionsPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/element/delete-draft', name: 'opendxp_admin_element_deletedraft', methods: ['DELETE'])]
-    public function deleteDraftAction(Request $request): JsonResponse
-    {
-        $version = Version::getById((int) $request->request->get('id'));
+    public function deleteDraftAction(
+        DeleteDraftHandler $handler,
+        IdBodyPayload $payload,
+    ): JsonResponse {
+        $handler($payload);
 
-        if ($version) {
-            $version->delete();
-        }
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
     #[Route('/element/delete-version', name: 'opendxp_admin_element_deleteversion', methods: ['DELETE'])]
-    public function deleteVersionAction(Request $request): JsonResponse
-    {
-        $version = Model\Version::getById((int) $request->request->get('id'));
-        $version->delete();
+    public function deleteVersionAction(
+        DeleteVersionHandler $handler,
+        IdBodyPayload $payload,
+    ): JsonResponse {
+        $handler($payload);
 
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
     #[Route('/element/delete-all-versions', name: 'opendxp_admin_element_deleteallversion', methods: ['DELETE'])]
-    public function deleteAllVersionAction(Request $request): JsonResponse
-    {
-        $elementId = $request->request->getInt('id');
-        $elementModificationdate = $request->request->get('date');
-        $elementType = $request->request->get('type');
+    public function deleteAllVersionAction(
+        DeleteAllVersionsHandler $handler,
+        DeleteAllVersionsPayload $payload,
+    ): JsonResponse {
+        $handler($payload);
 
-        $versions = new Model\Version\Listing();
-        $versions->setCondition('cid = ' . $versions->quote($elementId) .
-            ' AND date <> ' . $versions->quote($elementModificationdate) .
-            ' AND ctype = ' . $versions->quote($elementType)
-        );
-        foreach ($versions->load() as $version) {
-            $version->delete();
-        }
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
     #[Route('/element/get-requires-dependencies', name: 'opendxp_admin_element_getrequiresdependencies', methods: ['GET'])]
-    public function getRequiresDependenciesAction(Request $request): JsonResponse
-    {
-        $id = $request->query->getInt('id');
-        $type = $request->query->get('elementType');
-        $allowedTypes = ['asset', 'document', 'object'];
-        $offset = (int) $request->query->get('start', '0');
-        $limit = (int) $request->query->get('limit', '25');
-        $filterRequires = $request->query->get('filter');
-        $value = null;
-        $elements = null;
-
-        if ($id && in_array($type, $allowedTypes)) {
-            $element = Model\Element\Service::getElementById($type, $id);
-            $dependencies = $element->getDependencies();
-
-            if ($filterRequires) {
-                $filters = $this->decodeJson($filterRequires);
-
-                foreach ($filters as $filter) {
-
-                    if ($filter['type'] === 'string') {
-                        $value = ($filter['value']??'');
-                    }
-
-                    $elements = $element->getDependencies()->getFilterRequiresByPath($offset, $limit, $value);
-
-                }
-
-                if (count($elements) > 0) {
-                    $result = Model\Element\Service::getFilterRequiresForFrontend($elements);
-                    $result['total'] = count($result['requires']);
-
-                    return $this->adminJson($result);
-                }
-
-                return $this->adminJson($elements);
-
-            }
-
-            if ($element instanceof Model\Element\ElementInterface) {
-                $dependenciesResult = Model\Element\Service::getRequiresDependenciesForFrontend($dependencies, $offset, $limit);
-
-                $dependenciesResult['start'] = $offset;
-                $dependenciesResult['limit'] = $limit;
-                $dependenciesResult['total'] = $dependencies->getRequiresTotalCount();
-
-                return $this->adminJson($dependenciesResult);
-            }
-        }
-
-        return $this->adminJson(false);
+    public function getRequiresDependenciesAction(
+        GetRequiresDependenciesHandler $handler,
+        GetDependenciesPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/element/get-required-by-dependencies', name: 'opendxp_admin_element_getrequiredbydependencies', methods: ['GET'])]
-    public function getRequiredByDependenciesAction(Request $request): JsonResponse
-    {
-        $id = $request->query->getInt('id');
-        $type = $request->query->get('elementType');
-        $allowedTypes = ['asset', 'document', 'object'];
-        $offset = (int) $request->query->get('start', '0');
-        $limit = (int) $request->query->get('limit', '25');
-        $filterRequiredBy = $request->query->get('filter');
-        $value = null;
-        $elements = null;
-
-        if ($id && in_array($type, $allowedTypes)) {
-            $element = Model\Element\Service::getElementById($type, $id);
-            $dependencies = $element->getDependencies();
-
-            if ($filterRequiredBy) {
-                $filters = $this->decodeJson($filterRequiredBy);
-
-                foreach ($filters as $filter) {
-
-                    if ($filter['type'] === 'string') {
-                        $value = ($filter['value']??'');
-                    }
-
-                    $elements = $element->getDependencies()->getFilterRequiredByPath($offset, $limit, $value);
-
-                }
-
-                $result = [
-                    'start' => $offset,
-                    'limit' => $limit,
-                    'requiredBy' => [], // Initialize 'requiredBy' as an empty array
-                ];
-
-                if (count($elements) > 0) {
-                    $result = Model\Element\Service::getFilterRequiredByPathForFrontend($elements);
-                    $result['total'] = count($result['requiredBy']);
-
-                    return $this->adminJson($result);
-                }
-
-                return $this->adminJson($elements);
-
-            }
-
-            if ($element instanceof Model\Element\ElementInterface) {
-                $dependenciesResult = Model\Element\Service::getRequiredByDependenciesForFrontend($dependencies, $offset, $limit);
-
-                $dependenciesResult['start'] = $offset;
-                $dependenciesResult['limit'] = $limit;
-                $dependenciesResult['total'] = $dependencies->getRequiredByTotalCount();
-
-                return $this->adminJson($dependenciesResult);
-            }
-        }
-
-        return $this->adminJson(false);
+    public function getRequiredByDependenciesAction(
+        GetRequiredByDependenciesHandler $handler,
+        GetDependenciesPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/element/get-predefined-properties', name: 'opendxp_admin_element_getpredefinedproperties', methods: ['GET'])]
-    public function getPredefinedPropertiesAction(Request $request, TranslatorInterface $translator): JsonResponse
-    {
-        $properties = [];
-        $type = $request->query->get('elementType');
-        $query = $request->query->get('query');
-        $allowedTypes = ['asset', 'document', 'object'];
-
-        if (in_array($type, $allowedTypes, true)) {
-            $list = new Model\Property\Predefined\Listing();
-            $list->setFilter(function (Model\Property\Predefined $predefined) use ($type, $query, $translator) {
-                if (!str_contains($predefined->getCtype(), $type)) {
-                    return false;
-                }
-
-                return !($query && stripos($translator->trans($predefined->getName(), [], 'admin'), (string) $query) === false);
-            });
-
-            foreach ($list->getProperties() as $type) {
-                $properties[] = $type->getObjectVars();
-            }
-        }
-
-        return $this->adminJson(['properties' => $properties]);
+    public function getPredefinedPropertiesAction(
+        GetPredefinedPropertiesHandler $handler,
+        GetPredefinedPropertiesPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), envelope: false);
     }
 
     #[Route('/element/analyze-permissions', name: 'opendxp_admin_element_analyzepermissions', methods: ['POST'])]
-    public function analyzePermissionsAction(Request $request): Response
-    {
-        $userId = $request->request->getInt('userId');
-        if ($userId) {
-            $userList = [];
-            if ($user = Model\User::getById($userId)) {
-                $userList[] = $user;
-            }
-        } else {
-            $userList = new Model\User\Listing();
-            $userList->setCondition('`type` = ?', ['user']);
-            $userList = $userList->load();
-        }
-
-        $elementType = $request->request->get('elementType');
-        $elementId = $request->request->getInt('elementId');
-
-        $element = Element\Service::getElementById($elementType, $elementId);
-
-        $result = Element\PermissionChecker::check($element, $userList);
-
-        return $this->adminJson(
-            [
-                'data' => $result,
-                'success' => true,
-            ]
-        );
-    }
-
-    /**
-     * @throws Exception
-     */
-    protected function getNicePathFormatterFieldDefinition(DataObject\Concrete $source, array $context): DataObject\ClassDefinition\Data|bool|null
-    {
-        $ownerType = $context['containerType'];
-        $fieldname = $context['fieldname'];
-        $fd = null;
-
-        if ($ownerType === 'object') {
-            $subContainerType = $context['subContainerType'] ?? null;
-            if ($subContainerType) {
-                $subContainerKey = $context['subContainerKey'];
-                $subContainer = $source->getClass()->getFieldDefinition($subContainerKey);
-                if (method_exists($subContainer, 'getFieldDefinition')) {
-                    $fd = $subContainer->getFieldDefinition($fieldname);
-                }
-            } else {
-                $fd = $source->getClass()->getFieldDefinition($fieldname);
-            }
-        } elseif ($ownerType === 'localizedfield') {
-            $localizedfields = $source->getClass()->getFieldDefinition('localizedfields');
-            if ($localizedfields instanceof DataObject\ClassDefinition\Data\Localizedfields) {
-                $fd = $localizedfields->getFieldDefinition($fieldname);
-            }
-        } elseif ($ownerType === 'objectbrick') {
-            $fdBrick = DataObject\Objectbrick\Definition::getByKey($context['containerKey']);
-            $fd = $fdBrick->getFieldDefinition($fieldname);
-        } elseif ($ownerType === 'fieldcollection') {
-            $containerKey = $context['containerKey'];
-            $fdCollection = DataObject\Fieldcollection\Definition::getByKey($containerKey);
-            if (($context['subContainerType'] ?? null) === 'localizedfield') {
-                /** @var DataObject\ClassDefinition\Data\Localizedfields $fdLocalizedFields */
-                $fdLocalizedFields = $fdCollection->getFieldDefinition('localizedfields');
-                $fd = $fdLocalizedFields->getFieldDefinition($fieldname);
-            } else {
-                $fd = $fdCollection->getFieldDefinition($fieldname);
-            }
-        }
-
-        return $fd;
-    }
-
-    /**
-     * @throws Exception
-     */
-    protected function convertResultWithPathFormatter(DataObject\Concrete $source, array $context, array $result, array $targets): array
-    {
-        $fd = $this->getNicePathFormatterFieldDefinition($source, $context);
-
-        if ($fd instanceof DataObject\ClassDefinition\PathFormatterAwareInterface) {
-            $formatter = $fd->getPathFormatterClass();
-
-            if (null !== $formatter) {
-                $pathFormatter = DataObject\ClassDefinition\Helper\PathFormatterResolver::resolvePathFormatter(
-                    $fd->getPathFormatterClass()
-                );
-
-                if ($pathFormatter instanceof DataObject\ClassDefinition\PathFormatterInterface) {
-                    $result = $pathFormatter->formatPath($result, $source, $targets, [
-                        'fd' => $fd,
-                        'context' => $context,
-                    ]);
-                }
-            }
-        }
-
-        return $result;
+    public function analyzePermissionsAction(
+        AnalyzePermissionsHandler $handler,
+        AnalyzePermissionsPayload $payload,
+    ): Response {
+        return $this->apiJson($handler($payload));
     }
 }

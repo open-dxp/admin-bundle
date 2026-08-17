@@ -1,0 +1,70 @@
+<?php
+
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) Pimcore GmbH (https://pimcore.com)
+ * @copyright  Modification Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
+declare(strict_types=1);
+
+namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Page;
+
+use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
+use Symfony\Component\HttpFoundation\Request;
+
+/** @phpstan-consistent-constructor */
+readonly class PagePayload implements ExtJsPayloadInterface
+{
+    public function __construct(
+        public readonly int $id,
+        public readonly string $task,
+        public readonly ?array $settings,
+        public readonly ?array $editables,
+        public readonly bool $appendEditables,
+        public readonly ?array $properties,
+        public readonly ?array $scheduler,
+        public readonly ?bool $missingRequiredEditable,
+    ) {}
+
+    public static function fromRequest(Request $request): static
+    {
+        $editables = $request->request->has('data')
+            ? json_decode($request->request->getString('data'), true)
+            : null;
+
+        $properties = $request->request->has('properties')
+            ? json_decode($request->request->getString('properties'), true)
+            : null;
+
+        $scheduler = null;
+        if ($request->request->has('scheduler')) {
+            $decodedScheduler = json_decode($request->request->getString('scheduler'), true);
+            // a present-but-non-array value (e.g. JSON null) must still clear existing
+            // scheduled tasks, matching ApplySchedulerDataTrait's original behavior
+            $scheduler = is_array($decodedScheduler) ? $decodedScheduler : [];
+        }
+
+        return new static(
+            id:   $request->request->getInt('id'),
+            task: strtolower($request->query->getString('task')),
+            settings: $request->request->has('settings')
+                ? (json_decode($request->request->getString('settings'), true) ?? null)
+                : null,
+            editables: is_array($editables) ? $editables : null,
+            appendEditables: (bool) $request->request->get('appendEditables'),
+            properties: is_array($properties) ? $properties : null,
+            scheduler: $scheduler,
+            missingRequiredEditable: $request->request->has('missingRequiredEditable')
+                ? $request->request->getString('missingRequiredEditable') === 'true'
+                : null,
+        );
+    }
+}

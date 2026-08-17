@@ -23,6 +23,8 @@ services:
 
     OpenDxp\Bundle\AdminBundle\EventListener\AdminExceptionListener: ~
 
+    OpenDxp\Bundle\AdminBundle\EventListener\HtmlContentTypeResponseListener: ~
+
     #
     # GRID CONFIG CLEANUP
     #
@@ -34,6 +36,12 @@ services:
     #
 
     OpenDxp\Bundle\AdminBundle\EventListener\ImportConfigListener: ~
+
+    #
+    # REQUEST CONTEXT
+    #
+
+    OpenDxp\Bundle\AdminBundle\EventListener\CurrentControllerListener: ~
 
     #
     # MISC

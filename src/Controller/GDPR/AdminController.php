@@ -18,37 +18,21 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\Manager;
-use OpenDxp\Controller\KernelControllerEventInterface;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\GetDataProviders\GetDataProvidersHandler;
+use OpenDxp\Bundle\AdminBundle\Security\AdminPermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
  */
-class AdminController extends AdminAbstractController implements KernelControllerEventInterface
+#[IsGranted(AdminPermission::GdprDataExtractor->value)]
+class AdminController extends AdminAbstractController
 {
     #[Route('/get-data-providers', name: 'opendxp_admin_gdpr_admin_getdataproviders', methods: ['GET'])]
-    public function getDataProvidersAction(Manager $manager): JsonResponse
+    public function getDataProvidersAction(GetDataProvidersHandler $handler): JsonResponse
     {
-        $response = [];
-        foreach ($manager->getServices() as $service) {
-            $response[] = [
-                'name' => $service->getName(),
-                'jsClass' => $service->getJsClassName(),
-            ];
-        }
-
-        return $this->adminJson($response);
-    }
-
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        $this->checkActionPermission($event, 'gdpr_data_extractor');
+        return $this->apiJson($handler(), rootProperty: 'providers');
     }
 }

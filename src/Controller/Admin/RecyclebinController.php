@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * OpenDXP
@@ -14,169 +13,91 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
+declare(strict_types=1);
+
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\AddToRecyclebin\AddToRecyclebinHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\AddToRecyclebin\AddToRecyclebinPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\DeleteRecyclebinItem\DeleteRecyclebinItemHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\FlushRecyclebin\FlushRecyclebinHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\ListRecyclebin\ListRecyclebinHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RecyclebinPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RestoreRecyclebinItem\RestoreRecyclebinItemHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Recyclebin\RestoreRecyclebinItem\RestoreRecyclebinItemPayload;
 use OpenDxp\Controller\KernelControllerEventInterface;
-use OpenDxp\Model\Element;
-use OpenDxp\Model\Element\Recyclebin;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
  */
 class RecyclebinController extends AdminAbstractController implements KernelControllerEventInterface
 {
+    #[IsGranted(CorePermission::Recyclebin->value)]
     #[Route('/recyclebin/list', name: 'opendxp_admin_recyclebin_list', methods: ['POST'])]
-    public function listAction(Request $request): JsonResponse
-    {
-        if ($request->query->get('xaction') === 'destroy') {
-            $item = Recyclebin\Item::getById(\OpenDxp\Bundle\AdminBundle\Helper\QueryParams::getRecordIdForGridRequest($request->request->get('data')));
-
-            if ($item) {
-                $item->delete();
-            }
-
-            return $this->adminJson(['success' => true, 'data' => []]);
+    public function listAction(
+        Request $request,
+        RecyclebinPayload $payload,
+        ListRecyclebinHandler $handler,
+        #[MapQueryParameter] ?string $xaction = null,
+    ): Response {
+        if ($payload->hasData) {
+            return match ($xaction) {
+                'destroy' => $this->forward(self::class . '::listDestroyAction', [], $request->query->all()),
+                default   => throw new AdminOperationFailedException(),
+            };
         }
 
-        $db = \OpenDxp\Db::get();
-
-        $list = new Recyclebin\Item\Listing();
-        $list->setLimit((int) $request->request->get('limit', 50));
-        $list->setOffset((int) $request->request->get('start', 0));
-
-        $list->setOrderKey('date');
-        $list->setOrder('DESC');
-
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->request->all());
-        if ($sortingSettings['orderKey']) {
-            $list->setOrderKey($sortingSettings['orderKey']);
-            $list->setOrder($sortingSettings['order']);
-        }
-
-        $conditionFilters = [];
-
-        if ($request->request->get('filterFullText')) {
-            $conditionFilters[] = '`path` LIKE ' . $list->quote('%'. $list->escapeLike($request->request->get('filterFullText')) .'%');
-        }
-
-        $filters = $request->request->get('filter');
-        if ($filters) {
-            $filters = $this->decodeJson($filters);
-
-            foreach ($filters as $filter) {
-                $operator = '=';
-
-                $filterField = $filter['property'];
-                $filterOperator = $filter['operator'];
-
-                if ($filter['type'] === 'string') {
-                    $operator = 'LIKE';
-                } elseif ($filter['type'] === 'numeric') {
-                    if ($filterOperator === 'lt') {
-                        $operator = '<';
-                    } elseif ($filterOperator === 'gt') {
-                        $operator = '>';
-                    } elseif ($filterOperator === 'eq') {
-                        $operator = '=';
-                    }
-                } elseif ($filter['type'] === 'date') {
-                    if ($filterOperator === 'lt') {
-                        $operator = '<';
-                    } elseif ($filterOperator === 'gt') {
-                        $operator = '>';
-                    } elseif ($filterOperator === 'eq') {
-                        $operator = '=';
-                    }
-                    $filter['value'] = strtotime($filter['value']);
-                } elseif ($filter['type'] === 'list') {
-                    $operator = '=';
-                } elseif ($filter['type'] === 'boolean') {
-                    $operator = '=';
-                    $filter['value'] = (int) $filter['value'];
-                }
-                // system field
-                $value = ($filter['value'] ?? '');
-                if ($operator === 'LIKE') {
-                    $value = '%' . $value . '%';
-                }
-
-                $field = $db->quoteIdentifier($filterField);
-                if (($filter['field'] ?? false) === 'fullpath') {
-                    $field = 'CONCAT(`path`,filename)';
-                }
-
-                if ($filter['type'] === 'date' && $operator === '=') {
-                    $maxTime = $value + (86400 - 1); //specifies the top point of the range used in the condition
-                    $condition = $field . ' BETWEEN ' . $db->quote($value) . ' AND ' . $db->quote($maxTime);
-                    $conditionFilters[] = $condition;
-                } else {
-                    $conditionFilters[] = $field . $operator . ' ' . $db->quote($value);
-                }
-            }
-        }
-
-        if ($conditionFilters !== []) {
-            $condition = implode(' AND ', $conditionFilters);
-            $list->setCondition($condition);
-        }
-
-        $items = $list->load();
-        $data = [];
-        foreach ($items as $item) {
-            $data[] = $item->getObjectVars();
-        }
-
-        return $this->adminJson(['data' => $data, 'success' => true, 'total' => $list->getTotalCount()]);
-
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Recyclebin->value)]
+    #[Route('/recyclebin/list-destroy', name: 'opendxp_admin_recyclebin_list_destroy', methods: ['POST'])]
+    public function listDestroyAction(
+        RecyclebinPayload $payload,
+        DeleteRecyclebinItemHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
+    }
+
+    #[IsGranted(CorePermission::Recyclebin->value)]
     #[Route('/recyclebin/restore', name: 'opendxp_admin_recyclebin_restore', methods: ['POST'])]
-    public function restoreAction(Request $request): JsonResponse
-    {
-        $item = Recyclebin\Item::getById((int) $request->request->get('id'));
-        if (!$item) {
-            throw $this->createNotFoundException();
-        }
-        $item->restore();
+    public function restoreAction(
+        RestoreRecyclebinItemPayload $payload,
+        RestoreRecyclebinItemHandler $handler,
+    ): JsonResponse {
+        $handler($payload);
 
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
+    #[IsGranted(CorePermission::Recyclebin->value)]
     #[Route('/recyclebin/flush', name: 'opendxp_admin_recyclebin_flush', methods: ['DELETE'])]
-    public function flushAction(): JsonResponse
-    {
-        $bin = new Element\Recyclebin();
-        $bin->flush();
+    public function flushAction(
+        FlushRecyclebinHandler $handler,
+    ): JsonResponse {
+        $handler();
 
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
     #[Route('/recyclebin/add', name: 'opendxp_admin_recyclebin_add', methods: ['POST'])]
-    public function addAction(Request $request): JsonResponse
-    {
-        try {
-            $element = Element\Service::getElementById($request->request->get('type'), $request->request->getInt('id'));
+    public function addAction(
+        AddToRecyclebinPayload $payload,
+        AddToRecyclebinHandler $handler,
+    ): JsonResponse {
+        $handler($payload);
 
-            if ($element) {
-                $list = $element::getList(['unpublished' => true]);
-                $list->setCondition('`path` LIKE ' . $list->quote($list->escapeLike($element->getRealFullPath()) . '/%'));
-                $children = $list->getTotalCount();
-
-                if ($children <= 100) {
-                    Recyclebin\Item::create($element, $this->getAdminUser());
-                }
-            }
-        } catch (Exception $e) {
-            return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-        }
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
     public function onKernelControllerEvent(ControllerEvent $event): void
@@ -185,12 +106,8 @@ class RecyclebinController extends AdminAbstractController implements KernelCont
             return;
         }
 
-        // recyclebin actions might take some time (save & restore)
         $timeout = 600; // 10 minutes
         @ini_set('max_execution_time', (string) $timeout);
         set_time_limit($timeout);
-
-        // check permissions
-        $this->checkActionPermission($event, 'recyclebin', ['addAction']);
     }
 }

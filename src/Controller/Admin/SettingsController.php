@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -16,41 +17,56 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use Exception;
+use OpenDxp\Bundle\AdminBundle\Attribute\AsHtmlContentTypeResponse;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\System\AdminConfig;
-use OpenDxp\Cache;
-use OpenDxp\Cache\Core\CoreCacheHandler;
-use OpenDxp\Cache\Symfony\CacheClearer;
-use OpenDxp\Db;
-use OpenDxp\Event\SystemEvents;
-use OpenDxp\Helper\FileSystemHelper;
-use OpenDxp\Helper\StopMessengerWorkersTrait;
-use OpenDxp\Localization\LocaleServiceInterface;
-use OpenDxp\Logger;
-use OpenDxp\Model;
-use OpenDxp\Model\Asset;
-use OpenDxp\Model\Element;
-use OpenDxp\Model\Exception\ConfigWriteException;
-use OpenDxp\Model\Metadata;
-use OpenDxp\Model\Property;
-use OpenDxp\Model\WebsiteSetting;
-use OpenDxp\SystemSettingsConfig;
-use OpenDxp\Tool;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\EventDispatcher\GenericEvent;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearCache\ClearCacheHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearCache\ClearCachePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearOutputCache\ClearOutputCacheHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearTemporaryFiles\ClearTemporaryFilesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\CreatePredefinedMetadata\CreatePredefinedMetadataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\CreatePredefinedProperty\CreatePredefinedPropertyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\CreateWebsiteSetting\CreateWebsiteSettingHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteCustomLogo\DeleteCustomLogoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeletePredefinedMetadata\DeletePredefinedMetadataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeletePredefinedProperty\DeletePredefinedPropertyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DeleteWebsiteSetting\DeleteWebsiteSettingHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DisplayCustomLogo\DisplayCustomLogoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\DisplayCustomLogo\DisplayCustomLogoPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAppearanceSettings\GetAppearanceSettingsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAdminLanguages\GetAvailableAdminLanguagesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableAlgorithms\GetAvailableAlgorithmsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableCountries\GetAvailableCountriesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableSites\GetAvailableSitesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetAvailableSites\GetAvailableSitesPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetFilteredPredefinedMetadata\GetFilteredPredefinedMetadataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetFilteredPredefinedMetadata\GetFilteredPredefinedMetadataPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetPredefinedMetadataList\GetPredefinedMetadataListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetPredefinedPropertiesList\GetPredefinedPropertiesListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetSystemSettings\GetSystemSettingsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\GetWebsiteSettingsList\GetWebsiteSettingsListHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\PredefinedMetadataPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\PredefinedPropertyPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\SaveAppearanceSettings\SaveAppearanceSettingsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\SaveSettingsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\SaveSystemSettings\SaveSystemSettingsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\ThumbnailAdapterCheck\ThumbnailAdapterCheckHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdatePredefinedMetadata\UpdatePredefinedMetadataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdatePredefinedProperty\UpdatePredefinedPropertyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UpdateWebsiteSetting\UpdateWebsiteSettingHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UploadCustomLogo\UploadCustomLogoHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\UploadCustomLogo\UploadCustomLogoPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Settings\WebsiteSettingPayload;
+use OpenDxp\Bundle\AdminBundle\Security\AdminPermission;
+use OpenDxp\Security\CorePermission;
+use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\HttpKernel\Event\TerminateEvent;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
@@ -58,440 +74,192 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[Route('/settings')]
 class SettingsController extends AdminAbstractController
 {
-    use StopMessengerWorkersTrait;
-
-    private const string CUSTOM_LOGO_PATH = 'custom-logo.image';
-
-    public function __construct(protected TranslatorInterface $translator)
-    {
-    }
-
     #[Route('/display-custom-logo', name: 'opendxp_settings_display_custom_logo', methods: ['GET'])]
-    public function displayCustomLogoAction(Request $request): StreamedResponse
+    public function displayCustomLogoAction(DisplayCustomLogoPayload $payload, DisplayCustomLogoHandler $handler): StreamedResponse
     {
-        $mime = 'image/svg+xml';
-        if ($request->query->has('white')) {
-            $logo = OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/logo-claim-white.svg';
-        } else {
-            $logo = OPENDXP_WEB_ROOT . '/bundles/opendxpadmin/img/logo-claim-gray.svg';
-        }
+        $result = $handler($payload);
 
-        $stream = fopen($logo, 'rb');
-
-        $storage = Tool\Storage::get('admin');
-        if ($storage->fileExists(self::CUSTOM_LOGO_PATH)) {
-            try {
-                $mime = $storage->mimeType(self::CUSTOM_LOGO_PATH);
-                $stream = $storage->readStream(self::CUSTOM_LOGO_PATH);
-            } catch (Exception) {
-                // do nothing
-            }
-        }
-
-        return new StreamedResponse(function () use ($stream): void {
-            fpassthru($stream);
+        return new StreamedResponse(static function () use ($result): void {
+            fpassthru($result->stream);
         }, 200, [
-            'Content-Type' => $mime,
+            'Content-Type'            => $result->mime,
             'Content-Security-Policy' => "script-src 'none'",
         ]);
     }
 
-    /**
-     * @throws Exception
-     */
+    #[AsHtmlContentTypeResponse]
     #[Route('/upload-custom-logo', name: 'opendxp_admin_settings_uploadcustomlogo', methods: ['POST'])]
-    public function uploadCustomLogoAction(Request $request): JsonResponse
+    public function uploadCustomLogoAction(UploadCustomLogoPayload $payload, UploadCustomLogoHandler $handler): JsonResponse
     {
-        $logoFile = $request->files->get('Filedata');
+        $handler($payload);
 
-        if (!$logoFile instanceof UploadedFile
-            || !in_array($logoFile->guessExtension(), ['svg', 'png', 'jpg'])
-        ) {
-            throw new Exception('Unsupported file format.');
-        }
-
-        $storage = Tool\Storage::get('admin');
-        $storage->writeStream(self::CUSTOM_LOGO_PATH, fopen($logoFile->getPathname(), 'rb'));
-
-        // set content-type to text/html, otherwise (when application/json is sent) chrome will complain in
-        // Ext.form.Action.Submit and mark the submission as failed
-
-        $response = $this->adminJson(['success' => true]);
-        $response->headers->set('Content-Type', 'text/html');
-
-        return $response;
+        return $this->apiOk();
     }
 
     #[Route('/delete-custom-logo', name: 'opendxp_admin_settings_deletecustomlogo', methods: ['DELETE'])]
-    public function deleteCustomLogoAction(Request $request): JsonResponse
+    public function deleteCustomLogoAction(DeleteCustomLogoHandler $handler): JsonResponse
     {
-        if (Tool\Storage::get('admin')->fileExists(self::CUSTOM_LOGO_PATH)) {
-            Tool\Storage::get('admin')->delete(self::CUSTOM_LOGO_PATH);
-        }
+        $handler();
 
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
-    /**
-     * Used by the predefined metadata grid
-     */
+    #[IsGranted(CorePermission::AssetMetadata->value)]
     #[Route('/predefined-metadata', name: 'opendxp_admin_settings_metadata', methods: ['POST'])]
-    public function metadataAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('asset_metadata');
-
-        if ($request->request->has('data')) {
-            if ($request->query->get('xaction') === 'destroy') {
-                $data = $this->decodeJson($request->request->get('data'));
-                $id = $data['id'];
-                $metadata = Metadata\Predefined::getById($id);
-                if (!$metadata->isWriteable()) {
-                    throw new ConfigWriteException();
-                }
-                $metadata->delete();
-
-                return $this->adminJson(['success' => true, 'data' => []]);
-            }
-
-            if ($request->query->get('xaction') === 'update') {
-                $data = $this->decodeJson($request->request->get('data'));
-                // save type
-                $metadata = Metadata\Predefined::getById($data['id']);
-                if (!$metadata->isWriteable()) {
-                    throw new ConfigWriteException();
-                }
-                $metadata->setValues($data);
-                $existingItem = Metadata\Predefined\Listing::getByKeyAndLanguage($metadata->getName(), $metadata->getLanguage(), $metadata->getTargetSubtype());
-                if ($existingItem && $existingItem->getId() !== $metadata->getId()) {
-                    return $this->adminJson(['message' => 'predefined_metadata_definitions_error_name_exists_msg', 'success' => false]);
-                }
-                $metadata->minimize();
-                $metadata->save();
-                $metadata->expand();
-                $responseData = $metadata->getObjectVars();
-                $responseData['writeable'] = $metadata->isWriteable();
-
-                return $this->adminJson(['data' => $responseData, 'success' => true]);
-            }
-
-            if ($request->query->get('xaction') === 'create') {
-                if (!(new Metadata\Predefined())->isWriteable()) {
-                    throw new ConfigWriteException();
-                }
-                $data = $this->decodeJson($request->request->get('data'));
-                unset($data['id']);
-                // save type
-                $metadata = Metadata\Predefined::create();
-                $metadata->setValues($data);
-                $existingItem = Metadata\Predefined\Listing::getByKeyAndLanguage($metadata->getName(), $metadata->getLanguage(), $metadata->getTargetSubtype());
-                if ($existingItem) {
-                    return $this->adminJson(['message' => 'rule_violation', 'success' => false]);
-                }
-                $metadata->save();
-                $responseData = $metadata->getObjectVars();
-                $responseData['writeable'] = $metadata->isWriteable();
-
-                return $this->adminJson(['data' => $responseData, 'success' => true]);
-            }
-        } else {
-            // get list of types
-            $list = new Metadata\Predefined\Listing();
-
-            if ($filter = $request->request->get('filter')) {
-                $list->setFilter(function (Metadata\Predefined $predefined) use ($filter) {
-                    foreach ($predefined->getObjectVars() as $value) {
-                        if (stripos((string)$value, (string) $filter) !== false) {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                });
-            }
-
-            $properties = [];
-            foreach ($list->getDefinitions() as $metadata) {
-                $metadata->expand();
-                $data = $metadata->getObjectVars();
-                $data['writeable'] = $metadata->isWriteable();
-                $properties[] = $data;
-            }
-
-            return $this->adminJson(['data' => $properties, 'success' => true, 'total' => $list->getTotalCount()]);
+    public function metadataAction(
+        Request $request,
+        PredefinedMetadataPayload $payload,
+        GetPredefinedMetadataListHandler $handler,
+        #[MapQueryParameter] ?string $xaction = null,
+    ): Response {
+        if ($payload->hasData) {
+            return match ($xaction) {
+                'destroy' => $this->forward(self::class . '::metadataDestroyAction', [], $request->query->all()),
+                'update'  => $this->forward(self::class . '::metadataUpdateAction', [], $request->query->all()),
+                'create'  => $this->forward(self::class . '::metadataCreateAction', [], $request->query->all()),
+                default   => throw new AdminOperationFailedException(''),
+            };
         }
 
-        return $this->adminJson(['success' => false]);
+        return $this->apiJson($handler($payload));
+    }
+
+    #[IsGranted(CorePermission::AssetMetadata->value)]
+    #[Route('/predefined-metadata-destroy', name: 'opendxp_admin_settings_metadata_destroy', methods: ['POST'])]
+    public function metadataDestroyAction(
+        PredefinedMetadataPayload $payload,
+        DeletePredefinedMetadataHandler $handler,
+    ): JsonResponse {
+        $handler($payload);
+
+        return $this->apiOk();
+    }
+
+    #[IsGranted(CorePermission::AssetMetadata->value)]
+    #[Route('/predefined-metadata-update', name: 'opendxp_admin_settings_metadata_update', methods: ['POST'])]
+    public function metadataUpdateAction(
+        PredefinedMetadataPayload $payload,
+        UpdatePredefinedMetadataHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
+    }
+
+    #[IsGranted(CorePermission::AssetMetadata->value)]
+    #[Route('/predefined-metadata-create', name: 'opendxp_admin_settings_metadata_create', methods: ['POST'])]
+    public function metadataCreateAction(
+        PredefinedMetadataPayload $payload,
+        CreatePredefinedMetadataHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/get-predefined-metadata', name: 'opendxp_admin_settings_getpredefinedmetadata', methods: ['GET'])]
-    public function getPredefinedMetadataAction(Request $request): JsonResponse
-    {
-        $type = $request->query->get('type');
-        $subType = $request->query->get('subType');
-        $group = $request->query->get('group');
-        $list = Metadata\Predefined\Listing::getByTargetType($type, [$subType]);
-        $result = [];
-        foreach ($list as $item) {
-            $itemGroup = $item->getGroup() ?? '';
-            if ($group === 'default' || $group === $itemGroup) {
-                $item->expand();
-                $data = $item->getObjectVars();
-                $data['writeable'] = $item->isWriteable();
-                $result[] = $data;
-            }
-        }
-
-        return $this->adminJson(['data' => $result, 'success' => true]);
+    public function getPredefinedMetadataAction(
+        GetFilteredPredefinedMetadataPayload $payload,
+        GetFilteredPredefinedMetadataHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::PredefinedProperties->value)]
     #[Route('/properties', name: 'opendxp_admin_settings_properties', methods: ['POST'])]
-    public function propertiesAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('predefined_properties');
-
-        if ($request->request->has('data')) {
-            if ($request->query->get('xaction') === 'destroy') {
-                $data = $this->decodeJson($request->request->get('data'));
-                $id = $data['id'];
-                $property = Property\Predefined::getById($id);
-                if (!$property->isWriteable()) {
-                    throw new ConfigWriteException();
-                }
-                $property->delete();
-
-                return $this->adminJson(['success' => true, 'data' => []]);
-            }
-
-            if ($request->query->get('xaction') === 'update') {
-                $data = $this->decodeJson($request->request->get('data'));
-                // save type
-                $property = Property\Predefined::getById($data['id']);
-                if (!$property->isWriteable()) {
-                    throw new ConfigWriteException();
-                }
-                if (is_array($data['ctype'])) {
-                    $data['ctype'] = implode(',', $data['ctype']);
-                }
-                $property->setValues($data);
-                $property->save();
-                $responseData = $property->getObjectVars();
-                $responseData['writeable'] = $property->isWriteable();
-
-                return $this->adminJson(['data' => $responseData, 'success' => true]);
-            }
-
-            if ($request->query->get('xaction') === 'create') {
-                if (!(new Property\Predefined())->isWriteable()) {
-                    throw new ConfigWriteException();
-                }
-                $data = $this->decodeJson($request->request->get('data'));
-                unset($data['id']);
-                // save type
-                $property = Property\Predefined::create();
-                $property->setValues($data);
-                $property->save();
-                $responseData = $property->getObjectVars();
-                $responseData['writeable'] = $property->isWriteable();
-
-                return $this->adminJson(['data' => $responseData, 'success' => true]);
-            }
-        } else {
-            // get list of types
-            $list = new Property\Predefined\Listing();
-
-            if ($filter = $request->request->get('filter')) {
-                $list->setFilter(function (Property\Predefined $predefined) use ($filter) {
-                    foreach ($predefined->getObjectVars() as $value) {
-                        if ($value) {
-                            $cellValues = is_array($value) ? $value : [$value];
-
-                            foreach ($cellValues as $cellValue) {
-                                if (stripos((string)$cellValue, (string) $filter) !== false) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-
-                    return false;
-                });
-            }
-
-            $properties = [];
-            foreach ($list->getProperties() as $property) {
-                $data = $property->getObjectVars();
-                $data['writeable'] = $property->isWriteable();
-                $properties[] = $data;
-            }
-
-            return $this->adminJson(['data' => $properties, 'success' => true, 'total' => $list->getTotalCount()]);
+    public function propertiesAction(
+        Request $request,
+        PredefinedPropertyPayload $payload,
+        GetPredefinedPropertiesListHandler $handler,
+        #[MapQueryParameter] ?string $xaction = null,
+    ): Response {
+        if ($payload->hasData) {
+            return match ($xaction) {
+                'destroy' => $this->forward(self::class . '::propertiesDestroyAction', [], $request->query->all()),
+                'update'  => $this->forward(self::class . '::propertiesUpdateAction', [], $request->query->all()),
+                'create'  => $this->forward(self::class . '::propertiesCreateAction', [], $request->query->all()),
+                default   => throw new AdminOperationFailedException(''),
+            };
         }
 
-        return $this->adminJson(['success' => false]);
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::PredefinedProperties->value)]
+    #[Route('/properties-destroy', name: 'opendxp_admin_settings_properties_destroy', methods: ['POST'])]
+    public function propertiesDestroyAction(
+        PredefinedPropertyPayload $payload,
+        DeletePredefinedPropertyHandler $handler,
+    ): JsonResponse {
+        $handler($payload);
+
+        return $this->apiOk();
+    }
+
+    #[IsGranted(CorePermission::PredefinedProperties->value)]
+    #[Route('/properties-update', name: 'opendxp_admin_settings_properties_update', methods: ['POST'])]
+    public function propertiesUpdateAction(
+        PredefinedPropertyPayload $payload,
+        UpdatePredefinedPropertyHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
+    }
+
+    #[IsGranted(CorePermission::PredefinedProperties->value)]
+    #[Route('/properties-create', name: 'opendxp_admin_settings_properties_create', methods: ['POST'])]
+    public function propertiesCreateAction(
+        PredefinedPropertyPayload $payload,
+        CreatePredefinedPropertyHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
+    }
+
+    #[IsGranted(AdminPermission::SystemAppearance->value)]
     #[Route('/get-admin-system', name: 'opendxp_appearance_admin_settings_get', methods: ['GET'])]
-    public function getAppearanceSystemAction(AdminConfig $config): JsonResponse
+    public function getAppearanceSystemAction(GetAppearanceSettingsHandler $handler): JsonResponse
     {
-        $this->checkPermission('system_appearance_settings');
-        $config = $config->getAdminSystemSettingsConfig();
-
-        $response = [
-            'values' => $config,
-        ];
-
-        return $this->adminJson($response);
+        return $this->apiJson($handler(), envelope: false);
     }
 
+    #[IsGranted(CorePermission::SystemSettings->value)]
     #[Route('/get-system', name: 'opendxp_admin_settings_getsystem', methods: ['GET'])]
-    public function getSystemAction(Request $request, SystemSettingsConfig $config): JsonResponse
+    public function getSystemAction(GetSystemSettingsHandler $handler): JsonResponse
     {
-        $this->checkPermission('system_settings');
-        $config = $config->getSystemSettingsConfig();
-
-        // If required languages is empty it's the same as if all langauges are required. Therefore, we
-        // need to overwrite the value with the valid languages value to have all languages required
-        if (empty($config['general']['required_languages'])) {
-            $config['general']['required_languages'] = $config['general']['valid_languages'];
-        }
-
-        $valueArray = [
-            'general' => $config['general'],
-            'documents' => $config['documents'],
-            'assets' => $config['assets'],
-            'objects' => $config['objects'],
-            'email' => $config['email'],
-            'writeable' => $config['writeable'],
-        ];
-
-        $locales = Tool::getSupportedLocales();
-        $languageOptions = [];
-        $validLanguages = [];
-        foreach ($locales as $short => $translation) {
-            if (!empty($short)) {
-                $languageOptions[] = [
-                    'language' => $short,
-                    'display' => $translation . " ($short)",
-                ];
-                $validLanguages[] = $short;
-            }
-        }
-
-        //for "wrong" legacy values
-        foreach ($valueArray['general']['valid_languages'] as $existingValue) {
-            if (!in_array($existingValue, $validLanguages)) {
-                $languageOptions[] = [
-                    'language' => $existingValue,
-                    'display' => $existingValue,
-                ];
-            }
-        }
-
-        $response = [
-            'values' => $valueArray,
-            'config' => [
-                'languages' => $languageOptions,
-            ],
-        ];
-
-        return $this->adminJson($response);
+        return $this->apiJson($handler(), envelope: false);
     }
 
+    #[IsGranted(AdminPermission::SystemAppearance->value)]
     #[Route('/set-appearance', name: 'opendxp_admin_settings_appearance_set', methods: ['PUT'])]
     public function setAppearanceSystemAction(
-        Request $request,
-        KernelInterface $kernel,
-        EventDispatcherInterface $eventDispatcher,
-        CoreCacheHandler $cache,
-        Filesystem $filesystem,
-        CacheClearer $symfonyCacheClearer,
-        AdminConfig $config
+        SaveSettingsPayload $payload,
+        SaveAppearanceSettingsHandler $handler,
     ): JsonResponse {
-        $this->checkPermission('system_appearance_settings');
+        $handler($payload);
 
-        $values = $this->decodeJson($request->request->get('data'));
-
-        $config->save($values);
-
-        // clear all caches
-        $this->clearSymfonyCache($request, $kernel, $eventDispatcher, $symfonyCacheClearer);
-        $this->stopMessengerWorkers();
-
-        $eventDispatcher->addListener(KernelEvents::TERMINATE, function (TerminateEvent $event) use (
-            $cache, $eventDispatcher, $filesystem
-        ): void {
-            // we need to clear the cache with a delay, because the cache is used by messenger:stop-workers
-            // to send the stop signal to all worker processes
-            sleep(2);
-            $this->clearOpenDxpCache($cache, $eventDispatcher, $filesystem);
-        });
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
+    #[IsGranted(CorePermission::SystemSettings->value)]
     #[Route('/set-system', name: 'opendxp_admin_settings_setsystem', methods: ['PUT'])]
     public function setSystemAction(
-        Request $request,
-        KernelInterface $kernel,
-        EventDispatcherInterface $eventDispatcher,
-        CoreCacheHandler $cache,
-        Filesystem $filesystem,
-        CacheClearer $symfonyCacheClearer,
-        SystemSettingsConfig $config
+        SaveSettingsPayload $payload,
+        SaveSystemSettingsHandler $handler,
     ): JsonResponse {
-        $this->checkPermission('system_settings');
+        $handler($payload);
 
-        $values = $this->decodeJson($request->request->get('data'));
-
-        $config->save($values);
-
-        // clear all caches
-        $this->clearSymfonyCache($request, $kernel, $eventDispatcher, $symfonyCacheClearer);
-        $this->stopMessengerWorkers();
-
-        $eventDispatcher->addListener(KernelEvents::TERMINATE, function (TerminateEvent $event) use (
-            $cache, $eventDispatcher, $filesystem
-        ): void {
-            // we need to clear the cache with a delay, because the cache is used by messenger:stop-workers
-            // to send the stop signal to all worker processes
-            sleep(2);
-            $this->clearOpenDxpCache($cache, $eventDispatcher, $filesystem);
-        });
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
+    #[IsGranted(new Expression(
+        'is_granted("' . CorePermission::ClearCache->value . '") or is_granted("' . CorePermission::SystemSettings->value . '")'
+    ))]
     #[Route('/clear-cache', name: 'opendxp_admin_settings_clearcache', methods: ['DELETE'])]
     public function clearCacheAction(
-        Request $request,
-        KernelInterface $kernel,
-        EventDispatcherInterface $eventDispatcher,
-        CoreCacheHandler $cache,
-        Filesystem $filesystem,
-        CacheClearer $symfonyCacheClearer
+        ClearCachePayload $payload,
+        ClearCacheHandler $handler,
     ): JsonResponse {
-        $this->checkPermissionsHasOneOf(['clear_cache', 'system_settings']);
+        $handler($payload);
 
-        $result = [
-            'success' => true,
-        ];
+        $response = $this->apiOk();
 
-        $clearOpenDxpCache = !(bool)$request->request->get('only_symfony_cache');
-        $clearSymfonyCache = !(bool)$request->request->get('only_opendxp_cache');
-
-        if ($clearOpenDxpCache) {
-            $this->clearOpenDxpCache($cache, $eventDispatcher, $filesystem);
-        }
-
-        if ($clearSymfonyCache) {
-            $this->clearSymfonyCache($request, $kernel, $eventDispatcher, $symfonyCacheClearer);
-        }
-
-        $response = new JsonResponse($result);
-
-        if ($clearSymfonyCache) {
-            // we send the response directly here and exit to make sure no code depending on the stale container
-            // is running after this
+        if (!$payload->onlyOpendxpCache) {
+            // send response before exit so the client gets a reply before the process terminates
             $response->sendHeaders();
             $response->sendContent();
             exit;
@@ -500,711 +268,102 @@ class SettingsController extends AdminAbstractController
         return $response;
     }
 
-    private function clearOpenDxpCache(
-        CoreCacheHandler $cache,
-        EventDispatcherInterface $eventDispatcher,
-        Filesystem $filesystem,
-    ): void {
-        // empty document cache
-        $cache->clearAll();
-
-        if ($filesystem->exists(OPENDXP_CACHE_DIRECTORY)) {
-            $filesystem->remove(OPENDXP_CACHE_DIRECTORY);
-        }
-
-        $filesystem->dumpFile(OPENDXP_CACHE_DIRECTORY . '/.gitkeep', '');
-
-        $eventDispatcher->dispatch(new GenericEvent(), SystemEvents::CACHE_CLEAR);
-    }
-
-    private function clearSymfonyCache(
-        Request $request,
-        KernelInterface $kernel,
-        EventDispatcherInterface $eventDispatcher,
-        CacheClearer $symfonyCacheClearer,
-    ): void {
-
-        // if no env is passed it will use the current one
-        $environment = $request->request->get('env', $kernel->getEnvironment());
-
-        if ($kernel->getEnvironment() === $environment) {
-            // remove terminate and exception event listeners for the current env as they break with a
-            // cleared container - see #2434
-            foreach ($eventDispatcher->getListeners(KernelEvents::TERMINATE) as $listener) {
-                $eventDispatcher->removeListener(KernelEvents::TERMINATE, $listener);
-            }
-
-            foreach ($eventDispatcher->getListeners(KernelEvents::EXCEPTION) as $listener) {
-                $eventDispatcher->removeListener(KernelEvents::EXCEPTION, $listener);
-            }
-        }
-
-        $symfonyCacheClearer->clear($environment);
-    }
-
+    #[IsGranted(CorePermission::ClearFullpageCache->value)]
     #[Route('/clear-output-cache', name: 'opendxp_admin_settings_clearoutputcache', methods: ['DELETE'])]
-    public function clearOutputCacheAction(EventDispatcherInterface $eventDispatcher): JsonResponse
+    public function clearOutputCacheAction(ClearOutputCacheHandler $handler): JsonResponse
     {
-        $this->checkPermission('clear_fullpage_cache');
+        $handler();
 
-        // remove "output" out of the ignored tags, if a cache lifetime is specified
-        Cache::removeIgnoredTagOnClear('output');
-
-        // empty document cache
-        Cache::clearTags(['output', 'output_lifetime']);
-
-        $eventDispatcher->dispatch(new GenericEvent(), SystemEvents::CACHE_CLEAR_FULLPAGE_CACHE);
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
+    #[IsGranted(CorePermission::ClearTempFiles->value)]
     #[Route('/clear-temporary-files', name: 'opendxp_admin_settings_cleartemporaryfiles', methods: ['DELETE'])]
-    public function clearTemporaryFilesAction(EventDispatcherInterface $eventDispatcher): JsonResponse
+    public function clearTemporaryFilesAction(ClearTemporaryFilesHandler $handler): JsonResponse
     {
-        $this->checkPermission('clear_temp_files');
+        $handler();
 
-        // public files
-        Tool\Storage::get('thumbnail')->deleteDirectory('/');
-        Db::get()->executeStatement('TRUNCATE TABLE assets_image_thumbnail_cache');
-
-        Tool\Storage::get('asset_cache')->deleteDirectory('/');
-
-        // system files
-        FileSystemHelper::recursiveDelete(OPENDXP_SYSTEM_TEMP_DIRECTORY, false);
-
-        $eventDispatcher->dispatch(new GenericEvent(), SystemEvents::CACHE_CLEAR_TEMPORARY_FILES);
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
     #[Route('/get-available-admin-languages', name: 'opendxp_admin_settings_getavailableadminlanguages', methods: ['GET'])]
-    public function getAvailableAdminLanguagesAction(Request $request): JsonResponse
+    public function getAvailableAdminLanguagesAction(GetAvailableAdminLanguagesHandler $handler): JsonResponse
     {
-        $langs = [];
-        $availableLanguages = Tool\Admin::getLanguages();
-        $locales = Tool::getSupportedLocales();
-
-        foreach ($availableLanguages as $lang) {
-            if (array_key_exists($lang, $locales)) {
-                $langs[] = [
-                    'language' => $lang,
-                    'display' => $locales[$lang],
-                ];
-            }
-        }
-
-        usort($langs, fn ($a, $b) => strcmp($a['display'], $b['display']));
-
-        return $this->adminJson($langs);
+        return $this->apiJson($handler(), rootProperty: 'langs');
     }
 
     #[Route('/get-available-sites', name: 'opendxp_admin_settings_getavailablesites', methods: ['GET'])]
-    public function getAvailableSitesAction(Request $request): JsonResponse
-    {
-        try {
-            // we need to check documents permission for listing purposes in sites ext model & url-slugs
-            $this->checkPermission('documents');
-        } catch (AccessDeniedHttpException) {
-            Logger::log('[Startup] Sites are not loaded as "documents" permission is missing');
-
-            //return empty string to avoid error on startup
-            return $this->adminJson([]);
-        }
-
-        $excludeMainSite = $request->query->get('excludeMainSite');
-
-        $sitesList = new Model\Site\Listing();
-        $sitesObjects = $sitesList->load();
-        $sites = [];
-        if (!$excludeMainSite) {
-            $sites[] = [
-                'id' => 0,
-                'rootId' => 1,
-                'domains' => '',
-                'rootPath' => '/',
-                'domain' => $this->translator->trans('main_site', [], 'admin'),
-            ];
-        }
-
-        foreach ($sitesObjects as $site) {
-            if ($site->getRootDocument()) {
-                if ($site->getMainDomain()) {
-                    $sites[] = [
-                        'id' => $site->getId(),
-                        'rootId' => $site->getRootId(),
-                        'domains' => implode(',', $site->getDomains()),
-                        'rootPath' => $site->getRootPath(),
-                        'domain' => $site->getMainDomain(),
-                    ];
-                }
-            } else {
-                // site is useless, parent doesn't exist anymore
-                $site->delete();
-            }
-        }
-
-        return $this->adminJson($sites);
+    public function getAvailableSitesAction(
+        GetAvailableSitesPayload $payload,
+        GetAvailableSitesHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), rootProperty: 'sites');
     }
 
     #[Route('/get-available-countries', name: 'opendxp_admin_settings_getavailablecountries', methods: ['GET'])]
-    public function getAvailableCountriesAction(LocaleServiceInterface $localeService): JsonResponse
+    public function getAvailableCountriesAction(GetAvailableCountriesHandler $handler): JsonResponse
     {
-        $countries = $localeService->getDisplayRegions();
-        asort($countries);
-
-        $options = [];
-
-        foreach ($countries as $short => $translation) {
-            if (strlen($short) === 2) {
-                $options[] = [
-                    'key' => $translation . ' (' . $short . ')',
-                    'value' => $short,
-                ];
-            }
-        }
-
-        $result = ['data' => $options, 'success' => true, 'total' => count($options)];
-
-        return $this->adminJson($result);
+        return $this->apiJson($handler());
     }
 
     #[Route('/thumbnail-adapter-check', name: 'opendxp_admin_settings_thumbnailadaptercheck', methods: ['GET'])]
-    public function thumbnailAdapterCheckAction(Request $request, TranslatorInterface $translator): Response
+    public function thumbnailAdapterCheckAction(ThumbnailAdapterCheckHandler $handler): Response
     {
-        $content = '';
-
-        $instance = \OpenDxp\Image::getInstance();
-        if ($instance instanceof \OpenDxp\Image\Adapter\GD) {
-            $content = '<span style="color: red; font-weight: bold;padding: 10px;margin:0 0 20px 0;border:1px solid red;display:block;">' .
-                $translator->trans('important_use_imagick_pecl_extensions_for_best_results_gd_is_just_a_fallback_with_less_quality', [], 'admin') .
-                '</span>';
-        }
-
-        return new Response($content);
+        return new Response($handler()->content);
     }
 
-    #[Route('/thumbnail-tree', name: 'opendxp_admin_settings_thumbnailtree', methods: ['GET', 'POST'])]
-    public function thumbnailTreeAction(): JsonResponse
-    {
-        $this->checkPermission('thumbnails');
-
-        $thumbnails = [];
-
-        $list = new Asset\Image\Thumbnail\Config\Listing();
-
-        $groups = [];
-        foreach ($list->getThumbnails() as $item) {
-            if ($item->getGroup()) {
-                if (empty($groups[$item->getGroup()])) {
-                    $groups[$item->getGroup()] = [
-                        'id' => 'group_' . $item->getName(),
-                        'text' => htmlspecialchars($item->getGroup()),
-                        'expandable' => true,
-                        'leaf' => false,
-                        'allowChildren' => true,
-                        'iconCls' => 'opendxp_icon_folder',
-                        'group' => $item->getGroup(),
-                        'children' => [],
-                    ];
-                }
-                $groups[$item->getGroup()]['children'][] =
-                    [
-                        'id' => $item->getName(),
-                        'text' => $item->getName(),
-                        'leaf' => true,
-                        'iconCls' => 'opendxp_icon_thumbnails',
-                        'cls' => 'opendxp_treenode_disabled',
-                        'writeable' => $item->isWriteable(),
-                    ];
-            } else {
-                $thumbnails[] = [
-                    'id' => $item->getName(),
-                    'text' => $item->getName(),
-                    'leaf' => true,
-                    'iconCls' => 'opendxp_icon_thumbnails',
-                    'cls' => 'opendxp_treenode_disabled',
-                    'writeable' => $item->isWriteable(),
-                ];
-            }
-        }
-
-        foreach ($groups as $group) {
-            $thumbnails[] = $group;
-        }
-
-        return $this->adminJson($thumbnails);
-    }
-
-    #[Route('/thumbnail-downloadable', name: 'opendxp_admin_settings_thumbnaildownloadable', methods: ['GET'])]
-    public function thumbnailDownloadableAction(): JsonResponse
-    {
-        $thumbnails = [];
-
-        $list = new Asset\Image\Thumbnail\Config\Listing();
-        $list->setFilter(fn (Asset\Image\Thumbnail\Config $config) => $config->isDownloadable());
-
-        foreach ($list->getThumbnails() as $item) {
-            $thumbnails[] = [
-                'id' => $item->getName(),
-                'text' => $item->getName(),
-            ];
-        }
-
-        return $this->adminJson($thumbnails);
-    }
-
-    #[Route('/thumbnail-add', name: 'opendxp_admin_settings_thumbnailadd', methods: ['POST'])]
-    public function thumbnailAddAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('thumbnails');
-
-        $success = false;
-
-        $pipe = Asset\Image\Thumbnail\Config::getByName($request->request->get('name'));
-
-        if (!$pipe) {
-            $pipe = new Asset\Image\Thumbnail\Config();
-            if (!$pipe->isWriteable()) {
-                throw new ConfigWriteException();
-            }
-            $pipe->setName($request->request->get('name'));
-            $pipe->save();
-            $success = true;
-        } elseif (!$pipe->isWriteable()) {
-            throw new ConfigWriteException();
-        }
-
-        return $this->adminJson(['success' => $success, 'id' => $pipe->getName()]);
-    }
-
-    #[Route('/thumbnail-delete', name: 'opendxp_admin_settings_thumbnaildelete', methods: ['DELETE'])]
-    public function thumbnailDeleteAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('thumbnails');
-
-        $pipe = Asset\Image\Thumbnail\Config::getByName($request->request->get('name'));
-
-        if (!$pipe->isWriteable()) {
-            throw new ConfigWriteException();
-        }
-
-        $pipe->delete();
-
-        return $this->adminJson(['success' => true]);
-    }
-
-    #[Route('/thumbnail-get', name: 'opendxp_admin_settings_thumbnailget', methods: ['GET'])]
-    public function thumbnailGetAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('thumbnails');
-
-        $pipe = Asset\Image\Thumbnail\Config::getByName($request->query->get('name'));
-        $data = $pipe->getObjectVars();
-        $data['writeable'] = $pipe->isWriteable();
-
-        return $this->adminJson($data);
-    }
-
-    #[Route('/thumbnail-update', name: 'opendxp_admin_settings_thumbnailupdate', methods: ['PUT'])]
-    public function thumbnailUpdateAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('thumbnails');
-
-        $pipe = Asset\Image\Thumbnail\Config::getByName($request->request->get('name'));
-
-        if (!$pipe->isWriteable()) {
-            throw new ConfigWriteException();
-        }
-
-        $settingsData = $this->decodeJson($request->request->get('settings'));
-        $mediaData = $this->decodeJson($request->request->get('medias'));
-        $mediaOrder = $this->decodeJson($request->request->get('mediaOrder'));
-
-        foreach ($settingsData as $key => $value) {
-            $setter = 'set' . ucfirst($key);
-            if (method_exists($pipe, $setter)) {
-                $pipe->$setter($value);
-            }
-        }
-
-        $pipe->resetItems();
-
-        uksort($mediaData, static function ($a, $b) use ($mediaOrder) {
-            if ($a === 'default') {
-                return -1;
-            }
-
-            return ($mediaOrder[$a] < $mediaOrder[$b]) ? -1 : 1;
-        });
-
-        foreach ($mediaData as $mediaName => $items) {
-            if (preg_match('/["<>]/', $mediaName)) {
-                throw new Exception('Invalid media query name');
-            }
-
-            foreach ($items as $item) {
-                $type = $item['type'];
-                unset($item['type']);
-
-                $pipe->addItem($type, $item, $mediaName);
-            }
-        }
-
-        $pipe->save();
-
-        return $this->adminJson(['success' => true]);
-    }
-
-    #[Route('/video-thumbnail-adapter-check', name: 'opendxp_admin_settings_videothumbnailadaptercheck', methods: ['GET'])]
-    public function videoThumbnailAdapterCheckAction(Request $request, TranslatorInterface $translator): Response
-    {
-        $content = '';
-
-        if (!\OpenDxp\Video::isAvailable()) {
-            $content = '<span style="color: red; font-weight: bold;padding: 10px;margin:0 0 20px 0;border:1px solid red;display:block;">' .
-                $translator->trans('php_cli_binary_and_or_ffmpeg_binary_setting_is_missing', [], 'admin') .
-                '</span>';
-        }
-
-        return new Response($content);
-    }
-
-    #[Route('/video-thumbnail-tree', name: 'opendxp_admin_settings_videothumbnailtree', methods: ['GET', 'POST'])]
-    public function videoThumbnailTreeAction(): JsonResponse
-    {
-        $this->checkPermission('thumbnails');
-
-        $thumbnails = [];
-
-        $list = new Asset\Video\Thumbnail\Config\Listing();
-
-        $groups = [];
-        foreach ($list->getThumbnails() as $item) {
-            if ($item->getGroup()) {
-                if (empty($groups[$item->getGroup()])) {
-                    $groups[$item->getGroup()] = [
-                        'id' => 'group_' . $item->getName(),
-                        'text' => htmlspecialchars($item->getGroup()),
-                        'expandable' => true,
-                        'leaf' => false,
-                        'allowChildren' => true,
-                        'iconCls' => 'opendxp_icon_folder',
-                        'group' => $item->getGroup(),
-                        'children' => [],
-                    ];
-                }
-                $groups[$item->getGroup()]['children'][] =
-                    [
-                        'id' => $item->getName(),
-                        'text' => $item->getName(),
-                        'leaf' => true,
-                        'iconCls' => 'opendxp_icon_videothumbnails',
-                        'cls' => 'opendxp_treenode_disabled',
-                        'writeable' => $item->isWriteable(),
-                    ];
-            } else {
-                $thumbnails[] = [
-                    'id' => $item->getName(),
-                    'text' => $item->getName(),
-                    'leaf' => true,
-                    'iconCls' => 'opendxp_icon_videothumbnails',
-                    'cls' => 'opendxp_treenode_disabled',
-                    'writeable' => $item->isWriteable(),
-                ];
-            }
-        }
-
-        foreach ($groups as $group) {
-            $thumbnails[] = $group;
-        }
-
-        return $this->adminJson($thumbnails);
-    }
-
-    #[Route('/video-thumbnail-list', name: 'opendxp_admin_settings_videothumbnail_list', methods: ['GET'])]
-    public function videoThumbnailListAction(): JsonResponse
-    {
-        $thumbnails = [
-            ['id' => 'opendxp-system-treepreview', 'text' => 'original'],
-        ];
-        $list = new Asset\Video\Thumbnail\Config\Listing();
-
-        foreach ($list->getThumbnails() as $item) {
-            $thumbnails[] = [
-                'id'   => $item->getName(),
-                'text' => $item->getName(),
-            ];
-        }
-
-        return $this->adminJson($thumbnails);
-    }
-
-    #[Route('/video-thumbnail-add', name: 'opendxp_admin_settings_videothumbnailadd', methods: ['POST'])]
-    public function videoThumbnailAddAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('thumbnails');
-
-        $success = false;
-
-        $pipe = Asset\Video\Thumbnail\Config::getByName($request->request->get('name'));
-
-        if (!$pipe) {
-            $pipe = new Asset\Video\Thumbnail\Config();
-            if (!$pipe->isWriteable()) {
-                throw new ConfigWriteException();
-            }
-            $pipe->setName($request->request->get('name'));
-            $pipe->save();
-            $success = true;
-        } elseif (!$pipe->isWriteable()) {
-            throw new ConfigWriteException();
-        }
-
-        return $this->adminJson(['success' => $success, 'id' => $pipe->getName()]);
-    }
-
-    #[Route('/video-thumbnail-delete', name: 'opendxp_admin_settings_videothumbnaildelete', methods: ['DELETE'])]
-    public function videoThumbnailDeleteAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('thumbnails');
-
-        $pipe = Asset\Video\Thumbnail\Config::getByName($request->request->get('name'));
-
-        if (!$pipe->isWriteable()) {
-            throw new ConfigWriteException();
-        }
-
-        $pipe->delete();
-
-        return $this->adminJson(['success' => true]);
-    }
-
-    #[Route('/video-thumbnail-get', name: 'opendxp_admin_settings_videothumbnailget', methods: ['GET'])]
-    public function videoThumbnailGetAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('thumbnails');
-
-        $pipe = Asset\Video\Thumbnail\Config::getByName($request->query->get('name'));
-
-        $data = $pipe->getObjectVars();
-        $data['writeable'] = $pipe->isWriteable();
-
-        return $this->adminJson($data);
-    }
-
-    #[Route('/video-thumbnail-update', name: 'opendxp_admin_settings_videothumbnailupdate', methods: ['PUT'])]
-    public function videoThumbnailUpdateAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('thumbnails');
-
-        $pipe = Asset\Video\Thumbnail\Config::getByName($request->request->get('name'));
-
-        if (!$pipe->isWriteable()) {
-            throw new ConfigWriteException();
-        }
-
-        $settingsData = $this->decodeJson($request->request->get('settings'));
-        $mediaData = $this->decodeJson($request->request->get('medias'));
-        $mediaOrder = $this->decodeJson($request->request->get('mediaOrder'));
-
-        foreach ($settingsData as $key => $value) {
-            $setter = 'set' . ucfirst($key);
-            if (method_exists($pipe, $setter)) {
-                $pipe->$setter($value);
-            }
-        }
-
-        $pipe->resetItems();
-
-        uksort($mediaData, static function ($a, $b) use ($mediaOrder) {
-            if ($a === 'default') {
-                return -1;
-            }
-
-            return ($mediaOrder[$a] < $mediaOrder[$b]) ? -1 : 1;
-        });
-
-        foreach ($mediaData as $mediaName => $items) {
-            foreach ($items as $item) {
-                $type = $item['type'];
-                unset($item['type']);
-
-                $pipe->addItem($type, $item, htmlspecialchars($mediaName));
-            }
-        }
-
-        $pipe->save();
-
-        return $this->adminJson(['success' => true]);
-    }
-
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::WebsiteSettings->value)]
     #[Route('/website-settings', name: 'opendxp_admin_settings_websitesettings', methods: ['POST'])]
-    public function websiteSettingsAction(Request $request): JsonResponse
-    {
-        $this->checkPermission('website_settings');
-
-        if ($request->request->has('data')) {
-            $data = $this->decodeJson($request->request->get('data'));
-
-            if (is_array($data)) {
-                foreach ($data as &$value) {
-                    if (is_string($value)) {
-                        $value = trim($value);
-                    }
-                }
-            }
-
-            if ($request->query->get('xaction') === 'destroy') {
-                $id = $data['id'];
-                $setting = WebsiteSetting::getById($id);
-                if ($setting instanceof WebsiteSetting) {
-                    $setting->delete();
-
-                    return $this->adminJson(['success' => true, 'data' => []]);
-                }
-            } elseif ($request->query->get('xaction') === 'update') {
-                // save routes
-                $setting = WebsiteSetting::getById($data['id']);
-                if ($setting instanceof WebsiteSetting) {
-                    switch ($setting->getType()) {
-                        case 'document':
-                        case 'asset':
-                        case 'object':
-                            if (isset($data['data'])) {
-                                $element = Element\Service::getElementByPath($setting->getType(), $data['data']);
-                                $data['data'] = $element;
-                            }
-
-                            break;
-                    }
-
-                    $setting->setValues($data);
-                    $setting->save();
-
-                    $data = $this->getWebsiteSettingForEditMode($setting);
-
-                    return $this->adminJson(['data' => $data, 'success' => true]);
-                }
-            } elseif ($request->query->get('xaction') === 'create') {
-                unset($data['id']);
-
-                // save route
-                $setting = new WebsiteSetting();
-                $setting->setValues($data);
-
-                $setting->save();
-
-                return $this->adminJson(['data' => $setting->getObjectVars(), 'success' => true]);
-            }
-        } else {
-            $list = new WebsiteSetting\Listing();
-
-            $list->setLimit((int) $request->request->get('limit', 50));
-            $list->setOffset((int) $request->request->get('start', 0));
-
-            $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings([...$request->request->all(), ...$request->query->all()]);
-            if ($sortingSettings['orderKey']) {
-                $list->setOrderKey($sortingSettings['orderKey']);
-                $list->setOrder($sortingSettings['order']);
-            } else {
-                $list->setOrderKey('name');
-                $list->setOrder('asc');
-            }
-
-            if ($request->request->has('filter')) {
-                $list->setCondition('`name` LIKE ' . $list->quote('%'.$request->request->get('filter').'%'));
-            }
-
-            $totalCount = $list->getTotalCount();
-            $list = $list->load();
-
-            $settings = [];
-            foreach ($list as $item) {
-                $resultItem = $this->getWebsiteSettingForEditMode($item);
-                $settings[] = $resultItem;
-            }
-
-            return $this->adminJson(['data' => $settings, 'success' => true, 'total' => $totalCount]);
+    public function websiteSettingsAction(
+        Request $request,
+        WebsiteSettingPayload $payload,
+        GetWebsiteSettingsListHandler $handler,
+        #[MapQueryParameter] ?string $xaction = null,
+    ): Response {
+        if ($payload->hasData) {
+            return match ($xaction) {
+                'destroy' => $this->forward(self::class . '::websiteSettingsDestroyAction', [], $request->query->all()),
+                'update'  => $this->forward(self::class . '::websiteSettingsUpdateAction', [], $request->query->all()),
+                'create'  => $this->forward(self::class . '::websiteSettingsCreateAction', [], $request->query->all()),
+                default   => throw new AdminOperationFailedException(''),
+            };
         }
 
-        return $this->adminJson(['success' => false]);
+        return $this->apiJson($handler($payload));
     }
 
-    /**
-     * @return array{id: ?int, name: string, language: string, type: string, data: mixed, siteId: ?int, creationDate: ?int, modificationDate: ?int}
-     */
-    private function getWebsiteSettingForEditMode(WebsiteSetting $item): array
-    {
-        $resultItem = [
-            'id' => $item->getId(),
-            'name' => $item->getName(),
-            'language' => $item->getLanguage(),
-            'type' => $item->getType(),
-            'data' => null,
-            'siteId' => $item->getSiteId(),
-            'creationDate' => $item->getCreationDate(),
-            'modificationDate' => $item->getModificationDate(),
-        ];
+    #[IsGranted(CorePermission::WebsiteSettings->value)]
+    #[Route('/website-settings-destroy', name: 'opendxp_admin_settings_websitesettings_destroy', methods: ['POST'])]
+    public function websiteSettingsDestroyAction(
+        WebsiteSettingPayload $payload,
+        DeleteWebsiteSettingHandler $handler,
+    ): JsonResponse {
+        $handler($payload);
 
-        switch ($item->getType()) {
-            case 'document':
-            case 'asset':
-            case 'object':
-                $element = $item->getData();
-                if ($element) {
-                    $resultItem['data'] = $element->getRealFullPath();
-                }
+        return $this->apiOk();
+    }
 
-                break;
-            default:
-                $resultItem['data'] = $item->getData();
+    #[IsGranted(CorePermission::WebsiteSettings->value)]
+    #[Route('/website-settings-update', name: 'opendxp_admin_settings_websitesettings_update', methods: ['POST'])]
+    public function websiteSettingsUpdateAction(
+        WebsiteSettingPayload $payload,
+        UpdateWebsiteSettingHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
+    }
 
-                break;
-        }
-
-        return $resultItem;
+    #[IsGranted(CorePermission::WebsiteSettings->value)]
+    #[Route('/website-settings-create', name: 'opendxp_admin_settings_websitesettings_create', methods: ['POST'])]
+    public function websiteSettingsCreateAction(
+        WebsiteSettingPayload $payload,
+        CreateWebsiteSettingHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/get-available-algorithms', name: 'opendxp_admin_settings_getavailablealgorithms', methods: ['GET'])]
-    public function getAvailableAlgorithmsAction(Request $request): JsonResponse
+    public function getAvailableAlgorithmsAction(GetAvailableAlgorithmsHandler $handler): JsonResponse
     {
-        $options = [
-            [
-                'key' => 'password_hash',
-                'value' => 'password_hash',
-            ],
-        ];
-
-        $algorithms = hash_algos();
-        foreach ($algorithms as $algorithm) {
-            $options[] = [
-                'key' => $algorithm . ' (' . $this->translator->trans('deprecated', [], 'admin') . ')',
-                'value' => $algorithm,
-            ];
-        }
-
-        $result = ['data' => $options, 'success' => true, 'total' => count($options)];
-
-        return $this->adminJson($result);
-    }
-
-    /**
-     * deleteViews
-     * delete views for localized fields when languages are removed to
-     * prevent mysql errors
-     */
-    protected function deleteViews(string $language, string $dbName): void
-    {
-        $db = \OpenDxp\Db::get();
-        $views = $db->fetchAllAssociative(sprintf('SHOW FULL TABLES IN %s WHERE TABLE_TYPE LIKE "VIEW"', $db->quoteIdentifier($dbName)));
-
-        foreach ($views as $view) {
-            if (preg_match('/^object_localized_[0-9]+_' . $language . '$/', $view['Tables_in_' . $dbName])) {
-                $db->executeStatement(sprintf('DROP VIEW %s', $db->quoteIdentifier($view['Tables_in_' . $dbName])));
-            }
-        }
+        return $this->apiJson($handler());
     }
 }

@@ -17,12 +17,14 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\OpenDxpUsers;
-use OpenDxp\Controller\KernelControllerEventInterface;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\OpenDxpUsers\ExportUserData\ExportUserDataHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\OpenDxpUsers\SearchUsers\SearchUsersHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\SearchDataPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
+use OpenDxp\Bundle\AdminBundle\Security\AdminPermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * Class OpenDxpController
@@ -30,45 +32,25 @@ use Symfony\Component\Routing\Attribute\Route;
  * @internal
  */
 #[Route('/opendxp-users')]
-class OpenDxpUsersController extends AdminAbstractController implements KernelControllerEventInterface
+#[IsGranted(AdminPermission::GdprDataExtractor->value)]
+class OpenDxpUsersController extends AdminAbstractController
 {
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        $this->checkActionPermission($event, 'gdpr_data_extractor');
-    }
-
     #[Route('/search-users', name: 'opendxp_admin_gdpr_opendxpusers_searchusers', methods: ['GET'])]
-    public function searchUsersAction(Request $request, OpenDxpUsers $openDxpUsers): JsonResponse
+    public function searchUsersAction(SearchUsersHandler $handler, SearchDataPayload $payload): JsonResponse
     {
-        $allParams = $request->query->all();
-
-        $result = $openDxpUsers->searchData(
-            (int)$allParams['id'],
-            strip_tags($allParams['firstname']),
-            strip_tags($allParams['lastname']),
-            strip_tags($allParams['email']),
-            (int)$allParams['start'],
-            (int)$allParams['limit'],
-            $allParams['sort'] ?? null
-        );
-
-        return $this->adminJson($result);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/export-user-data', name: 'opendxp_admin_gdpr_opendxpusers_exportuserdata', methods: ['GET'])]
-    public function exportUserDataAction(Request $request, OpenDxpUsers $openDxpUsers): JsonResponse
+    public function exportUserDataAction(ExportUserDataHandler $handler, IdQueryPayload $payload): JsonResponse
     {
         $this->checkPermission('users');
-        $userData = $openDxpUsers->getExportData((int)$request->query->get('id'));
+        $result = $handler($payload);
 
-        $json = $this->encodeJson($userData, [], JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_PRETTY_PRINT);
+        $json = $this->encodeJson($result->data, [], JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_PRETTY_PRINT);
 
         return new JsonResponse($json, 200, [
-            'Content-Disposition' => 'attachment; filename="export-userdata-' . $userData['id'] . '.json"',
+            'Content-Disposition' => 'attachment; filename="export-userdata-' . $result->data['id'] . '.json"',
         ], true);
     }
 }

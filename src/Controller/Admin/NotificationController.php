@@ -17,19 +17,23 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin;
 
-use const FILTER_NULL_ON_FAILURE;
-use const FILTER_VALIDATE_INT;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Model\Element\Service;
-use OpenDxp\Model\Notification\Service\NotificationService;
-use OpenDxp\Model\Notification\Service\NotificationServiceFilterParser;
-use OpenDxp\Model\Notification\Service\UserService;
-use OpenDxp\Model\User;
+use OpenDxp\Bundle\AdminBundle\Handler\Notification\DeleteAllNotifications\DeleteAllNotificationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Notification\DeleteNotification\DeleteNotificationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Notification\FindAllNotifications\FindAllNotificationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Notification\FindAllNotifications\FindAllNotificationsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Notification\FindLastUnreadNotifications\FindLastUnreadNotificationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Notification\FindLastUnreadNotifications\FindLastUnreadNotificationsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Notification\FindNotification\FindNotificationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Notification\GetRecipients\GetRecipientsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Notification\MarkAsReadNotification\MarkAsReadNotificationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Notification\SendNotification\SendNotificationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Notification\SendNotification\SendNotificationPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\Translation\TranslatorInterface;
-use UnexpectedValueException;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
@@ -37,163 +41,81 @@ use UnexpectedValueException;
 #[Route('/notification')]
 class NotificationController extends AdminAbstractController
 {
+    #[IsGranted(CorePermission::NotificationsSend->value)]
     #[Route('/recipients', name: 'opendxp_admin_notification_recipients', methods: ['GET'])]
-    public function recipientsAction(UserService $service, TranslatorInterface $translator): JsonResponse
-    {
-        $this->checkPermission('notifications_send');
-
-        $data = [];
-
-        foreach ($service->findAll($this->getAdminUser()) as $recipient) {
-            $group = $translator->trans('group', [], 'admin');
-            $prefix = $recipient->getType() === 'role' ? $group . ' - ' : '';
-
-            $data[] = [
-                'id' => $recipient->getId(),
-                'text' => $prefix . $recipient->getName(),
-            ];
-        }
-
-        return $this->adminJson($data);
+    public function recipientsAction(
+        GetRecipientsHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler(), rootProperty: 'data');
     }
 
+    #[IsGranted(CorePermission::NotificationsSend->value)]
     #[Route('/send', name: 'opendxp_admin_notification_send', methods: ['POST'])]
-    public function sendAction(Request $request, NotificationService $service): JsonResponse
-    {
-        $this->checkPermission('notifications_send');
+    public function sendAction(
+        SendNotificationHandler $handler,
+        SendNotificationPayload $payload,
+    ): JsonResponse {
+        $handler($payload);
 
-        $recipientId = $request->request->getInt('recipientId');
-        $fromUser = (int) $this->getAdminUser()->getId();
-        $title = $request->request->get('title', '');
-        $message = $request->request->get('message', '');
-        $element = null;
-        $elementId = $request->request->filter('elementId', 0, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE) ?? 0;
-        $elementType = $request->request->get('elementType');
-
-        if ($elementId && $elementType) {
-            $element = Service::getElementById($elementType, $elementId);
-        }
-
-        if (User::getById($recipientId) instanceof User) {
-            $service->sendToUser($recipientId, $fromUser, $title, $message, $element);
-        } else {
-            $service->sendToGroup($recipientId, $fromUser, $title, $message, $element);
-        }
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
+    #[IsGranted(CorePermission::Notifications->value)]
     #[Route('/find', name: 'opendxp_admin_notification_find', methods: ['GET'])]
-    public function findAction(Request $request, NotificationService $service): JsonResponse
-    {
-        $this->checkPermission('notifications');
-
-        $id = $request->query->getInt('id');
-
-        try {
-            $notification = $service->findAndMarkAsRead($id, $this->getAdminUser()->getId());
-        } catch (UnexpectedValueException) {
-            return $this->adminJson(
-                [
-                    'success' => false,
-                ]
-            );
-        }
-
-        $data = $service->format($notification);
-
-        return $this->adminJson([
-            'success' => true,
-            'data' => $data,
-        ]);
+    public function findAction(
+        FindNotificationHandler $handler,
+        IdQueryPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Notifications->value)]
     #[Route('/find-all', name: 'opendxp_admin_notification_findall', methods: ['POST'])]
-    public function findAllAction(Request $request, NotificationService $service): JsonResponse
-    {
-        $this->checkPermission('notifications');
-
-        $filter = ['recipient' => (int) $this->getAdminUser()->getId()];
-        $parser = new NotificationServiceFilterParser($request);
-
-        foreach ($parser->parse() as $key => $val) {
-            $filter[$key] = $val;
-        }
-
-        $options = [
-            'offset' => $request->request->getInt('start'),
-            'limit' => $request->request->getInt('limit', 40),
-        ];
-
-        $result = $service->findAll($filter, $options);
-
-        $data = [];
-
-        foreach ($result['data'] as $notification) {
-            $data[] = $service->format($notification);
-        }
-
-        return $this->adminJson([
-            'success' => true,
-            'total' => $result['total'],
-            'data' => $data,
-        ]);
+    public function findAllAction(
+        FindAllNotificationsHandler $handler,
+        FindAllNotificationsPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Notifications->value)]
     #[Route('/find-last-unread', name: 'opendxp_admin_notification_findlastunread', methods: ['GET'])]
-    public function findLastUnreadAction(Request $request, NotificationService $service): JsonResponse
-    {
-        $this->checkPermission('notifications');
-
-        $user = $this->getAdminUser();
-        $lastUpdate = $request->query->getInt('lastUpdate', time());
-        $result = $service->findLastUnread((int) $user->getId(), $lastUpdate);
-        $unread = $service->countAllUnread((int) $user->getId());
-
-        $data = [];
-
-        foreach ($result['data'] as $notification) {
-            $data[] = $service->format($notification);
-        }
-
-        return $this->adminJson([
-            'success' => true,
-            'total' => $result['total'],
-            'data' => $data,
-            'unread' => $unread,
-        ]);
+    public function findLastUnreadAction(
+        FindLastUnreadNotificationsHandler $handler,
+        FindLastUnreadNotificationsPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Notifications->value)]
     #[Route('/mark-as-read', name: 'opendxp_admin_notification_markasread', methods: ['PUT'])]
-    public function markAsReadAction(Request $request, NotificationService $service): JsonResponse
-    {
-        $this->checkPermission('notifications');
+    public function markAsReadAction(
+        MarkAsReadNotificationHandler $handler,
+        IdQueryPayload $payload,
+    ): JsonResponse {
+        $handler($payload);
 
-        $id = $request->query->getInt('id');
-        $service->findAndMarkAsRead($id, $this->getAdminUser()->getId());
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
+    #[IsGranted(CorePermission::Notifications->value)]
     #[Route('/delete', name: 'opendxp_admin_notification_delete', methods: ['DELETE'])]
-    public function deleteAction(Request $request, NotificationService $service): JsonResponse
-    {
-        $this->checkPermission('notifications');
+    public function deleteAction(
+        DeleteNotificationHandler $handler,
+        IdQueryPayload $payload,
+    ): JsonResponse {
+        $handler($payload);
 
-        $id = $request->query->getInt('id');
-        $service->delete($id, $this->getAdminUser()->getId());
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
+    #[IsGranted(CorePermission::Notifications->value)]
     #[Route('/delete-all', name: 'opendxp_admin_notification_deleteall', methods: ['DELETE'])]
-    public function deleteAllAction(NotificationService $service): JsonResponse
-    {
-        $this->checkPermission('notifications');
+    public function deleteAllAction(
+        DeleteAllNotificationsHandler $handler,
+    ): JsonResponse {
+        $handler();
 
-        $user = $this->getAdminUser();
-        $service->deleteAll((int) $user->getId());
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 }

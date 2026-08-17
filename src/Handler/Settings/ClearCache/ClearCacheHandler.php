@@ -1,0 +1,43 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
+namespace OpenDxp\Bundle\AdminBundle\Handler\Settings\ClearCache;
+
+use OpenDxp\Bundle\AdminBundle\Service\Cache\OpenDxpCacheClearingService;
+use OpenDxp\Bundle\AdminBundle\Service\Cache\SymfonyCacheClearingService;
+use Symfony\Component\HttpKernel\KernelInterface;
+
+final class ClearCacheHandler
+{
+    public function __construct(
+        private readonly OpenDxpCacheClearingService $openDxpCache,
+        private readonly SymfonyCacheClearingService $symfonyCache,
+        private readonly KernelInterface $kernel,
+    ) {}
+
+    public function __invoke(ClearCachePayload $payload): void
+    {
+        $env = $payload->env ?: $this->kernel->getEnvironment();
+
+        if (!$payload->onlySymfonyCache) {
+            $this->openDxpCache->clear();
+        }
+
+        if (!$payload->onlyOpendxpCache) {
+            $this->symfonyCache->clear($env);
+        }
+    }
+}

@@ -16,1481 +16,257 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\DataObject;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Controller\KernelControllerEventInterface;
-use OpenDxp\Db;
-use OpenDxp\Helper\ArrayHelper;
-use OpenDxp\Model\DataObject;
-use OpenDxp\Model\DataObject\ClassDefinition\Data\LayoutDefinitionEnrichmentInterface;
-use OpenDxp\Model\DataObject\Classificationstore;
-use OpenDxp\Model\Translation;
-use OpenDxp\Model\Translation\Listing;
-use OpenDxp\Model\User;
-use OpenDxp\Security\SecurityHelper;
-use OpenDxp\Tool\Admin;
-use stdClass;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\AddCollections\AddCollectionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\AddCollections\AddCollectionsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\AddGroups\AddGroupsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\AddGroups\AddGroupsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\AddProperty\AddPropertyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\AddProperty\AddPropertyPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateCollection\CreateCollectionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateCollection\CreateCollectionPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateGroup\CreateGroupHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateGroup\CreateGroupPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateStore\CreateStoreHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\CreateStore\CreateStorePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollectionRelation\DeleteCollectionRelationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollectionRelation\DeleteCollectionRelationPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollection\DeleteCollectionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteCollection\DeleteCollectionPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteGroup\DeleteGroupHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteGroup\DeleteGroupPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteProperty\DeletePropertyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteProperty\DeletePropertyPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteRelation\DeleteRelationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\DeleteRelation\DeleteRelationPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\EditStore\EditStoreHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\EditStore\EditStorePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetCollectionRelations\GetCollectionRelationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetCollectionRelations\GetCollectionRelationsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetCollections\GetCollectionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetCollections\GetCollectionsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetGroups\GetGroupsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetGroups\GetGroupsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetPage\GetPageHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetPage\GetPagePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetProperties\GetPropertiesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetProperties\GetPropertiesPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetRelations\GetRelationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetRelations\GetRelationsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\GetStoreTree\GetStoreTreeHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\ListStores\ListStoresHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\SaveCollectionRelations\SaveCollectionRelationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\SaveCollectionRelations\SaveCollectionRelationsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\SaveRelation\SaveRelationHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\SaveRelation\SaveRelationPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\SearchRelations\SearchRelationsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\SearchRelations\SearchRelationsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateCollection\UpdateCollectionHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateCollection\UpdateCollectionPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateGroup\UpdateGroupHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateGroup\UpdateGroupPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProperty\UpdatePropertyHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProperty\UpdatePropertyPayload;
+use OpenDxp\Security\CorePermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
  */
 #[Route('/classificationstore', name: 'opendxp_admin_dataobject_classificationstore_')]
-class ClassificationstoreController extends AdminAbstractController implements KernelControllerEventInterface
+class ClassificationstoreController extends AdminAbstractController
 {
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/delete-collection', name: 'deletecollection', methods: ['DELETE'])]
-    public function deleteCollectionAction(Request $request): JsonResponse
+    public function deleteCollectionAction(DeleteCollectionPayload $payload, DeleteCollectionHandler $handler): JsonResponse
     {
-        $this->checkPermission('classificationstore');
+        $handler($payload);
 
-        $id = $request->request->getInt('id');
-
-        $configRelations = new Classificationstore\CollectionGroupRelation\Listing();
-        $configRelations->setCondition('colId = ?', $id);
-        $list = $configRelations->load();
-        foreach ($list as $item) {
-            $item->delete();
-        }
-
-        $config = Classificationstore\CollectionConfig::getById($id);
-        $config->delete();
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/delete-collection-relation', name: 'deletecollectionrelation', methods: ['DELETE'])]
-    public function deleteCollectionRelationAction(Request $request): JsonResponse
+    public function deleteCollectionRelationAction(DeleteCollectionRelationPayload $payload, DeleteCollectionRelationHandler $handler): JsonResponse
     {
-        $this->checkPermission('classificationstore');
+        $handler($payload);
 
-        $colId = $request->request->getInt('colId');
-        $groupId = $request->request->getInt('groupId');
-
-        $config = new Classificationstore\CollectionGroupRelation();
-        $config->setColId($colId);
-        $config->setGroupId($groupId);
-
-        $config->delete();
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/delete-relation', name: 'deleterelation', methods: ['DELETE'])]
-    public function deleteRelationAction(Request $request): JsonResponse
+    public function deleteRelationAction(DeleteRelationPayload $payload, DeleteRelationHandler $handler): JsonResponse
     {
-        $this->checkPermission('classificationstore');
+        $handler($payload);
 
-        $keyId = $request->request->getInt('keyId');
-        $groupId = $request->request->getInt('groupId');
-
-        $config = new Classificationstore\KeyGroupRelation();
-        $config->setKeyId($keyId);
-        $config->setGroupId($groupId);
-
-        $config->delete();
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/delete-group', name: 'deletegroup', methods: ['DELETE'])]
-    public function deleteGroupAction(Request $request): JsonResponse
+    public function deleteGroupAction(DeleteGroupPayload $payload, DeleteGroupHandler $handler): JsonResponse
     {
-        $this->checkPermission('classificationstore');
+        $handler($payload);
 
-        $id = $request->request->getInt('id');
-
-        $config = Classificationstore\GroupConfig::getById($id);
-        $config->delete();
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/create-group', name: 'creategroup', methods: ['POST'])]
-    public function createGroupAction(Request $request): JsonResponse
+    public function createGroupAction(CreateGroupPayload $payload, CreateGroupHandler $handler): JsonResponse
     {
-        $this->checkPermission('classificationstore');
-
-        $name = SecurityHelper::convertHtmlSpecialChars($request->request->get('name'));
-        $storeId = $request->request->getInt('storeId');
-        $config = Classificationstore\GroupConfig::getByName($name, $storeId);
-
-        if (!$config) {
-            $config = new Classificationstore\GroupConfig();
-            $config->setStoreId($storeId);
-            $config->setName($name);
-            $config->save();
-
-            return $this->adminJson(['success' => true, 'id' => $config->getName()]);
-        }
-
-        return $this->adminJson(['success' => false, 'id' => $config->getName(), 'message' => 'classificationstore_error_group_exists_msg']);
+        return $this->apiJson($handler($payload));
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/create-store', name: 'createstore', methods: ['POST'])]
-    public function createStoreAction(Request $request): JsonResponse
+    public function createStoreAction(CreateStorePayload $payload, CreateStoreHandler $handler): JsonResponse
     {
-        $this->checkPermission('classificationstore');
-
-        $name = SecurityHelper::convertHtmlSpecialChars($request->request->get('name'));
-
-        $config = Classificationstore\StoreConfig::getByName($name);
-
-        if (!$config) {
-            $config = new Classificationstore\StoreConfig();
-            $config->setName($name);
-            $config->save();
-        } else {
-            throw new Exception('Store with the given name exists');
-        }
-
-        return $this->adminJson(['success' => true, 'storeId' => $config->getId()]);
+        return $this->apiJson($handler($payload));
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/create-collection', name: 'createcollection', methods: ['POST'])]
-    public function createCollectionAction(Request $request): JsonResponse
+    public function createCollectionAction(CreateCollectionPayload $payload, CreateCollectionHandler $handler): JsonResponse
     {
-        $this->checkPermission('classificationstore');
-
-        $name = SecurityHelper::convertHtmlSpecialChars($request->request->get('name'));
-        $storeId = $request->request->getInt('storeId');
-        $config = Classificationstore\CollectionConfig::getByName($name, $storeId);
-
-        if (!$config) {
-            $config = new Classificationstore\CollectionConfig();
-            $config->setName($name);
-            $config->setStoreId($storeId);
-            $config->save();
-        }
-
-        return $this->adminJson(['success' => true, 'id' => $config->getName()]);
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Objects->value)]
     #[Route('/collections', name: 'collectionsactionget', methods: ['GET'])]
-    public function collectionsActionGet(Request $request): JsonResponse
+    public function collectionsActionGet(GetCollectionsPayload $payload, GetCollectionsHandler $handler): JsonResponse
     {
-        $this->checkPermission('objects');
-
-        $start = 0;
-        $limit = $request->query->get('limit') ? (int) $request->query->get('limit') : 15;
-
-        $orderKey = 'name';
-        $order = 'ASC';
-
-        if ($request->query->has('dir')) {
-            $order = $request->query->get('dir');
-        }
-
-        if ($request->query->has('start')) {
-            $start = (int) $request->query->get('start');
-        }
-
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->query->all());
-        if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
-            $orderKey = $sortingSettings['orderKey'];
-            $order = $sortingSettings['order'];
-        }
-
-        if ($request->query->getBoolean('overrideSort')) {
-            $orderKey = 'id';
-            $order = 'DESC';
-        }
-
-        $storeIdFromDefinition = 0;
-        $allowedCollectionIds = [];
-        if ($oid = $request->query->get('oid')) {
-            $object = DataObject\Concrete::getById((int) $oid);
-            $class = $object->getClass();
-            /** @var DataObject\ClassDefinition\Data\Classificationstore $fd */
-            $fd = $class->getFieldDefinition($request->query->get('fieldname'));
-            $allowedGroupIds = $fd->getAllowedGroupIds();
-
-            if ($allowedGroupIds) {
-                $db = \OpenDxp\Db::get();
-                $relationList = $db->fetchAllAssociative(
-                    'SELECT * FROM classificationstore_collectionrelations WHERE groupId IN (?)',
-                    [$allowedGroupIds],
-                    [ArrayParameterType::INTEGER]
-                );
-
-                foreach ($relationList as $item) {
-                    $allowedCollectionIds[] = $item['colId'];
-                }
-            }
-
-            $storeIdFromDefinition = $fd->getStoreId();
-        }
-
-        $list = new Classificationstore\CollectionConfig\Listing();
-
-        $list->setLimit($limit);
-        $list->setOffset($start);
-        $list->setOrder($order);
-        $list->setOrderKey($orderKey);
-
-        $conditionParts = [];
-        $db = Db::get();
-
-        $searchfilter = $request->query->get('searchfilter');
-        if ($searchfilter) {
-            $searchFilterConditions = [];
-
-            $searchTerms = [$searchfilter, ...$this->getTranslatedSearchFilterTerms($searchfilter)];
-            foreach ($searchTerms as $searchFilterTerm) {
-                $searchFilterConditions[] = 'name LIKE '.$db->quote('%'.$searchFilterTerm.'%').' OR description LIKE '.$db->quote('%'.$searchFilterTerm.'%');
-            }
-
-            $conditionParts[] = '('.implode(' OR ', $searchFilterConditions).')';
-        }
-
-        $storeId = $request->query->get('storeId');
-        $storeId = $storeId ? (int) $storeId : $storeIdFromDefinition;
-
-        $conditionParts[] = ' (storeId = ' . $db->quote($storeId) . ')';
-
-        if ($request->query->has('filter')) {
-            $filterString = $request->query->get('filter');
-            $filters = json_decode($filterString);
-            /** @var stdClass $f */
-            foreach ($filters as $f) {
-                if (!isset($f->value)) {
-                    continue;
-                }
-
-                $conditionParts[] = $db->quoteIdentifier($f->property) . ' LIKE ' . $db->quote('%' . $f->value . '%');
-            }
-        }
-
-        if ($allowedCollectionIds) {
-            $conditionParts[] = ' id in (' . implode(',', $allowedCollectionIds) . ')';
-        }
-
-        $condition = implode(' AND ', $conditionParts);
-
-        $list->setCondition($condition);
-
-        $list->load();
-        $configList = $list->getList();
-
-        $rootElement = [];
-
-        $data = [];
-        foreach ($configList as $config) {
-            $name = $config->getName();
-            if (!$name) {
-                $name = 'EMPTY';
-            }
-            $item = [
-                'storeId' => $config->getStoreId(),
-                'id' => $config->getId(),
-                'name' => $name,
-                'description' => $config->getDescription(),
-            ];
-            if ($config->getCreationDate()) {
-                $item['creationDate'] = $config->getCreationDate();
-            }
-
-            if ($config->getModificationDate()) {
-                $item['modificationDate'] = $config->getModificationDate();
-            }
-
-            $data[] = $item;
-        }
-        $rootElement['data'] = $data;
-        $rootElement['success'] = true;
-        $rootElement['total'] = $list->getTotalCount();
-
-        return $this->adminJson($rootElement);
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/collections', name: 'collections', methods: ['POST', 'PUT'])]
-    public function collectionsAction(Request $request): JsonResponse
+    public function collectionsAction(UpdateCollectionPayload $payload, UpdateCollectionHandler $handler): JsonResponse
     {
-        if ($request->request->has('data')) {
-            $dataParam = $request->request->get('data');
-            $data = $this->decodeJson($dataParam);
-
-            $id = $data['id'];
-            $config = Classificationstore\CollectionConfig::getById($id);
-
-            foreach ($data as $key => $value) {
-                if ($key !== 'id') {
-                    $setter = 'set' . $key;
-                    $config->$setter($value);
-                }
-            }
-
-            $config->save();
-
-            return $this->adminJson(['success' => true, 'data' => $this->getConfigItem($config)]);
-        }
-
-        return $this->adminJson(['success' => false]);
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Objects->value)]
     #[Route('/groups', name: 'groupsactionget', methods: ['GET'])]
-    public function groupsActionGet(Request $request): JsonResponse
+    public function groupsActionGet(GetGroupsPayload $payload, GetGroupsHandler $handler): JsonResponse
     {
-        $this->checkPermission('objects');
-
-        $start = 0;
-        $limit = 15;
-        $orderKey = 'name';
-        $order = 'ASC';
-
-        if ($request->query->has('dir')) {
-            $order = $request->query->get('dir');
-        }
-
-        if ($request->query->has('sort')) {
-            $orderKey = $request->query->get('sort');
-        }
-
-        if ($request->query->has('limit')) {
-            $limit = (int) $request->query->get('limit');
-        }
-        if ($request->query->has('start')) {
-            $start = (int) $request->query->get('start');
-        }
-
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->query->all());
-        if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
-            $orderKey = $sortingSettings['orderKey'];
-            $order = $sortingSettings['order'];
-        }
-
-        if ($request->query->getBoolean('overrideSort')) {
-            $orderKey = 'id';
-            $order = 'DESC';
-        }
-
-        $list = new Classificationstore\GroupConfig\Listing();
-
-        $list->setLimit($limit);
-        $list->setOffset($start);
-        $list->setOrder($order);
-        $list->setOrderKey($orderKey);
-
-        $conditionParts = [];
-        $db = Db::get();
-
-        if ($request->query->has('searchfilter')) {
-            $searchfilter = $request->query->get('searchfilter');
-            $searchFilterConditions = [];
-
-            $searchTerms = [$searchfilter, ...$this->getTranslatedSearchFilterTerms($searchfilter)];
-            foreach ($searchTerms as $searchFilterTerm) {
-                $searchFilterConditions[] = 'name LIKE '.$db->quote('%'.$searchFilterTerm.'%').' OR description LIKE '.$db->quote('%'.$searchFilterTerm.'%');
-            }
-
-            $conditionParts[] = '('.implode(' OR ', $searchFilterConditions).')';
-        }
-
-        if ($storeId = $request->query->getInt('storeId')) {
-            $conditionParts[] = '(storeId = ' . $db->quote($storeId) . ')';
-        }
-
-        if ($request->query->has('filter')) {
-            $filterString = $request->query->get('filter');
-            $filters = json_decode($filterString);
-            /** @var stdClass $f */
-            foreach ($filters as $f) {
-                if (!isset($f->value)) {
-                    continue;
-                }
-
-                $conditionParts[] = $db->quoteIdentifier($f->property) . ' LIKE ' . $db->quote('%' . $f->value . '%');
-            }
-        }
-
-        if ($request->query->has('oid')) {
-            $oid = $request->query->get('oid');
-            $object = DataObject\Concrete::getById((int) $oid);
-            $class = $object->getClass();
-            /** @var DataObject\ClassDefinition\Data\Classificationstore $fd */
-            $fd = $class->getFieldDefinition($request->query->get('fieldname'));
-            $allowedGroupIds = $fd->getAllowedGroupIds();
-
-            if ($allowedGroupIds) {
-                $conditionParts[] = 'ID in (' . implode(',', $allowedGroupIds) . ')';
-            }
-        }
-
-        $condition = implode(' AND ', $conditionParts);
-        $list->setCondition($condition);
-
-        $list->load();
-        $configList = $list->getList();
-
-        $rootElement = [];
-
-        $data = [];
-        foreach ($configList as $config) {
-            $name = $config->getName();
-            if (!$name) {
-                $name = 'EMPTY';
-            }
-            $item = [
-                'storeId' => $config->getStoreId(),
-                'id' => $config->getId(),
-                'name' => $name,
-                'description' => $config->getDescription(),
-            ];
-            if ($config->getCreationDate()) {
-                $item['creationDate'] = $config->getCreationDate();
-            }
-
-            if ($config->getModificationDate()) {
-                $item['modificationDate'] = $config->getModificationDate();
-            }
-
-            $data[] = $item;
-        }
-        $rootElement['data'] = $data;
-        $rootElement['success'] = true;
-        $rootElement['total'] = $list->getTotalCount();
-
-        return $this->adminJson($rootElement);
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/groups', name: 'groupsaction', methods: ['POST', 'PUT'])]
-    public function groupsAction(Request $request): JsonResponse
+    public function groupsAction(UpdateGroupPayload $payload, UpdateGroupHandler $handler): JsonResponse
     {
-        if ($request->request->has('data')) {
-            $dataParam = $request->request->get('data');
-            $data = $this->decodeJson($dataParam);
-
-            $id = $data['id'];
-            $config = Classificationstore\GroupConfig::getById($id);
-
-            foreach ($data as $key => $value) {
-                if ($key !== 'id') {
-                    $setter = 'set' . $key;
-                    $config->$setter($value);
-                }
-            }
-
-            $config->save();
-
-            return $this->adminJson(['success' => true, 'data' => $this->getConfigItem($config)]);
-        }
-
-        return $this->adminJson(['success' => false]);
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/collection-relations', name: 'collectionrelationsget', methods: ['GET'])]
-    public function collectionRelationsGetAction(Request $request): JsonResponse
+    public function collectionRelationsGetAction(GetCollectionRelationsPayload $payload, GetCollectionRelationsHandler $handler): JsonResponse
     {
-        $mapping = ['groupName' => 'name', 'groupDescription' => 'description'];
-
-        $start = 0;
-        $limit = 15;
-        $orderKey = 'sorter';
-        $order = 'ASC';
-
-        if ($request->query->has('dir')) {
-            $order = $request->query->get('dir');
-        }
-
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->query->all());
-        if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
-            $orderKey = $sortingSettings['orderKey'];
-            $order = $sortingSettings['order'];
-        }
-
-        if ($request->query->getBoolean('overrideSort')) {
-            $orderKey = 'id';
-            $order = 'DESC';
-        }
-
-        if ($request->query->has('limit')) {
-            $limit = (int) $request->query->get('limit');
-        }
-        if ($request->query->has('start')) {
-            $start = (int) $request->query->get('start');
-        }
-
-        $list = new Classificationstore\CollectionGroupRelation\Listing();
-
-        if ($limit > 0) {
-            $list->setLimit($limit);
-        }
-        $list->setOffset($start);
-        $list->setOrder($order);
-        $list->setOrderKey($mapping[$orderKey] ?? $orderKey);
-        $condition = '';
-
-        if ($request->query->has('filter')) {
-            $db = Db::get();
-            $filterString = $request->query->get('filter');
-            $filters = json_decode($filterString);
-
-            $count = 0;
-            /** @var stdClass $f */
-            foreach ($filters as $f) {
-                if (!isset($f->value)) {
-                    continue;
-                }
-
-                if ($count > 0) {
-                    $condition .= ' AND ';
-                }
-                $count++;
-                $fieldname = $mapping[$f->field];
-                $condition .= $db->quoteIdentifier($fieldname) . ' LIKE ' . $db->quote('%' . $f->value . '%');
-            }
-        }
-
-        $colId = $request->query->getInt('colId');
-        if ($condition) {
-            $condition = '( ' . $condition . ' ) AND';
-        }
-        $condition .= ' colId = ' . $list->quote($colId);
-
-        $list->setCondition($condition);
-
-        $listItems = $list->load();
-
-        $rootElement = [];
-
-        $data = [];
-        foreach ($listItems as $config) {
-            $item = [
-                'colId' => $config->getColId(),
-                'groupId' => $config->getGroupId(),
-                'groupName' => $config->getName(),
-                'groupDescription' => $config->getDescription(),
-                'id' => $config->getColId() . '-' . $config->getGroupId(),
-                'sorter' => $config->getSorter(),
-            ];
-            $data[] = $item;
-        }
-        $rootElement['data'] = $data;
-        $rootElement['success'] = true;
-        $rootElement['total'] = $list->getTotalCount();
-
-        return $this->adminJson($rootElement);
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/collection-relations', name: 'collectionrelations', methods: ['POST', 'PUT'])]
-    public function collectionRelationsAction(Request $request): JsonResponse
+    public function collectionRelationsAction(SaveCollectionRelationsPayload $payload, SaveCollectionRelationsHandler $handler): JsonResponse
     {
-        if ($request->request->has('data')) {
-            $dataParam = $request->request->get('data');
-            $data = $this->decodeJson($dataParam);
-
-            if (count($data) === count($data, 1)) {
-                $data = [$data];
-            }
-
-            foreach ($data as &$row) {
-                $colId = $row['colId'];
-                $groupId = $row['groupId'];
-                $sorter = $row['sorter'];
-
-                $config = new Classificationstore\CollectionGroupRelation();
-                $config->setGroupId($groupId);
-                $config->setColId($colId);
-                $config->setSorter((int) $sorter);
-
-                $config->save();
-
-                $row['id'] = $config->getColId() . '-' . $config->getGroupId();
-            }
-
-            return $this->adminJson(['success' => true, 'data' => $data]);
-        }
-
-        return $this->adminJson(['success' => false]);
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/list-stores', name: 'liststores', methods: ['GET'])]
-    public function listStoresAction(): JsonResponse
+    public function listStoresAction(ListStoresHandler $handler): JsonResponse
     {
-        $storeConfigs = [];
-        $storeConfigListing = new Classificationstore\StoreConfig\Listing();
-        $storeConfigListing->load();
-
-        foreach ($storeConfigListing as $storeConfig) {
-            $storeConfigs[] = $storeConfig->getObjectVars();
-        }
-
-        return $this->adminJson($storeConfigs);
+        return $this->apiJson($handler(), rootProperty: 'storeConfigs');
     }
 
     #[Route('/search-relations', name: 'searchrelations', methods: ['GET'])]
-    public function searchRelationsAction(Request $request): JsonResponse
+    public function searchRelationsAction(SearchRelationsPayload $payload, SearchRelationsHandler $handler): JsonResponse
     {
-        $db = Db::get();
-
-        $storeId = $request->query->get('storeId');
-
-        $mapping = [
-            'groupName' => DataObject\Classificationstore\GroupConfig\Dao::TABLE_NAME_GROUPS .'.name',
-            'keyName' => DataObject\Classificationstore\KeyConfig\Dao::TABLE_NAME_KEYS .'.name',
-            'keyDescription' => DataObject\Classificationstore\KeyConfig\Dao::TABLE_NAME_KEYS. '.description',
-        ];
-
-        $start = 0;
-        $limit = 15;
-        $orderKey = 'name';
-        $order = 'ASC';
-
-        if ($request->query->get('dir')) {
-            $order = $request->query->get('dir');
-        }
-
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->query->all());
-        if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
-            $orderKey = $sortingSettings['orderKey'];
-            if ($orderKey === 'keyName') {
-                $orderKey = 'name';
-            }
-            $order = $sortingSettings['order'];
-        }
-
-        if ($request->query->getBoolean('overrideSort')) {
-            $orderKey = 'id';
-            $order = 'DESC';
-        }
-
-        if ($request->query->has('limit')) {
-            $limit = (int) $request->query->get('limit');
-        }
-        if ($request->query->has('start')) {
-            $start = (int) $request->query->get('start');
-        }
-
-        $list = new Classificationstore\KeyGroupRelation\Listing();
-
-        if ($limit > 0) {
-            $list->setLimit($limit);
-        }
-        $list->setOffset($start);
-        $list->setOrder($order);
-        $list->setOrderKey($orderKey);
-
-        $conditionParts = [];
-
-        if ($request->query->has('filter')) {
-            $db = Db::get();
-            $filterString = $request->query->get('filter');
-            $filters = json_decode($filterString);
-            /** @var stdClass $f */
-            foreach ($filters as $f) {
-                if (!isset($f->value)) {
-                    continue;
-                }
-
-                $fieldname = $mapping[$f->property];
-                $conditionParts[] = $fieldname . ' LIKE ' . $db->quote('%' . $f->value . '%');
-            }
-        }
-
-        $conditionParts[] = '  groupId IN (select id from classificationstore_groups where storeId = ' . $db->quote($storeId) . ')';
-
-        $searchfilter = $request->query->get('searchfilter');
-        if ($searchfilter) {
-            $searchFilterConditions = [];
-
-            $searchTerms = [$searchfilter, ...$this->getTranslatedSearchFilterTerms($searchfilter)];
-            foreach ($searchTerms as $searchFilterTerm) {
-                $searchFilterConditions[] = Classificationstore\KeyConfig\Dao::TABLE_NAME_KEYS.'.name LIKE '.$db->quote('%'.$searchFilterTerm.'%')
-                    .' OR '.Classificationstore\GroupConfig\Dao::TABLE_NAME_GROUPS.'.name LIKE '.$db->quote('%'.$searchFilterTerm.'%')
-                    .' OR '.Classificationstore\KeyConfig\Dao::TABLE_NAME_KEYS.'.description LIKE '.$db->quote('%'.$searchFilterTerm.'%');
-            }
-
-            $conditionParts[] = '('.implode(' OR ', $searchFilterConditions).')';
-        }
-
-        $condition = implode(' AND ', $conditionParts);
-        $list->setCondition($condition);
-        $list->setResolveGroupName(true);
-
-        $rootElement = [];
-
-        $data = [];
-        foreach ($list->getList() as $config) {
-            $item = [
-                'keyId' => $config->getKeyId(),
-                'groupId' => $config->getGroupId(),
-                'keyName' => $config->getName(),
-                'keyDescription' => $config->getDescription(),
-                'id' => $config->getGroupId() . '-' . $config->getKeyId(),
-                'sorter' => $config->getSorter(),
-            ];
-
-            $groupConfig = Classificationstore\GroupConfig::getById($config->getGroupId());
-            if ($groupConfig) {
-                $item['groupName'] = $groupConfig->getName();
-            }
-
-            $data[] = $item;
-        }
-        $rootElement['data'] = $data;
-        $rootElement['success'] = true;
-        $rootElement['total'] = $list->getTotalCount();
-
-        return $this->adminJson($rootElement);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/relations', name: 'relationsactionget', methods: ['GET'])]
-    public function relationsActionGet(Request $request): JsonResponse
+    public function relationsActionGet(GetRelationsPayload $payload, GetRelationsHandler $handler): JsonResponse
     {
-        $mapping = ['keyName' => 'name', 'keyDescription' => 'description'];
-
-        $start = 0;
-        $limit = 15;
-        $orderKey = 'name';
-        $order = 'ASC';
-        $relationIds = $request->query->get('relationIds');
-
-        if ($relationIds) {
-            $relationIds = json_decode($relationIds, true);
-        }
-
-        if ($request->query->has('dir')) {
-            $order = $request->query->get('dir');
-        }
-
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->query->all());
-
-        if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
-            $orderKey = $mapping[$sortingSettings['orderKey']] ?? $sortingSettings['orderKey'];
-            $order = $sortingSettings['order'];
-        }
-
-        if ($request->query->getBoolean('overrideSort')) {
-            $orderKey = 'id';
-            $order = 'DESC';
-        }
-
-        if ($request->query->has('limit')) {
-            $limit = (int) $request->query->get('limit');
-        } elseif (is_array($relationIds)) {
-            $limit = count($relationIds);
-        }
-
-        if ($request->query->has('start')) {
-            $start = (int) $request->query->get('start');
-        }
-
-        $list = new Classificationstore\KeyGroupRelation\Listing();
-
-        if ($limit > 0) {
-            $list->setLimit($limit);
-        }
-
-        $list->setOffset($start);
-        $list->setOrder($order);
-        $list->setOrderKey($orderKey);
-        $conditionParts = [];
-
-        if ($request->query->has('filter')) {
-            $db = Db::get();
-            $filterString = $request->query->get('filter');
-            $filters = json_decode($filterString);
-            /** @var stdClass $f */
-            foreach ($filters as $f) {
-                if (!isset($f->value)) {
-                    continue;
-                }
-
-                $fieldname = $mapping[$f->field];
-                $conditionParts[] = $db->quoteIdentifier($fieldname) . ' LIKE ' . $db->quote('%' . $f->value . '%');
-            }
-        }
-
-        if (!$request->query->has('relationIds')) {
-            $groupId = $request->query->get('groupId');
-            $conditionParts[] = ' groupId = ' . $list->quote($groupId);
-        }
-
-        if ($relationIds) {
-            $relationParts = [];
-
-            foreach ($relationIds as $relationId) {
-                $keyId = $relationId['keyId'];
-                $groupId = $relationId['groupId'];
-                $relationParts[] = '(keyId = ' . $list->quote($keyId) . ' AND groupId = ' . $list->quote($groupId) . ')';
-            }
-
-            $conditionParts[] = '(' . implode(' OR ', $relationParts) . ')';
-        }
-
-        $condition = implode(' AND ', $conditionParts);
-
-        $list->setCondition($condition);
-
-        $listItems = $list->load();
-
-        $rootElement = [];
-
-        $data = [];
-        foreach ($listItems as $config) {
-            $type = $config->getType();
-            $definition = json_decode($config->getDefinition(), true);
-            $definition = \OpenDxp\Model\DataObject\Classificationstore\Service::getFieldDefinitionFromJson($definition, $type);
-            DataObject\Service::enrichLayoutDefinition($definition);
-
-            $item = [
-                'keyId' => $config->getKeyId(),
-                'groupId' => $config->getGroupId(),
-                'keyName' => $config->getName(),
-                'keyDescription' => $config->getDescription(),
-                'id' => $config->getGroupId() . '-' . $config->getKeyId(),
-                'sorter' => $config->getSorter(),
-                'layout' => $definition,
-                'mandatory' => $config->isMandatory(),
-            ];
-
-            $data[] = $item;
-        }
-        $rootElement['data'] = $data;
-        $rootElement['success'] = true;
-        $rootElement['total'] = $list->getTotalCount();
-
-        return $this->adminJson($rootElement);
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/relations', name: 'relations', methods: ['POST', 'PUT'])]
-    public function relationsAction(Request $request): JsonResponse
+    public function relationsAction(SaveRelationPayload $payload, SaveRelationHandler $handler): JsonResponse
     {
-        if ($request->request->has('data')) {
-            $dataParam = $request->request->get('data');
-            $data = $this->decodeJson($dataParam);
-
-            $keyId = $data['keyId'];
-            $groupId = $data['groupId'];
-            $sorter = $data['sorter'];
-            $mandatory = $data['mandatory'];
-
-            $config = new Classificationstore\KeyGroupRelation();
-            $config->setGroupId((int) $groupId);
-            $config->setKeyId((int) $keyId);
-            $config->setSorter($sorter);
-            $config->setMandatory($mandatory);
-
-            $config->save();
-            $data['id'] = $config->getGroupId() . '-' . $config->getKeyId();
-
-            return $this->adminJson(['success' => true, 'data' => $data]);
-        }
-
-        return $this->adminJson(['success' => false]);
+        return $this->apiJson($handler($payload));
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Objects->value)]
     #[Route('/add-collections', name: 'addcollections', methods: ['POST'])]
-    public function addCollectionsAction(Request $request): JsonResponse
+    public function addCollectionsAction(AddCollectionsPayload $payload, AddCollectionsHandler $handler): JsonResponse
     {
-        $this->checkPermission('objects');
-
-        $ids = $this->decodeJson($request->request->get('collectionIds'));
-        $data = [];
-
-        if ($ids) {
-            $db = \OpenDxp\Db::get();
-            $mappedData = [];
-            $groupsData = $db->fetchAllAssociative(
-                'SELECT * FROM classificationstore_groups g, classificationstore_collectionrelations c
-                    WHERE colId IN (?) AND g.id = c.groupId',
-                [array_values(array_filter($ids, is_numeric(...)))],
-                [ArrayParameterType::INTEGER]
-            );
-
-            foreach ($groupsData as $groupData) {
-                $mappedData[$groupData['id']] = $groupData;
-            }
-
-            $groupIdList = [];
-            $groupId = null;
-
-            $allowedGroupIds = null;
-
-            $oid = $request->request->getInt('oid');
-            $object = DataObject\Concrete::getById($oid);
-            if ($object) {
-                $class = $object->getClass();
-                /** @var DataObject\ClassDefinition\Data\Classificationstore $fd */
-                $fd = $class->getFieldDefinition($request->request->get('fieldname'));
-                $allowedGroupIds = $fd->getAllowedGroupIds();
-            }
-
-            foreach ($groupsData as $groupItem) {
-                $groupId = $groupItem['groupId'];
-                if (!$allowedGroupIds || in_array($groupId, $allowedGroupIds)) {
-                    $groupIdList[] = $groupId;
-                }
-            }
-
-            if ($groupIdList) {
-                $fieldname = $request->request->get('fieldname');
-                $groupList = new Classificationstore\GroupConfig\Listing();
-                $groupCondition = 'id in (' . implode(',', $groupIdList) . ')';
-                $groupList->setCondition($groupCondition);
-
-                $groupList = $groupList->load();
-
-                $keyCondition = 'groupId in (' . implode(',', $groupIdList) . ')';
-
-                $keyList = new Classificationstore\KeyGroupRelation\Listing();
-                $keyList->setCondition($keyCondition);
-                $keyList->setOrderKey(['sorter', 'id']);
-                $keyList->setOrder(['ASC', 'ASC']);
-                $keyList = $keyList->load();
-
-                foreach ($groupList as $groupData) {
-                    $data[$groupData->getId()] = [
-                        'name' => $groupData->getName(),
-                        'id' => $groupData->getId(),
-                        'description' => $groupData->getDescription(),
-                        'keys' => [],
-                        'sorter' => (int) $mappedData[$groupData->getId()]['sorter'],
-                        'collectionId' => $mappedData[$groupId]['colId'],
-                    ];
-                }
-
-                foreach ($keyList as $keyData) {
-                    $groupId = $keyData->getGroupId();
-
-                    $keyList = $data[$groupId]['keys'];
-                    $type = $keyData->getType();
-                    $definition = json_decode($keyData->getDefinition(), true);
-                    $definition = \OpenDxp\Model\DataObject\Classificationstore\Service::getFieldDefinitionFromJson($definition, $type);
-
-                    if (method_exists($definition, '__wakeup')) {
-                        $definition->__wakeup();
-                    }
-
-                    $context['object'] = $object;
-                    $context['class'] = $object ? $object->getClass() : null;
-                    $context['ownerType'] = 'classificationstore';
-                    $context['ownerName'] = $fieldname;
-                    $context['keyId'] = $keyData->getKeyId();
-                    $context['groupId'] = $groupId;
-                    $context['keyDefinition'] = $definition;
-
-                    if ($definition instanceof LayoutDefinitionEnrichmentInterface) {
-                        $definition = $definition->enrichLayoutDefinition($object, $context);
-                    }
-
-                    $keyList[] = [
-                        'name' => $keyData->getName(),
-                        'id' => $keyData->getKeyId(),
-                        'description' => $keyData->getDescription(),
-                        'definition' => $definition,
-                    ];
-                    $data[$groupId]['keys'] = $keyList;
-                }
-            }
-        }
-
-        return $this->adminJson($data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Objects->value)]
     #[Route('/add-groups', name: 'addgroups', methods: ['POST'])]
-    public function addGroupsAction(Request $request): JsonResponse
+    public function addGroupsAction(AddGroupsPayload $payload, AddGroupsHandler $handler): JsonResponse
     {
-        $this->checkPermission('objects');
-
-        $ids = $this->decodeJson($request->request->get('groupIds'));
-        $oid = $request->request->getInt('oid');
-        $object = $oid === 0 ? null : DataObject\Concrete::getById($oid);
-        $fieldname = $request->request->get('fieldname');
-
-        $keyCondition = 'groupId in (' . implode(',', array_fill(0, count($ids), '?')) . ')';
-
-        $keyList = new Classificationstore\KeyGroupRelation\Listing();
-        $keyList->setCondition($keyCondition, $ids);
-        $keyList->setOrderKey(['sorter', 'id']);
-        $keyList->setOrder(['ASC', 'ASC']);
-        $keyList = $keyList->load();
-
-        $groupCondition = 'id in (' . implode(',', array_fill(0, count($ids), '?')) . ')';
-
-        $groupList = new Classificationstore\GroupConfig\Listing();
-        $groupList->setCondition($groupCondition, $ids);
-        $groupList->setOrder('ASC');
-        $groupList->setOrderKey('id');
-        $groupList = $groupList->load();
-
-        $data = [];
-
-        foreach ($groupList as $groupData) {
-            $data[$groupData->getId()] = [
-                'name' => $groupData->getName(),
-                'id' => $groupData->getId(),
-                'description' => $groupData->getDescription(),
-                'keys' => [],
-            ];
-        }
-
-        foreach ($keyList as $keyData) {
-            $groupId = $keyData->getGroupId();
-
-            $keyList = $data[$groupId]['keys'];
-            $type = $keyData->getType();
-            $definition = json_decode($keyData->getDefinition(), true);
-            $definition = \OpenDxp\Model\DataObject\Classificationstore\Service::getFieldDefinitionFromJson($definition, $type);
-
-            if (method_exists($definition, '__wakeup')) {
-                $definition->__wakeup();
-            }
-
-            $context['object'] = $object;
-            $context['class'] = $object ? $object->getClass() : null;
-            $context['ownerType'] = 'classificationstore';
-            $context['ownerName'] = $fieldname;
-            $context['keyId'] = $keyData->getKeyId();
-            $context['groupId'] = $groupId;
-            $context['keyDefinition'] = $definition;
-
-            if ($definition instanceof LayoutDefinitionEnrichmentInterface) {
-                $definition = $definition->enrichLayoutDefinition($object, $context);
-            }
-
-            $keyList[] = [
-                'name' => $keyData->getName(),
-                'id' => $keyData->getKeyId(),
-                'description' => $keyData->getDescription(),
-                'definition' => $definition,
-            ];
-            $data[$groupId]['keys'] = $keyList;
-        }
-
-        return $this->adminJson($data);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/properties', name: 'propertiesget', methods: ['GET'])]
-    public function propertiesGetAction(Request $request): JsonResponse
+    public function propertiesGetAction(GetPropertiesPayload $payload, GetPropertiesHandler $handler): JsonResponse
     {
-        $storeId = (int) $request->query->get('storeId');
-        $frameName = $request->query->get('frameName');
-        $db = \OpenDxp\Db::get();
-
-        $conditionParts = [];
-
-        if ($frameName) {
-            $keyCriteria = ' FALSE ';
-            $frameConfig = Classificationstore\CollectionConfig::getByName($frameName, $storeId);
-            if ($frameConfig) {
-                // get all keys within that collection / frame
-                $frameId = $frameConfig->getId();
-                $groupList = new Classificationstore\CollectionGroupRelation\Listing();
-                $groupList->setCondition('colId = ' . $db->quote($frameId));
-                $groupList = $groupList->load();
-                $groupIdList = [];
-                foreach ($groupList as $groupEntry) {
-                    $groupIdList[] = $groupEntry->getGroupId();
-                }
-
-                if ($groupIdList) {
-                    $keyIdList = new Classificationstore\KeyGroupRelation\Listing();
-                    $keyIdList->setCondition('groupId in (' . implode(',', $groupIdList) . ')');
-                    $keyIdList = $keyIdList->load();
-                    if ($keyIdList) {
-                        $keyIds = [];
-                        foreach ($keyIdList as $keyEntry) {
-                            $keyIds[] = $keyEntry->getKeyId();
-                        }
-
-                        $keyCriteria = ' id in (' . implode(',', $keyIds) . ')';
-                    }
-                }
-            }
-
-            $conditionParts[] = $keyCriteria;
-        }
-
-        $start = 0;
-        $limit = 15;
-        $orderKey = 'name';
-        $order = 'ASC';
-
-        if ($request->query->has('dir')) {
-            $order = $request->query->get('dir');
-        }
-
-        $sortingSettings = \OpenDxp\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($request->query->all());
-        if ($sortingSettings['orderKey'] && $sortingSettings['order']) {
-            $orderKey = $sortingSettings['orderKey'];
-            $order = $sortingSettings['order'];
-        }
-
-        if ($request->query->getBoolean('overrideSort')) {
-            $orderKey = 'id';
-            $order = 'DESC';
-        }
-
-        if ($request->query->has('limit')) {
-            $limit = (int) $request->query->get('limit');
-        }
-        if ($request->query->has('start')) {
-            $start = (int) $request->query->get('start');
-        }
-
-        $list = new Classificationstore\KeyConfig\Listing();
-
-        if ($limit > 0 && !$request->query->get('groupIds') && !$request->query->get('keyIds')) {
-            $list->setLimit($limit);
-        }
-        $list->setOffset($start);
-        $list->setOrder($order);
-        $list->setOrderKey($orderKey);
-
-        $searchfilter = $request->query->get('searchfilter');
-        if ($searchfilter) {
-            $conditionParts[] = '(name LIKE ' . $db->quote('%' . $searchfilter . '%') . ' OR description LIKE ' . $db->quote('%'. $searchfilter . '%') . ')';
-        }
-
-        if ($storeId) {
-            $conditionParts[] = '(storeId = '. $db->quote($storeId) . ')';
-        }
-
-        if ($request->query->has('filter')) {
-            $filterString = $request->query->get('filter');
-            $filters = json_decode($filterString);
-            /** @var stdClass $f */
-            foreach ($filters as $f) {
-                if (!isset($f->value)) {
-                    continue;
-                }
-
-                $conditionParts[] = $db->quoteIdentifier($f->property) . ' LIKE ' . $db->quote('%' . $f->value . '%');
-            }
-        }
-        $condition = implode(' AND ', $conditionParts);
-        $list->setCondition($condition);
-
-        if ($request->query->get('groupIds') || $request->query->get('keyIds')) {
-            $db = Db::get();
-
-            if ($request->query->get('groupIds')) {
-                $ids = $this->decodeJson($request->query->get('groupIds'));
-                $col = 'group';
-            } else {
-                $ids = $this->decodeJson($request->query->get('keyIds'));
-                $col = 'id';
-            }
-
-            $condition = $db->quoteIdentifier($col) . ' IN (';
-            $count = 0;
-            foreach ($ids as $theId) {
-                if ($count > 0) {
-                    $condition .= ',';
-                }
-                $condition .= $theId;
-                $count++;
-            }
-
-            $condition .= ')';
-            $list->setCondition($condition);
-        }
-
-        $list->load();
-        $configList = $list->getList();
-
-        $rootElement = [];
-
-        $data = [];
-        foreach ($configList as $config) {
-            $item = $this->getKeyConfigItem($config);
-            $data[] = $item;
-        }
-        $rootElement['data'] = $data;
-        $rootElement['success'] = true;
-        $rootElement['total'] = $list->getTotalCount();
-
-        return $this->adminJson($rootElement);
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/properties', name: 'properties', methods: ['POST', 'PUT'])]
-    public function propertiesAction(Request $request): JsonResponse
+    public function propertiesAction(UpdatePropertyPayload $payload, UpdatePropertyHandler $handler): JsonResponse
     {
-        if ($request->request->has('data')) {
-            $dataParam = $request->request->get('data');
-            $data = $this->decodeJson($dataParam);
-
-            $id = $data['id'];
-            $config = Classificationstore\KeyConfig::getById($id);
-
-            foreach ($data as $key => $value) {
-                if ($key !== 'id') {
-                    $setter = 'set' . $key;
-                    if (method_exists($config, $setter)) {
-                        $config->$setter($value);
-                    }
-                }
-            }
-
-            $config->save();
-            $item = $this->getKeyConfigItem($config);
-
-            return $this->adminJson(['success' => true, 'data' => $item]);
-        }
-
-        return $this->adminJson(['success' => false]);
+        return $this->apiJson($handler($payload));
     }
 
-    protected function getConfigItem(Classificationstore\KeyConfig|Classificationstore\CollectionConfig|Classificationstore\GroupConfig $config): array
-    {
-        $name = $config->getName();
-
-        $item = [
-            'storeId' => $config->getStoreId(),
-            'id' => $config->getId(),
-            'name' => $name,
-            'description' => $config->getDescription(),
-        ];
-
-        if ($config->getCreationDate()) {
-            $item['creationDate'] = $config->getCreationDate();
-        }
-
-        if ($config->getModificationDate()) {
-            $item['modificationDate'] = $config->getModificationDate();
-        }
-
-        return $item;
-    }
-
-    protected function getKeyConfigItem(Classificationstore\KeyConfig $config): array
-    {
-        $item = $this->getConfigItem($config);
-        $item['type'] = $config->getType() ?: 'input';
-        $definition = $config->getDefinition();
-        $item['definition'] = $definition;
-
-        if ($definition) {
-            $definition = json_decode($definition, true);
-            if ($definition) {
-                $item['title'] = $definition['title'];
-            }
-        }
-
-        return $item;
-    }
-
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/add-property', name: 'addproperty', methods: ['POST'])]
-    public function addPropertyAction(Request $request): JsonResponse
+    public function addPropertyAction(AddPropertyPayload $payload, AddPropertyHandler $handler): JsonResponse
     {
-        $name = $request->request->get('name');
-        $storeId = $request->request->getInt('storeId');
-
-        $definition = [
-            'fieldtype' => 'input',
-            'name' => $name,
-            'title' => $name,
-            'datatype' => 'data',
-        ];
-
-        $config = new Classificationstore\KeyConfig();
-        $config->setName($name);
-        $config->setTitle($name);
-        $config->setType('input');
-        $config->setStoreId($storeId);
-        $config->setEnabled(true);
-        $config->setDefinition(json_encode($definition));
-        $config->save();
-
-        return $this->adminJson(['success' => true, 'id' => $config->getName()]);
+        return $this->apiJson($handler($payload));
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/delete-property', name: 'deleteproperty', methods: ['DELETE'])]
-    public function deletePropertyAction(Request $request): JsonResponse
+    public function deletePropertyAction(DeletePropertyPayload $payload, DeletePropertyHandler $handler): JsonResponse
     {
-        $id = $request->request->getInt('id');
+        $handler($payload);
 
-        $config = Classificationstore\KeyConfig::getById($id);
-        //        $config->delete();
-        $config->setEnabled(false);
-        $config->save();
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
-    /**
-     * @throws Exception
-     */
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/edit-store', name: 'editstore', methods: ['PUT'])]
-    public function editStoreAction(Request $request): JsonResponse
+    public function editStoreAction(EditStorePayload $payload, EditStoreHandler $handler): JsonResponse
     {
-        $id = $request->request->getInt('id');
-        $data = json_decode($request->request->get('data'), true);
-        $name = $data['name'];
-        if (!$name) {
-            throw new Exception('Name must not be empty');
-        }
+        $handler($payload);
 
-        $description = $data['description'];
-
-        $config = Classificationstore\StoreConfig::getByName($name);
-        if ($config && $config->getId() != $id) {
-            throw new Exception('There is already a config with the same name');
-        }
-
-        $config = Classificationstore\StoreConfig::getById($id);
-
-        if (!$config) {
-            throw new Exception('Configuration does not exist');
-        }
-
-        $config->setName($name);
-        $config->setDescription($description);
-        $config->save();
-
-        return $this->adminJson(['success' => true]);
+        return $this->apiOk();
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/storetree', name: 'storetree', methods: ['GET'])]
-    public function storetreeAction(Request $request): JsonResponse
+    public function storetreeAction(GetStoreTreeHandler $handler): JsonResponse
     {
-        $result = [];
-        $list = new Classificationstore\StoreConfig\Listing();
-        $list = $list->load();
-        foreach ($list as $item) {
-            $resultItem = [
-                'id' => $item->getId(),
-                'text' => htmlspecialchars($item->getName() ?? '', ENT_QUOTES),
-                'expandable' => false,
-                'leaf' => true,
-                'expanded' => true,
-                'description' => htmlspecialchars($item->getDescription() ?? '', ENT_QUOTES),
-                'iconCls' => 'opendxp_icon_classificationstore',
-            ];
-
-            $resultItem['qtitle'] = 'ID: ' . $item->getId();
-
-            if ($item->getDescription()) {
-            }
-            $resultItem['qtip'] = $item->getDescription() ? htmlspecialchars($item->getDescription(), ENT_QUOTES) : ' ';
-            $result[] = $resultItem;
-        }
-
-        return $this->adminJson($result);
+        return $this->apiJson($handler(), rootProperty: 'items');
     }
 
+    #[IsGranted(CorePermission::Classificationstore->value)]
     #[Route('/get-page', name: 'getpage', methods: ['GET'])]
-    public function getPageAction(Request $request): JsonResponse
+    public function getPageAction(GetPagePayload $payload, GetPageHandler $handler): JsonResponse
     {
-        $tableSuffix = $request->query->get('table');
-        if (!ArrayHelper::inArrayCaseInsensitive($tableSuffix, ['keys', 'groups'])) {
-            $tableSuffix = 'keys';
-        }
-
-        $table = 'classificationstore_' . $tableSuffix;
-        $db = \OpenDxp\Db::get();
-        $id = (int) $request->query->get('id');
-        $storeId = (int) $request->query->get('storeId');
-        $pageSize = (int) $request->query->get('pageSize');
-
-        if ($request->query->get('sortKey')) {
-            $sortKey = $request->query->get('sortKey');
-            $sortDir = $request->query->get('sortDir');
-        } else {
-            $sortKey = 'name';
-            $sortDir = 'ASC';
-        }
-
-        if (!ArrayHelper::inArrayCaseInsensitive($sortDir, ['DESC', 'ASC'])) {
-            $sortDir = 'DESC';
-        }
-
-        if (!ArrayHelper::inArrayCaseInsensitive($sortKey, ['name', 'title', 'description', 'id', 'type', 'creationDate', 'modificationDate', 'enabled', 'parentId', 'storeId'])) {
-            $sortKey = 'name';
-        }
-
-        $sorter = ' order by `' . $sortKey .  '` ' . $sortDir;
-
-        if ($table === 'keys') {
-            $query = '
-                select *, (item.pos - 1)/ ' . $pageSize . ' + 1  as page from (
-                    select * from (
-                        select @rownum := @rownum + 1 as pos,  id, name, `type`
-                        from `' . $table . '`
-                        where enabled = 1 and storeId = ' . $storeId . $sorter . '
-                      ) all_rows) item where id = ' . $id . ';';
-        } else {
-            $query = '
-            select *, (item.pos - 1)/ ' . $pageSize . ' + 1  as page from (
-                select * from (
-                    select @rownum := @rownum + 1 as pos,  id, name
-                    from `' . $table . '`
-                    where storeId = ' . $storeId . $sorter . '
-                  ) all_rows) item where id = ' .  $id . ';';
-        }
-
-        $db->executeStatement('SET @rownum = 0');
-        $result = $db->fetchAllAssociative($query);
-
-        $page = (int) $result[0]['page'] ;
-
-        return $this->adminJson(['success' => true, 'page' => $page]);
-    }
-
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        $unrestrictedActions = [
-            'collectionsActionGet',
-            'groupsActionGet',
-            'relationsActionGet',
-            'addGroupsAction',
-            'addCollectionsAction',
-            'searchRelationsAction',
-        ];
-        $this->checkActionPermission($event, 'classificationstore', $unrestrictedActions);
-    }
-
-    /**
-     * @return string[]
-     */
-    private function getTranslatedSearchFilterTerms(string $searchTerm): array
-    {
-        $terms = [];
-
-        $user = Admin::getCurrentUser();
-        if ($user instanceof User) {
-            $translationListing = new Listing();
-            $translationListing->setDomain(Translation::DOMAIN_ADMIN);
-            $translationListing->setCondition(
-                $translationListing->quoteIdentifier('language') . ' = ? AND ' .
-                $translationListing->quoteIdentifier('text') . ' LIKE ?',
-                [
-                    $user->getLanguage(),
-                    '%' . $searchTerm . '%',
-                ]
-            );
-
-            foreach ($translationListing as $translation) {
-                $terms[] = $translation->getKey();
-            }
-        }
-
-        return $terms;
+        return $this->apiJson($handler($payload));
     }
 }

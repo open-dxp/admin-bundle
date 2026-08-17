@@ -16,64 +16,40 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\GDPR;
 
-use Exception;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\GDPR\DataProvider\Assets;
-use OpenDxp\Controller\KernelControllerEventInterface;
-use OpenDxp\Model\Asset;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\Asset\ExportAsset\ExportAssetHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\Asset\SearchAssets\SearchAssetsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\GDPR\SearchDataPayload;
+use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
+use OpenDxp\Bundle\AdminBundle\Security\AdminPermission;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @internal
  */
 #[Route('/asset')]
-class AssetController extends AdminAbstractController implements KernelControllerEventInterface
+#[IsGranted(AdminPermission::GdprDataExtractor->value)]
+class AssetController extends AdminAbstractController
 {
-    public function onKernelControllerEvent(ControllerEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        $this->checkActionPermission($event, 'gdpr_data_extractor');
-    }
-
     #[Route('/search-assets', name: 'opendxp_admin_gdpr_asset_searchasset', methods: ['GET'])]
-    public function searchAssetAction(Request $request, Assets $service): JsonResponse
+    public function searchAssetAction(SearchAssetsHandler $handler, SearchDataPayload $payload): JsonResponse
     {
-        $allParams = $request->query->all();
-
-        $result = $service->searchData(
-            (int)$allParams['id'],
-            strip_tags($allParams['firstname']),
-            strip_tags($allParams['lastname']),
-            strip_tags($allParams['email']),
-            (int)$allParams['start'],
-            (int)$allParams['limit'],
-            $allParams['sort'] ?? null
-        );
-
-        return $this->adminJson($result);
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
-    /**
-     * @throws Exception
-     */
     #[Route('/export', name: 'opendxp_admin_gdpr_asset_exportassets', methods: ['GET'])]
-    public function exportAssetsAction(Request $request, Assets $service): Response
+    public function exportAssetsAction(ExportAssetHandler $handler, IdQueryPayload $payload): Response
     {
-        $asset = Asset::getById((int) $request->query->get('id'));
-        if (!$asset) {
-            throw $this->createNotFoundException('Asset not found');
-        }
-        if (!$asset->isAllowed('view')) {
-            throw $this->createAccessDeniedException('Export denied');
-        }
+        $result = $handler($payload);
 
-        return $service->doExportData($asset);
+        $response = new Response($result->zipContent);
+        $response->headers->set('Content-Type', 'application/zip');
+        $response->headers->set('Content-Length', (string) strlen($result->zipContent));
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $result->suggestedFilename . '.zip"');
+
+        return $response;
     }
 }

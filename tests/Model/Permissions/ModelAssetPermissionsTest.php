@@ -18,6 +18,8 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Model\Controller;
 
 use OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset\AssetController;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\TreeGetAssetChildren\TreeGetAssetChildrenHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\TreeGetAssetChildren\TreeGetAssetChildrenPayload;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Property;
 use OpenDxp\Model\User;
@@ -290,6 +292,10 @@ class ModelAssetPermissionsTest extends AbstractPermissionTest
 
     protected function doTestTreeGetChildrenById(Asset $element, User $user, array $expectedChildren): void
     {
+        $elementService = $this->buildElementService($user);
+        $userContext = $this->buildUserContext($user);
+        $handler = new TreeGetAssetChildrenHandler($userContext, $elementService, new EventDispatcher(), $this->buildCurrentControllerContext());
+
         $controller = $this->buildController(AssetController::class, $user);
 
         $request = new Request([
@@ -297,12 +303,8 @@ class ModelAssetPermissionsTest extends AbstractPermissionTest
             'limit' => 100,
             'view' => 0,
         ]);
-        $eventDispatcher = new EventDispatcher();
 
-        $responseData = $controller->treeGetChildrenByIdAction(
-            $request,
-            $eventDispatcher
-        );
+        $responseData = $controller->treeGetChildrenByIdPaginatedAction(TreeGetAssetChildrenPayload::fromRequest($request), $handler);
         $responsePaths = [];
         $responseData = json_decode($responseData->getContent(), true);
         foreach ($responseData['nodes'] as $node) {

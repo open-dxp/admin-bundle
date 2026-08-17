@@ -16,41 +16,35 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Controller\Admin\Asset;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\ParameterType;
-use Exception;
-use League\Flysystem\FilesystemException;
-use League\Flysystem\UnableToReadFile;
-use OpenDxp;
+use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
-use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
-use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
-use OpenDxp\Bundle\AdminBundle\Model\GridConfig;
-use OpenDxp\Bundle\AdminBundle\Model\GridConfigFavourite;
-use OpenDxp\Bundle\AdminBundle\Model\GridConfigShare;
-use OpenDxp\Bundle\AdminBundle\Tool;
-use OpenDxp\Db;
-use OpenDxp\File;
-use OpenDxp\Loader\ImplementationLoader\Exception\UnsupportedException;
-use OpenDxp\Logger;
-use OpenDxp\Model\Asset;
-use OpenDxp\Model\Element;
-use OpenDxp\Model\Metadata;
-use OpenDxp\Model\User;
-use OpenDxp\Security\SecurityHelper;
-use OpenDxp\Tool\Session;
-use OpenDxp\Tool\Storage;
-use OpenDxp\Version;
-use stdClass;
-use Symfony\Component\EventDispatcher\GenericEvent;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetMetadataForColumnConfig\GetAssetMetadataForColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetGridColumnConfig\GetGridColumnConfigPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetGridColumnConfig\GetGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\MarkGridConfigFavouritePayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\MarkGridConfigFavouriteHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigHandler;
+use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @internal
@@ -58,1021 +52,108 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 #[Route('/asset-helper')]
 class AssetHelperController extends AdminAbstractController
 {
-    public function __construct(protected EventDispatcherInterface $eventDispatcher)
-    {
-    }
-
-    public function getMyOwnGridColumnConfigs(int $userId, string $classId, string $searchType): array
-    {
-        $db = Db::get();
-        $configListingConditionParts = [];
-        $configListingConditionParts[] = 'ownerId = ' . $userId;
-        $configListingConditionParts[] = 'classId = ' . $db->quote($classId);
-
-        if ($searchType) {
-            $configListingConditionParts[] = 'searchType = ' . $db->quote($searchType);
-        }
-
-        $configCondition = implode(' AND ', $configListingConditionParts);
-        $configListing = new GridConfig\Listing();
-        $configListing->setOrderKey('name');
-        $configListing->setOrder('ASC');
-        $configListing->setCondition($configCondition);
-        $configListing = $configListing->load();
-
-        $configData = [];
-        foreach ($configListing as $config) {
-            $configData[] = $config->getObjectVars();
-        }
-
-        return $configData;
-    }
-
-    public function getSharedGridColumnConfigs(User $user, string $classId, ?string $searchType = null): array
-    {
-        $db = Db::get();
-
-        $configListing = [];
-
-        $userIds = [$user->getId()];
-        // collect all roles
-        $userIds = [...$userIds, ...$user->getRoles()];
-
-        $ids = $db->fetchFirstColumn(
-            'SELECT DISTINCT c1.id FROM gridconfigs c1, gridconfig_shares s
-                WHERE (c1.searchType = ? AND c1.id = s.gridConfigId AND s.sharedWithUserId IN (?) AND c1.classId = ?)
-            UNION DISTINCT SELECT c2.id FROM gridconfigs c2 WHERE shareGlobally = 1 AND c2.classId = ? AND c2.ownerId != ?',
-            [$searchType, $userIds, $classId, $classId, $user->getId()],
-            [ParameterType::STRING, ArrayParameterType::INTEGER, ParameterType::STRING, ParameterType::STRING, ParameterType::INTEGER]
-        );
-
-        if ($ids) {
-            $ids = implode(',', $ids);
-            $configListing = new GridConfig\Listing();
-            $configListing->setOrderKey('name');
-            $configListing->setOrder('ASC');
-            $configListing->setCondition('id in (' . $ids . ')');
-            $configListing = $configListing->load();
-        }
-
-        $configData = [];
-        foreach ($configListing as $config) {
-            $configData[] = $config->getObjectVars();
-        }
-
-        return $configData;
-    }
-
     #[Route('/grid-delete-column-config', name: 'opendxp_admin_asset_assethelper_griddeletecolumnconfig', methods: ['DELETE'])]
-    public function gridDeleteColumnConfigAction(Request $request): JsonResponse
-    {
-        $params = [
-            'id'              => $request->request->get('id'),
-            'type'            => $request->request->get('type'),
-            'types'           => $request->request->get('types'),
-            'gridConfigId'    => $request->request->get('gridConfigId'),
-            'searchType'      => $request->request->get('searchType'),
-            'noSystemColumns' => $request->query->getBoolean('no_system_columns'),
-        ];
-
-        $gridConfigId = (int) $request->request->get('gridConfigId');
-        $gridConfig = GridConfig::getById($gridConfigId);
-        $success = false;
-        if ($gridConfig) {
-            if ($gridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
-                throw new Exception("don't mess with someone elses grid config");
-            }
-
-            $gridConfig->delete();
-            $success = true;
-        }
-
-        $newGridConfig = $this->doGetGridColumnConfig($params, true);
-        $newGridConfig['deleteSuccess'] = $success;
-
-        return $this->adminJson($newGridConfig);
+    public function gridDeleteColumnConfigAction(
+        DeleteGridColumnConfigPayload $payload,
+        DeleteGridColumnConfigHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
     #[Route('/grid-get-column-config', name: 'opendxp_admin_asset_assethelper_gridgetcolumnconfig', methods: ['GET'])]
-    public function gridGetColumnConfigAction(Request $request): JsonResponse
-    {
-        $params = [
-            'id'              => $request->query->get('id'),
-            'type'            => $request->query->get('type'),
-            'types'           => $request->query->get('types'),
-            'gridConfigId'    => $request->query->get('gridConfigId'),
-            'searchType'      => $request->query->get('searchType'),
-            'noSystemColumns' => $request->query->getBoolean('no_system_columns'),
-        ];
-
-        $result = $this->doGetGridColumnConfig($params);
-
-        return $this->adminJson($result);
+    public function gridGetColumnConfigAction(
+        GetGridColumnConfigPayload $payload,
+        GetGridColumnConfigHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
-    private function doGetGridColumnConfig(array $params, bool $isDelete = false): array
-    {
-        $gridConfigId = null;
-
-        $classId = $params['id'];
-        $context = ['purpose' => 'gridconfig'];
-
-        $types = [];
-        if (!empty($params['types'])) {
-            $types = explode(',', $params['types']);
-        }
-
-        $userId = $this->getAdminUser()->getId();
-
-        $requestedGridConfigId = $isDelete ? '' : $params['gridConfigId'] ?? '';
-
-        // grid config
-        $gridConfig = [];
-        $searchType = $params['searchType'];
-
-        if ((string) $requestedGridConfigId === '') {
-            // check if there is a favourite view
-            $favourite = GridConfigFavourite::getByOwnerAndClassAndObjectId($userId, $classId, 0, $searchType);
-
-            if ($favourite) {
-                $requestedGridConfigId = $favourite->getGridConfigId();
-            }
-        }
-
-        if (is_numeric($requestedGridConfigId) && $requestedGridConfigId > 0) {
-            $db = Db::get();
-            $savedGridConfig = GridConfig::getById((int) $requestedGridConfigId);
-
-            if ($savedGridConfig) {
-                $shared = false;
-                if (!$this->getAdminUser()->isAdmin()) {
-                    $userIds = [$this->getAdminUser()->getId()];
-                    $userIds = [...$userIds, ...$this->getAdminUser()->getRoles()];
-                    $isSharedGlobally = $savedGridConfig->getOwnerId() !== $userId && $savedGridConfig->isShareGlobally();
-
-                    $isSharedWithUser = (bool) $db->fetchOne(
-                        'SELECT 1 FROM gridconfig_shares WHERE sharedWithUserId IN (?) AND gridConfigId = ?',
-                        [$userIds, $savedGridConfig->getId()],
-                        [ArrayParameterType::INTEGER, ParameterType::INTEGER]
-                    );
-
-                    $shared = $isSharedGlobally || $isSharedWithUser;
-
-                    if (!$shared && $savedGridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
-                        throw new Exception('You are neither the owner of this config nor it is shared with you');
-                    }
-                }
-
-                $gridConfigId = $savedGridConfig->getId();
-                $gridConfig = $savedGridConfig->getConfig();
-                $gridConfig = json_decode($gridConfig, true);
-                $gridConfigName = SecurityHelper::convertHtmlSpecialChars($savedGridConfig->getName());
-                $gridConfigDescription = SecurityHelper::convertHtmlSpecialChars($savedGridConfig->getDescription());
-                $sharedGlobally = $savedGridConfig->isShareGlobally();
-                $setAsFavourite = $savedGridConfig->isSetAsFavourite();
-
-                foreach ($gridConfig['columns'] as &$column) {
-                    if (array_key_exists('isOperator', $column) && $column['isOperator']) {
-                        $colAttributes = &$column['fieldConfig']['attributes'];
-                        SecurityHelper::convertHtmlSpecialCharsArrayKeys($colAttributes, ['label', 'attribute', 'param1']);
-                    }
-                }
-            }
-        }
-
-        $availableFields = [];
-        $language = '';
-
-        if (empty($gridConfig)) {
-            $availableFields = $this->getDefaultGridFields(
-                $params['noSystemColumns'],
-                [], //maybe required for types other than metadata
-                $context,
-                $types
-            );
-        } else {
-            $savedColumns = $gridConfig['columns'];
-
-            foreach ($savedColumns as $sc) {
-                if (!$sc['hidden']) {
-                    $colConfig = $this->getFieldGridConfig($sc, $language);
-                    if ($colConfig) {
-                        $availableFields[] = $colConfig;
-                    }
-                }
-            }
-        }
-        usort($availableFields, static fn ($a, $b) => $a['position'] <=> $b['position']);
-
-        $availableConfigs = $classId ? $this->getMyOwnGridColumnConfigs($userId, $classId, $searchType) : [];
-        $sharedConfigs = $classId ? $this->getSharedGridColumnConfigs($this->getAdminUser(), $classId, $searchType) : [];
-        $settings = $this->getShareSettings((int)$gridConfigId);
-        $settings['gridConfigId'] = (int)$gridConfigId;
-        $settings['gridConfigName'] = $gridConfigName ?? null;
-        $settings['gridConfigDescription'] = $gridConfigDescription ?? null;
-        $settings['shareGlobally'] = $sharedGlobally ?? null;
-        $settings['setAsFavourite'] = $setAsFavourite ?? null;
-        $settings['isShared'] = !$gridConfigId || ($shared ?? null);
-
-        $context = $gridConfig['context'] ?? null;
-        if ($context) {
-            $context = json_decode($context, true);
-        }
-
-        return [
-            'sortinfo' => $gridConfig['sortinfo'] ?? false,
-            'availableFields' => $availableFields,
-            'settings' => $settings,
-            'onlyDirectChildren' => $gridConfig['onlyDirectChildren'] ?? false,
-            'onlyUnreferenced' => $gridConfig['onlyUnreferenced'] ?? false,
-            'pageSize' => $gridConfig['pageSize'] ?? false,
-            'availableConfigs' => $availableConfigs,
-            'sharedConfigs' => $sharedConfigs,
-            'context' => $context,
-        ];
-    }
-
-    protected function getFieldGridConfig(array $field, string $language = '', ?string $keyPrefix = null): ?array
-    {
-        $defaulMetadataFields = ['copyright', 'alt', 'title'];
-        $predefined = null;
-
-        if (isset($field['fieldConfig']['layout']['name'])) {
-            $predefined = Metadata\Predefined::getByName($field['fieldConfig']['layout']['name']);
-        }
-
-        $key = $field['name'];
-        if ($keyPrefix) {
-            $key = $keyPrefix . $key;
-        }
-        $fieldDef = explode('~', $field['name']);
-        $field['name'] = $fieldDef[0];
-
-        if (isset($fieldDef[1]) && $fieldDef[1] === 'system') {
-            $type = 'system';
-        } elseif (in_array($fieldDef[0], $defaulMetadataFields)) {
-            $type = 'input';
-        } else {
-            $type = $field['fieldConfig']['type'];
-            if (isset($fieldDef[1])) {
-                $field['fieldConfig']['label'] = $field['fieldConfig']['layout']['title'] = $fieldDef[0] . ' (' . $fieldDef[1] . ')';
-                $field['fieldConfig']['layout']['icon'] = Tool::getLanguageFlagFile($fieldDef[1], true);
-            }
-        }
-
-        $result = [
-            'key' => $key,
-            'type' => $type,
-            'label' => $field['fieldConfig']['label'] ?? $key,
-            'width' => $field['width'],
-            'position' => $field['position'],
-            'language' => $field['fieldConfig']['language'] ?? null,
-            'layout' => $field['fieldConfig']['layout'] ?? null,
-        ];
-
-        if (isset($field['locked'])) {
-            $result['locked'] = $field['locked'];
-        }
-
-        if ($type === 'select' && $predefined) {
-            $field['fieldConfig']['layout']['config'] = $predefined->getConfig();
-            $result['layout'] = $field['fieldConfig']['layout'];
-        } elseif (in_array($type, ['document', 'asset', 'object'], true)) {
-            $result['layout']['fieldtype'] = 'manyToOneRelation';
-            $result['layout']['subtype'] = $type;
-        }
-
-        $assetGetFieldGridConfig = new GenericEvent($this, [
-            'field' => $field,
-            'result' => $result,
-        ]);
-
-        $this->eventDispatcher->dispatch($assetGetFieldGridConfig, AdminEvents::ASSET_GET_FIELD_GRID_CONFIG);
-
-        return $assetGetFieldGridConfig->getArgument('result');
-    }
-
-    public function getDefaultGridFields(bool $noSystemColumns, array $fields, array $context, array $types = []): array
-    {
-        $count = 0;
-        $availableFields = [];
-
-        if (!$noSystemColumns) {
-            foreach (Asset\Service::GRID_SYSTEM_COLUMNS as $sc) {
-                if ($types === []) {
-                    $availableFields[] = [
-                        'key' => $sc . '~system',
-                        'type' => 'system',
-                        'label' => $sc,
-                        'position' => $count, ];
-                    $count++;
-                }
-            }
-        }
-
-        return $availableFields;
-    }
-
+    #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     #[Route('/prepare-helper-column-configs', name: 'opendxp_admin_asset_assethelper_preparehelpercolumnconfigs', methods: ['POST'])]
-    public function prepareHelperColumnConfigs(Request $request): JsonResponse
-    {
-        $helperColumns = [];
-        $newData = [];
-        $data = json_decode($request->request->get('columns'));
-
-        /** @var stdClass $item */
-        foreach ($data as $item) {
-            if (!empty($item->isOperator)) {
-                $itemKey = '#' . uniqid('', false);
-
-                $item->key = $itemKey;
-                $newData[] = $item;
-                $helperColumns[$itemKey] = $item;
-            } else {
-                $newData[] = $item;
-            }
-        }
-
-        Session::useBag($request->getSession(), static function (AttributeBagInterface $session) use ($helperColumns): void {
-            $existingColumns = $session->get('helpercolumns', []);
-            $helperColumns = [...$helperColumns, ...$existingColumns];
-            $session->set('helpercolumns', $helperColumns);
-        }, 'opendxp_gridconfig');
-
-        return $this->adminJson(['success' => true, 'columns' => $newData]);
+    public function prepareHelperColumnConfigs(
+        PrepareHelperColumnConfigsPayload $payload,
+        PrepareHelperColumnConfigsHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/grid-mark-favourite-column-config', name: 'opendxp_admin_asset_assethelper_gridmarkfavouritecolumnconfig', methods: ['POST'])]
-    public function gridMarkFavouriteColumnConfigAction(Request $request): JsonResponse
-    {
-        $classId = $request->request->get('classId');
-        $asset = Asset::getById(is_numeric($classId) ? (int) $classId : 0);
-
-        if ($asset->isAllowed('list')) {
-            $gridConfigId = (int) $request->request->get('gridConfigId');
-            $searchType = $request->request->get('searchType');
-            $type = $request->request->get('type');
-            $user = $this->getAdminUser();
-
-            $favourite = new GridConfigFavourite();
-            $favourite->setOwnerId($user->getId());
-            $favourite->setClassId($classId);
-            $favourite->setSearchType($searchType);
-            $favourite->setType($type);
-
-            try {
-                if ($gridConfigId !== 0) {
-                    $gridConfig = GridConfig::getById($gridConfigId);
-                    $favourite->setGridConfigId($gridConfig->getId());
-                }
-
-                $favourite->setObjectId(0);
-                $favourite->save();
-            } catch (Exception) {
-                $favourite->delete();
-            }
-
-            return $this->adminJson(['success' => true, 'specializedConfigs' => false]);
-        }
-
-        throw $this->createAccessDeniedHttpException();
-    }
-
-    protected function getShareSettings(int $gridConfigId): array
-    {
-        $result = [
-            'sharedUserIds' => [],
-            'sharedRoleIds' => [],
-        ];
-
-        $db = Db::get();
-        $allShares = $db->fetchAllAssociative(
-            'SELECT s.sharedWithUserId, u.type FROM gridconfig_shares s, users u
-                WHERE s.sharedWithUserId = u.id AND s.gridConfigId = ?',
-            [$gridConfigId]
-        );
-
-        foreach ($allShares as $share) {
-            $type = $share['type'];
-            $key = 'shared' . ucfirst($type) . 'Ids';
-            $result[$key][] = $share['sharedWithUserId'];
-        }
-
-        foreach ($result as $idx => $value) {
-            $value = $value ? implode(',', $value) : '';
-            $result[$idx] = $value;
-        }
-
-        return $result;
+    public function gridMarkFavouriteColumnConfigAction(
+        MarkGridConfigFavouritePayload $payload,
+        MarkGridConfigFavouriteHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/grid-save-column-config', name: 'opendxp_admin_asset_assethelper_gridsavecolumnconfig', methods: ['POST'])]
-    public function gridSaveColumnConfigAction(Request $request): JsonResponse
-    {
-        $asset = Asset::getById((int) $request->request->get('id'));
-
-        if (!$asset) {
-            throw $this->createNotFoundException();
-        }
-
-        if ($asset->isAllowed('list')) {
-            try {
-                $classId = $request->request->get('class_id');
-                $context = $request->request->get('context');
-
-                $searchType = $request->request->get('searchType');
-                $type = $request->request->get('type');
-
-                // grid config
-                $gridConfigData = $this->decodeJson($request->request->get('gridconfig'));
-                $gridConfigData['opendxp_version'] = Version::getVersion();
-                $gridConfigData['opendxp_revision'] = Version::getRevision();
-                $gridConfigData['context'] = $context;
-                unset($gridConfigData['settings']['isShared']);
-
-                $metadata = $request->request->get('settings');
-                $metadata = json_decode($metadata, true);
-
-                $gridConfigId = $metadata['gridConfigId'];
-                $gridConfig = null;
-                if ($gridConfigId) {
-                    $gridConfig = GridConfig::getById($gridConfigId);
-                }
-
-                if ($gridConfig && $gridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
-                    throw new Exception("don't mess around with somebody else's configuration");
-                }
-
-                $this->updateGridConfigShares($gridConfig, $metadata);
-
-                if ($metadata['setAsFavourite'] && $this->getAdminUser()->isAdmin()) {
-                    $this->updateGridConfigFavourites($gridConfig, $metadata);
-                }
-
-                if (!$gridConfig) {
-                    $gridConfig = new GridConfig();
-                    $gridConfig->setName(date('c'));
-                    $gridConfig->setClassId($classId);
-                    $gridConfig->setSearchType($searchType);
-                    $gridConfig->setType($type);
-
-                    $gridConfig->setOwnerId($this->getAdminUser()->getId());
-                }
-
-                if ($metadata) {
-                    $gridConfig->setName($metadata['gridConfigName']);
-                    $gridConfig->setDescription($metadata['gridConfigDescription']);
-                    $gridConfig->setShareGlobally($metadata['shareGlobally'] && $this->getAdminUser()->isAdmin());
-                    $gridConfig->setSetAsFavourite($metadata['setAsFavourite'] && $this->getAdminUser()->isAdmin());
-                }
-
-                $gridConfigData = json_encode($gridConfigData);
-                $gridConfig->setConfig($gridConfigData);
-                $gridConfig->save();
-
-                $userId = $this->getAdminUser()->getId();
-
-                $availableConfigs = $this->getMyOwnGridColumnConfigs($userId, $classId, $searchType);
-                $sharedConfigs = $this->getSharedGridColumnConfigs($this->getAdminUser(), $classId, $searchType);
-
-                $settings = $this->getShareSettings($gridConfig->getId());
-                $settings['gridConfigId'] = (int)$gridConfig->getId();
-                $settings['gridConfigName'] = $gridConfig->getName();
-                $settings['gridConfigDescription'] = $gridConfig->getDescription();
-                $settings['shareGlobally'] = $gridConfig->isShareGlobally();
-                $settings['setAsFavourite'] = $gridConfig->isSetAsFavourite();
-                $settings['isShared'] = $gridConfig->getOwnerId() !== $this->getAdminUser()->getId();
-
-                return $this->adminJson([
-                    'success' => true,
-                    'settings' => $settings,
-                    'availableConfigs' => $availableConfigs,
-                    'sharedConfigs' => $sharedConfigs,
-                ]);
-            } catch (Exception $e) {
-                return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-            }
-        }
-
-        throw $this->createAccessDeniedHttpException();
-    }
-
-    /**
-     * @throws Exception
-     */
-    protected function updateGridConfigShares(?GridConfig $gridConfig, array $metadata): void
-    {
-        $user = $this->getAdminUser();
-        if (!$gridConfig || !$user->isAllowed('share_configurations')) {
-            // nothing to do
-            return;
-        }
-
-        if ($gridConfig->getOwnerId() !== $this->getAdminUser()->getId()) {
-            throw new Exception("don't mess with someone elses grid config");
-        }
-        $combinedShares = [];
-        $sharedUserIds = $metadata['sharedUserIds'];
-        $sharedRoleIds = $metadata['sharedRoleIds'];
-
-        if ($sharedUserIds) {
-            $combinedShares = explode(',', $sharedUserIds);
-        }
-
-        if ($sharedRoleIds) {
-            $sharedRoleIds = explode(',', $sharedRoleIds);
-            $combinedShares = [...$combinedShares, ...$sharedRoleIds];
-        }
-
-        $db = Db::get();
-        $db->delete('gridconfig_shares', ['gridConfigId' => $gridConfig->getId()]);
-
-        foreach ($combinedShares as $id) {
-            $share = new GridConfigShare();
-            $share->setGridConfigId($gridConfig->getId());
-            $share->setSharedWithUserId((int) $id);
-            $share->save();
-        }
-    }
-
-    /**
-     * @throws Exception
-     */
-    protected function updateGridConfigFavourites(?GridConfig $gridConfig, array $metadata): void
-    {
-        $currentUser = $this->getAdminUser();
-
-        if (!$gridConfig || $currentUser === null || !$currentUser->isAllowed('share_configurations')) {
-            // nothing to do
-            return;
-        }
-
-        if (!$currentUser->isAdmin() && (int) $gridConfig->getOwnerId() !== $currentUser->getId()) {
-            throw new Exception("don't mess with someone elses grid config");
-        }
-
-        $sharedUsers = [];
-
-        if ($metadata['shareGlobally'] === false) {
-            $sharedUserIds = $metadata['sharedUserIds'];
-
-            if ($sharedUserIds) {
-                $sharedUsers = array_map(intval(...), explode(',', $sharedUserIds));
-            }
-        }
-
-        if ($metadata['shareGlobally'] === true) {
-            $users = new User\Listing();
-            $users->setCondition('id = ?', $currentUser->getId());
-
-            foreach ($users as $user) {
-                $sharedUsers[] = $user->getId();
-            }
-        }
-
-        foreach ($sharedUsers as $id) {
-            // Check if the user has already a favourite
-            $favourite = GridConfigFavourite::getByOwnerAndClassAndObjectId(
-                $id,
-                $gridConfig->getClassId(),
-                0,
-                $gridConfig->getSearchType()
-            );
-
-            if ($favourite instanceof GridConfigFavourite) {
-                $favouriteGridConfig = GridConfig::getById($favourite->getGridConfigId());
-
-                if ($favouriteGridConfig instanceof GridConfig) {
-                    // Check if the grid config was shared globally if that is *not* the case we also not update
-                    if ($favouriteGridConfig->isShareGlobally() === false) {
-                        continue;
-                    }
-
-                    // Check if the user is the owner. If that is the case we do not update the favourite
-                    if ($favouriteGridConfig->getOwnerId() === $id) {
-                        continue;
-                    }
-                }
-            }
-
-            $favourite = new GridConfigFavourite();
-            $favourite->setGridConfigId($gridConfig->getId());
-            $favourite->setClassId($gridConfig->getClassId());
-            $favourite->setObjectId(0);
-            $favourite->setOwnerId($id);
-            $favourite->setType($gridConfig->getType());
-            $favourite->setSearchType($gridConfig->getSearchType());
-            $favourite->save();
-        }
+    public function gridSaveColumnConfigAction(
+        SaveGridColumnConfigPayload $payload,
+        SaveGridColumnConfigHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/get-export-jobs', name: 'opendxp_admin_asset_assethelper_getexportjobs', methods: ['POST'])]
-    public function getExportJobsAction(Request $request, GridHelperService $gridHelperService): JsonResponse
+    public function getExportJobsAction(GetExportJobsPayload $payload, GetExportJobsHandler $handler): JsonResponse
     {
-        $allParams = [...$request->request->all(), ...$request->query->all()];
-        $list = $gridHelperService->prepareAssetListingForGrid($allParams, $this->getAdminUser());
-
-        if (empty($ids = $allParams['ids'] ?? '')) {
-            $ids = $list->loadIdList();
-        }
-
-        $jobs = array_chunk($ids, 20);
-
-        $fileHandle = uniqid('asset-export-', false);
-        $storage = Storage::get('temp');
-        $storage->write($this->getCsvFile($fileHandle), '');
-
-        return $this->adminJson(['success' => true, 'jobs' => $jobs, 'fileHandle' => $fileHandle]);
+        return $this->apiJson($handler($payload));
     }
 
-    /**
-     * @throws FilesystemException
-     */
     #[Route('/do-export', name: 'opendxp_admin_asset_assethelper_doexport', methods: ['POST'])]
-    public function doExportAction(Request $request): JsonResponse
+    public function doExportAction(DoAssetExportPayload $payload, DoAssetExportHandler $handler): JsonResponse
     {
-        $fileHandle = File::getValidFilename($request->request->get('fileHandle'));
-        $ids = $request->request->all('ids');
-        $settings = json_decode($request->request->get('settings'), true);
-        $delimiter = $settings['delimiter'] ?? ';';
-        $language = str_replace('default', '', $request->request->get('language'));
-        $header = $settings['header'] ?? 'title';
+        $handler($payload);
 
-        $list = new Asset\Listing();
-
-        $quotedIds = [];
-        foreach ($ids as $id) {
-            $quotedIds[] = $list->quote($id);
-        }
-
-        $list->setCondition('id IN (' . implode(',', $quotedIds) . ')');
-        $list->setOrderKey(' FIELD(id, ' . implode(',', $quotedIds) . ')', false);
-
-        $fields = json_decode($request->request->all('fields')[0], true);
-
-        $addTitles = (bool) $request->request->get('initial');
-
-        $csv = $this->getCsvData($language, $list, $fields, $header, $addTitles);
-
-        $temp = tmpfile();
-
-        try {
-            $storage = Storage::get('temp');
-            $csvFile = $this->getCsvFile($fileHandle);
-
-            $fileStream = $storage->readStream($csvFile);
-
-            stream_copy_to_stream($fileStream, $temp, null, 0);
-
-            $firstLine = true;
-            if ($request->request->get('initial') && $header === 'no_header') {
-                $firstLine = false;
-            }
-
-            foreach ($csv as $line) {
-                if ($addTitles && $firstLine) {
-                    $firstLine = false;
-                    $line = implode($delimiter, $line) . "\r\n";
-                    fwrite($temp, $line);
-                } else {
-                    fwrite($temp, implode($delimiter, array_map($this->encodeFunc(...), $line)) . "\r\n");
-                }
-            }
-            $storage->writeStream($csvFile, $temp);
-        } catch (UnableToReadFile $exception) {
-            Logger::err($exception->getMessage());
-
-            return $this->adminJson(
-                [
-                    'success' => false,
-                    'message' => sprintf('export file not found: %s', $fileHandle),
-                ]
-            );
-        } finally {
-            if (is_resource($temp)) {
-                fclose($temp);
-            }
-        }
-
-        return $this->adminJson(['success' => true]);
-    }
-
-    public function encodeFunc(null|string|array $value): string
-    {
-        if (is_array($value)) {
-            $value = implode(',', $value);
-        }
-        $value = str_replace('"', '""', $value ?? '');
-
-        //force wrap value in quotes and return
-        return '"' . $value . '"';
-    }
-
-    protected function getCsvData(
-        string $language,
-        Asset\Listing $list,
-        array $fields,
-        string $header,
-        bool $addTitles = true
-    ): array {
-        //create csv
-        $csv = [];
-
-        $unsupportedFields = [0 => 'preview~system', 1 => 'size~system'];
-        $fields = array_filter($fields, fn ($field) => !in_array($field['key'], $unsupportedFields));
-
-        if ($addTitles && $header !== 'no_header') {
-            $columns = $fields;
-            $titleIdx = $header === 'name' ? 'key' : 'label';
-            foreach ($columns as $columnIdx => $columnKeys) {
-                $columns[$columnIdx] = '"' . $columnKeys[$titleIdx] . '"';
-            }
-            $csv[] = $columns;
-        }
-
-        foreach ($list->load() as $asset) {
-            if ($fields) {
-                $dataRows = [];
-                foreach ($fields as $field) {
-                    $fieldDef = explode('~', $field['key']);
-                    $getter = 'get' . ucfirst($fieldDef[0]);
-
-                    if (isset($fieldDef[1])) {
-                        if ($fieldDef[1] === 'system' && method_exists($asset, $getter)) {
-                            $data = $asset->$getter($language);
-                        } else {
-                            $fieldDef[1] = str_replace('none', '', $fieldDef[1]);
-                            $data = $asset->getMetadata($fieldDef[0], $fieldDef[1], true);
-                        }
-                    } else {
-                        $data = $asset->getMetadata($field['key'], $language, true);
-                    }
-
-                    if ($data instanceof Element\ElementInterface) {
-                        $data = $data->getRealFullPath();
-                    }
-                    $dataRows[] = $data;
-                }
-                $dataRows = Element\Service::escapeCsvRecord($dataRows);
-                $csv[] = $dataRows;
-            }
-        }
-
-        return $csv;
-    }
-
-    protected function getCsvFile(string $fileHandle): string
-    {
-        return $fileHandle . '.csv';
+        return $this->apiOk();
     }
 
     #[Route('/download-csv-file', name: 'opendxp_admin_asset_assethelper_downloadcsvfile', methods: ['GET'])]
-    public function downloadCsvFileAction(Request $request): Response
-    {
-        $storage = Storage::get('temp');
-        $fileHandle = File::getValidFilename($request->query->get('fileHandle'));
-        $csvFile = $this->getCsvFile($fileHandle);
-
+    public function downloadCsvFileAction(
+        GridExportService $gridExportService,
+        #[MapQueryParameter] ?string $fileHandle = null,
+    ): Response {
         try {
-            $csvData = $storage->read($csvFile);
-            $response = new Response($csvData);
-            $response->headers->set('Content-Type', 'application/csv');
-            $disposition = HeaderUtils::makeDisposition(
-                HeaderUtils::DISPOSITION_ATTACHMENT,
-                'export.csv'
-            );
-
-            $response->headers->set('Content-Disposition', $disposition);
-            $storage->delete($csvFile);
-
-            return $response;
-        } catch (FilesystemException | UnableToReadFile) {
-            // handle the error
+            return $gridExportService->downloadCsvFile($fileHandle ?? '');
+        } catch (\RuntimeException) {
             throw $this->createNotFoundException('CSV file not found');
         }
     }
 
     #[Route('/download-xlsx-file', name: 'opendxp_admin_asset_assethelper_downloadxlsxfile', methods: ['GET'])]
-    public function downloadXlsxFileAction(Request $request, GridHelperService $gridHelperService): BinaryFileResponse
-    {
-        $storage = Storage::get('temp');
-        $fileHandle = File::getValidFilename($request->query->get('fileHandle'));
-        $csvFile = $this->getCsvFile($fileHandle);
-
+    public function downloadXlsxFileAction(
+        GridExportService $gridExportService,
+        #[MapQueryParameter] ?string $fileHandle = null,
+    ): BinaryFileResponse {
         try {
-            return $gridHelperService->createXlsxExportFile($storage, $fileHandle, $csvFile);
-        } catch (Exception | FilesystemException | UnableToReadFile) {
-            // handle the error
+            return $gridExportService->downloadXlsxFile($fileHandle ?? '');
+        } catch (\RuntimeException) {
             throw $this->createNotFoundException('XLSX file not found');
         }
     }
 
     #[Route('/get-metadata-for-column-config', name: 'opendxp_admin_asset_assethelper_getmetadataforcolumnconfig', methods: ['GET'])]
-    public function getMetadataForColumnConfigAction(Request $request): JsonResponse
+    public function getMetadataForColumnConfigAction(GetAssetMetadataForColumnConfigHandler $handler): JsonResponse
     {
-        $result = [];
-
-        //default metadata
-        $defaultMetadataNames = ['copyright', 'alt', 'title'];
-        foreach ($defaultMetadataNames as $defaultMetadata) {
-            $defaultColumns[] = ['title' => $defaultMetadata, 'name' => $defaultMetadata, 'datatype' => 'data', 'fieldtype' => 'input'];
-        }
-        $result['defaultColumns']['nodeLabel'] = 'default_metadata';
-        $result['defaultColumns']['nodeType'] = 'image';
-        $result['defaultColumns']['children'] = $defaultColumns;
-
-        //predefined metadata
-        $list = Metadata\Predefined\Listing::getByTargetType('asset');
-        $metadataItems = [];
-        $tmp = [];
-        foreach ($list as $item) {
-            //only allow unique metadata columns with subtypes
-            $uniqueKey = $item->getName().'_'.$item->getTargetSubtype();
-            if (!in_array($uniqueKey, $tmp) && !in_array($item->getName(), $defaultMetadataNames)) {
-                $tmp[] = $uniqueKey;
-                $item->expand();
-                $name = SecurityHelper::convertHtmlSpecialChars($item->getName());
-                $metadataItems[] = [
-                    'title' => $name,
-                    'name' => $name,
-                    'subtype' => $item->getTargetSubtype(),
-                    'datatype' => 'data',
-                    'fieldtype' => $item->getType(),
-                    'config' => $item->getConfig(),
-                ];
-            }
-        }
-
-        $result['metadataColumns']['children'] = $metadataItems;
-        $result['metadataColumns']['nodeLabel'] = 'predefined_metadata';
-        $result['metadataColumns']['nodeType'] = 'metadata';
-
-        //system columns
-        $systemColumnNames = Asset\Service::GRID_SYSTEM_COLUMNS;
-        $systemColumns = [];
-        foreach ($systemColumnNames as $systemColumn) {
-            $systemColumns[] = ['title' => $systemColumn, 'name' => $systemColumn, 'datatype' => 'data', 'fieldtype' => 'system'];
-        }
-        $result['systemColumns']['nodeLabel'] = 'system_columns';
-        $result['systemColumns']['nodeType'] = 'system';
-        $result['systemColumns']['children'] = $systemColumns;
-
-        return $this->adminJson($result);
+        return $this->apiJson($handler(), rootProperty: 'data');
     }
 
     #[Route('/get-batch-jobs', name: 'opendxp_admin_asset_assethelper_getbatchjobs', methods: ['POST'])]
-    public function getBatchJobsAction(Request $request, GridHelperService $gridHelperService): JsonResponse
+    public function getBatchJobsAction(GetAssetBatchJobsPayload $payload, GetAssetBatchJobsHandler $handler, Request $request): JsonResponse
     {
-        if ($request->request->get('language')) {
-            $request->setLocale($request->request->get('language'));
+        if ($payload->language) {
+            $request->setLocale($payload->language);
         }
 
-        $allParams = [...$request->request->all(), ...$request->query->all()];
-        $list = $gridHelperService->prepareAssetListingForGrid($allParams, $this->getAdminUser());
-
-        $jobs = $list->loadIdList();
-
-        return $this->adminJson(['success' => true, 'jobs' => $jobs]);
+        return $this->apiJson($handler($payload));
     }
 
     #[Route('/batch', name: 'opendxp_admin_asset_assethelper_batch', methods: ['PUT'])]
-    public function batchAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
+    public function batchAction(ExecuteAssetBatchPayload $payload, ExecuteAssetBatchHandler $handler): JsonResponse
     {
-        try {
-            if ($request->request->has('data')) {
-                $loader = OpenDxp::getContainer()->get('opendxp.implementation_loader.asset.metadata.data');
-
-                $data = $this->decodeJson($request->request->get('data'), true);
-
-                $updateEvent = new GenericEvent($this, [
-                    'data' => $data,
-                    'processed' => false,
-                ]);
-
-                $eventDispatcher->dispatch($updateEvent, AdminEvents::ASSET_LIST_BEFORE_BATCH_UPDATE);
-
-                $processed = $updateEvent->getArgument('processed');
-
-                if ($processed) {
-                    return $this->adminJson(['success' => true]);
-                }
-
-                $language = null;
-                if (isset($data['language'])) {
-                    $language = $data['language'] !== 'default' ? $data['language'] : null;
-                }
-
-                $asset = Asset::getById((int) $data['job']);
-
-                if ($asset) {
-                    if (!$asset->isAllowed('publish')) {
-                        throw new Exception("Permission denied. You don't have the rights to save this asset.");
-                    }
-
-                    $metadata = $asset->getMetadata(null, null, false, true);
-                    $dirty = false;
-
-                    $name = $data['name'];
-                    $value = $data['value'];
-
-                    if ($data['valueType'] === 'object') {
-                        $value = $this->decodeJson($value);
-                    }
-
-                    $fieldDef = explode('~', $name);
-                    $name = $fieldDef[0];
-                    if (count($fieldDef) > 1) {
-                        $language = ($fieldDef[1] === 'none' ? '' : $fieldDef[1]);
-                    }
-
-                    foreach ($metadata as &$em) {
-                        if ($em['name'] == $name && $em['language'] == $language) {
-                            try {
-                                $dataImpl = $loader->build($em['type']);
-                                $value = $dataImpl->getDataFromListfolderGrid($value, $em);
-                            } catch (UnsupportedException) {
-                                Logger::error('could not resolve metadata implementation for ' . $em['type']);
-                            }
-                            $em['data'] = $value;
-                            $dirty = true;
-
-                            break;
-                        }
-                    }
-
-                    if (!$dirty) {
-                        $defaulMetadata = ['title', 'alt', 'copyright'];
-                        if (in_array($name, $defaulMetadata)) {
-                            $newEm = [
-                                'name' => $name,
-                                'language' => $language,
-                                'type' => 'input',
-                                'data' => $value,
-                            ];
-
-                            try {
-                                $dataImpl = $loader->build($newEm['type']);
-                                $newEm['data'] = $dataImpl->getDataFromListfolderGrid($value, $newEm);
-                            } catch (UnsupportedException) {
-                                Logger::error('could not resolve metadata implementation for ' . $newEm['type']);
-                            }
-
-                            $metadata[] = $newEm;
-                            $dirty = true;
-                        } else {
-                            $predefined = Metadata\Predefined::getByName($name);
-                            if ($predefined && (empty($predefined->getTargetSubtype())
-                                    || $predefined->getTargetSubtype() === $asset->getType())) {
-                                $newEm = [
-                                    'name' => $name,
-                                    'language' => $language,
-                                    'type' => $predefined->getType(),
-                                    'data' => $value,
-                                ];
-
-                                try {
-                                    $dataImpl = $loader->build($newEm['type']);
-                                    $newEm['data'] = $dataImpl->getDataFromListfolderGrid($value, $newEm);
-                                } catch (UnsupportedException) {
-                                    Logger::error('could not resolve metadata implementation for ' . $newEm['type']);
-                                }
-
-                                $metadata[] = $newEm;
-
-                                $dirty = true;
-                            }
-                        }
-                    }
-
-                    try {
-                        if ($dirty) {
-                            $metadataEvent = new GenericEvent($this, [
-                                'id' => $asset->getId(),
-                                'metadata' => $metadata,
-                            ]);
-
-                            $eventDispatcher->dispatch($metadataEvent, AdminEvents::ASSET_METADATA_PRE_SET);
-
-                            $asset->setMetadataRaw($metadata);
-                            $asset->save();
-
-                            return $this->adminJson(['success' => true]);
-                        }
-                    } catch (Exception $e) {
-                        return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
-                    }
-                } else {
-                    Logger::debug('AssetHelperController::batchAction => There is no asset left to update.');
-
-                    return $this->adminJson(['success' => false, 'message' => 'AssetHelperController::batchAction => There is no asset left to update.']);
-                }
-            }
-        } catch (Exception $e) {
-            Logger::err((string)$e);
-
-            return $this->adminJson(['success' => false, 'message' => $e->getMessage()]);
+        if ($payload->data !== null) {
+            $handler($payload);
         }
 
-        return $this->adminJson(['success' => false, 'message' => 'something went wrong.']);
+        return $this->apiOk();
     }
 }

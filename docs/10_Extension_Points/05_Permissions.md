@@ -18,31 +18,8 @@ After this, the permission appears in the Users/Roles admin panel and can be ass
 Inside an admin controller that extends `UserAwareController`:
 
 ```php
-<?php
-
-namespace App\Controller;
-
-use OpenDxp\Controller\UserAwareController;
-use OpenDxp\Controller\Traits\JsonHelperTrait;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
-
-class MyAdminController extends UserAwareController
-{
-    use JsonHelperTrait;
-
-    #[Route('/admin/my-action', methods: ['GET'])]
-    public function myAdminAction(Request $request): Response
-    {
-        $openDxpUser = $this->getOpenDxpUser();
-
-        if ($openDxpUser?->isAllowed('my_custom_permission')) {
-            // authorized
-        }
-
-        return $this->jsonResponse(['success' => true]);
-    }
+if ($this->getOpenDxpUser()?->isAllowed('my_custom_permission')) {
+    // authorized
 }
 ```
 
@@ -51,12 +28,17 @@ class MyAdminController extends UserAwareController
 In your bundle's JavaScript (loaded via [Admin UI Assets](02_Admin_UI_Assets.md)):
 
 ```javascript
-document.addEventListener(opendxp.events.opendxpReady, (e) => {
-    if (opendxp.currentuser.permissions.indexOf('my_custom_permission') >= 0) {
-        // user has the permission — show/enable UI element
-    }
-});
+const user = opendxp.globalmanager.get('user');
+
+if (user.isAllowed('my_custom_permission')) {
+    // user has the permission, show/enable UI element
+}
 ```
+
+## Using Symfony's Authorization Layer
+
+For `#[IsGranted]` and `Security::isGranted()` instead of manual `isAllowed()` calls, 
+see [Permission Voters](https://github.com/open-dxp/opendxp/blob/1.x/doc/19_Development_Tools_and_Details/10_Security_Authentication/10_Permission_Voters.md) in opendxp core.
 
 ## See Also
 

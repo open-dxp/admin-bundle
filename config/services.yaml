@@ -18,11 +18,12 @@ services:
         public: true
         tags: ['controller.service_arguments']
 
-    OpenDxp\Bundle\AdminBundle\Controller\Admin\IndexController:
-        public: true
+    OpenDxp\Maintenance\ExecutorInterface:
+        alias: OpenDxp\Maintenance\Executor
+
+    OpenDxp\Bundle\AdminBundle\Handler\Admin\Statistics\StatisticsHandler:
         arguments:
             $httpClient: '@opendxp.http_client'
-        tags: [ 'controller.service_arguments' ]
 
     #
     # COMMANDS
@@ -78,7 +79,7 @@ services:
     #
 
     OpenDxp\Model\DataObject\ClassDefinition\PreviewGeneratorInterface:
-        class: OpenDxp\Bundle\AdminBundle\Service\PreviewGenerator
+        class: OpenDxp\Bundle\AdminBundle\Generator\PreviewGenerator
 
     #
     # Twig Extensions
@@ -91,6 +92,7 @@ services:
     #
     
     OpenDxp\Bundle\AdminBundle\Service\Workflow\ActionsButtonService: ~
+    OpenDxp\Bundle\AdminBundle\Resolver\Workflow\WorkflowElementResolver: ~
 
     #
     # Admin Config Services
@@ -100,5 +102,102 @@ services:
     #
     # Element Services
     #
-    OpenDxp\Bundle\AdminBundle\Service\ElementServiceInterface:
-        class: OpenDxp\Bundle\AdminBundle\Service\ElementService
+    OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface:
+        class: OpenDxp\Bundle\AdminBundle\Service\Element\ElementService
+
+    OpenDxp\Bundle\AdminBundle\Generator\CustomLoginUrlGenerator: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface:
+        class: OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContext
+
+    OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface:
+        class: OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContext
+
+    OpenDxp\Bundle\AdminBundle\Session\SessionIdentityInterface:
+        class: OpenDxp\Bundle\AdminBundle\Session\SessionIdentity
+
+    OpenDxp\Bundle\AdminBundle\Session\Gateway\:
+        resource: '../src/Session/Gateway'
+
+    OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Login\LoginPageService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Notification\NotificationFilterParser: ~
+
+    OpenDxp\Bundle\AdminBundle\Mapper\Document\DocumentPayloadMapper: ~
+    OpenDxp\Bundle\AdminBundle\Coordinator\Document\DocumentPersistenceCoordinator: ~
+
+    OpenDxp\Bundle\AdminBundle\Mapper\DataObject\DataObjectPayloadMapper: ~
+    OpenDxp\Bundle\AdminBundle\Coordinator\DataObject\DataObjectPersistenceCoordinator: ~
+    OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService: ~
+    OpenDxp\Bundle\AdminBundle\Mapper\DataObject\ClassificationstoreKeyConfigMapper: ~
+
+    OpenDxp\Bundle\AdminBundle\Mapper\Asset\AssetPayloadMapper: ~
+    OpenDxp\Bundle\AdminBundle\Coordinator\Asset\AssetPersistenceCoordinator: ~
+    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetUploadService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Asset\AssetGridService: ~
+    OpenDxp\Bundle\AdminBundle\Resolver\Asset\ImageThumbnailResolver: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Grid\GridColumnConfigService: ~
+    OpenDxp\Bundle\AdminBundle\Resolver\Grid\AssetGridColumnConfigResolver: ~
+    OpenDxp\Bundle\AdminBundle\Resolver\Grid\DataObjectGridColumnConfigResolver: ~
+    OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Grid\GridBatchService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Cache\OpenDxpCacheClearingService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Cache\SymfonyCacheClearingService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Translation\TranslationQueryService: ~
+    OpenDxp\Bundle\AdminBundle\Resolver\Translation\AdminSearchTermResolver: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Portal\DashboardService: ~
+
+    OpenDxp\Bundle\AdminBundle\Service\Admin\AdminSettingsService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Admin\AdminStatisticsService: ~
+
+    #
+    # Repositories
+    #
+    OpenDxp\Bundle\AdminBundle\Repository\:
+        resource: '../src/Repository'
+
+    #
+    # Factories
+    #
+    OpenDxp\Bundle\AdminBundle\Factory\:
+        resource: '../src/Factory'
+
+    #
+    # HTTP / Value Resolvers
+    #
+    OpenDxp\Bundle\AdminBundle\Http\:
+        resource: '../src/Http'
+
+    #
+    # Enrichers
+    #
+    OpenDxp\Bundle\AdminBundle\Enricher\:
+        resource: '../src/Enricher'
+
+    #
+    # Handlers
+    #
+    OpenDxp\Bundle\AdminBundle\Handler\:
+        resource: '../src/Handler'
+        bind:
+            $documentNoteTypes: '%opendxp_admin.dataObjects.notes_events.types%'
+            $assetNoteTypes: '%opendxp_admin.assets.notes_events.types%'
+            $objectNoteTypes: '%opendxp_admin.documents.notes_events.types%'
+
+    OpenDxp\Bundle\AdminBundle\Handler\Document\AddDocument\AddDocumentHandler:
+        arguments:
+            $documentClassResolver: '@opendxp.class.resolver.document'
+            $defaultDocumentController: '%opendxp.documents.default_controller%'
+
+    #
+    # Security Voters
+    #
+    OpenDxp\Bundle\AdminBundle\Security\Voter\:
+        resource: '../src/Security/Voter'

@@ -19,4 +19,4 @@ opendxp_admin_page_display_preview_image:
 # we need to have this outside of /admin scope, to be reachable publicly
 opendxp_admin_document_document_diff_versions_html:
     path: /__admin/document/diff-versions-html
-    defaults: { _controller: OpenDxp\Bundle\AdminBundle\Controller\Admin\Document\DocumentController::diffVersionsHtmlAction }
+    defaults: { _controller: OpenDxp\Bundle\AdminBundle\Controller\Admin\Document\DocumentVersionController::diffVersionsHtmlAction }

@@ -1152,6 +1152,7 @@ opendxp.helpers.uploadDialog = function (url, filename, success, failure, descri
                     request.addEventListener("error", errorWrapper, false);
                     request.addEventListener("abort", errorWrapper, false);
                     request.open('POST', url);
+                    request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                     request.send(data);
 
                 });
