@@ -496,11 +496,16 @@ Ext.onReady(function () {
     const sitesStore = new Ext.data.Store({
         model: 'opendxp.model.sites'
     });
-    sitesStore.load();
     opendxp.globalmanager.add('sites', sitesStore);
 
     // check for updates
-    window.setTimeout(function () {
+    sitesStore.load({
+        callback: function () {
+            window.setTimeout(sendMetricsCheck, 5000);
+        }
+    });
+
+    function sendMetricsCheck() {
         const domains = [];
         opendxp.globalmanager.get('sites').each(function (rec) {
             if (rec.get('rootId') !== 1) {
@@ -515,6 +520,7 @@ Ext.onReady(function () {
 
         const data = {
             instance_id: opendxp.settings.instanceId,
+            system_uuid: opendxp.settings.systemUuid,
             revision: opendxp.settings.build,
             version: opendxp.settings.version,
             debug: opendxp.settings.debug,
@@ -597,7 +603,7 @@ Ext.onReady(function () {
             .catch(error => {
                 console.error('Metrics fetch error', error);
             });
-    }, 5000);
+    }
 
     Ext.get('opendxp_logout')?.on('click', function () {
         document.getElementById('opendxp_logout_form').submit();

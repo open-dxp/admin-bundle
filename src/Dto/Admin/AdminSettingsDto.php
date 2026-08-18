@@ -21,6 +21,7 @@ final readonly class AdminSettingsDto
     public function __construct(
         // Core identity
         public string $instanceId,
+        public string $systemUuid,
         public string $version,
         public string $build,
         public bool $debug,
@@ -103,6 +104,7 @@ final readonly class AdminSettingsDto
     {
         return [
             'instanceId'      => $this->instanceId,
+            'systemUuid'      => $this->systemUuid,
             'version'         => $this->version,
             'build'           => $this->build,
             'debug'           => $this->debug,

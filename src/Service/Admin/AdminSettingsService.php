@@ -58,10 +58,9 @@ final class AdminSettingsService
         private readonly KernelInterface $kernel,
         private readonly RequestStack $requestStack,
         private readonly SessionIdentityInterface $sessionIdentity,
+        private readonly InstanceIdentityService $instanceIdentity,
         #[Autowire('%opendxp_admin.custom_admin_route_name%')]
         private readonly string $customAdminRouteName,
-        #[Autowire('%secret%')]
-        private readonly string $secret,
     ) {
     }
 
@@ -110,15 +109,17 @@ final class AdminSettingsService
         }
 
         $notificationsEnabled = (bool) $config['notifications']['enabled'];
+        $environment = $this->kernel->getEnvironment();
 
         return new AdminSettingsDto(
-            instanceId: $this->buildInstanceId(),
+            instanceId: $this->instanceIdentity->getInstanceId(),
+            systemUuid: $this->instanceIdentity->getSystemUuid($environment),
             version: Version::getVersion(),
             build: Version::getRevision(),
             debug: OpenDxp::inDebugMode(),
             devMode: OpenDxp::inDevMode(),
             disableMinifyJs: OpenDxp::disableMinifyJs(),
-            environment: $this->kernel->getEnvironment(),
+            environment: $environment,
             sessionId: htmlentities($this->sessionIdentity->getId(), ENT_QUOTES, 'UTF-8'),
 
             language: $locale,
@@ -189,15 +190,6 @@ final class AdminSettingsService
 
             csrfToken: $this->csrfProtection->getCsrfToken($this->requestStack->getSession()) ?? '',
         );
-    }
-
-    private function buildInstanceId(): string
-    {
-        try {
-            return sha1(substr($this->secret, 3, -3));
-        } catch (Exception) {
-            return 'not-set';
-        }
     }
 
     private function buildCustomViews(): array
