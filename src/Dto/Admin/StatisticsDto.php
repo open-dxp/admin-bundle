@@ -20,12 +20,14 @@ final readonly class StatisticsDto
 {
     public function __construct(
         public string $instanceId,
+        public string $systemUuid,
         public string $revision,
         public string $version,
         public int $majorVersion,
         public string $phpVersion,
         public ?string $dbVersion,
         public array $bundles,
+        public string $environment,
     ) {
     }
 
@@ -33,12 +35,14 @@ final readonly class StatisticsDto
     {
         return [
             'instance_id'   => $this->instanceId,
+            'system_uuid'   => $this->systemUuid,
             'revision'      => $this->revision,
             'version'       => $this->version,
             'major_version' => $this->majorVersion,
             'php_version'   => $this->phpVersion,
             'db_version'    => $this->dbVersion,
             'bundles'       => $this->bundles,
+            'environment'   => $this->environment,
         ];
     }
 }

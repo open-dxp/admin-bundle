@@ -90,7 +90,7 @@ services:
     #
     # Workflows
     #
-    
+
     OpenDxp\Bundle\AdminBundle\Service\Workflow\ActionsButtonService: ~
     OpenDxp\Bundle\AdminBundle\Resolver\Workflow\WorkflowElementResolver: ~
 
@@ -160,6 +160,7 @@ services:
 
     OpenDxp\Bundle\AdminBundle\Service\Admin\AdminSettingsService: ~
     OpenDxp\Bundle\AdminBundle\Service\Admin\AdminStatisticsService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Admin\InstanceIdentityService: ~
 
     #
     # Repositories

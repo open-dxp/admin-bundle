@@ -17,10 +17,8 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Service\Admin;
 
 use Doctrine\DBAL\Connection;
-use Exception;
 use OpenDxp\Bundle\AdminBundle\Dto\Admin\StatisticsDto;
 use OpenDxp\Version;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Throwable;
 
@@ -29,8 +27,7 @@ final class AdminStatisticsService
     public function __construct(
         private readonly Connection $db,
         private readonly KernelInterface $kernel,
-        #[Autowire('%secret%')]
-        private readonly string $secret,
+        private readonly InstanceIdentityService $instanceIdentity,
     ) {
     }
 
@@ -43,22 +40,15 @@ final class AdminStatisticsService
         }
 
         return new StatisticsDto(
-            instanceId: $this->buildInstanceId(),
+            instanceId: $this->instanceIdentity->getInstanceId(),
+            systemUuid: $this->instanceIdentity->getSystemUuid($this->kernel->getEnvironment()),
             revision: Version::getRevision(),
             version: Version::getVersion(),
             majorVersion: Version::getMajorVersion(),
             phpVersion: PHP_VERSION,
             dbVersion: is_string($dbVersion) ? $dbVersion : null,
             bundles: array_keys($this->kernel->getBundles()),
+            environment: $this->kernel->getEnvironment(),
         );
-    }
-
-    private function buildInstanceId(): string
-    {
-        try {
-            return sha1(substr($this->secret, 3, -3));
-        } catch (Exception) {
-            return 'not-set';
-        }
     }
 }
