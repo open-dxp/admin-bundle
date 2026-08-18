@@ -1,17 +1,27 @@
 # Changelog / Upgrade Notes
 
+## 1.4.0
+* **New Feature**: Replace controller logic with dedicated handler and service classes (CQRS-Lite) [#91](https://github.com/open-dxp/admin-bundle/pull/91)
+* New Feature: Add "use original recipients" option, fix resend and forward recipients [#102](https://github.com/open-dxp/admin-bundle/pull/102)
+* New Feature: Add CSV export for email logs [#104](https://github.com/open-dxp/admin-bundle/pull/104)
+* New Feature: Add email log cleanup to the global email log panel [#105](https://github.com/open-dxp/admin-bundle/pull/105)
+* Improvement: Introduce system_uuid & centralize system identity handling [#106](https://github.com/open-dxp/admin-bundle/pull/106)
+* Bugfix: Notification undefined elmentId [#100](https://github.com/open-dxp/admin-bundle/pull/100)
+* Bugfix: Handle root path in `optimizedConcatNotLike` [#101](https://github.com/open-dxp/admin-bundle/pull/101)
+* Bugfix: Fix typo in target group editable selection [#103](https://github.com/open-dxp/admin-bundle/pull/103)
+
 ## 1.3.4
-* Chore: Remove unused grid configuration processing logic from DataObjectController by @solverat in https://github.com/open-dxp/admin-bundle/pull/89
-* Bugfix: resolve persistent thumbnail spinners in asset folder preview by @solverat in https://github.com/open-dxp/admin-bundle/pull/90
-* Bugfix: standardize Content-Disposition header formatting across controllers by @solverat in https://github.com/open-dxp/admin-bundle/pull/92
-* Improvement: Add stricter unserialize options; refactor variable naming in TranslationController by @solverat in https://github.com/open-dxp/admin-bundle/pull/88
-* Improvement: Added css color variables prefix by @cbl6499 in https://github.com/open-dxp/admin-bundle/pull/87
+* Chore: Remove unused grid configuration processing logic from DataObjectController [#89](https://github.com/open-dxp/admin-bundle/pull/89)
+* Bugfix: Resolve persistent thumbnail spinners in asset folder preview [#90](https://github.com/open-dxp/admin-bundle/pull/90)
+* Bugfix: Standardize Content-Disposition header formatting across controllers [#92](https://github.com/open-dxp/admin-bundle/pull/92)
+* Improvement: Add stricter unserialize options; refactor variable naming in TranslationController [#88](https://github.com/open-dxp/admin-bundle/pull/88)
+* Improvement: Added css color variables prefix [@cbl6499](https://github.com/open-dxp/admin-bundle/pull/87)
 
 ## 1.3.3
-* Improvement: add forceResize checkbox to video thumbnail settings [#82](https://github.com/open-dxp/admin-bundle/pull/82)
-* Bugfix: executing workflow transitions [#80](https://github.com/open-dxp/admin-bundle/pull/80)
-* Bugfix: array thumbnail parameter in getImageThumbnailAction [#78](https://github.com/open-dxp/admin-bundle/pull/78)
-* Bugfix: remove duplicate AdminExtension service definition from services.yaml [#84](https://github.com/open-dxp/admin-bundle/pull/84)
+* Improvement: Add forceResize checkbox to video thumbnail settings [#82](https://github.com/open-dxp/admin-bundle/pull/82)
+* Bugfix: Executing workflow transitions [#80](https://github.com/open-dxp/admin-bundle/pull/80)
+* Bugfix: Array thumbnail parameter in getImageThumbnailAction [#78](https://github.com/open-dxp/admin-bundle/pull/78)
+* Bugfix: Remove duplicate AdminExtension service definition from services.yaml [#84](https://github.com/open-dxp/admin-bundle/pull/84)
 
 ## 1.3.2
 * Bugfix: Remove redundant translation cache clearing from TranslationController [#67](https://github.com/open-dxp/admin-bundle/pull/67)
