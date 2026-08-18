@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Mapper\GridData;
 
 use OpenDxp;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Model;
 use OpenDxp\Model\DataObject\AbstractObject;
@@ -226,6 +227,21 @@ class DataObject extends Element
         }
 
         return $data;
+    }
+
+    /**
+     * Static bridge for OpenDxp\Model\DataObject\Service, which cannot receive the gateway by injection.
+     * Prefer GridColumnConfigSessionGateway::getHelperColumns() everywhere else.
+     */
+    public static function getHelperDefinitions(): array
+    {
+        $requestStack = OpenDxp::getContainer()->get('request_stack');
+
+        if (!$requestStack->getMainRequest()?->hasSession()) {
+            return [];
+        }
+
+        return (new GridColumnConfigSessionGateway($requestStack))->getHelperColumns();
     }
 
     /**

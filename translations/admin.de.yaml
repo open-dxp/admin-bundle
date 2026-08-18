@@ -331,6 +331,7 @@ email_log_resend_window_error_message: 'Ein Fehler ist aufgetreten. Die E-Mail k
 email_log_resend_window_msg: 'Bitte bestätige, dass du die E-Mail wiederholt an alle Empfänger versenden möchtest.'
 email_log_resend_window_success_message: 'Die E-Mail wurde erfolgreich an alle Empfänger versendet.'
 email_log_sent_Date: 'Datum gesendet'
+email_log_export_confirmation: 'Sie sind dabei, %s Email-Log-Einträge zu exportieren. Möchten Sie fortfahren?'
 email_log_subject: 'Subject'
 email_log_to: 'An'
 email_logs: 'Versendete E-Mails'
