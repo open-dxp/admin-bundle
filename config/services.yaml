@@ -124,6 +124,7 @@ services:
 
     OpenDxp\Bundle\AdminBundle\Service\Email\UnusableRecipientDetector: ~
     OpenDxp\Bundle\AdminBundle\Service\Email\EmailLogListingFactory: ~
+    OpenDxp\Bundle\AdminBundle\Service\Email\EmailLogCleaner: ~
 
     OpenDxp\Bundle\AdminBundle\Service\Login\LoginPageService: ~
 
