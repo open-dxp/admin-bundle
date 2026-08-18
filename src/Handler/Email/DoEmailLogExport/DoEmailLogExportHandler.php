@@ -80,8 +80,6 @@ final class DoEmailLogExportHandler
 
                 $offset += self::PAGE_SIZE;
 
-                // a short page means the end: getTotalCount() ignores limit and offset, so it
-                // would report the same number on every pass
             } while (count($entries) === self::PAGE_SIZE);
 
             rewind($temp);
