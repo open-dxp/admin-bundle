@@ -22,6 +22,8 @@ use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\CreateBlocklistEntry\Crea
 use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\DeleteBlocklistEntry\DeleteBlocklistEntryHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\Blocklist\UpdateBlocklistEntry\UpdateBlocklistEntryHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\CleanupEmailLogs\CleanupEmailLogsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Email\CleanupEmailLogs\CleanupEmailLogsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\DeleteEmailLog\DeleteEmailLogHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\DoEmailLogExport\DoEmailLogExportHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\DoEmailLogExport\DoEmailLogExportPayload;
@@ -158,6 +160,15 @@ class EmailController extends AdminAbstractController
         IdQueryPayload $payload,
     ): JsonResponse {
         return $this->apiJson($handler($payload), envelope: false);
+    }
+
+    #[IsGranted(CorePermission::Emails->value)]
+    #[Route('/cleanup-email-logs', name: 'opendxp_admin_email_cleanupemaillogs', methods: ['DELETE'])]
+    public function cleanupEmailLogsAction(
+        CleanupEmailLogsHandler $handler,
+        CleanupEmailLogsPayload $payload,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
     }
 
     #[IsGranted(CorePermission::Emails->value)]

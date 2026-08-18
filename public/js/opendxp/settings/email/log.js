@@ -18,6 +18,7 @@ opendxp.registerNS('opendxp.settings.email.log');
 opendxp.settings.email.log = Class.create({
 
     filterField: null,
+    cleanupUrl: null,
     exportPrepareUrl: null,
     exportProcessUrl: null,
     exportDownloadUrl: null,
@@ -26,6 +27,7 @@ opendxp.settings.email.log = Class.create({
 
     initialize: function(document) {
         this.document = document;
+        this.cleanupUrl = Routing.generate('opendxp_admin_email_cleanupemaillogs');
         this.exportPrepareUrl = Routing.generate('opendxp_admin_email_exportemaillogs_prepare');
         this.exportProcessUrl = Routing.generate('opendxp_admin_email_exportemaillogs');
         this.exportDownloadUrl = Routing.generate('opendxp_admin_email_exportemaillogs_download');
@@ -421,7 +423,9 @@ opendxp.settings.email.log = Class.create({
                     tooltip: t('delete'),
                     icon: '/bundles/opendxpadmin/img/flat-color-icons/delete.svg',
                     handler: function (grid, rowIndex) {
+
                         let data = grid.getStore().getAt(rowIndex);
+
                         opendxp.helpers.deleteConfirm(t('email_log'), data.id, function () {
                             var rec = grid.getStore().getAt(rowIndex);
                             Ext.Ajax.request({
@@ -430,20 +434,17 @@ opendxp.settings.email.log = Class.create({
                                 success: function(response){
                                     var data = Ext.decode( response.responseText );
                                     if(!data.success){
-                                        Ext.Msg.alert(t('error'),
-                                            t('error_deleting_item'));
+                                        Ext.Msg.alert(t('error'), t('error_deleting_item'));
                                     }
 
                                     grid.getStore().reload();
                                 },
                                 failure: function () {
-                                    Ext.Msg.alert(t('error'),
-                                        t('error_deleting_item'));
+                                    Ext.Msg.alert(t('error'), t('error_deleting_item'));
                                 },
                                 params: { id : rec.get('id') }
                             });
                         }.bind(this));
-
 
                     }.bind(this)
                 }]
@@ -471,20 +472,30 @@ opendxp.settings.email.log = Class.create({
 
         this.selectionColumn = new Ext.selection.CheckboxModel();
 
+        var toolbarItems = ['->'];
+
+        // cleaning up belongs to the global email panel only!
+        if (!this.document) {
+            toolbarItems.push({
+                text: t('cleanup'),
+                iconCls: 'opendxp_icon_cleanup',
+                handler: this.showCleanupWindow.bind(this)
+            }, '-');
+        }
+
+        toolbarItems.push({
+            text: t('export_csv'),
+            iconCls: 'opendxp_icon_export',
+            handler: this.doExport.bind(this)
+        }, '-', {
+            text: t('filter') + '/' + t('search'),
+            xtype: 'tbtext',
+            style: 'margin: 0 10px 0 0;'
+        }, this.filterField);
+
         var toolbar = Ext.create('Ext.Toolbar', {
             cls: 'opendxp_main_toolbar',
-            items: [
-                '->',
-                {
-                    text: t('export_csv'),
-                    iconCls: 'opendxp_icon_export',
-                    handler: this.doExport.bind(this)
-                }, '-', {
-                    text: t('filter') + '/' + t('search'),
-                    xtype: 'tbtext',
-                    style: 'margin: 0 10px 0 0;'
-                },this.filterField
-            ]
+            items: toolbarItems
         });
 
         this.grid = new Ext.grid.GridPanel({
@@ -509,6 +520,73 @@ opendxp.settings.email.log = Class.create({
         });
 
         return this.grid;
+    },
+
+    showCleanupWindow: function () {
+
+        var daysField = new Ext.form.field.Number({
+            fieldLabel: t('email_log_cleanup_older_than_days'),
+            value: 30,
+            minValue: 1,
+            allowBlank: false,
+            allowDecimals: false,
+            labelWidth: 280,
+            anchor: '100%'
+        });
+
+        var win = new Ext.Window({
+            title: t('email_log_cleanup'),
+            iconCls: 'opendxp_icon_cleanup',
+            width: 480,
+            modal: true,
+            bodyStyle: 'padding: 10px;',
+            layout: 'anchor',
+            items: [daysField],
+            buttons: [{
+                text: t('cancel'),
+                handler: function () {
+                    win.close();
+                }
+            }, {
+                text: t('cleanup'),
+                iconCls: 'opendxp_icon_cleanup',
+                handler: function () {
+                    if (!daysField.isValid()) {
+                        return;
+                    }
+
+                    this.cleanup(daysField.getValue(), win);
+                }.bind(this)
+            }]
+        });
+
+        win.show();
+    },
+
+    cleanup: function (olderThanDays, win) {
+
+        win.setLoading(t('please_wait'));
+
+        Ext.Ajax.request({
+            url: this.cleanupUrl,
+            method: 'DELETE',
+            params: {
+                olderThanDays: olderThanDays
+            },
+            callback: function () {
+                win.setLoading(false);
+            },
+            success: function (response) {
+                var rdata = Ext.decode(response.responseText);
+                win.close();
+
+                if (rdata) {
+                    opendxp.helpers.showNotification(t('success'), sprintf(t('email_log_cleanup_success'), rdata.deleted), 'success');
+                }
+
+                this.store.reload();
+            }.bind(this)
+        });
     },
 
     doExport: function () {
