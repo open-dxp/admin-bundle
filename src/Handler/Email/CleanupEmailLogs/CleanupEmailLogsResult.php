@@ -20,8 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\ResultInterface;
 
 final readonly class CleanupEmailLogsResult implements ResultInterface
 {
-    public function __construct(
-        public int $deleted,
-    ) {
+    public function __construct(public int $deleted,)
+    {
     }
 }

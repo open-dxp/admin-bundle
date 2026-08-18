@@ -23,9 +23,8 @@ final readonly class CleanupEmailLogsPayload implements ExtJsPayloadInterface
 {
     public const int MINIMUM_DAYS = 1;
 
-    public function __construct(
-        public readonly int $olderThanDays,
-    ) {
+    public function __construct(public readonly int $olderThanDays,)
+    {
     }
 
     public static function fromRequest(Request $request): static
