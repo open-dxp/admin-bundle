@@ -12,7 +12,7 @@
  */
 
 
-opendxp.registerNS("opendxp.settings.user.panels.abstract");
+opendxp.registerNS('opendxp.settings.user.panels.abstract');
 /**
  * @private
  */
@@ -37,10 +37,10 @@ opendxp.settings.user.panels.abstract = Class.create({
 
     getTreeNodeListeners: function () {
         var treeNodeListeners = {
-            'itemclick' : this.onTreeNodeClick.bind(this),
+            'itemclick': this.onTreeNodeClick.bind(this),
             'itemcontextmenu': this.onTreeNodeContextmenu.bind(this),
             'beforeitemappend': function (thisNode, newChildNode, index, eOpts) {
-                newChildNode.data.qtip = t('id') +  ": " + newChildNode.data.id;
+                newChildNode.data.qtip = t('id') + ': ' + newChildNode.data.id;
             }
         };
 
@@ -51,20 +51,20 @@ opendxp.settings.user.panels.abstract = Class.create({
     remove: function (tree, record) {
 
         Ext.MessageBox.show({
-            title:t('delete'),
-            msg: record.hasChildNodes() ? t("are_you_sure_recursive") : sprintf(t("delete_message_advanced"), t('user'), record.data.text),
-            buttons: Ext.Msg.OKCANCEL ,
+            title: t('delete'),
+            msg: record.hasChildNodes() ? t('are_you_sure_recursive') : sprintf(t('delete_message_advanced'), t('user'), record.data.text),
+            buttons: Ext.Msg.OKCANCEL,
             icon: record.hasChildNodes() ? Ext.MessageBox.WARNING : Ext.MessageBox.QUESTION,
             fn: function (button) {
-                if (button == "ok") {
+                if (button == 'ok') {
                     Ext.Ajax.request({
                         url: Routing.generate('opendxp_admin_user_delete'),
                         method: 'DELETE',
                         params: {
                             id: record.data.id
                         },
-                        success: function() {
-                            var userPanelKey = "user_" + record.data.id;
+                        success: function () {
+                            var userPanelKey = 'user_' + record.data.id;
                             if (this.panels[userPanelKey]) {
                                 this.panels[userPanelKey].panel.close();
                                 delete this.panels[userPanelKey];
@@ -88,7 +88,7 @@ opendxp.settings.user.panels.abstract = Class.create({
         }
         var pid = parentNode.data.id;
         Ext.MessageBox.prompt(t('add'), t('enter_the_name_of_the_new_item'), function (button, value, object) {
-            if(button=='ok' && value != ''){
+            if (button == 'ok' && value != '') {
                 var params = {
                     parentId: pid,
                     type: type,
