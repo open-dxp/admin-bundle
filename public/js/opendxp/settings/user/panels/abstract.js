@@ -83,22 +83,25 @@ opendxp.settings.user.panels.abstract = Class.create({
             rid = cloneRecord.data.id;
             parentNode = cloneRecord.parentNode;
         } else {
-            rid = 0;
+            rid = null;
             parentNode = selectedRecord;
         }
         var pid = parentNode.data.id;
         Ext.MessageBox.prompt(t('add'), t('enter_the_name_of_the_new_item'), function (button, value, object) {
             if(button=='ok' && value != ''){
+                var params = {
+                    parentId: pid,
+                    type: type,
+                    name: value,
+                    active: true
+                };
+                if (rid !== null) {
+                    params.rid = rid;
+                }
                 Ext.Ajax.request({
                     url: Routing.generate('opendxp_admin_user_add'),
                     method: 'POST',
-                    params: {
-                        parentId: pid,
-                        type: type,
-                        name: value,
-                        active: true,
-                        rid: rid
-                    },
+                    params: params,
                     success: this.addComplete.bind(this, parentNode)
                 });
             }
