@@ -84,14 +84,14 @@ opendxp.object.helpers.grid = Class.create({
                 var key = fieldConfig.key;
                 var readerFieldConfig = {name: key};
                 // dynamic select returns data + options on cell level
-                if ((type == "select" || type == "multiselect") && fieldConfig.layout.optionsProviderType !== opendxp.object.helpers.selectField.OPTIONS_PROVIDER_TYPE_CONFIGURE && fieldConfig.layout.optionsProviderClass) {
+                if ((type === "select" || type === "multiselect") && fieldConfig.layout.optionsProviderType !== opendxp.object.helpers.selectField.OPTIONS_PROVIDER_TYPE_CONFIGURE && fieldConfig.layout.optionsProviderClass) {
                     if (typeof noBatchColumns != "undefined") {
                         if (fieldConfig.layout.dynamicOptions) {
                             noBatchColumns.push(key);
                         }
                     }
 
-                    if (type == "select") {
+                    if (type === "select") {
                         readerFieldConfig["convert"] = function (key, v, rec) {
                             if (v && typeof v.options !== "undefined") {
                                 // split it up and store the options in a separate field
@@ -152,7 +152,7 @@ opendxp.object.helpers.grid = Class.create({
             },
             listeners: {
                 exception: function (proxy, request, operation, eOpts) {
-                    if(operation.getAction() == "update") {
+                    if(operation.getAction() === "update") {
                         Ext.MessageBox.alert(t('error'),
                             t('cannot_save_object_please_try_to_edit_the_object_in_detail_view'));
                         this.store.rejectChanges();
@@ -224,7 +224,7 @@ opendxp.object.helpers.grid = Class.create({
             var field = fields[i];
 
             var width = this.getColumnWidth(field, null);
-            if(field.key == "subtype") {
+            if(field.key === "subtype") {
                 var columnConfig = {
                     text: t("type"),
                     sortable: true,
@@ -242,7 +242,7 @@ opendxp.object.helpers.grid = Class.create({
                     columnConfig.width = width;
                 }
                 gridColumns.push(columnConfig);
-            } else if(field.key == "id") {
+            } else if(field.key === "id") {
                 var columnConfig = {
                     text: 'ID',
                     sortable: true,
@@ -257,17 +257,17 @@ opendxp.object.helpers.grid = Class.create({
                     columnConfig.width = width;
                 }
                 gridColumns.push(columnConfig);
-            } else if(field.key == "published") {
+            } else if(field.key === "published") {
                 gridColumns.push(new Ext.grid.column.Check({
                     text: t("published"),
-                    width: 40,
+                    width: this.getColumnWidth(field, 40),
                     sortable: true,
                     filter: 'boolean',
                     dataIndex: "published",
                     disabled: this.isSearch,
                     locked: this.getColumnLock(field)
                 }));
-            } else if(field.key == "fullpath") {
+            } else if(field.key === "fullpath") {
                 var columnConfig = {
                     text: t("path"),
                     sortable: true,
@@ -282,7 +282,7 @@ opendxp.object.helpers.grid = Class.create({
                 }
 
                 gridColumns.push(columnConfig);
-            } else if(field.key == "filename") {
+            } else if(field.key === "filename") {
                 var columnConfig = {
                     text: t("filename"),
                     sortable: true,
@@ -297,7 +297,7 @@ opendxp.object.helpers.grid = Class.create({
                     columnConfig.width = width;
                 }
                 gridColumns.push(columnConfig);
-            } else if(field.key == "key") {
+            } else if(field.key === "key") {
                 var columnConfig = {
                     text: t("key"),
                     sortable: true,
@@ -314,7 +314,7 @@ opendxp.object.helpers.grid = Class.create({
                 }
 
                 gridColumns.push(columnConfig);
-            } else if(field.key == "classname") {
+            } else if(field.key === "classname") {
                 var columnConfig = {
                     text: t("class"),
                     sortable: true,
@@ -330,15 +330,15 @@ opendxp.object.helpers.grid = Class.create({
                 }
 
                 gridColumns.push(columnConfig);
-            } else if(field.key == "index") {
+            } else if(field.key === "index") {
                 gridColumns.push({text: t("index") + " (System)", width: this.getColumnWidth(field, 160), sortable: false,
                     dataIndex: "index", editable: false});
-            } else if(field.key == "creationDate") {
+            } else if(field.key === "creationDate") {
                 gridColumns.push({text: t("creationdate") + " (System)", width: this.getColumnWidth(field, 160), sortable: true,
                     dataIndex: "creationDate", filter: 'date', editable: false, locked: this.getColumnLock(field), renderer: function(d) {
                         return Ext.Date.format(d, opendxp.globalmanager.get('localeDateTime').getDateTimeFormat());
                     }/*, hidden: !propertyVisibility.creationDate*/});
-            } else if(field.key == "modificationDate") {
+            } else if(field.key === "modificationDate") {
                 gridColumns.push({text: t("modificationdate") + " (System)", width: this.getColumnWidth(field, 160), sortable: true,
                     dataIndex: "modificationDate", filter: 'date', editable: false, locked: this.getColumnLock(field), renderer: function(d) {
 
@@ -387,10 +387,12 @@ opendxp.object.helpers.grid = Class.create({
                     if (tag) {
                         var fc = tag.getGridColumnConfig(field);
 
-                        if(width === null) {
-                            fc.autoSizeColumn = true;
-                        } else {
+                        if(width !== null) {
                             fc.width = width;
+                        } else if(!fc.width) {
+                            // several field types carry their own default width, auto-sizing would
+                            // measure a lazily loaded thumbnail as empty and collapse the column
+                            fc.autoSizeColumn = true;
                         }
                         
                         if (field.layout.decimalPrecision) {
@@ -454,11 +456,11 @@ opendxp.object.helpers.grid = Class.create({
         var fields = this.fields;
         for (var i = 0; i < fields.length; i++) {
 
-            if(fields[i].key != "id" && fields[i].key != "published" && fields[i].key != "key"
-                && fields[i].key != "filename" && fields[i].key != "classname"
-                && fields[i].key != "creationDate" && fields[i].key != "modificationDate") {
+            if(fields[i].key !== "id" && fields[i].key != "published" && fields[i].key !== "key"
+                && fields[i].key !== "filename" && fields[i].key !== "classname"
+                && fields[i].key !== "creationDate" && fields[i].key !== "modificationDate") {
 
-                if (fields[i].key == "fullpath") {
+                if (fields[i].key === "fullpath") {
                     configuredFilters.fullpath = {
                         type: "string"
                     };
@@ -500,9 +502,9 @@ opendxp.object.helpers.grid = Class.create({
                 continue;
             }
 
-            if(fields[i].key != "id" && fields[i].key != "published" && fields[i].key != "fullpath"
-                && fields[i].key != "filename" && fields[i].key != "classname" && fields[i].key != "key"
-                && fields[i].key != "creationDate" && fields[i].key != "modificationDate") {
+            if(fields[i].key !== "id" && fields[i].key !== "published" && fields[i].key !== "fullpath"
+                && fields[i].key !== "filename" && fields[i].key !== "classname" && fields[i].key != "key"
+                && fields[i].key !== "creationDate" && fields[i].key !== "modificationDate") {
 
                 var fieldType = fields[i].type;
                 var tag = opendxp.object.tags[fieldType];

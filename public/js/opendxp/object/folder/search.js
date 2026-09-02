@@ -321,8 +321,13 @@ opendxp.object.search = Class.create(opendxp.object.helpers.gridTabAbstract, {
                 listeners: {
                     refresh: function (dataview) {
                         Ext.each(dataview.panel.columns, function (column) {
-                            if (column.autoSizeColumn === true) {
+                            // a width differing from the last measurement was chosen by the user and must survive the reload
+                            if (
+                                column.autoSizeColumn === true &&
+                                (column.autoSizedWidth === undefined || column.width === column.autoSizedWidth)
+                            ) {
                                 column.autoSize();
+                                column.autoSizedWidth = column.width;
                             }
                         })
                     }
@@ -331,7 +336,7 @@ opendxp.object.search = Class.create(opendxp.object.helpers.gridTabAbstract, {
             listeners: {
                 celldblclick: function(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
                     var columns = grid.grid.getColumnManager().getColumns();
-                    if (columns[cellIndex].dataIndex == 'id' || columns[cellIndex].dataIndex == 'fullpath') {
+                    if (columns[cellIndex].dataIndex === 'id' || columns[cellIndex].dataIndex === 'fullpath') {
                         var data = this.store.getAt(rowIndex);
                         opendxp.helpers.openObject(data.get("id"), data.get("type"));
                     }
