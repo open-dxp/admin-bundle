@@ -156,7 +156,9 @@ opendxp.object.helpers.gridTabAbstract = Class.create({
                     name: name,
                     position: i,
                     hidden: cm[i].hidden,
-                    width: cm[i].width,
+                    // a width still equal to the auto-size measurement is not a user choice,
+                    // storing it would freeze the column at whatever the first render produced
+                    width: cm[i].width === cm[i].autoSizedWidth ? null : cm[i].width,
                     locked: cm[i].locked,
                     fieldConfig: this.fieldObject[name],
                     isOperator: this.fieldObject[name].isOperator
@@ -275,7 +277,7 @@ opendxp.object.helpers.gridTabAbstract = Class.create({
             });
         }
 
-        this.languageInfo.setText(t("grid_current_language") + ": " + (this.gridLanguage == "default" ? t("default") : opendxp.available_languages[this.gridLanguage]));
+        this.languageInfo.setText(t("grid_current_language") + ": " + (this.gridLanguage === "default" ? t("default") : opendxp.available_languages[this.gridLanguage]));
 
         var hideSaveColumnConfig = !fromConfig || save;
 
