@@ -74,9 +74,7 @@ final class UpdateDocumentHandler
                         $intendedPath .= $parentDocument->getKey() . '/';
                     }
 
-                    $documentWithSamePath = Document::getByPath($intendedPath . $document->getKey());
-
-                    if ($documentWithSamePath != null) {
+                    if (Document\Service::pathExists($intendedPath . $document->getKey())) {
                         $allowUpdate = false;
                     }
 
