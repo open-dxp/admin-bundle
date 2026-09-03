@@ -29,13 +29,19 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\ConvertDocument;
 
+use Doctrine\DBAL\Connection;
 use OpenDxp\Cache\RuntimeCache;
+use OpenDxp\Config;
 use OpenDxp\Model\Document;
 use OpenDxp\Tool;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ConvertDocumentHandler
 {
+    public function __construct(private readonly Connection $db)
+    {
+    }
+
     public function __invoke(ConvertDocumentPayload $payload): void
     {
         $document = Document::getById($payload->id);
@@ -48,6 +54,7 @@ final class ConvertDocumentHandler
             return;
         }
 
+        $previousType = $document->getType();
         $new = new $class;
 
         // overwrite internal store to avoid "duplicate full path" error
@@ -69,5 +76,21 @@ final class ConvertDocumentHandler
 
         $new->setType($payload->type);
         $new->save();
+
+        $this->removeRowOfPreviousType($document->getId(), $previousType, $payload->type);
+    }
+
+    private function removeRowOfPreviousType(int $id, string $previousType, string $newType): void
+    {
+        if ($previousType === $newType) {
+            return;
+        }
+
+        $config = Config::getSystemConfiguration('documents') ?? [];
+        $validTable = $config['type_definitions']['map'][$previousType]['valid_table'] ?? null;
+
+        if ($validTable) {
+            $this->db->delete('documents_' . $validTable, ['id' => $id]);
+        }
     }
 }
