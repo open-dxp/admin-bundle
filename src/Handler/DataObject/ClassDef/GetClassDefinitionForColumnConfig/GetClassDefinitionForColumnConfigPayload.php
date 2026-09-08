@@ -31,7 +31,7 @@ final readonly class GetClassDefinitionForColumnConfigPayload implements ExtJsPa
     {
         return new static(
             id: $request->query->getString('id') ?: null,
-            objectId: $request->query->getInt('oid'),
+            objectId: ($v = $request->query->get('oid')) !== null && is_numeric($v) ? (int) $v : 0,
         );
     }
 }

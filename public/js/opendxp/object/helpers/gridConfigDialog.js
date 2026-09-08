@@ -11,7 +11,7 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-opendxp.registerNS("opendxp.object.helpers.gridConfigDialog");
+opendxp.registerNS('opendxp.object.helpers.gridConfigDialog');
 /**
  * @private
  */
@@ -28,8 +28,8 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
 
             this.brickKeys = [];
             this.leftPanel = new Ext.Panel({
-                cls: "opendxp_panel_tree opendxp_gridconfig_leftpanel",
-                region: "center",
+                cls: 'opendxp_panel_tree opendxp_gridconfig_leftpanel',
+                region: 'center',
                 split: true,
                 width: 300,
                 minSize: 175,
@@ -43,7 +43,7 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
                 layoutConfig: {
                     animate: false
                 },
-                hideMode: "offsets",
+                hideMode: 'offsets',
                 items: items
             });
         }
@@ -95,13 +95,13 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
             }.bind(this));
         }
 
-        var user = opendxp.globalmanager.get("user");
+        var user = opendxp.globalmanager.get('user');
 
         if (this.showSaveAndShareTab) {
             this.settings = Ext.apply(this.settings, this.settingsForm.getForm().getFieldValues());
         }
 
-        if (this.showSaveAndShareTab && user.isAllowed("share_configurations")) {
+        if (this.showSaveAndShareTab && user.isAllowed('share_configurations')) {
 
             if (this.settings.sharedUserIds != null) {
                 this.settings.sharedUserIds = this.settings.sharedUserIds.join();
@@ -169,20 +169,20 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
             url: Routing.generate('opendxp_admin_dataobject_dataobject_gridproxy', {classId: this.previewSettings.classId, folderId: this.previewSettings.objectId}),
             method: 'POST',
             params: {
-                "fields[]": keys,
+                'fields[]': keys,
                 language: language,
                 limit: 1,
                 csvMode: csvMode,
                 specificId: this.previewSettings.specificId,
-                context : Ext.encode(this.context)
+                context: Ext.encode(this.context)
             },
             success: function (response) {
                 let responseData = Ext.decode(response.responseText);
                 if (responseData && responseData.data && responseData.data.length == 1) {
-                    let rootNode = this.selectionPanel.getRootNode()
+                    let rootNode = this.selectionPanel.getRootNode();
                     let childNodes = rootNode.childNodes;
                     let previewItem = responseData.data[0];
-                    let store = this.selectionPanel.getStore()
+                    let store = this.selectionPanel.getStore();
                     let i;
                     let count = childNodes.length;
 
@@ -195,7 +195,7 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
                         let value = previewItem[columnKey];
 
                         let record = store.getById(nodeId);
-                        record.set("preview", value, {
+                        record.set('preview', value, {
                             commit: true
                         });
                     }
@@ -222,19 +222,19 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
                 } else {
                     let text = t(nodeConf.label);
 
-                    const keyText = ` (${nodeConf.key.replace("~", ".")})`;
-                    if (nodeConf.dataType !== "system" && this.showFieldname && nodeConf.key && !text.includes(keyText)) {
+                    const keyText = ` (${nodeConf.key.replace('~', '.')})`;
+                    if (nodeConf.dataType !== 'system' && this.showFieldname && nodeConf.key && !text.includes(keyText)) {
                         text = text + keyText;
                     }
 
                     var child = {
                         text: text,
                         key: nodeConf.key,
-                        type: "data",
+                        type: 'data',
                         dataType: nodeConf.dataType,
                         leaf: true,
                         layout: nodeConf.layout,
-                        iconCls: "opendxp_icon_" + nodeConf.dataType
+                        iconCls: 'opendxp_icon_' + nodeConf.dataType
                     };
                     if (nodeConf.width) {
                         child.width = nodeConf.width;
@@ -254,17 +254,17 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
 
             var store = new Ext.data.TreeStore({
                 fields: [{
-                    name: "text"
+                    name: 'text'
                 }, {
-                    name: "preview",
+                    name: 'preview',
                     persist: false
                 }
 
                 ],
                 root: {
-                    id: "0",
+                    id: '0',
                     root: true,
-                    text: t("selected_grid_columns"),
+                    text: t('selected_grid_columns'),
                     leaf: false,
                     isTarget: true,
                     expanded: true,
@@ -296,12 +296,12 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
                             var key = record.data.key;
                             record.data.inheritedFields = {};
 
-                            if (key == "modificationDate" || key == "creationDate") {
+                            if (key == 'modificationDate' || key == 'creationDate') {
                                 var timestamp = intval(value) * 1000;
                                 var date = new Date(timestamp);
                                 return Ext.Date.format(date, opendxp.globalmanager.get('localeDateTime').getShortDateTimeFormat());
 
-                            } else if (key == "published") {
+                            } else if (key == 'published') {
                                 return Ext.String.format('<div style="text-align: left"><div role="button" class="x-grid-checkcolumn{0}" style=""></div></div>', value ? '-checked' : '');
                             } else {
                                 var layout = Ext.clone(record.data.layout) || {};
@@ -330,7 +330,7 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
                                     console.log(e);
                                 }
 
-                                if (typeof value == "string") {
+                                if (typeof value == 'string') {
                                     value = '<div style="max-height: 50px">' + value + '</div>';
                                 }
                                 return value;
@@ -348,7 +348,7 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
                 viewConfig: {
                     plugins: {
                         ptype: 'treeviewdragdrop',
-                        ddGroup: "columnconfigelement"
+                        ddGroup: 'columnconfigelement'
                     },
                     listeners: {
                         beforedrop: function (node, data, overModel, dropPosition, dropHandlers, eOpts) {
@@ -359,7 +359,7 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
                                 var record = data.records[0];
                                 var isOperator = record.data.isOperator;
                                 var realOverModel = overModel;
-                                if (dropPosition == "before" || dropPosition == "after") {
+                                if (dropPosition == 'before' || dropPosition == 'after') {
                                     realOverModel = overModel.parentNode;
                                 }
 
@@ -367,7 +367,7 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
                                     let copy = this.handleOperator(record);
                                     data.records = [copy]; // assign the copy as the new dropNode
                                 } else {
-                                    if (this.selectionPanel.getRootNode().findChild("key", record.data.key)) {
+                                    if (this.selectionPanel.getRootNode().findChild('key', record.data.key)) {
                                         dropHandlers.cancelDrop();
                                     } else {
                                         var copy = Ext.apply({}, record.data);
@@ -376,7 +376,7 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
 
                                         var ownerTree = this.selectionPanel;
 
-                                        if (record.data.dataType == "classificationstore") {
+                                        if (record.data.dataType == 'classificationstore') {
                                             setTimeout(function () {
                                                 var ccd = new opendxp.object.classificationstore.columnConfigDialog();
                                                 ccd.getConfigDialog(ownerTree, copy, this.selectionPanel);
@@ -390,7 +390,7 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
                                 var record = data.records[0];
                                 var isOperator = record.data.isOperator;
                                 var realOverModel = overModel;
-                                if (dropPosition == "before" || dropPosition == "after") {
+                                if (dropPosition == 'before' || dropPosition == 'after') {
                                     realOverModel = overModel.parentNode;
                                 }
 
@@ -430,26 +430,26 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
 
                             if (sourceNode.data.isOperator) {
                                 var realOverModel = targetNode;
-                                if (dropPosition == "before" || dropPosition == "after") {
+                                if (dropPosition == 'before' || dropPosition == 'after') {
                                     realOverModel = realOverModel.parentNode;
                                 }
 
                                 var allowed = true;
 
 
-                                if (typeof realOverModel.data.isChildAllowed == "function") {
-                                    console.log("no child allowed");
+                                if (typeof realOverModel.data.isChildAllowed == 'function') {
+                                    console.log('no child allowed');
                                     allowed = allowed && realOverModel.data.isChildAllowed(realOverModel, sourceNode);
                                 }
 
-                                if(realOverModel.data.maxChildCount) {
+                                if (realOverModel.data.maxChildCount) {
                                     if (realOverModel.childNodes.length >= realOverModel.data.maxChildCount) {
                                         allowed = false;
                                     }
                                 }
 
-                                if (typeof sourceNode.data.isParentAllowed == "function") {
-                                    console.log("parent not allowed");
+                                if (typeof sourceNode.data.isParentAllowed == 'function') {
+                                    console.log('parent not allowed');
                                     allowed = allowed && sourceNode.data.isParentAllowed(realOverModel, sourceNode);
                                 }
 
@@ -460,21 +460,21 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
 
                                 var allowed = true;
                                 if (this.parentIsOperator(targetNode)) {
-                                    if (dropPosition == "before" || dropPosition == "after") {
+                                    if (dropPosition == 'before' || dropPosition == 'after') {
                                         targetNode = targetNode.parentNode;
                                     }
 
-                                    if (typeof targetNode.data.isChildAllowed == "function") {
+                                    if (typeof targetNode.data.isChildAllowed == 'function') {
                                         allowed = allowed && targetNode.data.isChildAllowed(targetNode, sourceNode);
                                     }
 
-                                    if(targetNode.data.maxChildCount) {
+                                    if (targetNode.data.maxChildCount) {
                                         if (targetNode.childNodes.length >= targetNode.data.maxChildCount) {
                                             allowed = false;
                                         }
                                     }
 
-                                    if (typeof sourceNode.data.isParentAllowed == "function") {
+                                    if (typeof sourceNode.data.isParentAllowed == 'function') {
                                         allowed = allowed && sourceNode.data.isParentAllowed(targetNode, sourceNode);
                                     }
 
@@ -511,7 +511,7 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
         return this.selectionPanel;
     },
 
-    handleOperator: function(record) {
+    handleOperator: function (record) {
         var attr = record.data;
         if (record.data.configAttributes) {
             attr = record.data.configAttributes;
@@ -547,18 +547,18 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
         var classTreeHelper = new opendxp.object.helpers.classTree(this.showFieldname);
         var tree = classTreeHelper.getClassTree(url, classId, objectId);
 
-        tree.addListener("itemdblclick", function (tree, record, item, index, e, eOpts) {
-            if (!record.data.root && record.data.type != "layout"
+        tree.addListener('itemdblclick', function (tree, record, item, index, e, eOpts) {
+            if (!record.data.root && record.data.type != 'layout'
                 && record.data.dataType != 'localizedfields') {
                 var copy = Ext.apply({}, record.data);
 
-                if (this.selectionPanel && !this.selectionPanel.getRootNode().findChild("key", record.data.key)) {
+                if (this.selectionPanel && !this.selectionPanel.getRootNode().findChild('key', record.data.key)) {
                     delete copy.id;
                     copy = this.selectionPanel.getRootNode().appendChild(copy);
 
                     var ownerTree = this.selectionPanel;
 
-                    if (record.data.dataType == "classificationstore") {
+                    if (record.data.dataType == 'classificationstore') {
                         var ccd = new opendxp.object.classificationstore.columnConfigDialog();
                         ccd.getConfigDialog(ownerTree, copy, this.selectionPanel);
                     } else {
@@ -581,13 +581,13 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
                 var nodeConfig = opendxp.object.gridcolumn.operator[operator].prototype;
                 var configTreeNode = nodeConfig.getConfigTreeNode();
 
-                var operatorGroup = nodeConfig.operatorGroup ? nodeConfig.operatorGroup : "other";
+                var operatorGroup = nodeConfig.operatorGroup ? nodeConfig.operatorGroup : 'other';
 
                 if (!operatorGroups[operatorGroup]) {
                     operatorGroups[operatorGroup] = [];
                 }
 
-                var groupName = nodeConfig.group || "other";
+                var groupName = nodeConfig.group || 'other';
                 if (!operatorGroups[operatorGroup][groupName]) {
                     operatorGroups[operatorGroup][groupName] = [];
                 }
@@ -608,7 +608,7 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
             var operatorGroupName = operatorGroupKeys[i];
             var groupNodes = operatorGroups[operatorGroupName];
             let operatorTree = this.getOperatorTree(operatorGroupName, groupNodes);
-            operatorTree.addListener("itemdblclick", function (tree, record, item, index, e, eOpts) {
+            operatorTree.addListener('itemdblclick', function (tree, record, item, index, e, eOpts) {
                 var copy = this.handleOperator(record);
                 this.selectionPanel.getRootNode().appendChild(copy);
             }.bind(this));

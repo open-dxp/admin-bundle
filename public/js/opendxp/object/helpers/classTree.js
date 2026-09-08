@@ -11,7 +11,7 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-opendxp.registerNS("opendxp.object.helpers.classTree");
+opendxp.registerNS('opendxp.object.helpers.classTree');
 /**
  * @private
  */
@@ -72,7 +72,7 @@ opendxp.object.helpers.classTree = Class.create({
         );
 
         var filterButton = new Ext.button.Button({
-            iconCls: "opendxp_icon_search"
+            iconCls: 'opendxp_icon_search'
         });
 
         var headerConfig = {
@@ -87,16 +87,16 @@ opendxp.object.helpers.classTree = Class.create({
             title: t('class_attributes'),
             iconCls: 'opendxp_icon_gridconfig_class_attributes',
             tbar: headerConfig,
-            region: "center",
+            region: 'center',
             autoScroll: true,
             rootVisible: false,
             bufferedRenderer: false,
             animate: false,
             width: 300,
             root: {
-                id: "0",
+                id: '0',
                 root: true,
-                text: t("base"),
+                text: t('base'),
                 allowDrag: false,
                 leaf: true,
                 isTarget: true
@@ -106,7 +106,7 @@ opendxp.object.helpers.classTree = Class.create({
                     ptype: 'treeviewdragdrop',
                     enableDrag: true,
                     enableDrop: false,
-                    ddGroup: "columnconfigelement"
+                    ddGroup: 'columnconfigelement'
                 }
             }
         });
@@ -121,10 +121,10 @@ opendxp.object.helpers.classTree = Class.create({
         });
 
         filterField.on(
-            "keyup",
+            'keyup',
             Ext.Function.createBuffered(this.updateFilter.bind(this, tree, filterField), 300)
         );
-        filterButton.on("click", this.updateFilter.bind(this, tree, filterField));
+        filterButton.on('click', this.updateFilter.bind(this, tree, filterField));
 
         return tree;
     },
@@ -141,19 +141,19 @@ opendxp.object.helpers.classTree = Class.create({
 
                     var brickDescriptor = {};
 
-                    if (data[keys[i]].nodeType == "objectbricks") {
+                    if (data[keys[i]].nodeType == 'objectbricks') {
                         brickDescriptor = {
                             insideBrick: true,
                             brickType: data[keys[i]].nodeLabel,
                             brickField: data[keys[i]].brickField
                         };
 
-                        text = t(data[keys[i]].nodeLabel) + " " + t("columns");
+                        text = t(data[keys[i]].nodeLabel) + ' ' + t('columns');
                     }
                     var baseNode = {
-                        type: "layout",
+                        type: 'layout',
                         allowDrag: false,
-                        iconCls: "opendxp_icon_" + data[keys[i]].nodeType,
+                        iconCls: 'opendxp_icon_' + data[keys[i]].nodeType,
                         text: text,
                         originalText: text
                     };
@@ -162,7 +162,7 @@ opendxp.object.helpers.classTree = Class.create({
                     for (var j = 0; j < data[keys[i]].children.length; j++) {
                         baseNode.appendChild(this.recursiveAddNode(data[keys[i]].children[j], baseNode, brickDescriptor, this.config));
                     }
-                    if (data[keys[i]].nodeType == "object") {
+                    if (data[keys[i]].nodeType == 'object') {
                         baseNode.expand(true);
                     } else {
                         // baseNode.collapse();
@@ -177,7 +177,7 @@ opendxp.object.helpers.classTree = Class.create({
         var fn = null;
         var newNode = null;
 
-        if (con.fieldtype == "localizedfields") {
+        if (con.fieldtype == 'localizedfields') {
             // create a copy because we have to pop this state
             brickDescriptor = Ext.clone(brickDescriptor);
             Ext.apply(brickDescriptor, {
@@ -185,10 +185,9 @@ opendxp.object.helpers.classTree = Class.create({
             });
         }
 
-        if (con.datatype == "layout") {
+        if (con.datatype == 'layout') {
             fn = this.addLayoutChild.bind(scope, con.fieldtype, con);
-        }
-        else if (con.datatype == "data") {
+        } else if (con.datatype == 'data') {
             fn = this.addDataChild.bind(scope, con.fieldtype, con, this.showFieldName, brickDescriptor, config);
         }
 
@@ -216,11 +215,11 @@ opendxp.object.helpers.classTree = Class.create({
         }
 
         var newNode = {
-            type: "layout",
+            type: 'layout',
             expanded: true,
             expandable: initData.children.length,
             allowDrag: false,
-            iconCls: "opendxp_icon_" + type,
+            iconCls: 'opendxp_icon_' + type,
             text: t(nodeLabel),
             originalText: nodeLabel
         };
@@ -231,12 +230,12 @@ opendxp.object.helpers.classTree = Class.create({
     },
 
     addDataChild: function (type, initData, showFieldname, brickDescriptor, config) {
-        if (type != "objectbricks" && (!initData.invisible || config.showInvisible)) {
+        if (type != 'objectbricks' && (!initData.invisible || config.showInvisible)) {
             var isLeaf = true;
             var draggable = true;
 
             // localizedfields can be a drop target
-            if (type == "localizedfields") {
+            if (type == 'localizedfields') {
                 isLeaf = false;
                 draggable = false;
             }
@@ -249,31 +248,31 @@ opendxp.object.helpers.classTree = Class.create({
                         containerKey: brickDescriptor.brickType,
                         fieldname: brickDescriptor.brickField,
                         brickfield: key
-                    }
-                    key = "?" + Ext.encode(parts) + "~" + key;
+                    };
+                    key = '?' + Ext.encode(parts) + '~' + key;
                 } else {
-                    key = brickDescriptor.brickType + "~" + key;
+                    key = brickDescriptor.brickType + '~' + key;
                 }
             }
 
             var text = t(initData.title);
             if (showFieldname) {
                 if (brickDescriptor && brickDescriptor.insideBrick && brickDescriptor.insideLocalizedFields) {
-                    text = text + "(" + brickDescriptor.brickType + "." + initData.name + ")";
+                    text = text + '(' + brickDescriptor.brickType + '.' + initData.name + ')';
                 } else {
-                    text = text + " (" + key.replace("~", ".") + ")";
+                    text = text + ' (' + key.replace('~', '.') + ')';
                 }
             }
             var newNode = {
                 text: text,
                 key: key,
                 name: initData.name,
-                type: "data",
+                type: 'data',
                 layout: initData,
                 leaf: isLeaf,
                 allowDrag: draggable,
                 dataType: type,
-                iconCls: "opendxp_icon_" + type,
+                iconCls: 'opendxp_icon_' + type,
                 expanded: true,
                 brickDescriptor: brickDescriptor,
                 originalText: text

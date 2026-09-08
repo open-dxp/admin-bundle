@@ -1,5 +1,8 @@
 # Changelog / Upgrade Notes
 
+## 1.4.1
+* Bugfix: Tolerate empty / non-integer `oid` query parameter in `getClassDefinitionForColumnConfig` (regression from #91) [#115](https://github.com/open-dxp/admin-bundle/pull/115)
+
 ## 1.4.0
 * **New Feature**: Replace controller logic with dedicated handler and service classes (CQRS-Lite) [#91](https://github.com/open-dxp/admin-bundle/pull/91)
 * New Feature: Add "use original recipients" option, fix resend and forward recipients [#102](https://github.com/open-dxp/admin-bundle/pull/102)
