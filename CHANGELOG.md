@@ -1,6 +1,10 @@
 # Changelog / Upgrade Notes
 
 ## 1.4.1
+* Improvement: Refine grid logic with strict comparisons and column auto-sizing adjustments [#112](https://github.com/open-dxp/admin-bundle/pull/112)
+* Bugfix: Prevent passing `rid` on scratch user creation [#109](https://github.com/open-dxp/admin-bundle/pull/109)
+* Bugfix: Clean up leftover rows of the previous document type during type conversion [#113](https://github.com/open-dxp/admin-bundle/pull/113)
+* Bugfix: Use the document tree instead of pretty URLs for the move collision check, so a document is no longer blocked by its own pretty URL [#114](https://github.com/open-dxp/admin-bundle/pull/114)
 * Bugfix: Tolerate empty / non-integer `oid` query parameter in `getClassDefinitionForColumnConfig` (regression from #91) [#115](https://github.com/open-dxp/admin-bundle/pull/115)
 
 ## 1.4.0
