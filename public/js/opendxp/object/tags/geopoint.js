@@ -235,6 +235,11 @@ opendxp.object.tags.geopoint = Class.create(opendxp.object.tags.geo.abstract, {
             opendxp.helpers.geocodingRequest(
                 url,
                 function (data) {
+                    // ignore unsuccessful geocoding responses / errors
+                    if (!data || !data.display_name) {
+                        return;
+                    }
+
                     this.currentLocationText = data.display_name;
                     layerObj.bindTooltip(this.currentLocationText);
                     layerObj.openTooltip();

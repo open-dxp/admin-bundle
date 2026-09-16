@@ -60,10 +60,17 @@ opendxp.object.tags.geo.abstract = Class.create(opendxp.object.tags.abstract, {
     },
     
     getLeafletMap: function(lat, lng, mapZoom) {
+        // remove existing map instance if it exists to avoid leaflet errors
+        if (this.leafletMap) {
+            this.leafletMap.remove();
+            this.leafletMap = null;
+        }
+
         document.getElementById('leaflet_maps_container_' + this.mapImageID)
             .innerHTML = '<div id="'+ this.mapId +'" style="height:' + (this.fieldConfig.height - 74) + 'px;width:' + this.fieldConfig.width + 'px;"></div>';
 
         var leafletMap =  L.map(this.mapId).setView([lat, lng], mapZoom);
+        this.leafletMap = leafletMap;
         L.tileLayer(opendxp.settings.tile_layer_url_template, {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                 referrerPolicy: 'strict-origin-when-cross-origin'
@@ -107,6 +114,11 @@ opendxp.object.tags.geo.abstract = Class.create(opendxp.object.tags.abstract, {
         opendxp.helpers.geocodingRequest(
             this.getSearchUrl(address),
             function (data) {
+                if (!Array.isArray(data) || data.length === 0) {
+                    Ext.MessageBox.alert(t('error'), t('address_not_found'));
+                    return;
+                }
+
                 if (data[0].lat !== null && data[0].lon !== null) {
                     const map = this.getLeafletMap(data[0].lat, data[0].lon, 15);
                     this.getLeafletToolbar(map);
