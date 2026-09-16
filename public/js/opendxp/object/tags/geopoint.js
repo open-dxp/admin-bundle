@@ -130,7 +130,13 @@ opendxp.object.tags.geopoint = Class.create(opendxp.object.tags.geo.abstract, {
             this.marker = L.marker([data.latitude, data.longitude], {});
             leafletMap.addLayer(this.marker);
             this.editableLayers.addLayer(this.marker);
-            this.reverseGeocode(this.marker);
+
+            // Resolved on demand only: geocoding the marker on every render sends a
+            // request per geo field each time an object is opened, which the usage
+            // policy of the geocoding service does not allow.
+            this.marker.on('click', function () {
+                this.reverseGeocode(this.marker);
+            }.bind(this));
         } else {
             leafletMap = this.getLeafletMap(
                 fieldConfig.lat,
@@ -199,11 +205,9 @@ opendxp.object.tags.geopoint = Class.create(opendxp.object.tags.geo.abstract, {
 
     geocode: function () {
         const address = this.searchfield.getValue();
-        opendxp.helpers.sendRequest(
-            "GET",
+        opendxp.helpers.geocodingRequest(
             this.getSearchUrl(address),
-            function (response) {
-                const data = Ext.decode(response.responseText);
+            function (data) {
                 if (!Array.isArray(data) || data.length === 0) {
                     Ext.MessageBox.alert(t('error'), t('address_not_found') + '. <br /> <br /> ' +
                         t('possible_causes') + ':' +
@@ -218,19 +222,25 @@ opendxp.object.tags.geopoint = Class.create(opendxp.object.tags.geo.abstract, {
     },
 
     reverseGeocode: function (layerObj) {
-        if (this.latitude.getValue() !== null && this.longitude.getValue() !== null) {
+        if (this.latitude.getValue() === null || this.longitude.getValue() === null) {
+            return;
+        }
+
+        // Moving a marker fires this for every single move, so the request is
+        // delayed and superseded by the next move. The geocoding service allows
+        // at most one request per second.
+        window.clearTimeout(this.reverseGeocodeTimeout);
+        this.reverseGeocodeTimeout = window.setTimeout(function () {
             const url = opendxp.settings.reverse_geocoding_url_template.replace('{lat}', this.latitude.getValue()).replace('{lon}', this.longitude.getValue());
-            opendxp.helpers.sendRequest(
-                "GET",
+            opendxp.helpers.geocodingRequest(
                 url,
-                function (response) {
-                    const data = Ext.decode(response.responseText);
+                function (data) {
                     this.currentLocationText = data.display_name;
                     layerObj.bindTooltip(this.currentLocationText);
                     layerObj.openTooltip();
                 }.bind(this)
             );
-        }
+        }.bind(this), 1000);
     },
 
     getValue: function () {

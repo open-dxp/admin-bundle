@@ -65,7 +65,8 @@ opendxp.object.tags.geo.abstract = Class.create(opendxp.object.tags.abstract, {
 
         var leafletMap =  L.map(this.mapId).setView([lat, lng], mapZoom);
         L.tileLayer(opendxp.settings.tile_layer_url_template, {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                referrerPolicy: 'strict-origin-when-cross-origin'
         }).addTo(leafletMap);
 
         return leafletMap;
@@ -103,11 +104,9 @@ opendxp.object.tags.geo.abstract = Class.create(opendxp.object.tags.abstract, {
 
     geocode: function () {
         const address = this.searchfield.getValue();
-        opendxp.helpers.sendRequest(
-            "GET",
+        opendxp.helpers.geocodingRequest(
             this.getSearchUrl(address),
-            function (response) {
-                const data = Ext.decode(response.responseText);
+            function (data) {
                 if (data[0].lat !== null && data[0].lon !== null) {
                     const map = this.getLeafletMap(data[0].lat, data[0].lon, 15);
                     this.getLeafletToolbar(map);
