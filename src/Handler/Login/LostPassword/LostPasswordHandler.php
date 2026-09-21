@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Login\LostPassword;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\Login\LostPasswordEvent;
-use OpenDxp\Http\Request\Host\GeneralHostResolver;
+use OpenDxp\Bundle\AdminBundle\Security\TrustedLoginLinkHostResolver;
 use OpenDxp\Logger;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
@@ -36,7 +36,7 @@ final class LostPasswordHandler
         private readonly RateLimiterFactory $resetPasswordLimiter,
         private readonly RouterInterface $router,
         private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly GeneralHostResolver $hostResolver,
+        private readonly TrustedLoginLinkHostResolver $hostResolver,
         private readonly RequestStack $requestStack,
     ) {
     }
@@ -78,18 +78,23 @@ final class LostPasswordHandler
             $token = Authentication::generateTokenByUser($user);
 
             try {
-                $domain = $this->hostResolver->resolve(['source' => $this->requestStack->getCurrentRequest()]) ?? '';
+                $domain = $this->hostResolver->resolve($this->requestStack->getCurrentRequest()) ?? '';
                 if (!$domain) {
                     throw new Exception('No main domain set in system settings, unable to generate reset password link');
                 }
 
                 $context = $this->router->getContext();
+                $previousHost = $context->getHost();
                 $context->setHost($domain);
 
-                $loginUrl = $this->router->generate('opendxp_admin_login_check', [
-                    'token' => $token,
-                    'reset' => 'true',
-                ], UrlGeneratorInterface::ABSOLUTE_URL);
+                try {
+                    $loginUrl = $this->router->generate('opendxp_admin_login_check', [
+                        'token' => $token,
+                        'reset' => 'true',
+                    ], UrlGeneratorInterface::ABSOLUTE_URL);
+                } finally {
+                    $context->setHost($previousHost);
+                }
 
                 $event = new LostPasswordEvent($user, $loginUrl);
                 $this->eventDispatcher->dispatch($event, AdminEvents::LOGIN_LOSTPASSWORD);
