@@ -73,7 +73,7 @@ class GetTokenLoginLinkHandlerTest extends LoginLinkHostTestCase
     private function getLinkForRequestTo(string $host): string
     {
         $handler = new GetTokenLoginLinkHandler(
-            userContext: new class () implements AdminUserContextInterface {
+            userContext: new class() implements AdminUserContextInterface {
                 public function getAdminUser(): ?User
                 {
                     return null;

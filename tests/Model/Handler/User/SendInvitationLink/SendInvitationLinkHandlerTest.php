@@ -54,7 +54,7 @@ class SendInvitationLinkHandlerTest extends LoginLinkHostTestCase
         $this->user->save();
 
         $this->mailInterceptor = function (MailEvent $event): void {
-            $event->setArgument('mailer', new class ($this) implements MailerInterface {
+            $event->setArgument('mailer', new class($this) implements MailerInterface {
                 public function __construct(private readonly SendInvitationLinkHandlerTest $test)
                 {
                 }
