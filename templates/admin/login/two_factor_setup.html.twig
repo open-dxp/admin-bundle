@@ -1,7 +1,7 @@
 {% extends '@OpenDxpAdmin/admin/login/layout.html.twig' %}
 
 {% block content %}
-    {% if error is defined %}
+    {% if error is defined and error %}
         <div class="text error">
             {{ error|trans([],'admin') }}
         </div>
