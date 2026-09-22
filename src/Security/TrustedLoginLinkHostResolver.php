@@ -20,7 +20,7 @@ use OpenDxp\Http\Request\Host\GeneralHostResolver;
 use OpenDxp\Model\Site;
 use Symfony\Component\HttpFoundation\Request;
 
-final class TrustedLoginLinkHostResolver
+final class TrustedLoginLinkHostResolver implements TrustedLoginLinkHostResolverInterface
 {
     public function __construct(
         private readonly GeneralHostResolver $generalHostResolver,
@@ -33,6 +33,6 @@ final class TrustedLoginLinkHostResolver
             return $request->getHost();
         }
 
-        return $this->generalHostResolver->resolve(['source' => $request, 'trust_request_host' => true]);
+        return $this->generalHostResolver->resolve(['source' => $request]);
     }
 }

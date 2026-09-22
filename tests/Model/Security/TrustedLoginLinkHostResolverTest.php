@@ -57,12 +57,12 @@ class TrustedLoginLinkHostResolverTest extends LoginLinkHostTestCase
         self::assertSame(self::GENERAL_HOST, $host);
     }
 
-    public function testAsksFallbackProvidersToTrustTheRequestHost(): void
+    public function testAsksFallbackProvidersForTheGeneralHost(): void
     {
         $request = $this->createRequest('attacker.example');
 
         $this->createHostResolver()->resolve($request);
 
-        self::assertSame([['source' => $request, 'trust_request_host' => true]], $this->generalHostProvider->receivedContexts);
+        self::assertSame([['source' => $request]], $this->generalHostProvider->receivedContexts);
     }
 }

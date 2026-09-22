@@ -32,7 +32,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\User\SendInvitationLink;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Generator\CustomLoginUrlGenerator;
-use OpenDxp\Bundle\AdminBundle\Security\TrustedLoginLinkHostResolver;
+use OpenDxp\Bundle\AdminBundle\Security\TrustedLoginLinkHostResolverInterface;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -45,7 +45,7 @@ final class SendInvitationLinkHandler
         private readonly TranslatorInterface $translator,
         private readonly CustomLoginUrlGenerator $loginUrlGenerator,
         private readonly RouterInterface $router,
-        private readonly TrustedLoginLinkHostResolver $hostResolver,
+        private readonly TrustedLoginLinkHostResolverInterface $hostResolver,
         private readonly RequestStack $requestStack,
     ) {
     }

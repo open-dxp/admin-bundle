@@ -31,7 +31,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLink;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Generator\CustomLoginUrlGenerator;
-use OpenDxp\Bundle\AdminBundle\Security\TrustedLoginLinkHostResolver;
+use OpenDxp\Bundle\AdminBundle\Security\TrustedLoginLinkHostResolverInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
@@ -47,7 +47,7 @@ final class GetTokenLoginLinkHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly CustomLoginUrlGenerator $loginUrlGenerator,
         private readonly TranslatorInterface $translator,
-        private readonly TrustedLoginLinkHostResolver $hostResolver,
+        private readonly TrustedLoginLinkHostResolverInterface $hostResolver,
         private readonly RequestStack $requestStack,
         private readonly RouterInterface $router,
     ) {

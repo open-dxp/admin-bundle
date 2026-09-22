@@ -19,7 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Login\LostPassword;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\Login\LostPasswordEvent;
-use OpenDxp\Bundle\AdminBundle\Security\TrustedLoginLinkHostResolver;
+use OpenDxp\Bundle\AdminBundle\Security\TrustedLoginLinkHostResolverInterface;
 use OpenDxp\Logger;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
@@ -36,7 +36,7 @@ final class LostPasswordHandler
         private readonly RateLimiterFactory $resetPasswordLimiter,
         private readonly RouterInterface $router,
         private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly TrustedLoginLinkHostResolver $hostResolver,
+        private readonly TrustedLoginLinkHostResolverInterface $hostResolver,
         private readonly RequestStack $requestStack,
     ) {
     }
