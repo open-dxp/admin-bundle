@@ -3531,3 +3531,70 @@ opendxp.helpers.sendRequest = function (
     request.open(method, url);
     request.send();
 };
+
+// Sends a request to the configured geocoding service (Nominatim by default).
+//
+// The OSM geocoding usage policy allows an absolute maximum of one request per
+// second and requires results to be cached, so every geo field on the page has
+// to share a single queue instead of requesting on its own. Repeatedly sending
+// the same query gets the instance blocked.
+// See https://operations.osmfoundation.org/policies/nominatim/
+opendxp.helpers.geocodingRequest = (function () {
+    const minRequestInterval = 1000;
+    const cache = new Map();
+    const queue = [];
+    let lastRequestAt = 0;
+    let pending = false;
+
+    const finish = function () {
+        pending = false;
+        next();
+    };
+
+    const next = function () {
+        if (pending || queue.length === 0) {
+            return;
+        }
+
+        pending = true;
+        const job = queue.shift();
+
+        if (cache.has(job.url)) {
+            job.successCallback(cache.get(job.url));
+            finish();
+
+            return;
+        }
+
+        const delay = Math.max(0, minRequestInterval - (Date.now() - lastRequestAt));
+
+        window.setTimeout(function () {
+            lastRequestAt = Date.now();
+
+            opendxp.helpers.sendRequest(
+                'GET',
+                job.url,
+                function (response) {
+                    let data = null;
+                    try {
+                        data = Ext.decode(response.responseText);
+                    } catch (e) {
+                        job.failureCallback(response);
+
+                        return;
+                    }
+
+                    cache.set(job.url, data);
+                    job.successCallback(data);
+                },
+                job.failureCallback,
+                finish
+            );
+        }, delay);
+    };
+
+    return function (url, successCallback = function (data) {}, failureCallback = function (response) {}) {
+        queue.push({url: url, successCallback: successCallback, failureCallback: failureCallback});
+        next();
+    };
+})();
