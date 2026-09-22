@@ -1,7 +1,9 @@
 # Changelog / Upgrade Notes
 
 ## 1.4.2
-* Improvement: One-time login links (lost password, user invitation, token login) now use the requested host if it belongs to a registered site, instead of always the configured main domain. Unknown hosts fall back to the general host resolver, so the `Host` header cannot be used to poison the links.
+* Improvement: Comply with OpenStreetMap tile and Nominatim usage policies [#118](https://github.com/open-dxp/admin-bundle/pull/118)
+* Improvement: One-time login links (lost password, user invitation, token login) now use the requested host if it belongs to a registered site, instead of always the configured main domain. Unknown hosts fall back to the general host resolver, so the `Host` header cannot be used to poison the links. [#119](https://github.com/open-dxp/admin-bundle/pull/119)
+* Improvement: Hide error box on login UI if error is empty or not set [#120](https://github.com/open-dxp/admin-bundle/pull/120)
 
 ## 1.4.1
 * Improvement: Refine grid logic with strict comparisons and column auto-sizing adjustments [#112](https://github.com/open-dxp/admin-bundle/pull/112)
