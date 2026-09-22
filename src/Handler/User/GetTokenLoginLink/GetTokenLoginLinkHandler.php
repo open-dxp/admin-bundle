@@ -29,12 +29,16 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLink;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Generator\CustomLoginUrlGenerator;
+use OpenDxp\Bundle\AdminBundle\Security\TrustedLoginLinkHostResolverInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class GetTokenLoginLinkHandler
@@ -43,6 +47,9 @@ final class GetTokenLoginLinkHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly CustomLoginUrlGenerator $loginUrlGenerator,
         private readonly TranslatorInterface $translator,
+        private readonly TrustedLoginLinkHostResolverInterface $hostResolver,
+        private readonly RequestStack $requestStack,
+        private readonly RouterInterface $router,
     ) {
     }
 
@@ -62,8 +69,22 @@ final class GetTokenLoginLinkHandler
             throw new AccessDeniedHttpException($this->translator->trans('login_token_no_password_error', [], 'admin'));
         }
 
+        $domain = $this->hostResolver->resolve($this->requestStack->getCurrentRequest()) ?? '';
+        if (!$domain) {
+            throw new AdminOperationFailedException('No main domain set in system settings, unable to generate login link');
+        }
+
         $token = Tool\Authentication::generateTokenByUser($user);
-        $link = $this->loginUrlGenerator->generate(['token' => $token]);
+
+        $context = $this->router->getContext();
+        $previousHost = $context->getHost();
+        $context->setHost($domain);
+
+        try {
+            $link = $this->loginUrlGenerator->generate(['token' => $token]);
+        } finally {
+            $context->setHost($previousHost);
+        }
 
         return new GetTokenLoginLinkResult(link: $link);
     }

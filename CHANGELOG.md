@@ -1,5 +1,8 @@
 # Changelog / Upgrade Notes
 
+## 1.4.2
+* Improvement: One-time login links (lost password, user invitation, token login) now use the requested host if it belongs to a registered site, instead of always the configured main domain. Unknown hosts fall back to the general host resolver, so the `Host` header cannot be used to poison the links.
+
 ## 1.4.1
 * Improvement: Refine grid logic with strict comparisons and column auto-sizing adjustments [#112](https://github.com/open-dxp/admin-bundle/pull/112)
 * Bugfix: Prevent passing `rid` on scratch user creation [#109](https://github.com/open-dxp/admin-bundle/pull/109)

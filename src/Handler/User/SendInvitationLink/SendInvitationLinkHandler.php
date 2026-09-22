@@ -32,7 +32,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\User\SendInvitationLink;
 use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Generator\CustomLoginUrlGenerator;
-use OpenDxp\Http\Request\Host\GeneralHostResolver;
+use OpenDxp\Bundle\AdminBundle\Security\TrustedLoginLinkHostResolverInterface;
 use OpenDxp\Model\User;
 use OpenDxp\Tool;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -45,7 +45,7 @@ final class SendInvitationLinkHandler
         private readonly TranslatorInterface $translator,
         private readonly CustomLoginUrlGenerator $loginUrlGenerator,
         private readonly RouterInterface $router,
-        private readonly GeneralHostResolver $generalHostResolver,
+        private readonly TrustedLoginLinkHostResolverInterface $hostResolver,
         private readonly RequestStack $requestStack,
     ) {
     }
@@ -75,7 +75,7 @@ final class SendInvitationLinkHandler
             throw new AdminOperationFailedException($message);
         }
 
-        $domain = $this->generalHostResolver->resolve(['source' => $this->requestStack->getCurrentRequest()]) ?? '';
+        $domain = $this->hostResolver->resolve($this->requestStack->getCurrentRequest()) ?? '';
 
         if (!$domain) {
             throw new AdminOperationFailedException('No main domain set in system settings, unable to generate login invitation link');
@@ -89,12 +89,17 @@ final class SendInvitationLinkHandler
         $token = Tool\Authentication::generateTokenByUser($user);
 
         $context = $this->router->getContext();
+        $previousHost = $context->getHost();
         $context->setHost($domain);
 
-        $loginUrl = $this->loginUrlGenerator->generate(['token' => $token, 'reset' => true]);
+        try {
+            $loginUrl = $this->loginUrlGenerator->generate(['token' => $token, 'reset' => true]);
+        } finally {
+            $context->setHost($previousHost);
+        }
 
         try {
-            $mail = Tool::getMail([$user->getEmail()], 'OpenDXP login invitation for ' . Tool::getHostname());
+            $mail = Tool::getMail([$user->getEmail()], 'OpenDXP login invitation for ' . $domain);
             $mail->setIgnoreDebugMode(true);
             $mail->text("Login to OpenDXP and change your password using the following link. This temporary login link will expire in  24 hours: \r\n\r\n" . $loginUrl);
             $mail->send();
