@@ -4,7 +4,7 @@
 <div id="loginform" {% if not browserSupported %}style="display:none;"{% endif %}>
     <form id="form-element" method="post" action="{{ path('opendxp_admin_login_check', {'perspective' : app.request.query.get('perspective')|striptags}) }}">
 
-        {% if error is defined %}
+        {% if error is defined and error %}
         <div class="text error">
             {{ error|trans([],'admin')|raw }}
         </div>
@@ -45,7 +45,7 @@
 
 {% block below_footer %}
 <script {{ opendxp_csp.getNonceHtmlAttribute()|raw }}>
-    {% if deeplink is not defined %}
+    {% if not deeplink %}
     // clear opened tabs store
     localStorage.removeItem('opendxp_opentabs');
     {% endif %}
