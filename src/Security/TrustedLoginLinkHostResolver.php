@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final class TrustedLoginLinkHostResolver implements TrustedLoginLinkHostResolverInterface
 {
-    public function __construct(private readonly GeneralHostResolver $generalHostResolver,)
+    public function __construct(private readonly GeneralHostResolver $generalHostResolver)
     {
     }
 
