@@ -32,6 +32,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxy;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService;
+use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Model\DataObject;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -42,6 +43,7 @@ final class DataObjectGridProxyHandler
         private readonly DataObjectGridService $gridService,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly CurrentControllerContextInterface $currentControllerContext,
+        private readonly LocaleServiceInterface $localeService,
     ) {
     }
 
@@ -57,9 +59,12 @@ final class DataObjectGridProxyHandler
             $requestedLanguage = $payload->locale;
         }
 
+        if ($requestedLanguage !== 'default') {
+            $this->localeService->setLocale($requestedLanguage);
+        }
+
         return new DataObjectGridProxyResult(
             data: $this->gridService->gridProxy($allParams, DataObject::OBJECT_TYPE_OBJECT, $requestedLanguage),
-            requestedLanguage: $requestedLanguage,
         );
     }
 }
