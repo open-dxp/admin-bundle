@@ -218,9 +218,6 @@ class DataObjectController extends ElementControllerBase
         $csrfProtection->checkCsrfToken($request);
 
         $result = $handler($payload);
-        if ($result->requestedLanguage && $result->requestedLanguage !== 'default') {
-            $request->setLocale($result->requestedLanguage);
-        }
 
         return $this->apiJson($result, rootProperty: 'data');
     }

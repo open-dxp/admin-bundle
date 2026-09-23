@@ -35,7 +35,6 @@ final readonly class DataObjectGridProxyResult implements ResultInterface
 {
     public function __construct(
         public array $data,
-        public string $requestedLanguage,
     ) {
     }
 }
