@@ -2,6 +2,7 @@
 
 ## 1.4.3
 * Bugfix: Object grid now applies the requested grid language before the listing is loaded and before inline edits are saved (regression from #91) [#122](https://github.com/open-dxp/admin-bundle/issues/122)
+* Bugfix: Object grid batch editing now saves localized fields in the requested grid language instead of the admin UI language. Localized classification store keys edited with grid language "default" are stored under "default" again (regression from #91). Batch append and remove on classification store keys now read the existing value in the requested language [#122](https://github.com/open-dxp/admin-bundle/issues/122)
 
 ## 1.4.2
 * Improvement: Comply with OpenStreetMap tile and Nominatim usage policies [#118](https://github.com/open-dxp/admin-bundle/pull/118)

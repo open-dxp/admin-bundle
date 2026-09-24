@@ -201,8 +201,6 @@ final class GridBatchService
         $requestedLanguage = $params['language'];
         if (!$requestedLanguage) {
             $requestedLanguage = $locale;
-        } elseif ($requestedLanguage === 'default') {
-            $requestedLanguage = $locale;
         }
 
         $name = $params['name'];
@@ -250,11 +248,11 @@ final class GridBatchService
                     /** @var DataObject\Classificationstore $classificationStoreData */
                     $classificationStoreData = $object->$getter();
                     if ($append) {
-                        $oldValue = $classificationStoreData->getLocalizedKeyValue($groupId, $keyId);
+                        $oldValue = $classificationStoreData->getLocalizedKeyValue($groupId, $keyId, $csLanguage);
                         $value = $dataDefinition->appendData($oldValue, $value);
                     }
                     if ($remove) {
-                        $oldValue = $classificationStoreData->getLocalizedKeyValue($groupId, $keyId);
+                        $oldValue = $classificationStoreData->getLocalizedKeyValue($groupId, $keyId, $csLanguage);
                         $value = $dataDefinition->removeData($oldValue, $value);
                     }
                     $classificationStoreData->setLocalizedKeyValue(

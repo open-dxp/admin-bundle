@@ -33,18 +33,25 @@ use Exception;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridBatchService;
+use OpenDxp\Localization\LocaleServiceInterface;
 
 final class ExecuteBatchHandler
 {
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly GridBatchService $gridBatchService,
+        private readonly LocaleServiceInterface $localeService,
     ) {
     }
 
     public function __invoke(ExecuteBatchPayload $payload): void
     {
         $adminUser = $this->userContext->getAdminUser();
+
+        $requestedLanguage = $payload->params['language'] ?? null;
+        if ($requestedLanguage && $requestedLanguage !== 'default') {
+            $this->localeService->setLocale($requestedLanguage);
+        }
 
         try {
             $this->gridBatchService->executeObjectBatch($payload->params, $payload->locale, $adminUser);
