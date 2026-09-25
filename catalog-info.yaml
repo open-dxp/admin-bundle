@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+    name: admin-bundle
+    description: Admin interface and UI layer for OpenDXP. Provides the
+        browser-based backend for managing content, assets, objects, users, and
+        system configuration.
+spec:
+    type: library
+    lifecycle: production
+    owner: team-opendxp
+    system: opendxp
