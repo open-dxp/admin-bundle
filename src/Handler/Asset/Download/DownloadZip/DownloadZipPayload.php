@@ -22,16 +22,18 @@ use Symfony\Component\HttpFoundation\Request;
 final readonly class DownloadZipPayload implements ExtJsPayloadInterface
 {
     public function __construct(
-        public readonly int $id = 0,
-        public readonly string $jobId = '',
+        public int $id = 0,
+        public string $jobId = '',
+        public ?string $thumbnail = null,
     ) {
     }
 
     public static function fromRequest(Request $request): static
     {
         return new static(
-            id:    $request->query->getInt('id'),
-            jobId: $request->query->getString('jobId'),
+            id:        $request->query->getInt('id'),
+            jobId:     $request->query->getString('jobId'),
+            thumbnail: $request->query->getString('thumbnail') ?: null,
         );
     }
 }

@@ -21,9 +21,13 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class GetDownloadZipJobsPayload implements ExtJsPayloadInterface
 {
+    /**
+     * @param list<int> $selectedIds
+     */
     public function __construct(
-        public readonly int $id = 0,
-        public readonly string $selectedIds = '',
+        public int $id = 0,
+        public array $selectedIds = [],
+        public ?string $thumbnail = null,
     ) {
     }
 
@@ -31,7 +35,8 @@ final readonly class GetDownloadZipJobsPayload implements ExtJsPayloadInterface
     {
         return new static(
             id:          $request->query->getInt('id'),
-            selectedIds: $request->query->getString('selectedIds'),
+            selectedIds: array_values(array_filter(array_map(intval(...), explode(',', $request->query->getString('selectedIds'))))),
+            thumbnail:   $request->query->getString('thumbnail') ?: null,
         );
     }
 }

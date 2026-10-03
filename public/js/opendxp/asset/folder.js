@@ -317,9 +317,7 @@ opendxp.asset.folder = Class.create(opendxp.asset.asset, {
                 ...(() => opendxp.helpers.checkIfNewHeadbarLayoutIsEnabled() ? { text: t('download_as_zip') } : { tooltip: t('download_as_zip') })(),
                 iconCls: "opendxp_material_icon_download_zip opendxp_material_icon",
                 scale: "medium",
-                handler: function () {
-                    opendxp.elementservice.downloadAssetFolderAsZip(this.id)
-                }.bind(this)
+                menu: opendxp.elementservice.getAssetZipDownloadMenu(this.id)
             }
 
             if (opendxp.helpers.checkIfNewHeadbarLayoutIsEnabled()) {

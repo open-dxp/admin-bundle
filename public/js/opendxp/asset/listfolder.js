@@ -238,20 +238,16 @@ opendxp.asset.listfolder = Class.create(opendxp.asset.helpers.gridTabAbstract, {
         this.downloadSelectedZipButton = new Ext.Button({
             text: t("download_selected_as_zip"),
             iconCls: "opendxp_icon_zip opendxp_icon_overlay_download",
-            handler: function () {
-                var ids = [];
+            menu: opendxp.elementservice.getAssetZipDownloadMenu(this.element.id, function () {
+                const ids = this.grid.getSelectionModel().getSelection().map(row => row.data.id);
 
-                var selectedRows = this.grid.getSelectionModel().getSelection();
-                for (var i = 0; i < selectedRows.length; i++) {
-                    ids.push(selectedRows[i].data.id);
-                }
-
-                if(ids.length) {
-                    opendxp.elementservice.downloadAssetFolderAsZip(this.element.id, ids);
-                } else {
+                if (ids.length === 0) {
                     Ext.Msg.alert(t('error'), t('please_select_items_to_download'));
+                    return false;
                 }
-            }.bind(this)
+
+                return ids;
+            }.bind(this))
         });
 
         this.grid = Ext.create('Ext.grid.Panel', {

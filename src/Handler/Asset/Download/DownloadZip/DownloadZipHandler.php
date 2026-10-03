@@ -36,11 +36,14 @@ final class DownloadZipHandler
 {
     public function __invoke(DownloadZipPayload $payload): DownloadZipResult
     {
-        $id = $payload->id;
-        $jobId = $payload->jobId;
-        $asset = Asset::getById($id) ?? throw new AssetNotFoundException($id);
-        $zipFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/download-zip-' . $jobId . '.zip';
+        $asset = Asset::getById($payload->id) ?? throw new AssetNotFoundException($payload->id);
+
+        $zipFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/download-zip-' . $payload->jobId . '.zip';
         $suggestedFilename = $asset->getFilename() ?: 'assets';
+
+        if ($payload->thumbnail !== null) {
+            $suggestedFilename .= '-' . $payload->thumbnail;
+        }
 
         return new DownloadZipResult($zipFile, $suggestedFilename);
     }

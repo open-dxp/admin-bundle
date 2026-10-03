@@ -718,9 +718,8 @@
                      menu.add({
                          text: t("download_as_zip"),
                          iconCls: "opendxp_icon_zip opendxp_icon_overlay_download",
-                         handler: function () {
-                             opendxp.elementservice.downloadAssetFolderAsZip(record.data.id)
-                         }
+                         hideOnClick: false,
+                         menu: opendxp.elementservice.getAssetZipDownloadMenu(record.data.id)
                      });
                  } else {
                      if (record.data.permissions.publish) {
