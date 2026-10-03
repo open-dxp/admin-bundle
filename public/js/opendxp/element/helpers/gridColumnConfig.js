@@ -215,11 +215,16 @@ opendxp.element.helpers.gridColumnConfig = {
     filterUpdateFunction: function (grid, toolbarFilterInfo, clearFilterButton) {
         var filterStringConfig = [];
         var filterData = grid.getStore().getFilters().items;
+        var searchQuery = this.searchField ? this.searchField.getValue() : "";
+        var isFiltered = filterData.length > 0 || searchQuery !== "";
 
         // reset
         toolbarFilterInfo.setTooltip(" ");
 
-        if (filterData.length > 0) {
+        if (isFiltered) {
+            if (searchQuery !== "") {
+                filterStringConfig.push(t("search") + ": " + Ext.util.Format.htmlEncode(searchQuery));
+            }
 
             for (var i = 0; i < filterData.length; i++) {
 
@@ -253,8 +258,8 @@ opendxp.element.helpers.gridColumnConfig = {
             toolbarFilterInfo.opendxp_filter_condition = filterCondition;
             toolbarFilterInfo.setHidden(false);
         }
-        toolbarFilterInfo.setHidden(filterData.length == 0);
-        clearFilterButton.setHidden(filterData.length == 0);
+        toolbarFilterInfo.setHidden(!isFiltered);
+        clearFilterButton.setHidden(!isFiltered);
     },
 
     updateGridHeaderContextMenu: function (grid) {

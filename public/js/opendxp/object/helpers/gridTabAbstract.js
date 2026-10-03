@@ -174,6 +174,7 @@ opendxp.object.helpers.gridTabAbstract = Class.create({
             this.searchQuery = function(field) {
                 this.store.getProxy().setExtraParam("query", field.getValue());
                 this.pagingtoolbar.moveFirst();
+                this.filterUpdateFunction(this.grid, this.toolbarFilterInfo, this.clearFilterButton);
             }.bind(this);
 
             this.languageInfo = new Ext.Toolbar.TextItem();
@@ -194,8 +195,17 @@ opendxp.object.helpers.gridTabAbstract = Class.create({
                 text: t("clear_filters"),
                 tooltip: t("clear_filters"),
                 handler: function (button) {
+                    if (this.searchField) {
+                        this.searchField.setValue("");
+                        this.store.getProxy().setExtraParam("query", "");
+                    }
+
+                    this.grid.getStore().setRemoteFilter(false);
                     this.grid.filters.clearFilters();
                     this.grid.getStore().clearFilter();
+                    this.grid.getStore().setRemoteFilter(true);
+                    this.pagingtoolbar.moveFirst();
+
                     this.toolbarFilterInfo.hide();
                     this.clearFilterButton.hide();
                 }.bind(this)
