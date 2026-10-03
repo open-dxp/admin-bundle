@@ -1,9 +1,7 @@
-name: Static analysis
+name: Pest tests
 
 on:
     workflow_dispatch:
-    schedule:
-        -   cron: '0 3 * * 1,3,5'
     push:
         branches:
             - "[0-9]+.[0-9]+"
@@ -26,15 +24,18 @@ jobs:
             -   id: matrix
                 uses: open-dxp/workflows-collection-public/.github/actions/test-matrix@main
                 with:
-                    configuration: phpstan-configuration
+                    configuration: tests-configuration
 
-    static-analysis:
+    pest-tests:
         needs: setup-matrix
         strategy:
             matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
-        uses: open-dxp/workflows-collection-public/.github/workflows/reusable-static-analysis.yaml@main
+        uses: open-dxp/workflows-collection-public/.github/workflows/reusable-pest-tests.yaml@main
         with:
             php_version: ${{ matrix.matrix.php-version }}
+            database: ${{ matrix.matrix.database }}
+            server_version: ${{ matrix.matrix.server_version }}
+            dependencies: ${{ matrix.matrix.dependencies }}
             experimental: ${{ matrix.matrix.experimental }}
             opendxp_version: ${{ matrix.matrix.opendxp_version }}
         secrets:

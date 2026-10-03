@@ -150,4 +150,4 @@ Where and how the data is persisted or used downstream.
 
 
 ## Tests
-See `tests/CLAUDE.md` for full test conventions, base classes, and examples.
+See `docs/90_Testing/README.md` for the test conventions and how to run the tests.

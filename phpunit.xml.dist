@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/open-dxp/test-foundation/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache">
+    <testsuites>
+        <testsuite name="open-dxp/admin-bundle">
+            <directory>tests/Feature</directory>
+            <directory>tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+    <extensions>
+        <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension"/>
+        <bootstrap class="OpenDxp\TestFoundation\PHPUnit\InstallDefinitions"/>
+    </extensions>
+    <php>
+        <env name="KERNEL_CLASS" value="OpenDxp\Bundle\AdminBundle\Tests\Application\TestKernel"/>
+    </php>
+</phpunit>

@@ -16,7 +16,7 @@ This bundle depends heavily on the **opendxp core** (`open-dxp/opendxp`). The co
 | `OpenDxp\Model\*`         | Document, Asset, DataObject, Site models        |
 | `OpenDxp\Event\*`         | Core events (DocumentEvents, AssetEvents, etc.) |
 | `OpenDxp\Controller\*`    | Base controller classes                         |
-| `OpenDxp\Tests\Support\*` | Base test classes (ModelTestCase)               |
+| `OpenDxp\Test\Factory\*`  | Factories for test data                         |
 | `OpenDxp\Config`          | Global configuration                            |
 
 The admin-bundle adds its **own** event layer on top (`src/Event/AdminEvents.php`) for

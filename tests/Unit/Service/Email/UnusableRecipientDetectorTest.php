@@ -17,53 +17,30 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Unit\Service\Email;
 
 use OpenDxp\Bundle\AdminBundle\Service\Email\UnusableRecipientDetector;
-use OpenDxp\Bundle\AdminBundle\Tests\Support\Test\UnitTestCase;
 
-class UnusableRecipientDetectorTest extends UnitTestCase
-{
-    public function testUsableAddressFields(): void
-    {
-        $detector = new UnusableRecipientDetector();
+it('accepts an address field a mail can be sent to', function (?string $field) {
+    expect((new UnusableRecipientDetector())->isUsableAddressField($field))->toBeTrue();
+})->with([
+    'no field' => [null],
+    'an empty field' => [''],
+    'a plain address' => ['office@example.com'],
+    'an address with a display name' => ['Max Muster <max@example.com>'],
+    'an address with a name in parentheses' => ['max@example.com (Max Muster)'],
+    'a list separated by commas' => ['a@example.com, b@example.com'],
+    'a list separated by semicolons' => ['a@example.com; b@example.com'],
+]);
 
-        $addressFields = [
-            'empty field contributes no recipient' => '',
-            'plain address'                        => 'office@example.com',
-            'address with display name'            => 'Max Muster <max@example.com>',
-            'address with parenthesised name'      => 'max@example.com (Max Muster)',
-            'comma separated list'                 => 'a@example.com, b@example.com',
-            'semicolon separated list'             => 'a@example.com; b@example.com',
-        ];
+it('refuses an address field that still holds a placeholder or a broken address', function (string $field) {
+    expect((new UnusableRecipientDetector())->isUsableAddressField($field))->toBeFalse();
+})->with([
+    'a percent placeholder' => ['%email%'],
+    'a placeholder inside a display name' => ['Max Muster <%email%>'],
+    'a twig placeholder' => ['{{ email }}'],
+    'a bracket placeholder' => ['[email]'],
+    'a valid address next to a placeholder' => ['office@example.com, %email%'],
+    'an address without a domain' => ['office@'],
+]);
 
-        foreach ($addressFields as $case => $addressField) {
-            self::assertTrue($detector->isUsableAddressField($addressField), $case);
-        }
-    }
-
-    public function testUnusableAddressFields(): void
-    {
-        $detector = new UnusableRecipientDetector();
-
-        $addressFields = [
-            'simple placeholder'                     => '%email%',
-            'placeholder inside display name syntax' => 'Max Muster <%email%>',
-            'twig style placeholder'                 => '{{ email }}',
-            'bracket style placeholder'              => '[email]',
-            'one valid address plus one placeholder' => 'office@example.com, %email%',
-            'missing domain'                         => 'office@',
-        ];
-
-        foreach ($addressFields as $case => $addressField) {
-            self::assertFalse($detector->isUsableAddressField($addressField), $case);
-        }
-    }
-
-    public function testNullFieldIsUsable(): void
-    {
-        self::assertTrue((new UnusableRecipientDetector())->isUsableAddressField(null));
-    }
-
-    public function testDocumentIdIsOptional(): void
-    {
-        self::assertFalse((new UnusableRecipientDetector())->hasUnusableRecipients(null));
-    }
-}
+it('finds no unusable recipients when no document is named', function () {
+    expect((new UnusableRecipientDetector())->hasUnusableRecipients(null))->toBeFalse();
+});

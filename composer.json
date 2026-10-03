@@ -25,13 +25,9 @@
         "symfony/webpack-encore-bundle": "^2.1.1"
     },
     "require-dev": {
-        "codeception/codeception": "^5.3.5",
-        "codeception/stub": "^4.3",
-        "codeception/module-asserts": "^3.2",
-        "codeception/module-symfony": "^3.8",
+        "open-dxp/test-foundation": "1.x-dev",
         "phpstan/phpstan": "2.1.33",
         "phpstan/phpstan-symfony": "^2.0.9",
-        "phpunit/phpunit": "^10.5",
         "symfony/dotenv": "^7.4",
         "symfony/runtime": "^7.4"
     },
@@ -42,15 +38,12 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "OpenDxp\\Bundle\\AdminBundle\\Tests\\": "tests"
-        },
-        "files": [
-            "kernel/Kernel.php"
-        ]
+            "OpenDxp\\Bundle\\AdminBundle\\Tests\\": "tests/"
+        }
     },
     "extra": {
         "branch-alias": {
-          "dev-1.x": "1.2.x-dev"
+            "dev-1.x": "1.2.x-dev"
         },
         "opendxp": {
             "bundles": [
