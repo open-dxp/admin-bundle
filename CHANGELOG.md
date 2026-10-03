@@ -9,6 +9,9 @@
 * Chore: Stop registering the payload and result classes in `src/Handler` as services. They are data objects, and a service definition for them could not be built.
 * Improvement: The object grid counts its search as an active filter, and "Clear filters" clears the search as well [#129](https://github.com/open-dxp/admin-bundle/issues/129)
 * Improvement: Hide the AnyGetter grid operator from users who are not admins [#28](https://github.com/open-dxp/admin-bundle/issues/28)
+* Bugfix: Opening a deeplink works in a long running process, for example FrankenPHP in worker mode.
+* Bugfix: In a long running process, every session keeps its own CSRF token.
+* Deprecation: Printing the Twig global `csrfToken` outside the admin is deprecated. It throws an exception in 2.0.
 
 ## 1.4.3
 * Bugfix: Object grid now applies the requested grid language before the listing is loaded and before inline edits are saved (regression from #91) [#122](https://github.com/open-dxp/admin-bundle/issues/122)

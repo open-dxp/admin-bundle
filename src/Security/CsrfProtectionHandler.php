@@ -24,7 +24,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Twig\Environment;
 
 /**
  * @internal
@@ -33,11 +32,8 @@ class CsrfProtectionHandler implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
-    protected ?string $csrfToken = null;
-
     public function __construct(
         protected array $excludedRoutes,
-        protected Environment $twig
     ) {
     }
 
@@ -61,34 +57,34 @@ class CsrfProtectionHandler implements LoggerAwareInterface
         }
     }
 
+    /**
+     * A service outlives the request in a long running process, so the token stays in the session.
+     */
     public function getCsrfToken(SessionInterface $session): ?string
     {
-        if (!$this->csrfToken) {
-            $this->csrfToken = Session::getSessionBag($session)->get('csrfToken');
-            if (!$this->csrfToken) {
-                $this->regenerateCsrfToken($session, false);
-            }
+        $token = Session::getSessionBag($session)?->get('csrfToken');
+
+        if ($token) {
+            return $token;
         }
 
-        return $this->csrfToken;
+        $this->regenerateCsrfToken($session, false);
+
+        return Session::getSessionBag($session)?->get('csrfToken');
     }
 
     public function regenerateCsrfToken(SessionInterface $session, bool $force = true): void
     {
-        $this->csrfToken = Session::useBag($session, static function (AttributeBagInterface $adminSession) use ($force) {
+        Session::useBag($session, static function (AttributeBagInterface $adminSession) use ($force): void {
             if ($force || !$adminSession->get('csrfToken')) {
                 $adminSession->set('csrfToken', sha1(StringHelper::generateRandomSymfonySecret()));
             }
-
-            return $adminSession->get('csrfToken');
         });
-
-        $this->twig->addGlobal('csrfToken', $this->csrfToken);
     }
 
     public function generateCsrfToken(SessionInterface $session): void
     {
-        $this->twig->addGlobal('csrfToken', $this->getCsrfToken($session));
+        $this->regenerateCsrfToken($session, false);
     }
 
     public function getExcludedRoutes(): array
