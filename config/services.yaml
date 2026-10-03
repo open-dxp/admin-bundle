@@ -191,6 +191,7 @@ services:
     #
     OpenDxp\Bundle\AdminBundle\Handler\:
         resource: '../src/Handler'
+        exclude: '../src/Handler/**/*{Payload,Result}.php'
         bind:
             $documentNoteTypes: '%opendxp_admin.dataObjects.notes_events.types%'
             $assetNoteTypes: '%opendxp_admin.assets.notes_events.types%'
