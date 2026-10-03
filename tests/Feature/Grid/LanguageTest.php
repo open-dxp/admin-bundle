@@ -24,6 +24,7 @@ use OpenDxp\Bundle\AdminBundle\Tests\Factory\InheritanceFactory;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Model\DataObject\Inheritance;
 use OpenDxp\Test\Factory\UserFactory;
+use OpenDxp\TestFoundation\Admin;
 use OpenDxp\TestFoundation\Container;
 
 beforeEach(function () {
@@ -32,7 +33,7 @@ beforeEach(function () {
     $this->object->setInput('initial-de', 'de');
     $this->object->save();
 
-    actingAs(UserFactory::new()->admin()->create());
+    Admin::actingAs(UserFactory::new()->admin()->create());
 
     // The authenticator primes the locale with the language of the admin interface on every request. It differs
     // from the language of the grid on purpose.
