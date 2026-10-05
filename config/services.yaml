@@ -136,6 +136,7 @@ services:
     OpenDxp\Bundle\AdminBundle\Mapper\DataObject\DataObjectPayloadMapper: ~
     OpenDxp\Bundle\AdminBundle\Coordinator\DataObject\DataObjectPersistenceCoordinator: ~
     OpenDxp\Bundle\AdminBundle\Service\DataObject\DataObjectGridService: ~
+    OpenDxp\Bundle\AdminBundle\Service\DataObject\ContextFieldDefinitionResolver: ~
     OpenDxp\Bundle\AdminBundle\Mapper\DataObject\ClassificationstoreKeyConfigMapper: ~
 
     OpenDxp\Bundle\AdminBundle\Mapper\Asset\AssetPayloadMapper: ~

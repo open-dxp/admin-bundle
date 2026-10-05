@@ -21,5 +21,6 @@ pest()->extend(TestCase::class)->in(
     'Feature/Application',
     'Feature/Grid',
     'Feature/Tree',
+    'Feature/UrlSlug',
 );
 pest()->extend(LoginLinkTestCase::class)->in('Feature/LoginLink');

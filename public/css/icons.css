@@ -596,6 +596,10 @@
     background: url(/bundles/opendxpadmin/img/flat-color-icons/lock.svg) center center no-repeat !important;
 }
 
+.opendxp_icon_unlock {
+    background: url(/bundles/opendxpadmin/img/flat-color-icons/unlock.svg) center center no-repeat !important;
+}
+
 .opendxp_icon_open {
     background: url(/bundles/opendxpadmin/img/flat-color-icons/open_file.svg) center center no-repeat !important;
 }
