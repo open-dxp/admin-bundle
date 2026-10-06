@@ -21,6 +21,7 @@ pest()->extend(TestCase::class)->in(
     'Feature/Application',
     'Feature/Asset',
     'Feature/Classificationstore',
+    'Feature/Document',
     'Feature/Grid',
     'Feature/Security',
     'Feature/Tree',
