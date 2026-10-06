@@ -2,18 +2,6 @@
 
 declare(strict_types=1);
 
-/**
- * OpenDXP
- *
- * This source file is licensed under the GNU General Public License version 3 (GPLv3).
- *
- * Full copyright and license information is available in
- * LICENSE.md which is distributed with this source code.
- *
- * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
- * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
- */
-
 namespace OpenDxp\Bundle\AdminBundle\Tests\Feature\Document;
 
 use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePagePayload;
@@ -24,15 +12,14 @@ use OpenDxp\Test\Factory\DocumentPageFactory;
 use OpenDxp\TestFoundation\Container;
 
 /**
- * Saves the page like the editmode: with its own (non-inherited) editables, or null when none were sent.
+ * The editmode sends only the editables a page does not inherit. Without editables in the request, it sends null.
  *
  * @param array<string, array{type: string, data: mixed}>|null $editables
  */
-function savePage(Page $page, ?array $editables): Page
+function publishPage(Page $page, ?array $editables): Page
 {
     $page = Page::getById($page->getId(), ['force' => true]);
-
-    Container::get(DocumentPayloadMapper::class)->applyPagePayload(new SavePagePayload(
+    $payload = new SavePagePayload(
         id: $page->getId(),
         task: 'publish',
         settings: null,
@@ -41,7 +28,9 @@ function savePage(Page $page, ?array $editables): Page
         properties: null,
         scheduler: null,
         missingRequiredEditable: null,
-    ), $page, 'publish');
+    );
+
+    Container::get(DocumentPayloadMapper::class)->applyPagePayload($payload, $page, 'publish');
     $page->save();
 
     return Page::getById($page->getId(), ['force' => true]);
@@ -51,8 +40,6 @@ beforeEach(function () {
     $this->main = DocumentPageFactory::new()
         ->withEditables(['headline' => (new Input())->setDataFromResource('from the main document')])
         ->create();
-
-    // the page already had own editables before it got a content main document
     $this->page = DocumentPageFactory::new()
         ->withEditables(['headline' => (new Input())->setDataFromResource('own')])
         ->withContentMainDocument($this->main)
@@ -60,25 +47,34 @@ beforeEach(function () {
 });
 
 it('drops the own editables when the editmode sends none because all are inherited', function () {
-    $page = savePage($this->page, []);
+    $page = publishPage($this->page, []);
 
-    expect($page->getEditables())->toBeEmpty()
-        ->and($page->getEditable('headline')->getValue())->toBe('from the main document')
-        ->and($page->getEditable('headline')->getInherited())->toBeTrue();
+    expect($page->getEditables())
+        ->toBeEmpty()
+        ->and($page->getEditable('headline'))
+        ->getValue()->toBe('from the main document')
+        ->getInherited()->toBeTrue();
 });
 
 it('keeps only the editables the editmode sends', function () {
-    $page = savePage($this->page, [
-        'subline' => ['type' => 'input', 'data' => 'own subline'],
+    $page = publishPage($this->page, [
+        'subline' => [
+            'type' => 'input',
+            'data' => 'own subline',
+        ],
     ]);
 
-    expect(array_keys($page->getEditables()))->toBe(['subline'])
-        ->and($page->getEditable('headline')->getValue())->toBe('from the main document');
+    expect(array_keys($page->getEditables()))
+        ->toBe(['subline'])
+        ->and($page->getEditable('headline'))
+        ->getValue()->toBe('from the main document');
 });
 
 it('keeps the own editables when the save sends no editables', function () {
-    $page = savePage($this->page, null);
+    $page = publishPage($this->page, null);
 
-    expect(array_keys($page->getEditables()))->toBe(['headline'])
-        ->and($page->getEditable('headline')->getValue())->toBe('own');
+    expect(array_keys($page->getEditables()))
+        ->toBe(['headline'])
+        ->and($page->getEditable('headline'))
+        ->getValue()->toBe('own');
 });

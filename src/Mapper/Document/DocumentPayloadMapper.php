@@ -120,7 +120,7 @@ final class DocumentPayloadMapper
         if ($appendEditables || $isTargetSpecific) {
             $document->getEditables();
         } elseif ($editables !== null) {
-            // [] means "no own editables", null means "keep the stored editables"
+            // An empty array means the page has no editables of its own. Null keeps the stored ones.
             $document->setEditables([]);
         } else {
             // ensure no editables (e.g. from session, version, ...) are still referenced
