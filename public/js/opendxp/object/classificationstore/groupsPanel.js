@@ -59,6 +59,11 @@ opendxp.object.classificationstore.groupsPanel = Class.create({
             },
             extraParams: {
                 storeId: this.storeConfig.id
+            },
+            listeners: {
+                exception: function (proxy, response, operation) {
+                    opendxp.helpers.rejectFailedStoreUpdate(this.relationsStore, response, operation);
+                }.bind(this)
             }
         };
 
@@ -79,22 +84,11 @@ opendxp.object.classificationstore.groupsPanel = Class.create({
 
         readerFields.push({name: 'mandatory', type: 'bool'});
 
-        var listeners = {};
-
-        listeners.write = function(store, action, result, response, rs) {};
-        listeners.exception = function (conn, mode, action, request, response, store) {
-            if(action == "update") {
-                Ext.MessageBox.alert(t('error'), response);
-                this.relationsStore.rejectChanges();
-            }
-        }.bind(this);
-
         this.relationsStore = new Ext.data.Store({
             autoSync: true,
             proxy: this.getRelationsProxy(),
             remoteSort: true,
-            fields: readerFields,
-            listeners: listeners
+            fields: readerFields
         });
 
         var gridColumns = [];
@@ -255,24 +249,18 @@ opendxp.object.classificationstore.groupsPanel = Class.create({
             },
             extraParams: {
                 storeId: this.storeConfig.id
+            },
+            listeners: {
+                exception: function (proxy, response, operation) {
+                    opendxp.helpers.rejectFailedStoreUpdate(this.groupsStore, response, operation);
+                }.bind(this)
             }
         };
-
-        var listeners = {};
-
-        listeners.exception = function (conn, mode, action, request, response, store) {
-            if(action == "update") {
-                Ext.MessageBox.alert(t('error'), t('cannot_save_object_please_try_to_edit_the_object_in_detail_view'));
-                this.groupsStore.rejectChanges();
-            }
-        }.bind(this);
-
 
         this.groupsStore = new Ext.data.Store({
             autoSync: true,
             proxy: proxy,
             fields: readerFields,
-            listeners: listeners,
             remoteFilter: true,
             remoteSort: true
         });

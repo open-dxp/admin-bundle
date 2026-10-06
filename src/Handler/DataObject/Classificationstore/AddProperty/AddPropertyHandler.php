@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\AddProperty;
 
+use InvalidArgumentException;
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Model\DataObject\Classificationstore;
 
 final class AddPropertyHandler
@@ -49,7 +51,12 @@ final class AddPropertyHandler
         $config->setStoreId($payload->storeId);
         $config->setEnabled(true);
         $config->setDefinition(json_encode($definition) ?: '');
-        $config->save();
+
+        try {
+            $config->save();
+        } catch (InvalidArgumentException) {
+            throw new AdminOperationFailedException('classificationstore_invalidname');
+        }
 
         return new AddPropertyResult(id: $config->getName());
     }

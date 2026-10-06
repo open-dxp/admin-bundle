@@ -12,6 +12,8 @@
 * Bugfix: Opening a deeplink works in a long running process, for example FrankenPHP in worker mode.
 * Bugfix: In a long running process, every session keeps its own CSRF token.
 * Deprecation: Printing the Twig global `csrfToken` outside the admin is deprecated. It throws an exception in 2.0.
+* Bugfix: A classification store key takes only a name that is valid for a data object field [#126](https://github.com/open-dxp/admin-bundle/pull/126)
+* Bugfix: The grids of the classification store configuration show why a change could not be saved and take the change back [#126](https://github.com/open-dxp/admin-bundle/pull/126)
 
 ## 1.4.3
 * Bugfix: Object grid now applies the requested grid language before the listing is loaded and before inline edits are saved (regression from #91) [#122](https://github.com/open-dxp/admin-bundle/issues/122)

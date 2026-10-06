@@ -20,6 +20,7 @@ use OpenDxp\TestFoundation\TestCase;
 pest()->extend(TestCase::class)->in(
     'Feature/Application',
     'Feature/Asset',
+    'Feature/Classificationstore',
     'Feature/Grid',
     'Feature/Security',
     'Feature/Tree',
