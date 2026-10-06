@@ -18,11 +18,12 @@ services:
         public: true
         arguments:
             - '%opendxp_admin.csrf_protection.excluded_routes%'
-            - '@twig'
         calls:
             - [setLogger, ['@logger']]
         tags:
             - { name: monolog.logger, channel: security }
+
+    OpenDxp\Bundle\AdminBundle\Security\CurrentCsrfToken: ~
 
     OpenDxp\Bundle\AdminBundle\Security\ContentSecurityPolicyHandler:
         public: true

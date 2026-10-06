@@ -197,6 +197,7 @@ flysystem:
 twig:
     globals:
         opendxp_csrf: '@OpenDxp\Bundle\AdminBundle\Security\CsrfProtectionHandler'
+        csrfToken: '@OpenDxp\Bundle\AdminBundle\Security\CurrentCsrfToken'
         opendxp_csp: '@OpenDxp\Bundle\AdminBundle\Security\ContentSecurityPolicyHandler'
 
 monolog:
