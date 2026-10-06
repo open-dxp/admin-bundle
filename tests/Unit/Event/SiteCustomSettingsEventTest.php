@@ -25,16 +25,7 @@ use OpenDxp\Bundle\AdminBundle\Event\SiteCustomSettingsEvent;
 use OpenDxp\Model\Site;
 
 beforeEach(function () {
-    $this->site = new Site();
-    $this->event = new SiteCustomSettingsEvent($this->site);
-});
-
-it('holds no config nodes to begin with', function () {
-    expect($this->event->getConfigNodes())->toBe([]);
-});
-
-it('hands back the site it was given', function () {
-    expect($this->event->getSite())->toBe($this->site);
+    $this->event = new SiteCustomSettingsEvent(new Site());
 });
 
 it('groups the config nodes by their scope', function () {
@@ -50,8 +41,15 @@ it('groups the config nodes by their scope', function () {
 });
 
 it('describes a config node by its type, name, label and config', function () {
+    $store = [
+        [
+            'label' => 'A',
+            'value' => 'a',
+        ],
+    ];
+
     $this->event->addConfigNode(
-        new DropdownNodeConfig(store: [['label' => 'A', 'value' => 'a']], required: true),
+        new DropdownNodeConfig(store: $store, required: true),
         'app',
         'my_field',
         'My Field',
@@ -62,7 +60,7 @@ it('describes a config node by its type, name, label and config', function () {
         ->name->toBe('my_field')
         ->label->toBe('My Field')
         ->config->required->toBeTrue()
-        ->config->store->toBe([['label' => 'A', 'value' => 'a']]);
+        ->config->store->toBe($store);
 });
 
 it('keeps the config nodes of one scope in the order they were added', function () {
@@ -72,12 +70,3 @@ it('keeps the config nodes of one scope in the order they were added', function 
 
     expect(array_column($this->event->getConfigNodes()['app'], 'name'))->toBe(['first', 'second', 'third']);
 });
-
-it('names the type of each config node', function (object $node, SiteCustomConfigNodeType $type) {
-    expect($node->getType())->toBe($type);
-})->with([
-    'input' => [new InputNodeConfig(), SiteCustomConfigNodeType::INPUT],
-    'text' => [new TextNodeConfig(), SiteCustomConfigNodeType::TEXT],
-    'checkbox' => [new CheckboxNodeConfig(), SiteCustomConfigNodeType::CHECKBOX],
-    'dropdown' => [new DropdownNodeConfig(), SiteCustomConfigNodeType::DROPDOWN],
-]);

@@ -20,11 +20,23 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\Thumbnail\GetImageThumbnail\GetImag
 use Symfony\Component\HttpFoundation\Request;
 
 it('reads the thumbnail as an inline config or as the name of one', function (array|string $thumbnail) {
-    $request = Request::create('/admin/asset/get-image-thumbnail', 'GET', ['id' => '42', 'thumbnail' => $thumbnail]);
+    $request = Request::create(
+        '/admin/asset/get-image-thumbnail',
+        'GET',
+        [
+            'id' => '42',
+            'thumbnail' => $thumbnail,
+        ],
+    );
 
     expect(GetImageThumbnailPayload::fromRequest($request)->thumbnailParam)->toBe($thumbnail);
 })->with([
-    'an inline config' => [['width' => 100, 'height' => 200]],
+    'an inline config' => [
+        [
+            'width' => 100,
+            'height' => 200,
+        ],
+    ],
     'the name of a config' => ['my-thumbnail-config'],
 ]);
 

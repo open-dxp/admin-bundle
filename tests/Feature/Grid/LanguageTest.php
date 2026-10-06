@@ -28,12 +28,17 @@ use OpenDxp\TestFoundation\Admin;
 use OpenDxp\TestFoundation\Container;
 
 beforeEach(function () {
-    $this->object = InheritanceFactory::new()->unsaved()->create();
-    $this->object->setInput('initial-en', 'en');
-    $this->object->setInput('initial-de', 'de');
-    $this->object->save();
+    $this->object = InheritanceFactory::new()
+        ->withLocalizedValues('input', [
+            'en' => 'initial-en',
+            'de' => 'initial-de',
+        ])
+        ->create();
 
-    Admin::actingAs(UserFactory::new()->admin()->create());
+    $admin = UserFactory::new()
+        ->admin()
+        ->create();
+    Admin::actingAs($admin);
 
     // The authenticator primes the locale with the language of the admin interface on every request. It differs
     // from the language of the grid on purpose.
@@ -46,7 +51,13 @@ it('saves a grid edit in the language of the grid, not of the admin interface', 
             'xaction' => 'update',
             'language' => 'de',
             'fields' => null,
-            'data' => json_encode(['id' => $this->object->getId(), 'input' => 'from-grid-de'], JSON_THROW_ON_ERROR),
+            'data' => json_encode(
+                [
+                    'id' => $this->object->getId(),
+                    'input' => 'from-grid-de',
+                ],
+                JSON_THROW_ON_ERROR,
+            ),
         ],
         locale: 'en',
     ));

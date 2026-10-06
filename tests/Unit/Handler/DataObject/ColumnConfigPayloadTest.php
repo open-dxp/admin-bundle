@@ -19,6 +19,9 @@ namespace OpenDxp\Bundle\AdminBundle\Tests\Unit\Handler\DataObject;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\ClassDef\GetClassDefinitionForColumnConfig\GetClassDefinitionForColumnConfigPayload;
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * @param array<string, ?string> $query
+ */
 function columnConfigPayload(array $query): GetClassDefinitionForColumnConfigPayload
 {
     return GetClassDefinitionForColumnConfigPayload::fromRequest(
@@ -26,18 +29,28 @@ function columnConfigPayload(array $query): GetClassDefinitionForColumnConfigPay
     );
 }
 
-it('reads an object id that is not a number as no object', function (array $query) {
-    expect(columnConfigPayload($query)->objectId)->toBe(0);
+it('reads an object id that is not a number as no object', function (?string $objectId) {
+    $payload = columnConfigPayload([
+        'id' => 'news',
+        'oid' => $objectId,
+    ]);
+
+    expect($payload->objectId)->toBe(0);
 })->with([
-    'no oid' => [['id' => 'news']],
-    'an empty oid' => [['id' => 'news', 'oid' => '']],
-    'the string undefined' => [['id' => 'news', 'oid' => 'undefined']],
-    'the string null' => [['id' => 'news', 'oid' => 'null']],
-    'zero' => [['id' => 'news', 'oid' => '0']],
+    'no oid' => [null],
+    'an empty oid' => [''],
+    'the string undefined' => ['undefined'],
+    'the string null' => ['null'],
+    'zero' => ['0'],
 ]);
 
 it('reads a numeric object id as a number', function () {
-    expect(columnConfigPayload(['id' => 'news', 'oid' => '42'])->objectId)->toBe(42);
+    $payload = columnConfigPayload([
+        'id' => 'news',
+        'oid' => '42',
+    ]);
+
+    expect($payload->objectId)->toBe(42);
 });
 
 it('reads the class id as a string', function () {

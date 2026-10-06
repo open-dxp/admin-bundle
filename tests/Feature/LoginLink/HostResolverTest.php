@@ -16,8 +16,10 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Tests\Feature\LoginLink;
 
+use OpenDxp\Test\Factory\SiteFactory;
+
 it('trusts the host of a registered site without asking the providers', function () {
-    $this->site($this->domain('main'));
+    SiteFactory::createOne(['mainDomain' => $this->domain('main')]);
 
     expect($this->hostResolver()->resolve($this->requestFor($this->domain('main'))))
         ->toBe($this->domain('main'))
@@ -26,13 +28,13 @@ it('trusts the host of a registered site without asking the providers', function
 });
 
 it('falls back to the general host for a host no site knows', function () {
-    $this->site($this->domain('main'));
+    SiteFactory::createOne(['mainDomain' => $this->domain('main')]);
 
     expect($this->hostResolver()->resolve($this->requestFor('attacker.example')))->toBe(self::GENERAL_HOST);
 });
 
 it('trusts a backend host that a provider vouches for', function () {
-    $backend = 'backend.' . $this->domain('site');
+    $backend = sprintf('backend.%s', $this->domain('site'));
     $this->generalHosts = self::generalHostProvider($backend);
 
     expect($this->hostResolver()->resolve($this->requestFor($backend)))->toBe($backend);

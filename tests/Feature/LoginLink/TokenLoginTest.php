@@ -14,56 +14,34 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
+
 namespace OpenDxp\Bundle\AdminBundle\Tests\Feature\LoginLink;
 
-use OpenDxp\Bundle\AdminBundle\Generator\CustomLoginUrlGenerator;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLink\GetTokenLoginLinkHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLink\GetTokenLoginLinkPayload;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
-use OpenDxp\Model\User;
-use OpenDxp\Security\User\User as UserProxy;
+use OpenDxp\Test\Factory\SiteFactory;
 use OpenDxp\Test\Factory\UserFactory;
-use Symfony\Component\Translation\IdentityTranslator;
+use OpenDxp\TestFoundation\Container;
+use Symfony\Component\Routing\RouterInterface;
 
 beforeEach(function () {
     $this->user = UserFactory::createOne();
-
-    $this->tokenLoginLinkFrom = function (string $host): string {
-        $handler = new GetTokenLoginLinkHandler(
-            userContext: new class() implements AdminUserContextInterface {
-                public function getAdminUser(): ?User
-                {
-                    return null;
-                }
-
-                public function getAdminUserProxy(): ?UserProxy
-                {
-                    return null;
-                }
-            },
-            loginUrlGenerator: new CustomLoginUrlGenerator($this->router(), 'login_link_test_missing_route'),
-            translator: new IdentityTranslator(),
-            hostResolver: $this->hostResolver(),
-            requestStack: $this->requestStackFor($host),
-            router: $this->router(),
-        );
-
-        return $handler(new GetTokenLoginLinkPayload($this->user->getId()))->link;
-    };
 });
 
 it('links to the general host when the request comes from a host no site knows', function () {
-    expect(self::hostOf(($this->tokenLoginLinkFrom)('attacker.example')))->toBe(self::GENERAL_HOST);
+    $link = $this->tokenLoginLinkFrom('attacker.example', $this->user);
+
+    expect(self::hostOf($link))->toBe(self::GENERAL_HOST);
 });
 
 it('links to the host of the request when it belongs to a site', function () {
-    $this->site($this->domain('site'));
+    SiteFactory::createOne(['mainDomain' => $this->domain('site')]);
 
-    expect(self::hostOf(($this->tokenLoginLinkFrom)($this->domain('site'))))->toBe($this->domain('site'));
+    $link = $this->tokenLoginLinkFrom($this->domain('site'), $this->user);
+
+    expect(self::hostOf($link))->toBe($this->domain('site'));
 });
 
 it('leaves the host of the router as it found it', function () {
-    ($this->tokenLoginLinkFrom)('attacker.example');
+    $this->tokenLoginLinkFrom('attacker.example', $this->user);
 
-    expect($this->router()->getContext()->getHost())->toBe('attacker.example');
+    expect(Container::get(RouterInterface::class)->getContext()->getHost())->toBe('attacker.example');
 });
