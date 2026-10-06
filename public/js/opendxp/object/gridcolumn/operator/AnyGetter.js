@@ -20,6 +20,7 @@ opendxp.object.gridcolumn.operator.anygetter = Class.create(opendxp.object.gridc
         operatorGroup: "extractor",
         type: "operator",
         class: "AnyGetter",
+        adminOnly: true,
         iconCls: "opendxp_icon_operator_anygetter",
         defaultText: "Any Getter",
         group: "getter",

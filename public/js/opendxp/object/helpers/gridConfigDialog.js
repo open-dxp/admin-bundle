@@ -574,11 +574,17 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
     getOperatorTrees: function () {
         var operators = Object.keys(opendxp.object.gridcolumn.operator);
         var operatorGroups = [];
+        var user = opendxp.globalmanager.get("user");
 
         for (let i = 0; i < operators.length; i++) {
             var operator = operators[i];
             if (!this.availableOperators || this.availableOperators.indexOf(operator) >= 0) {
                 var nodeConfig = opendxp.object.gridcolumn.operator[operator].prototype;
+
+                if (nodeConfig.adminOnly && !user.admin) {
+                    continue;
+                }
+
                 var configTreeNode = nodeConfig.getConfigTreeNode();
 
                 var operatorGroup = nodeConfig.operatorGroup ? nodeConfig.operatorGroup : 'other';
