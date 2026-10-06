@@ -349,9 +349,10 @@ opendxp.object.search = Class.create(opendxp.object.helpers.gridTabAbstract, {
         if (this.filter) {
             this.filter.forEach(filt => {
                 this.store.setFilters(new Ext.util.Filter(filt))
-                this.filterUpdateFunction(this.grid, this.toolbarFilterInfo, this.clearFilterButton);
             });
         }
+
+        this.filterUpdateFunction(this.grid, this.toolbarFilterInfo, this.clearFilterButton);
 
         this.grid.on("columnmove", function () {
             this.saveColumnConfigButton.show()
