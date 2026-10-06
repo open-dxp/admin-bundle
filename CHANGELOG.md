@@ -1,8 +1,8 @@
 # Changelog / Upgrade Notes
 
 ## 1.5.0
-* Chore: Replace Codeception with Pest and `open-dxp/test-foundation`. Remove `codeception/codeception`, `codeception/module-asserts`, `codeception/module-symfony`, `codeception/stub` and `phpunit/phpunit` from `require-dev`.
-* Chore: Remove `tests/bin`, the Codeception container setup.
+* Chore: Replace Codeception with Pest and `open-dxp/test-foundation`
+* Chore: Require `open-dxp/opendxp` ^1.5
 * Chore: Stop registering the payload and result classes in `src/Handler` as services. They are data objects, and a service definition for them could not be built.
 
 ## 1.4.3
