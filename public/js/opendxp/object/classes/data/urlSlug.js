@@ -121,7 +121,52 @@ opendxp.object.classes.data.urlSlug = Class.create(opendxp.object.classes.data.d
                 valueField: "id",
                 store: sitesStore,
                 width: 600,
-            })
+            }),
+            {
+                xtype: "textfield",
+                fieldLabel: t("url_slug_generator"),
+                name: "slugGeneratorClass",
+                value: datax.slugGeneratorClass,
+                width: 740,
+                listeners: {
+                    change: function (field, value) {
+                        const fillEmptySlug = field.up('form').down('[name=fillEmptySlug]');
+
+                        fillEmptySlug.setDisabled(!value);
+                        if (!value) {
+                            fillEmptySlug.setValue(false);
+                        }
+                    }
+                }
+            },
+            {
+                xtype: "displayfield",
+                hideLabel: true,
+                value: t('url_slug_generator_info')
+            },
+            {
+                xtype: "checkbox",
+                fieldLabel: t("url_slug_fill_empty"),
+                name: "fillEmptySlug",
+                value: datax.fillEmptySlug,
+                disabled: !datax.slugGeneratorClass
+            },
+            {
+                xtype: "displayfield",
+                hideLabel: true,
+                value: t('url_slug_fill_empty_info')
+            },
+            {
+                xtype: "checkbox",
+                fieldLabel: t("url_slug_extend_duplicates"),
+                name: "extendDuplicateSlugs",
+                value: datax.extendDuplicateSlugs
+            },
+            {
+                xtype: "displayfield",
+                hideLabel: true,
+                value: t('url_slug_extend_duplicates_info')
+            }
         ]);
     },
 
@@ -136,6 +181,9 @@ opendxp.object.classes.data.urlSlug = Class.create(opendxp.object.classes.data.d
                     action: source.datax.action,
                     availableSites: source.datax.availableSites,
                     domainLabelWidth: source.datax.domainLabelWidth,
+                    slugGeneratorClass: source.datax.slugGeneratorClass,
+                    fillEmptySlug: source.datax.fillEmptySlug,
+                    extendDuplicateSlugs: source.datax.extendDuplicateSlugs,
                     defaultValueGenerator: source.datax.defaultValueGenerator
                 });
         }

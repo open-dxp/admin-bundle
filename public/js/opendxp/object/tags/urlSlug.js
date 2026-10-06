@@ -25,6 +25,7 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
         this.usedSiteIds = [];
         this.elements = {};
         this.dirty = false;
+        this.formatting = 0;
 
         if (data) {
             this.data = data;
@@ -48,7 +49,13 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
 
     getLayoutEdit: function () {
         this.component = new Ext.Panel();
+        this.addSlugElements();
+        this.listenToObjectSave();
 
+        return this.component;
+    },
+
+    addSlugElements: function () {
         this.addFallbackSlug();
         if (this.data.length > 0) {
             for (var i = 0; i < this.data.length; i++) {
@@ -57,8 +64,108 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
         }
 
         this.updateSiteFilter();
+    },
 
-        return this.component;
+    /**
+     * Saving waits for the formatting, because the formatted slug goes public. Saving may fill or extend a slug, so
+     * the slugs are loaded again afterwards.
+     */
+    listenToObjectSave: function () {
+        const preSave = function (event) {
+            if (event.detail.object === this.object && this.formatting > 0) {
+                opendxp.helpers.showNotification(t("info"), t("url_slug_formatting"), "info");
+                event.preventDefault();
+            }
+        }.bind(this);
+
+        const postSave = function (event) {
+            if (event.detail.object === this.object) {
+                this.reloadSlugs();
+            }
+        }.bind(this);
+
+        document.addEventListener(opendxp.events.preSaveObject, preSave);
+        document.addEventListener(opendxp.events.postSaveObject, postSave);
+
+        this.component.on('destroy', function () {
+            document.removeEventListener(opendxp.events.preSaveObject, preSave);
+            document.removeEventListener(opendxp.events.postSaveObject, postSave);
+        });
+    },
+
+    reloadSlugs: function () {
+        const context = this.getContext();
+
+        if (context.subContainerType || !['object', 'localizedfield'].includes(context.containerType)) {
+            return;
+        }
+
+        Ext.Ajax.request({
+            url: Routing.generate('opendxp_admin_dataobject_dataobject_geturlslugs'),
+            method: 'GET',
+            params: {
+                objectId: this.object.id,
+                context: Ext.encode(context)
+            },
+            success: function (response) {
+                this.data = Ext.decode(response.responseText).slugs;
+                this.elements = {};
+                this.usedSiteIds = [];
+                this.siteCombo = undefined;
+                this.dirty = false;
+
+                Ext.suspendLayouts();
+                this.component.removeAll();
+                this.addSlugElements();
+                Ext.resumeLayouts(true);
+            }.bind(this)
+        });
+    },
+
+    getPrefix: function (siteId) {
+        const prefixes = (this.fieldConfig.slugPrefixes || {})[this.getContext().language || ''];
+
+        if (!prefixes) {
+            return null;
+        }
+
+        return prefixes.hasOwnProperty(siteId) ? prefixes[siteId] : prefixes[0];
+    },
+
+    formatSlug: function (field) {
+        const text = field.getValue();
+
+        if (!this.fieldConfig.slugGeneratorClass || text === '' || text === field.formattedText) {
+            return;
+        }
+
+        this.formatting++;
+        field.setLoading(true);
+
+        Ext.Ajax.request({
+            url: Routing.generate('opendxp_admin_dataobject_dataobject_formaturlslug'),
+            method: 'POST',
+            params: {
+                objectId: this.object.id,
+                context: Ext.encode(this.getContext()),
+                siteId: field.siteId,
+                text: field.slugPrefix === null ? text.replace(/^\/+/, '') : text
+            },
+            success: function (response) {
+                const slug = Ext.decode(response.responseText).slug;
+
+                field.formattedText = slug !== '' && field.slugPrefix === null ? '/' + slug : slug;
+                field.setValue(field.formattedText);
+            },
+            failure: function () {
+                opendxp.helpers.showNotification(t("error"), t("url_slug_format_failed"), "error");
+            },
+            callback: function () {
+                this.formatting--;
+                field.setLoading(false);
+            },
+            scope: this
+        });
     },
 
     addFallbackSlug: function () {
@@ -108,7 +215,10 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
         Ext.suspendLayouts();
 
         var fieldContainer = new Ext.form.FieldContainer({
-            layout: 'hbox',
+            layout: {
+                type: 'hbox',
+                align: 'middle'
+            }
         });
 
 
@@ -116,26 +226,42 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
         this.usedSiteIds.push(siteData['siteId']);
 
         if (siteData['siteId'] > 0) {
-            domain = siteData['domain'];
+            domain = " (" + t('site') + ")";
         } else if (opendxp.globalmanager.get("sites").getCount() > 1) {
-            domain = t('fallback');
-        }
-
-        if(domain) {
-            domain = " (" + domain + ")";
+            domain = " (" + t('fallback') + ")";
         }
 
         var title = this.fieldConfig.title ? this.fieldConfig.title : this.fieldConfig.name;
+        var storedSlug = siteData['slug'] || '';
+        var prefix = this.getPrefix(siteData['siteId']);
+        var prefixed = prefix !== null && (storedSlug === '' || storedSlug.startsWith(prefix + '/'));
+        var locked = storedSlug !== '' && !this.fieldConfig.noteditable;
+        var triggers = {};
+
+        if (locked) {
+            triggers.lock = {
+                cls: 'opendxp_url_slug_trigger opendxp_icon_lock',
+                hideOnReadOnly: false
+            };
+        }
 
         var textConfig = {
             xtype: "textfield",
             fieldLabel: title + domain,
             name: "slug",
-            labelWidth: 100,
-            value: siteData['slug'],
-            componentCls: this.getWrapperClassNames(),
+            labelWidth: this.getLabelWidth(),
+            value: prefixed ? storedSlug.substring(prefix.length + 1) : storedSlug,
+            readOnly: locked,
+            triggers: triggers,
+            emptyText: this.fieldConfig.fillEmptySlug && !siteData['siteId'] ? t("url_slug_filled_on_save") : '',
+            componentCls: this.getWrapperClassNames(prefix === null ? '' : 'opendxp_url_slug_prefixed'),
+            afterLabelTpl: this.getPrefixTpl(prefixed ? prefix : null),
             validator: function(value) {
                 if (value) {
+                    if (text.slugPrefix !== null) {
+                        value = '/' + value;
+                    }
+
                     if (!value.startsWith('/') || value.length < 2) {
                         return false;
 
@@ -146,7 +272,7 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
                     const parts = value.split('/');
                     for (let i = 0; i < parts.length; i++) {
                         let part = parts[i];
-                        if  (part.length == 0) {
+                        if  (part.length === 0) {
                             return false;
                         }
                     }
@@ -161,8 +287,8 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
             textConfig.width = 350;
         }
 
-        if (this.fieldConfig.labelWidth) {
-            textConfig.labelWidth = this.fieldConfig.labelWidth;
+        if (prefixed) {
+            textConfig.width += this.measure(prefix + '/') + 4;
         }
 
         // data type allows to configure a field-level label width, otherwise the parent label width gets applied.
@@ -179,6 +305,33 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
         }
 
         var text = new Ext.form.TextField(textConfig);
+        text.siteId = siteData['siteId'];
+        text.slugPrefix = prefixed ? prefix : null;
+        text.storedSlug = storedSlug;
+        text.storedValue = textConfig.value;
+        text.formattedText = textConfig.value;
+        text.lockTooltip = t(prefix === null || prefixed ? "url_slug_locked" : "url_slug_other_prefix");
+
+        text.on('afterrender', function (field) {
+            const lock = field.getTrigger('lock');
+
+            if (lock) {
+                lock.getEl().dom.setAttribute('data-qtip', field.lockTooltip);
+
+                // ExtJS ignores the handler of a trigger while its field is read only.
+                lock.getEl().on('click', function () {
+                    if (field.readOnly) {
+                        this.unlock(field, prefix);
+                    } else {
+                        this.lock(field);
+                    }
+                }.bind(this));
+            }
+        }.bind(this));
+
+        text.on('blur', function (field) {
+            this.formatSlug(field);
+        }.bind(this));
 
         var containerItems = [text];
 
@@ -196,6 +349,12 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
                     }.bind(this, fieldContainer, siteData['siteId'])
                 });
             }
+
+            containerItems.push({
+                xtype: "component",
+                cls: "opendxp_url_slug_domain",
+                html: Ext.util.Format.htmlEncode(siteData['domain'])
+            });
         } else {
             let siteData = [];
             let allSitesStore = opendxp.globalmanager.get("sites");
@@ -258,11 +417,80 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
         Ext.resumeLayouts();
     },
 
+    getPrefixTpl: function (prefix) {
+        if (prefix === null) {
+            return '';
+        }
+
+        return '<div class="opendxp_url_slug_prefix">' + Ext.util.Format.htmlEncode(prefix + '/') + '</div>';
+    },
+
+    measure: function (text) {
+        return Ext.util.TextMetrics.measure(Ext.getBody(), text).width;
+    },
+
+    getLabelWidth: function () {
+        if (this.fieldConfig.domainLabelWidth) {
+            return this.fieldConfig.domainLabelWidth;
+        }
+
+        const title = this.fieldConfig.title ? this.fieldConfig.title : this.fieldConfig.name;
+
+        return Math.max(
+            this.fieldConfig.labelWidth || 100,
+            this.measure(title + ' (' + t('fallback') + '):') + 10,
+            this.measure(title + ' (' + t('site') + '):') + 10
+        );
+    },
+
+    /**
+     * A slug saved with another prefix gets the current prefix once it is unlocked, and keeps its last path segment.
+     */
+    unlock: function (field, prefix) {
+        if (prefix !== null && field.slugPrefix === null) {
+            field.slugPrefix = prefix;
+            field.setValue(field.storedSlug.split('/').pop());
+            field.bodyEl.insertHtml('beforeBegin', this.getPrefixTpl(prefix));
+        }
+
+        field.setReadOnly(false);
+        field.getTrigger('lock').getEl().replaceCls('opendxp_icon_lock', 'opendxp_icon_unlock');
+        field.getTrigger('lock').getEl().dom.setAttribute('data-qtip', t("url_slug_unlocked"));
+        field.focus([field.getValue().length, field.getValue().length]);
+    },
+
+    lock: function (field) {
+        if (field.storedValue === field.storedSlug && field.slugPrefix !== null) {
+            field.slugPrefix = null;
+            field.el.down('.opendxp_url_slug_prefix').destroy();
+        }
+
+        field.setValue(field.storedValue);
+        field.formattedText = field.storedValue;
+        field.setReadOnly(true);
+        field.getTrigger('lock').getEl().replaceCls('opendxp_icon_unlock', 'opendxp_icon_lock');
+        field.getTrigger('lock').getEl().dom.setAttribute('data-qtip', field.lockTooltip);
+    },
+
+    getSlug: function (field) {
+        const value = field.getValue();
+
+        if (field.slugPrefix === null || value === '') {
+            return value;
+        }
+
+        return field.slugPrefix + '/' + value;
+    },
+
     getLayoutShow: function () {
         var layout = this.getLayoutEdit();
         for (let key in this.elements) {
             if (this.elements.hasOwnProperty(key)) {
                 this.elements[key].setReadOnly(true);
+
+                if (this.elements[key].getTrigger('lock')) {
+                    this.elements[key].getTrigger('lock').hide();
+                }
             }
         }
 
@@ -279,7 +507,7 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
         for (let key in this.elements) {
             if (this.elements.hasOwnProperty(key)) {
                 let textfield = this.elements[key];
-                value.push([key, textfield.getValue(), textfield.originalValue]);
+                value.push([key, this.getSlug(textfield), textfield.storedSlug]);
             }
         }
 

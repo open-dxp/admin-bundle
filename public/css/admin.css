@@ -2422,3 +2422,29 @@ ul.leaflet-draw-actions.leaflet-draw-actions-top.leaflet-draw-actions-bottom li:
 .opendxp_reverse-object-relation-bottom-bar > div {
     height: 4.5rem !important;
 }
+
+.opendxp_url_slug_trigger:before {
+    content: '';
+}
+
+.opendxp_url_slug_prefixed {
+    table-layout: auto;
+}
+
+.opendxp_url_slug_prefix {
+    display: table-cell;
+    vertical-align: middle;
+    width: 1px;
+    padding-right: 4px;
+    white-space: nowrap;
+    color: var(--color-opendxp-neutral-d);
+}
+
+.opendxp_url_slug_domain {
+    margin-left: 6px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--color-opendxp-neutral-h);
+    color: var(--color-opendxp-neutral-c);
+    white-space: nowrap;
+}

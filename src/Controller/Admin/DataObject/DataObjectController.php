@@ -37,7 +37,11 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl\GetDat
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl\GetDataObjectPreviewUrlPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo\GetIdPathPagingInfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo\GetIdPathPagingInfoPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FormatUrlSlug\FormatUrlSlugHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FormatUrlSlug\FormatUrlSlugPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions\GetSelectOptionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetUrlSlugs\GetUrlSlugsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetUrlSlugs\GetUrlSlugsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions\GetSelectOptionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectPayload;
@@ -121,6 +125,22 @@ class DataObjectController extends ElementControllerBase
     public function getSelectOptions(
         GetSelectOptionsPayload $payload,
         GetSelectOptionsHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
+    }
+
+    #[Route('/format-url-slug', name: 'formaturlslug', methods: ['POST'])]
+    public function formatUrlSlugAction(
+        FormatUrlSlugPayload $payload,
+        FormatUrlSlugHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
+    }
+
+    #[Route('/get-url-slugs', name: 'geturlslugs', methods: ['GET'])]
+    public function getUrlSlugsAction(
+        GetUrlSlugsPayload $payload,
+        GetUrlSlugsHandler $handler,
     ): JsonResponse {
         return $this->apiJson($handler($payload));
     }
