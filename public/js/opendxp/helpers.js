@@ -3598,3 +3598,13 @@ opendxp.helpers.geocodingRequest = (function () {
         next();
     };
 })();
+
+opendxp.helpers.rejectFailedStoreUpdate = function (store, response, operation) {
+    if (operation.getAction() !== "update") {
+        return;
+    }
+
+    const data = response.responseJson || Ext.decode(response.responseText, true);
+    Ext.MessageBox.alert(t('error'), t(data && data.message ? data.message : 'cannot_save_object_please_try_to_edit_the_object_in_detail_view'));
+    store.rejectChanges();
+};

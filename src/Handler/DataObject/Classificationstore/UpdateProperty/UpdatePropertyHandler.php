@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\Classificationstore\UpdateProperty;
 
+use InvalidArgumentException;
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Mapper\DataObject\ClassificationstoreKeyConfigMapper;
 use OpenDxp\Model\DataObject\Classificationstore;
@@ -58,7 +59,12 @@ final class UpdatePropertyHandler
             }
         }
 
-        $config->save();
+        try {
+            $config->save();
+        } catch (InvalidArgumentException) {
+            throw new AdminOperationFailedException('classificationstore_invalidname');
+        }
+
         $item = $this->keyConfigService->buildKeyConfigItem($config);
 
         return new UpdatePropertyResult(data: $item);

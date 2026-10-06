@@ -95,25 +95,18 @@ opendxp.object.classificationstore.propertiespanel = Class.create({
             },
             extraParams: {
                 storeId: this.storeConfig.id
+            },
+            listeners: {
+                exception: function (proxy, response, operation) {
+                    opendxp.helpers.rejectFailedStoreUpdate(this.store, response, operation);
+                }.bind(this)
             }
-
         };
-
-        var listeners = {};
-
-        listeners.exception = function (conn, mode, action, request, response, store) {
-            if(action == "update") {
-                Ext.MessageBox.alert(t('error'), t('cannot_save_object_please_try_to_edit_the_object_in_detail_view'));
-                this.store.rejectChanges();
-            }
-        }.bind(this);
-
 
         this.store = new Ext.data.Store({
             autoSync: true,
             proxy: proxy,
             fields: readerFields,
-            listeners: listeners,
             remoteFilter: true,
             remoteSort: true
         });
@@ -225,29 +218,19 @@ opendxp.object.classificationstore.propertiespanel = Class.create({
 
         var cellEditing = Ext.create('Ext.grid.plugin.CellEditing', {
             listeners: {
-                edit: function (editor, e) {
-                    var field = e.field;
-                    var rec = e.record;
-                    var val = e.value;
-                    var originalValue = e.originalValue;
-
-                    var definition = rec.get("definition");
-                    definition = Ext.util.JSON.decode(definition);
-                    if (field == "name") {
-                        definition.name = val;
-                        definition = Ext.util.JSON.encode(definition);
-                        rec.set("definition", definition);
-                    } else if (field == "type") {
-                        definition.fieldtype = val;
-                        definition = Ext.util.JSON.encode(definition);
-                        rec.set("definition", definition);
-                    } else if (field == "title") {
-                        definition.title = val;
-                        definition = Ext.util.JSON.encode(definition);
-                        rec.set("definition", definition);
+                // The definition changes silently, so the edit of the cell saves it in the same request.
+                validateedit: function (editor, e) {
+                    var definitionKey = {name: "name", type: "fieldtype", title: "title"}[e.field];
+                    if (!definitionKey) {
+                        return;
                     }
 
-                    if (val != originalValue) {
+                    var definition = Ext.util.JSON.decode(e.record.get("definition"));
+                    definition[definitionKey] = e.value;
+                    e.record.set("definition", Ext.util.JSON.encode(definition), {silent: true});
+                },
+                edit: function (editor, e) {
+                    if (e.value != e.originalValue) {
                         this.showDetailedConfig(e.grid, e.rowIdx);
                     }
                 }.bind(this)
@@ -320,8 +303,7 @@ opendxp.object.classificationstore.propertiespanel = Class.create({
         definition = Ext.util.JSON.encode(definition);
 
         var record = this.store.getById(keyid);
-        record.set("name",  name);
-        record.set("definition",  definition);
+        record.set({name: name, definition: definition});
     },
 
     onAdd: function () {
@@ -343,7 +325,7 @@ opendxp.object.classificationstore.propertiespanel = Class.create({
                     var data = Ext.decode(response.responseText);
 
                     if(!data || !data.success) {
-                        Ext.Msg.alert(t("classificationstore_error_addkey_title"), t("classificationstore_error_addkey_msg"));
+                        Ext.Msg.alert(t("classificationstore_error_addkey_title"), t(data && data.message ? data.message : "classificationstore_error_addkey_msg"));
                     } else {
 
                         this.store.reload({
