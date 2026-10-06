@@ -32,9 +32,8 @@ class CsrfProtectionHandler implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
-    public function __construct(
-        protected array $excludedRoutes,
-    ) {
+    public function __construct(protected array $excludedRoutes,)
+    {
     }
 
     public function checkCsrfToken(Request $request): void
