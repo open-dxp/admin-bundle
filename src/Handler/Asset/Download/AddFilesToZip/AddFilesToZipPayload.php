@@ -21,12 +21,16 @@ use Symfony\Component\HttpFoundation\Request;
 
 final readonly class AddFilesToZipPayload implements ExtJsPayloadInterface
 {
+    /**
+     * @param list<int> $selectedIds
+     */
     public function __construct(
-        public readonly int $id = 0,
-        public readonly ?string $selectedIds = null,
-        public readonly int $offset = 0,
-        public readonly int $limit = 0,
-        public readonly string $jobId = '',
+        public int $id = 0,
+        public array $selectedIds = [],
+        public int $offset = 0,
+        public int $limit = 0,
+        public string $jobId = '',
+        public ?string $thumbnail = null,
     ) {
     }
 
@@ -34,10 +38,11 @@ final readonly class AddFilesToZipPayload implements ExtJsPayloadInterface
     {
         return new static(
             id:          $request->query->getInt('id'),
-            selectedIds: $request->query->getString('selectedIds') ?: null,
+            selectedIds: array_values(array_filter(array_map(intval(...), explode(',', $request->query->getString('selectedIds'))))),
             offset:      $request->query->getInt('offset'),
             limit:       $request->query->getInt('limit'),
             jobId:       $request->query->getString('jobId'),
+            thumbnail:   $request->query->getString('thumbnail') ?: null,
         );
     }
 }

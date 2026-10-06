@@ -1151,7 +1151,102 @@ opendxp.elementservice.replaceAsset = function (id, callback) {
 };
 
 
-opendxp.elementservice.downloadAssetFolderAsZip = function (id, selectedIds) {
+/**
+ * The menu entries that download a folder, or the assets selected in it, as a ZIP file. The selected IDs are read when
+ * an entry is clicked, so a list can hand over a function that returns its current selection.
+ */
+opendxp.elementservice.getAssetZipDownloadMenu = function (id, getSelectedIds) {
+    getSelectedIds = getSelectedIds || function () {
+        return null;
+    };
+
+    return [{
+        text: t("originals"),
+        iconCls: "opendxp_icon_zip opendxp_icon_overlay_download",
+        handler: function () {
+            const selectedIds = getSelectedIds();
+            if (selectedIds !== false) {
+                opendxp.elementservice.downloadAssetFolderAsZip(id, selectedIds);
+            }
+        }
+    }, {
+        text: t("thumbnails"),
+        iconCls: "opendxp_icon_image opendxp_icon_overlay_download",
+        handler: function () {
+            const selectedIds = getSelectedIds();
+            if (selectedIds !== false) {
+                opendxp.elementservice.downloadAssetImagesAsThumbnailZip(id, selectedIds);
+            }
+        }
+    }];
+};
+
+opendxp.elementservice.downloadAssetImagesAsThumbnailZip = function (id, selectedIds) {
+    const idsParam = selectedIds && selectedIds.length ? selectedIds.join(',') : '';
+
+    Ext.Ajax.request({
+        url: Routing.generate('opendxp_admin_asset_downloadaszipimagecount'),
+        params: {
+            id: id,
+            selectedIds: idsParam
+        },
+        success: function (response) {
+            if (Ext.decode(response.responseText).count === 0) {
+                Ext.Msg.alert(t('error'), t(idsParam ? 'zip_selection_without_images' : 'zip_folder_without_images'));
+                return;
+            }
+
+            const thumbnailStore = new Ext.data.JsonStore({
+                autoDestroy: true,
+                proxy: {
+                    type: 'ajax',
+                    url: Routing.generate('opendxp_admin_settings_thumbnaildownloadable')
+                },
+                fields: ['id']
+            });
+
+            thumbnailStore.load(function (records) {
+                if (records.length === 0) {
+                    Ext.Msg.alert(t('error'), t('no_downloadable_thumbnail'));
+                    return;
+                }
+
+                const thumbnailCombo = new Ext.form.ComboBox({
+                    fieldLabel: t("thumbnail"),
+                    store: thumbnailStore,
+                    displayField: "id",
+                    valueField: "id",
+                    queryMode: 'local',
+                    editable: false,
+                    forceSelection: true,
+                    value: records[0].get('id'),
+                    width: 350
+                });
+
+                const dialog = new Ext.Window({
+                    title: t("thumbnails_as_zip"),
+                    modal: true,
+                    resizable: false,
+                    bodyStyle: "padding: 10px;",
+                    items: [thumbnailCombo],
+                    buttons: [{
+                        text: t("download"),
+                        iconCls: "opendxp_icon_download",
+                        handler: function () {
+                            const thumbnail = thumbnailCombo.getValue();
+                            dialog.close();
+                            opendxp.elementservice.downloadAssetFolderAsZip(id, selectedIds, thumbnail);
+                        }
+                    }]
+                });
+
+                dialog.show();
+            });
+        }
+    });
+};
+
+opendxp.elementservice.downloadAssetFolderAsZip = function (id, selectedIds, thumbnail) {
 
     var that = {};
 
@@ -1164,7 +1259,8 @@ opendxp.elementservice.downloadAssetFolderAsZip = function (id, selectedIds) {
         url: Routing.generate('opendxp_admin_asset_downloadaszipjobs'),
         params: {
             id: id,
-            selectedIds: idsParam
+            selectedIds: idsParam,
+            thumbnail: thumbnail || ''
         },
         success: function(response) {
             var res = Ext.decode(response.responseText);
@@ -1196,7 +1292,7 @@ opendxp.elementservice.downloadAssetFolderAsZip = function (id, selectedIds) {
                     that.downloadProgressBar = null;
                     that.downloadProgressWin = null;
 
-                    opendxp.helpers.download(Routing.generate('opendxp_admin_asset_downloadaszip', {jobId: res.jobId, id: id}));
+                    opendxp.helpers.download(Routing.generate('opendxp_admin_asset_downloadaszip', thumbnail ? {jobId: res.jobId, id: id, thumbnail: thumbnail} : {jobId: res.jobId, id: id}));
                 },
                 update: function (currentStep, steps, percent) {
                     if(that.downloadProgressBar) {

@@ -30,12 +30,17 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadImageThumbnail;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetDownloadService;
 use OpenDxp\Model\Asset;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Process\Process;
 
 final class DownloadImageThumbnailHandler
 {
+    public function __construct(private readonly AssetDownloadService $assetDownloadService)
+    {
+    }
+
     public function __invoke(DownloadImageThumbnailPayload $payload): DownloadImageThumbnailResult
     {
         $id = $payload->id;
@@ -79,7 +84,7 @@ final class DownloadImageThumbnailHandler
                 }
             }
 
-            $thumbnail = $image->getThumbnail($thumbnailConfig);
+            $thumbnail = $this->assetDownloadService->getThumbnail($image, $thumbnailConfig);
             $thumbnailFile = $thumbnail->getLocalFile();
 
             $exiftool = \OpenDxp\Tool\Console::getExecutable('exiftool');
@@ -88,16 +93,12 @@ final class DownloadImageThumbnailHandler
                 $process->run();
             }
         } elseif ($thumbnailName) {
-            $thumbnail = $image->getThumbnail($thumbnailName);
+            $thumbnailConfig = $this->assetDownloadService->getDownloadableThumbnailConfig($thumbnailName);
+            $thumbnail = $this->assetDownloadService->getThumbnail($image, $thumbnailConfig);
             $deleteThumbnail = false;
         }
 
         if ($thumbnail) {
-            $thumbnailConfig = $thumbnail->getConfig();
-            if ($thumbnailConfig->getFormat() === 'SOURCE' && $autoFormatConfigs = $thumbnailConfig->getAutoFormatThumbnailConfigs()) {
-                $autoFormatConfig = current($autoFormatConfigs);
-                $thumbnail = $image->getThumbnail($autoFormatConfig);
-            }
             $thumbnailFile = $thumbnailFile ?: $thumbnail->getLocalFile();
 
             return new DownloadImageThumbnailResult($image, $thumbnail, $thumbnailFile, $deleteThumbnail);

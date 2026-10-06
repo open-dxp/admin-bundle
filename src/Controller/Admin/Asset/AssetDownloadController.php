@@ -34,6 +34,8 @@ use DateTime;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZip\AddFilesToZipHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZip\AddFilesToZipPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\CountZipImages\CountZipImagesHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\CountZipImages\CountZipImagesPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadAsset\DownloadAssetHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadAsset\DownloadAssetPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadImageThumbnail\DownloadImageThumbnailHandler;
@@ -108,6 +110,14 @@ class AssetDownloadController extends AdminAbstractController
     public function downloadAsZipJobsAction(
         GetDownloadZipJobsPayload $payload,
         GetDownloadZipJobsHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($payload));
+    }
+
+    #[Route('/download-as-zip-image-count', name: 'opendxp_admin_asset_downloadaszipimagecount', methods: ['GET'])]
+    public function downloadAsZipImageCountAction(
+        CountZipImagesPayload $payload,
+        CountZipImagesHandler $handler,
     ): JsonResponse {
         return $this->apiJson($handler($payload));
     }

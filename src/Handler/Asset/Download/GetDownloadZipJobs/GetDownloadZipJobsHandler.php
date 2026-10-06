@@ -30,8 +30,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\GetDownloadZipJobs;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
-use OpenDxp\Db\Helper;
+use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetDownloadService;
 use OpenDxp\Model\Asset;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -40,71 +39,43 @@ final class GetDownloadZipJobsHandler
     private const int FILES_PER_JOB = 5;
 
     public function __construct(
-        private readonly AdminUserContextInterface $userContext,
+        private readonly AssetDownloadService $assetDownloadService,
         private readonly RouterInterface $router,
     ) {
     }
 
     public function __invoke(GetDownloadZipJobsPayload $payload): GetDownloadZipJobsResult
     {
-        $id = $payload->id;
-        $selectedIds = $payload->selectedIds;
-        $adminUser = $this->userContext->getAdminUser();
-        $asset = Asset::getById($id) ?? throw new AssetNotFoundException($id);
+        $asset = Asset::getById($payload->id) ?? throw new AssetNotFoundException($payload->id);
+        $jobId = uniqid('', false);
 
         if (!$asset->isAllowed('view')) {
-            return new GetDownloadZipJobsResult(jobId: uniqid('', false), jobs: []);
+            return new GetDownloadZipJobsResult(jobId: $jobId, jobs: []);
         }
 
-        $parentPath = $asset->getRealFullPath();
-        if ($asset->getId() == 1) {
-            $parentPath = '';
+        if ($payload->thumbnail === null) {
+            $assetList = $this->assetDownloadService->getZipFileListing($asset, $payload->selectedIds);
+        } else {
+            $this->assetDownloadService->getDownloadableThumbnailConfig($payload->thumbnail);
+            $assetList = $this->assetDownloadService->getZipImageListing($asset, $payload->selectedIds);
         }
 
-        $db = \OpenDxp\Db::get();
-        $conditionFilters = [];
-        $selectedIdList = explode(',', $selectedIds);
-        $quotedSelectedIds = [];
-        foreach ($selectedIdList as $selectedId) {
-            if ($selectedId) {
-                $quotedSelectedIds[] = $db->quote($selectedId);
-            }
-        }
-        if ($quotedSelectedIds !== []) {
-            $conditionFilters[] = 'id IN (' . implode(',', $quotedSelectedIds) . ')';
-        }
-        $conditionFilters[] = '`path` LIKE ' . $db->quote(Helper::escapeLike($parentPath) . '/%') . ' AND `type` != ' . $db->quote('folder');
-        if (!$adminUser->isAdmin()) {
-            $userIds = $adminUser->getRoles();
-            $userIds[] = $adminUser->getId();
-            $conditionFilters[] = ' (
-               (select list from users_workspaces_asset where userId in (' . implode(',', $userIds) . ') and LOCATE(CONCAT(`path`, filename),cpath)=1  ORDER BY LENGTH(cpath) DESC LIMIT 1)=1
-               OR
-               (select list from users_workspaces_asset where userId in (' . implode(',', $userIds) . ') and LOCATE(cpath,CONCAT(`path`, filename))=1  ORDER BY LENGTH(cpath) DESC LIMIT 1)=1
-            )';
-        }
-
-        $assetList = new Asset\Listing();
-        $assetList->setCondition(implode(' AND ', $conditionFilters));
-        $assetList->setOrderKey('LENGTH(`path`)', false);
-        $assetList->setOrder('ASC');
-
-        $totalCount = $assetList->getTotalCount();
-        $jobId = uniqid('', false);
+        $jobAmount = (int) ceil($assetList->getTotalCount() / self::FILES_PER_JOB);
         $addFilesUrl = $this->router->generate('opendxp_admin_asset_downloadaszipaddfiles');
-        $jobAmount = (int) ceil($totalCount / self::FILES_PER_JOB);
+
         $jobs = [];
         for ($i = 0; $i < $jobAmount; $i++) {
             $jobs[] = [[
                 'url' => $addFilesUrl,
                 'method' => 'GET',
-                'params' => [
+                'params' => array_filter([
                     'id' => $asset->getId(),
-                    'selectedIds' => implode(',', $selectedIdList),
+                    'selectedIds' => implode(',', $payload->selectedIds),
                     'offset' => $i * self::FILES_PER_JOB,
                     'limit' => self::FILES_PER_JOB,
                     'jobId' => $jobId,
-                ],
+                    'thumbnail' => $payload->thumbnail,
+                ], static fn (mixed $value): bool => $value !== null),
             ]];
         }
 

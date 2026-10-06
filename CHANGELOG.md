@@ -2,6 +2,8 @@
 
 ## 1.5.0
 * Feature: The URL slug field shows the prefix of its slug generator, formats what an editor types and locks a stored slug. The domain of a site slug stands next to it [open-dxp/opendxp#159](https://github.com/open-dxp/opendxp/issues/159)
+* Feature: Download the images of a folder or a selection as a ZIP of thumbnails. "Download as ZIP" in the asset tree, the folder toolbar and the list view offers "Originals" and "Thumbnails", which asks for one of the thumbnails offered for download [#128](https://github.com/open-dxp/admin-bundle/issues/128)
+* Bugfix: The thumbnail download of the image detail view hands out only thumbnails that are offered for download [#128](https://github.com/open-dxp/admin-bundle/issues/128)
 * Chore: Replace Codeception with Pest and `open-dxp/test-foundation`
 * Chore: Require `open-dxp/opendxp` ^1.5
 * Chore: Stop registering the payload and result classes in `src/Handler` as services. They are data objects, and a service definition for them could not be built.
