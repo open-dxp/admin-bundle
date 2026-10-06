@@ -1,9 +1,0 @@
-actor: UnitTester
-modules:
-    enabled:
-        - \OpenDxp\Tests\Support\Helper\ClassManager
-        - OpenDxp\Tests\Support\Helper\DataType\TestDataHelper
-        - \OpenDxp\Tests\Support\Helper\OpenDxp:
-            connect_db: true
-            cache_router: false
-        - \OpenDxp\Bundle\AdminBundle\Tests\Support\Helper\Model

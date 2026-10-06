@@ -40,7 +40,7 @@ Following topics are short-cuts into the documentation for admin interface:
 - [Architecture](docs/00_Architecture/README.md)
 - [Extension_Points](docs/10_Extension_Points)
 - [Deeplinks](docs/10_Extension_Points/06_Deeplinks.md)
-- 🤖 [Testing with AI (Claude)](https://github.com/open-dxp/opendxp/doc/19_Development_Tools_and_Details/50_Testing_with_AI.md) - Write, run and fix tests with Claude Code
+- [Testing](docs/90_Testing/README.md)
 
 => [Full Documentation](docs/README.md)
 
