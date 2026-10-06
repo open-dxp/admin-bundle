@@ -26,5 +26,8 @@ node_modules/
 /.phpunit.cache/
 
 # AI
-.claude
 .mcp.json
+
+# agent instructions stay local
+/CLAUDE.md
+/.claude/
