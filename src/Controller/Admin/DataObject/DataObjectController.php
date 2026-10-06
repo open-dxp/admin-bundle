@@ -30,6 +30,8 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxy\DataObject
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxy\DataObjectGridProxyPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DeleteDataObject\DeleteDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DeleteDataObject\DeleteDataObjectPayload;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FormatUrlSlug\FormatUrlSlugHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FormatUrlSlug\FormatUrlSlugPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObject\GetDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObject\GetDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectFolder\GetDataObjectFolderHandler;
@@ -37,12 +39,10 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl\GetDat
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetDataObjectPreviewUrl\GetDataObjectPreviewUrlPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo\GetIdPathPagingInfoHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetIdPathPagingInfo\GetIdPathPagingInfoPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FormatUrlSlug\FormatUrlSlugHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\FormatUrlSlug\FormatUrlSlugPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions\GetSelectOptionsHandler;
+use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions\GetSelectOptionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetUrlSlugs\GetUrlSlugsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetUrlSlugs\GetUrlSlugsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\GetSelectOptions\GetSelectOptionsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObject\SaveDataObjectPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\SaveDataObjectFolder\SaveDataObjectFolderHandler;
