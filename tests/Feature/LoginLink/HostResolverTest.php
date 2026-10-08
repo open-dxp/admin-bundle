@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Tests\Feature\LoginLink;
 
+use OpenDxp\Http\Request\Host\GeneralHostProviderInterface;
 use OpenDxp\Test\Factory\SiteFactory;
 
 it('trusts the host of a registered site without asking the providers', function () {
@@ -49,5 +50,5 @@ it('hands the request to the providers it asks for the general host', function (
 
     $this->hostResolver()->resolve($request);
 
-    expect($this->generalHosts->contexts)->toBe([['source' => $request]]);
+    expect($this->generalHosts->contexts)->toBe([[GeneralHostProviderInterface::CONTEXT_SOURCE => $request]]);
 });
