@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Tests\TestCase;
 
-use ArrayObject;
 use OpenDxp;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Event\Login\LostPasswordEvent;
@@ -28,22 +27,19 @@ use OpenDxp\Bundle\AdminBundle\Handler\User\GetTokenLoginLink\GetTokenLoginLinkP
 use OpenDxp\Bundle\AdminBundle\Handler\User\SendInvitationLink\SendInvitationLinkHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\User\SendInvitationLink\SendInvitationLinkPayload;
 use OpenDxp\Bundle\AdminBundle\Security\TrustedLoginLinkHostResolver;
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Tests\Application\Admin\MockAdminUserContext;
+use OpenDxp\Bundle\AdminBundle\Tests\Application\Host\MockGeneralHostProvider;
+use OpenDxp\Bundle\AdminBundle\Tests\Application\Mailer\MockMailer;
 use OpenDxp\Event\MailEvents;
 use OpenDxp\Event\Model\MailEvent;
-use OpenDxp\Http\Request\Host\GeneralHostProviderInterface;
 use OpenDxp\Http\Request\Host\GeneralHostResolver;
 use OpenDxp\Mail;
 use OpenDxp\Model\User;
-use OpenDxp\Security\User\User as UserProxy;
 use OpenDxp\TestFoundation\Container;
 use OpenDxp\TestFoundation\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Mailer\Envelope;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\RawMessage;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\RateLimiter\Storage\InMemoryStorage;
 use Symfony\Component\Routing\RouterInterface;
@@ -53,7 +49,7 @@ class LoginLinkTestCase extends TestCase
 {
     protected const string GENERAL_HOST = 'general.login-link-test.example';
 
-    protected GeneralHostProviderInterface $generalHosts;
+    protected MockGeneralHostProvider $generalHosts;
 
     private string $run;
 
@@ -62,31 +58,7 @@ class LoginLinkTestCase extends TestCase
         parent::setUp();
 
         $this->run = uniqid();
-        $this->generalHosts = self::generalHostProvider(self::GENERAL_HOST);
-    }
-
-    /**
-     * The provider remembers the context it was asked with, so a test can see whether it was asked at all.
-     */
-    protected static function generalHostProvider(string $host): GeneralHostProviderInterface
-    {
-        return new class($host) implements GeneralHostProviderInterface {
-            /**
-             * @var list<array<string, mixed>>
-             */
-            public array $contexts = [];
-
-            public function __construct(private readonly string $host)
-            {
-            }
-
-            public function provide(array $context = []): ?string
-            {
-                $this->contexts[] = $context;
-
-                return $this->host;
-            }
-        };
+        $this->generalHosts = new MockGeneralHostProvider(self::GENERAL_HOST);
     }
 
     /**
@@ -123,23 +95,11 @@ class LoginLinkTestCase extends TestCase
 
     protected function invitationFrom(string $host, User $user): Mail
     {
-        $sent = new ArrayObject();
+        $mailer = new MockMailer();
         OpenDxp::getEventDispatcher()->addListener(
             MailEvents::PRE_SEND,
-            static function (MailEvent $event) use ($sent): void {
-                $event->setArgument('mailer', new class($sent) implements MailerInterface {
-                    /**
-                     * @param ArrayObject<int, RawMessage> $sent
-                     */
-                    public function __construct(private readonly ArrayObject $sent)
-                    {
-                    }
-
-                    public function send(RawMessage $message, ?Envelope $envelope = null): void
-                    {
-                        $this->sent->append($message);
-                    }
-                });
+            static function (MailEvent $event) use ($mailer): void {
+                $event->setArgument('mailer', $mailer);
             },
         );
 
@@ -154,7 +114,7 @@ class LoginLinkTestCase extends TestCase
 
         $handler(new SendInvitationLinkPayload($user->getName()));
 
-        return $sent[0];
+        return $mailer->sent[0];
     }
 
     protected function lostPasswordLinkFrom(string $host, User $user): string
@@ -196,17 +156,7 @@ class LoginLinkTestCase extends TestCase
     {
         $router = Container::get(RouterInterface::class);
         $handler = new GetTokenLoginLinkHandler(
-            userContext: new class() implements AdminUserContextInterface {
-                public function getAdminUser(): ?User
-                {
-                    return null;
-                }
-
-                public function getAdminUserProxy(): ?UserProxy
-                {
-                    return null;
-                }
-            },
+            userContext: new MockAdminUserContext(),
             loginUrlGenerator: new CustomLoginUrlGenerator($router, 'login_link_test_missing_route'),
             translator: new IdentityTranslator(),
             hostResolver: $this->hostResolver(),
