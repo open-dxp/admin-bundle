@@ -19,18 +19,10 @@ opendxp.settings.email.log = Class.create({
 
     filterField: null,
     cleanupUrl: null,
-    exportPrepareUrl: null,
-    exportProcessUrl: null,
-    exportDownloadUrl: null,
-
-    exportConfirmThreshold: 1000,
 
     initialize: function(document) {
         this.document = document;
         this.cleanupUrl = Routing.generate('opendxp_admin_email_cleanupemaillogs');
-        this.exportPrepareUrl = Routing.generate('opendxp_admin_email_exportemaillogs_prepare');
-        this.exportProcessUrl = Routing.generate('opendxp_admin_email_exportemaillogs');
-        this.exportDownloadUrl = Routing.generate('opendxp_admin_email_exportemaillogs_download');
 
         this.filterField = new Ext.form.TextField({
             width: 200,
@@ -484,9 +476,9 @@ opendxp.settings.email.log = Class.create({
         }
 
         toolbarItems.push({
-            text: t('export_csv'),
+            text: t('export'),
             iconCls: 'opendxp_icon_export',
-            handler: this.doExport.bind(this)
+            handler: this.startExport.bind(this)
         }, '-', {
             text: t('filter') + '/' + t('search'),
             xtype: 'tbtext',
@@ -589,87 +581,18 @@ opendxp.settings.email.log = Class.create({
         });
     },
 
-    doExport: function () {
-        var params = {};
-
-        if (this.document) {
-            params.documentId = this.document.id;
-        }
-
-        var selection = this.grid.getSelectionModel().getSelection();
-        if (selection.length > 0) {
-            params['ids[]'] = selection.map(function (record) {
-                return record.get('id');
-            });
-
-            this.exportPrepare(params);
-            return;
-        }
-
-        // the applied filter, not the raw input: the field only takes effect on ENTER
-        var filter = this.store.getProxy().extraParams.filter;
-        if (!filter) {
-            this.exportPrepare(params);
-            return;
-        }
-
-        Ext.MessageBox.confirm('', t('filter_active_message'), function (buttonValue) {
-            if (buttonValue === 'yes') {
-                params.filter = filter;
-            }
-
-            this.exportPrepare(params);
-        }.bind(this));
-    },
-
-    exportPrepare: function (params) {
-        Ext.Ajax.request({
-            url: this.exportPrepareUrl,
-            method: 'POST',
-            params: params,
-            success: function (response) {
-                var rdata = Ext.decode(response.responseText);
-
-                if (!rdata || !rdata.fileHandle) {
-                    return;
-                }
-
-                if (rdata.total <= this.exportConfirmThreshold) {
-                    this.exportProcess(params, rdata.fileHandle);
-                    return;
-                }
-
-                var formatted = new Intl.NumberFormat(navigator.language).format(rdata.total);
-
-                Ext.Msg.confirm(t('warning'), sprintf(t('email_log_export_confirmation'), '<b>' + formatted + '</b>'), function (buttonValue) {
-                    if (buttonValue === 'yes') {
-                        this.exportProcess(params, rdata.fileHandle);
-                    }
-                }.bind(this));
-            }.bind(this)
-        });
-    },
-
-    exportProcess: function (params, fileHandle) {
-        this.grid.setLoading(t('please_wait'));
-
-        Ext.Ajax.request({
-            url: this.exportProcessUrl,
-            method: 'POST',
-            params: Ext.applyIf({fileHandle: fileHandle}, params),
-            callback: function () {
-                this.grid.setLoading(false);
+    startExport: function () {
+        new opendxp.element.gridexport.runner({
+            source: 'email-logs',
+            getParameters: function () {
+                return opendxp.element.gridexport.runner.getStoreParameters(this.store);
             }.bind(this),
-            success: function (response) {
-                var rdata = Ext.decode(response.responseText);
-
-                if (!rdata || !rdata.success) {
-                    return;
-                }
-
-                opendxp.helpers.download(Ext.urlAppend(this.exportDownloadUrl, Ext.Object.toQueryString({fileHandle: fileHandle})));
+            getSelectedIds: function () {
+                return this.grid.getSelectionModel().getSelection().map(function (record) {
+                    return record.get('id');
+                });
             }.bind(this)
-        });
+        }).start();
     },
 
     reload: function () {

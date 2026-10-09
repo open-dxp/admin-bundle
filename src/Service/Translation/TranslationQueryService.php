@@ -31,6 +31,7 @@ namespace OpenDxp\Bundle\AdminBundle\Service\Translation;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder as DoctrineQueryBuilder;
+use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
 use OpenDxp\Model\Translation;
 
 final class TranslationQueryService
@@ -39,6 +40,69 @@ final class TranslationQueryService
 
     public function __construct(protected Connection $db)
     {
+    }
+
+    /**
+     * Creates the listing of a translation grid with the filters and the sorting of the grid.
+     *
+     * @param list<string> $languages
+     * @param array<string, mixed> $requestParams
+     */
+    public function createGridListing(
+        string $domain,
+        array $languages,
+        array $requestParams,
+        ?string $filter,
+        ?string $searchString,
+    ): Translation\Listing {
+        $translation = new Translation();
+        $translation->setDomain($domain);
+        $tableName = $translation->getDao()->getDatabaseTableName();
+
+        $list = new Translation\Listing();
+        $list->setDomain($domain);
+        $list->setOrder('asc');
+        $list->setOrderKey($tableName . '.key', false);
+        $list->setLanguages($languages);
+
+        $sortingSettings = QueryParams::extractSortingSettings($requestParams);
+
+        $joins = [];
+
+        if ($orderKey = $sortingSettings['orderKey']) {
+            if (in_array(trim($orderKey, '_'), $languages)) {
+                $orderKey = trim($orderKey, '_');
+                $joins[] = [
+                    'language' => $orderKey,
+                ];
+                $list->setOrderKey($orderKey);
+            } elseif ($list->isValidOrderKey($sortingSettings['orderKey'])) {
+                $list->setOrderKey($tableName . '.' . $sortingSettings['orderKey'], false);
+            }
+        }
+        if ($sortingSettings['order']) {
+            $list->setOrder($sortingSettings['order']);
+        }
+
+        $filterParameters = [
+            'filter' => $filter,
+            'searchString' => $searchString,
+        ];
+
+        $conditions = $this->getGridFilterCondition($filterParameters, $tableName, false, $languages);
+        $filters = $this->getGridFilterCondition($filterParameters, $tableName, true, $languages);
+
+        if ($filters) {
+            $joins = [...$joins, ...$filters['joins']];
+        }
+
+        if ($conditions !== []) {
+            $list->setCondition($conditions['condition'], $conditions['params']);
+        }
+
+        $this->extendTranslationQuery($joins, $list, $tableName, $filters);
+
+        return $list;
     }
 
     public function extendTranslationQuery(array $joins, Translation\Listing $list, string $tableName, array $filters): void

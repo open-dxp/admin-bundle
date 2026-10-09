@@ -20,15 +20,11 @@ use OpenDxp\Bundle\AdminBundle\Attribute\SessionGatewayAware;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\DoAssetExport\DoAssetExportPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\ExecuteAssetBatch\ExecuteAssetBatchPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetBatchJobs\GetAssetBatchJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetAssetMetadataForColumnConfig\GetAssetMetadataForColumnConfigHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetExportJobs\GetExportJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetGridColumnConfig\GetGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\GetGridColumnConfig\GetGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\MarkGridConfigFavourite\MarkGridConfigFavouriteHandler;
@@ -37,14 +33,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\P
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\Helper\SaveGridColumnConfig\SaveGridColumnConfigPayload;
-use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
-use RuntimeException;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -92,44 +83,6 @@ class AssetHelperController extends AdminAbstractController
         SaveGridColumnConfigHandler $handler,
     ): JsonResponse {
         return $this->apiJson($handler($payload));
-    }
-
-    #[Route('/get-export-jobs', name: 'opendxp_admin_asset_assethelper_getexportjobs', methods: ['POST'])]
-    public function getExportJobsAction(GetExportJobsPayload $payload, GetExportJobsHandler $handler): JsonResponse
-    {
-        return $this->apiJson($handler($payload));
-    }
-
-    #[Route('/do-export', name: 'opendxp_admin_asset_assethelper_doexport', methods: ['POST'])]
-    public function doExportAction(DoAssetExportPayload $payload, DoAssetExportHandler $handler): JsonResponse
-    {
-        $handler($payload);
-
-        return $this->apiOk();
-    }
-
-    #[Route('/download-csv-file', name: 'opendxp_admin_asset_assethelper_downloadcsvfile', methods: ['GET'])]
-    public function downloadCsvFileAction(
-        GridExportService $gridExportService,
-        #[MapQueryParameter] ?string $fileHandle = null,
-    ): Response {
-        try {
-            return $gridExportService->downloadCsvFile($fileHandle ?? '');
-        } catch (RuntimeException) {
-            throw $this->createNotFoundException('CSV file not found');
-        }
-    }
-
-    #[Route('/download-xlsx-file', name: 'opendxp_admin_asset_assethelper_downloadxlsxfile', methods: ['GET'])]
-    public function downloadXlsxFileAction(
-        GridExportService $gridExportService,
-        #[MapQueryParameter] ?string $fileHandle = null,
-    ): BinaryFileResponse {
-        try {
-            return $gridExportService->downloadXlsxFile($fileHandle ?? '');
-        } catch (RuntimeException) {
-            throw $this->createNotFoundException('XLSX file not found');
-        }
     }
 
     #[Route('/get-metadata-for-column-config', name: 'opendxp_admin_asset_assethelper_getmetadataforcolumnconfig', methods: ['GET'])]

@@ -18,16 +18,13 @@ opendxp.registerNS("opendxp.asset.helpers.gridTabAbstract");
 opendxp.asset.helpers.gridTabAbstract = Class.create(opendxp.element.helpers.gridTabAbstract, {
 
     objecttype: 'asset',
+    exportSource: 'assets',
     batchPrepareUrl: null,
     batchProcessUrl: null,
-    exportPrepareUrl: null,
-    exportProcessUrl: null,
 
     initialize: function() {
         this.batchPrepareUrl = Routing.generate('opendxp_admin_asset_assethelper_getbatchjobs');
         this.batchProcessUrl = Routing.generate('opendxp_admin_asset_assethelper_batch');
-        this.exportPrepareUrl = Routing.generate('opendxp_admin_asset_assethelper_getexportjobs');
-        this.exportProcessUrl = Routing.generate('opendxp_admin_asset_assethelper_doexport');
     },
 
     createGrid: function (columnConfig) {

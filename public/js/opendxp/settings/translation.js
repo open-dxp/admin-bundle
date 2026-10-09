@@ -22,7 +22,6 @@ opendxp.settings.translation.domain = Class.create({
     initialize: function (domain, filter) {
         this.domain = domain ?? 'messages';
         this.dataUrl = Routing.generate('opendxp_admin_translation_translations');
-        this.exportUrl = Routing.generate('opendxp_admin_translation_export');
         this.uploadImportUrl = Routing.generate('opendxp_admin_translation_uploadimportfile');
         this.importUrl = Routing.generate('opendxp_admin_translation_import');
         this.mergeUrl = Routing.generate('opendxp_admin_translation_import', {merge: 1});
@@ -407,8 +406,8 @@ opendxp.settings.translation.domain = Class.create({
                 },
                 '-',
                 {
-                    text: t('export_csv'),
-                    handler: this.doExport.bind(this),
+                    text: t('export'),
+                    handler: this.startExport.bind(this),
                     iconCls: "opendxp_icon_export"
                 }, '-', {
                     text: t("filter") + "/" + t("search"),
@@ -545,25 +544,13 @@ opendxp.settings.translation.domain = Class.create({
         win.show();
     },
 
-    doExport: function () {
-        let store = this.grid.store;
-        let storeFilters = store.getFilters().items;
-        let proxy = store.getProxy();
-        let queryString = "domain=" + this.domain;
-
-        let filtersActive = this.filterField.getValue() || storeFilters.length > 0;
-        if (filtersActive) {
-            Ext.MessageBox.confirm("", t("filter_active_message"), function (buttonValue) {
-                if (buttonValue == "yes") {
-                    queryString += "&searchString=" + this.filterField.getValue() + "&domain=" + this.domain;
-                    queryString += "&filter=" + proxy.encodeFilters(storeFilters);
-                }
-                opendxp.helpers.download(Ext.urlAppend(this.exportUrl, queryString));
-            }.bind(this));
-        } else {
-            opendxp.helpers.download(Ext.urlAppend(this.exportUrl, queryString));
-        }
-
+    startExport: function () {
+        new opendxp.element.gridexport.runner({
+            source: this.domain === 'admin' ? 'admin-translations' : 'translations',
+            getParameters: function () {
+                return opendxp.element.gridexport.runner.getStoreParameters(this.store);
+            }.bind(this)
+        }).start();
     },
 
     onAdd: function (btn, ev) {

@@ -2448,3 +2448,21 @@ ul.leaflet-draw-actions.leaflet-draw-actions-top.leaflet-draw-actions-bottom li:
     color: var(--color-opendxp-neutral-c);
     white-space: nowrap;
 }
+
+.opendxp_grid_export_warning {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border-left: 4px solid var(--opendxp-orange-100);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--opendxp-orange-100) 12%, var(--color-opendxp-white));
+    line-height: 1.4;
+}
+
+.opendxp_grid_export_warning:before {
+    content: '';
+    flex: 0 0 20px;
+    height: 20px;
+    background: url(/bundles/opendxpadmin/img/flat-color-icons/warning.svg) center / 20px no-repeat;
+}

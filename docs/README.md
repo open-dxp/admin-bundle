@@ -24,6 +24,7 @@ How other bundles and applications can extend the admin UI.
 | [Permissions](10_Extension_Points/05_Permissions.md)                 | Adding custom permissions                                         |
 | [Deeplinks](10_Extension_Points/06_Deeplinks.md)                     | Deeplinks into the admin interface                                |
 | [Custom Admin Login](10_Extension_Points/07_Custom_Admin_Login.md)   | Custom admin login entry point                                    |
+| [Grid Export](10_Extension_Points/08_Grid_Export.md)                 | Exporting the rows of a grid, adding a source for a grid          |
 
 ### [20 Documents](20_Documents/README.md)
 Admin UI features specific to document and site management.
