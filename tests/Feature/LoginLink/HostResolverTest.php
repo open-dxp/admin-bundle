@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Tests\Feature\LoginLink;
 
+use OpenDxp\Bundle\AdminBundle\Tests\Application\Host\MockGeneralHostProvider;
 use OpenDxp\Http\Request\Host\GeneralHostProviderInterface;
 use OpenDxp\Test\Factory\SiteFactory;
 
@@ -36,7 +37,7 @@ it('falls back to the general host for a host no site knows', function () {
 
 it('trusts a backend host that a provider vouches for', function () {
     $backend = sprintf('backend.%s', $this->domain('site'));
-    $this->generalHosts = self::generalHostProvider($backend);
+    $this->generalHosts = new MockGeneralHostProvider($backend);
 
     expect($this->hostResolver()->resolve($this->requestFor($backend)))->toBe($backend);
 });
