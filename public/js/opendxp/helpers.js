@@ -3172,25 +3172,32 @@ opendxp.helpers.treeToolTipHide = function () {
     Ext.get('opendxp_tooltip').hide();
 };
 
-opendxp.helpers.progressWindowOffsets = [-50];
+opendxp.helpers.progressWindows = [];
+
+/**
+ * Stacks the open progress windows in the bottom right corner of the viewport, the oldest one at the bottom.
+ */
+opendxp.helpers.alignProgressWindows = function () {
+    let bottom = Ext.Element.getViewportHeight() - 50;
+    let right = Ext.Element.getViewportWidth() - 40;
+
+    opendxp.helpers.progressWindows.forEach(function (win) {
+        win.setPagePosition(right - win.getWidth(), bottom - win.getHeight());
+        bottom -= win.getHeight() + 20;
+    });
+};
+
+Ext.on("resize", opendxp.helpers.alignProgressWindows);
 
 opendxp.helpers.getProgressWindowListeners = function () {
     return {
-        show: function(win) {
-            let winY = opendxp.helpers.progressWindowOffsets.reduce(function(a, b) {
-                return Math.min(a, b);
-            });
-
-            win.alignTo(Ext.getBody(), "br-br", [-40, winY]);
-            let newOffset = winY - (win.getHeight()+20);
-            opendxp.helpers.progressWindowOffsets.push(newOffset);
-            win.myProgressWinOffset = newOffset;
+        show: function (win) {
+            opendxp.helpers.progressWindows.push(win);
+            opendxp.helpers.alignProgressWindows();
         },
-        destroy: function(win) {
-            let index = opendxp.helpers.progressWindowOffsets.indexOf(win.myProgressWinOffset);
-            if (index !== -1) {
-                opendxp.helpers.progressWindowOffsets.splice(index, 1);
-            }
+        destroy: function (win) {
+            Ext.Array.remove(opendxp.helpers.progressWindows, win);
+            opendxp.helpers.alignProgressWindows();
         }
     };
 };

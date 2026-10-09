@@ -3,6 +3,7 @@
 ## 1.5.0
 * Feature: Every grid exports as CSV or XLSX. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md)
 * Feature: `GridExports::export()` runs a grid export in a test
+* Bugfix: Progress windows stay in the bottom right corner when the browser window is resized
 * Chore: Require `openspout/openspout` ^5.0. `phpoffice/phpspreadsheet` goes with 2.0
 * Chore: Remove the old export routes of the object, asset, email log and translation grids
 * Feature: The URL slug field shows the prefix of its slug generator, formats what an editor types and locks a stored slug. The domain of a site slug stands next to it [open-dxp/opendxp#159](https://github.com/open-dxp/opendxp/issues/159)
