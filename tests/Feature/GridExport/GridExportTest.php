@@ -53,6 +53,14 @@ it('starts a CSV export with the byte order mark that Excel needs for UTF-8', fu
         ->toStartWith("\xEF\xBB\xBF");
 });
 
+it('keeps umlauts in every format', function (GridExportFormat $format) {
+    $file = GridExports::export($this->admin, 'mock', settings: new GridExportSettings(format: $format));
+
+    expect($file)
+        ->column('Name')
+        ->toContain('Jürgen');
+})->with(GridExportFormat::cases());
+
 it('separates the values of a CSV export with the delimiter of the settings', function () {
     $file = GridExports::export($this->admin, 'mock', settings: new GridExportSettings(delimiter: ','));
 
@@ -64,7 +72,7 @@ it('escapes a value that looks like a formula in a CSV export', function () {
 
     expect($file)
         ->column('Name')
-        ->toBe(['Ada', '\'=HYPERLINK("https://example.com")', 'Grace']);
+        ->toBe(['Ada', '\'=HYPERLINK("https://example.com")', 'Jürgen']);
 });
 
 it('writes every value of an XLSX export with its type', function () {
@@ -96,7 +104,7 @@ it('writes a value that looks like a formula as text into an XLSX export', funct
         ->not->toContain('<f>')
         ->and($file)
         ->column('Name')
-        ->toBe(['Ada', '=HYPERLINK("https://example.com")', 'Grace']);
+        ->toBe(['Ada', '=HYPERLINK("https://example.com")', 'Jürgen']);
 });
 
 it('keeps the header row of an XLSX export visible and filters its columns', function () {
@@ -117,5 +125,5 @@ it('exports only the selected rows', function () {
 
     expect($file)
         ->column('Name')
-        ->toBe(['Ada', 'Grace']);
+        ->toBe(['Ada', 'Jürgen']);
 });

@@ -9,14 +9,14 @@ use OpenDxp\Bundle\AdminBundle\GridExport\GridExport;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportBatchStorage;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportColumnType;
 use OpenDxp\Model\Element\Service;
-use RuntimeException;
+use OpenSpout\Common\Entity\Cell\StringCell;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\CSV\Options;
+use OpenSpout\Writer\CSV\Writer;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CsvGridExportWriter
 {
-    // Excel reads a CSV file as UTF-8 only when it starts with the byte order mark.
-    private const string BYTE_ORDER_MARK = "\xEF\xBB\xBF";
-
     public function __construct(
         private readonly GridExportBatchStorage $batchStorage,
         private readonly TranslatorInterface $translator,
@@ -24,43 +24,38 @@ final class CsvGridExportWriter
     }
 
     /**
+     * Writes the rows as text. The file starts with a byte order mark, so Excel reads it as UTF-8.
+     *
      * @throws FilesystemException
      */
     public function write(GridExport $export, string $path): void
     {
-        $file = fopen($path, 'wb');
-        if ($file === false) {
-            throw new RuntimeException(sprintf('Unable to open "%s" for the CSV export.', $path));
+        $writer = new Writer(new Options(FIELD_DELIMITER: $export->settings->delimiter));
+        $writer->openToFile($path);
+
+        $titles = $export->settings->header->getTitles($export->columns);
+        if ($titles !== null) {
+            $writer->addRow($this->createRow(Service::escapeCsvRecord($titles)));
         }
 
-        try {
-            fwrite($file, self::BYTE_ORDER_MARK);
-
-            $titles = $export->settings->header->getTitles($export->columns);
-            if ($titles !== null) {
-                $this->writeRecord($file, $export, Service::escapeCsvRecord($titles));
-            }
-
-            $types = array_column($export->columns, 'type');
-            foreach ($this->batchStorage->readRows($export) as $row) {
-                $this->writeRecord($file, $export, array_map(
-                    fn (GridExportColumnType $type, mixed $value): string => $this->formatValue($export, $type, $value),
-                    $types,
-                    $row,
-                ));
-            }
-        } finally {
-            fclose($file);
+        $types = array_column($export->columns, 'type');
+        foreach ($this->batchStorage->readRows($export) as $row) {
+            $writer->addRow($this->createRow(array_map(
+                fn (GridExportColumnType $type, mixed $value): string => $this->formatValue($export, $type, $value),
+                $types,
+                $row,
+            )));
         }
+
+        $writer->close();
     }
 
     /**
-     * @param resource $file
-     * @param list<string> $record
+     * @param list<string> $values
      */
-    private function writeRecord($file, GridExport $export, array $record): void
+    private function createRow(array $values): Row
     {
-        fputcsv($file, $record, $export->settings->delimiter, '"', '');
+        return new Row(array_map(static fn (string $value): StringCell => new StringCell($value, null), $values));
     }
 
     private function formatValue(GridExport $export, GridExportColumnType $type, mixed $value): string

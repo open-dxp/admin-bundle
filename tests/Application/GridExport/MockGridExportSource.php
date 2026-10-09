@@ -61,7 +61,7 @@ final class MockGridExportSource implements GridExportSourceInterface
             ],
             [
                 'id' => 3,
-                'name' => 'Grace',
+                'name' => 'Jürgen',
                 'price' => 3,
                 'active' => true,
                 'released' => new DateTimeImmutable('2024-02-01'),

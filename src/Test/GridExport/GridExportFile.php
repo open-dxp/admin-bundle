@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Test\GridExport;
 
 use InvalidArgumentException;
-use OpenSpout\Reader\XLSX\Reader;
+use OpenSpout\Reader\CSV\Options;
+use OpenSpout\Reader\CSV\Reader as CsvReader;
+use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 use ZipArchive;
 
 /**
@@ -27,7 +29,22 @@ final readonly class GridExportFile
      */
     public function rows(): array
     {
-        return str_ends_with($this->filename, '.xlsx') ? $this->readSpreadsheet() : $this->readCsv();
+        $file = $this->writeTemporaryFile();
+        $reader = str_ends_with($this->filename, '.xlsx')
+            ? new XlsxReader()
+            : new CsvReader(new Options(FIELD_DELIMITER: $this->delimiter));
+        $reader->open($file);
+
+        $rows = [];
+        foreach ($reader->getSheetIterator() as $sheet) {
+            foreach ($sheet->getRowIterator() as $row) {
+                $rows[] = $row->toArray();
+            }
+        }
+        $reader->close();
+        unlink($file);
+
+        return $rows;
     }
 
     /**
@@ -64,45 +81,6 @@ final readonly class GridExportFile
         unlink($file);
 
         return $worksheet;
-    }
-
-    /**
-     * @return list<list<mixed>>
-     */
-    private function readCsv(): array
-    {
-        $stream = fopen('php://memory', 'r+b');
-        fwrite($stream, preg_replace('/^\xEF\xBB\xBF/', '', $this->content));
-        rewind($stream);
-
-        $rows = [];
-        while (($row = fgetcsv($stream, separator: $this->delimiter, escape: '')) !== false) {
-            $rows[] = $row;
-        }
-        fclose($stream);
-
-        return $rows;
-    }
-
-    /**
-     * @return list<list<mixed>>
-     */
-    private function readSpreadsheet(): array
-    {
-        $file = $this->writeTemporaryFile();
-        $reader = new Reader();
-        $reader->open($file);
-
-        $rows = [];
-        foreach ($reader->getSheetIterator() as $sheet) {
-            foreach ($sheet->getRowIterator() as $row) {
-                $rows[] = $row->toArray();
-            }
-        }
-        $reader->close();
-        unlink($file);
-
-        return $rows;
     }
 
     public function writeTemporaryFile(): string
