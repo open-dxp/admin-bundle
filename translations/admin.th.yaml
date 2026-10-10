@@ -388,6 +388,7 @@ file_is_bigger_that_upload_limit: 'ไฟล์ต่อไปนี้ใหญ
 filename: 'ชื่อไฟล์'
 filter: 'กรอง'
 filter_active: 'ตัวกรองที่ใช้งานอยู่!'
+filter_active_message: 'คุณต้องการส่งออกเฉพาะค่าที่กรองหรือไม่'
 filter_by_relation: 'Filter by relation'
 filter_by_relation_field: 'Filter by relation field'
 filter_condition: 'เงื่อนไขการกรอง'

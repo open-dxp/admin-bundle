@@ -549,7 +549,8 @@ opendxp.settings.translation.domain = Class.create({
             source: this.domain === 'admin' ? 'admin-translations' : 'translations',
             getParameters: function () {
                 return opendxp.element.gridexport.runner.getStoreParameters(this.store);
-            }.bind(this)
+            }.bind(this),
+            filters: {filter: "", searchString: ""}
         }).start();
     },
 

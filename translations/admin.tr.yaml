@@ -388,6 +388,7 @@ file_is_bigger_that_upload_limit: 'Bu dosya, sunucu yükleme limitlerinden daha 
 filename: 'Dosya Adı'
 filter: 'Filtre'
 filter_active: 'Filtre aktif!'
+filter_active_message: 'Sadece filtrelenmiş değerleri mi dışa aktarmak istiyorsunuz?'
 filter_by_relation: 'Filter by relation'
 filter_by_relation_field: 'Filter by relation field'
 filter_condition: 'Filtre Koşulu'

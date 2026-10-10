@@ -388,6 +388,7 @@ file_is_bigger_that_upload_limit: 'Размер файла больше, чем 
 filename: 'Имя файла'
 filter: 'Фильтр'
 filter_active: 'Фильтр активен!'
+filter_active_message: 'Хотите экспортировать только отфильтрованные значения?'
 filter_by_relation: 'Фильтровать по отношениям'
 filter_by_relation_field: 'Фильтр по полю отношения'
 filter_condition: 'Условия фильтра'

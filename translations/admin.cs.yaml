@@ -388,6 +388,7 @@ file_is_bigger_that_upload_limit: 'Následující soubor je větší než upload
 filename: 'Název souboru'
 filter: 'Filtr'
 filter_active: 'Filtr aktivní'
+filter_active_message: 'Chcete exportovat pouze vyfiltrované hodnoty?'
 filter_by_relation: 'Filter by relation'
 filter_by_relation_field: 'Filter by relation field'
 filter_condition: 'Podmínky filtru'

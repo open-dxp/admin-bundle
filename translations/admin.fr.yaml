@@ -388,6 +388,7 @@ file_is_bigger_that_upload_limit: 'Le fichier suivant est plus grand que la limi
 filename: 'Nom du fichier'
 filter: 'Filtre'
 filter_active: 'Filtre actif'
+filter_active_message: 'Voulez-vous exporter les valeurs filtrées seulement ?'
 filter_by_relation: 'Filtrer par relation'
 filter_by_relation_field: 'Filtrer par champ de relation'
 filter_condition: 'Condition de filtre'

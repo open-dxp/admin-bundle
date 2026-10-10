@@ -388,6 +388,7 @@ file_is_bigger_that_upload_limit: '以下文件大于服务器的实际上载限
 filename: '文件名'
 filter: '过滤器'
 filter_active: '常用筛选！'
+filter_active_message: '您只导出筛选后的结果？'
 filter_by_relation: '按关系过滤'
 filter_by_relation_field: '按关系字段过滤'
 filter_condition: '过滤条件'

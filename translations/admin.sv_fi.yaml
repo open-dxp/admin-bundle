@@ -398,6 +398,7 @@ file_is_bigger_that_upload_limit: 'The following file is bigger than the actual 
 filename: 'Filnamn'
 filter: 'Filter'
 filter_active: 'Filter aktivt!'
+filter_active_message: 'Vill du endast exportera filtrerade värden?'
 filter_by_relation: 'Filter by relation'
 filter_by_relation_field: 'Filter by relation field'
 filter_condition: 'Filtervillkor'

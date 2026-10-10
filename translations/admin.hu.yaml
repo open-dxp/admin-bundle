@@ -388,6 +388,7 @@ file_is_bigger_that_upload_limit: 'A következő file nagyobb, mint a szerver á
 filename: 'Filenév'
 filter: 'Szűrés'
 filter_active: 'Szűrés aktív!'
+filter_active_message: 'Csak a szűrt értékeket szeretné exportálni?'
 filter_by_relation: 'Filter by relation'
 filter_by_relation_field: 'Filter by relation field'
 filter_condition: 'Szűrési feltétel'

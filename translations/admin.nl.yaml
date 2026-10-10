@@ -388,6 +388,7 @@ file_is_bigger_that_upload_limit: 'De grootte van het volgende bestand overschri
 filename: 'Bestandsnaam'
 filter: 'Filter'
 filter_active: 'filter actief!'
+filter_active_message: 'Wilt u alleen de gefilterde waarden exporteren?'
 filter_by_relation: 'Filter by relation'
 filter_by_relation_field: 'Filter by relation field'
 filter_condition: 'Filter voorwaarde'

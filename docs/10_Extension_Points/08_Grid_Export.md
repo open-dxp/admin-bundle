@@ -103,6 +103,7 @@ new opendxp.element.gridexport.runner({
     getParameters: function () {
         return opendxp.element.gridexport.runner.getStoreParameters(this.store);
     }.bind(this),
+    filters: {filter: ''},
     getSelectedIds: function () {
         return this.grid.getSelectionModel().getSelection().map(function (record) {
             return record.get('id');
@@ -113,7 +114,11 @@ new opendxp.element.gridexport.runner({
 
 - `getStoreParameters()` returns what the store of a grid sends to load its rows: the extra parameters, the filters
   and the sorting.
-- `getSelectedIds` belongs only to a grid with a checkbox column.
+- `filters` maps each parameter that filters the grid to its value without a filter. When a parameter holds another
+  value, the admin asks whether the export holds only the filtered rows. With "All rows", the export sets these
+  parameters back to their value without a filter.
+- `getSelectedIds` belongs only to a grid with a checkbox column. When the editor selected rows, the admin asks whether
+  the export holds only them.
 - `warnings` shows a note per format on top of the dialog, for example `{csv: t('my_csv_note')}`.
 - `settings` adds fields of the grid to the dialog. Their values go into the parameters.
 
@@ -130,7 +135,7 @@ it('exports the price of a product', function () {
     $file = GridExports::export($this->admin, 'products');
 
     expect($file)
-        ->column('Price')
+        ->getColumn('Price')
         ->toBe(['9.5']);
 });
 ```

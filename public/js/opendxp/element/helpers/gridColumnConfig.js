@@ -798,6 +798,14 @@ opendxp.element.helpers.gridColumnConfig = {
             warnings: this.exportWarnings,
             settings: this.getExportSettings(),
             getParameters: this.getExportParameters.bind(this),
+            filters: {
+                filter: "",
+                query: "",
+                tagIds: [],
+                only_direct_children: false,
+                filter_by_object_type: "all_objects",
+                only_unreferenced: false
+            },
             getSelectedIds: function () {
                 return this.grid.getSelectionModel().getSelection().map(function (record) {
                     return record.get("id");

@@ -587,6 +587,7 @@ opendxp.settings.email.log = Class.create({
             getParameters: function () {
                 return opendxp.element.gridexport.runner.getStoreParameters(this.store);
             }.bind(this),
+            filters: {filter: ''},
             getSelectedIds: function () {
                 return this.grid.getSelectionModel().getSelection().map(function (record) {
                     return record.get('id');

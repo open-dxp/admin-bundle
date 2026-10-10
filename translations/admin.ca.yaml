@@ -388,6 +388,7 @@ file_is_bigger_that_upload_limit: 'El fitxer és més gran que el límit de càr
 filename: 'Nom de l''arxiu'
 filter: 'Filtre'
 filter_active: 'Filtre actiu!'
+filter_active_message: 'Voleu exportar només els valors filtrats?'
 filter_by_relation: 'Filter by relation'
 filter_by_relation_field: 'Filter by relation field'
 filter_condition: 'Condició del filtre'

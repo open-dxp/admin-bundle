@@ -388,6 +388,7 @@ file_is_bigger_that_upload_limit: 'Plik jest większy niż aktualny limit na Two
 filename: 'Nazwa pliku'
 filter: 'Filtr'
 filter_active: 'Filtr aktywny!'
+filter_active_message: 'Czy chcesz wyeksportować tylko przefiltrowane wartości?'
 filter_by_relation: 'Filtruj przez relację'
 filter_by_relation_field: 'Filtruj przez pole relacyjne'
 filter_condition: 'Warunek filtrowania'

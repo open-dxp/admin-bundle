@@ -1,10 +1,9 @@
 opendxp.registerNS("opendxp.element.gridexport.runner");
 /**
- * Exports the rows of a grid. It asks for the settings, writes the export batch by batch and downloads the file.
- *
  * The config of a grid holds:
  * - source: the name of the grid export source
  * - getParameters: a function that returns the filters and the sorting of the grid
+ * - filters: the parameters that filter the grid with their value without a filter, optional
  * - getSelectedIds: a function that returns the IDs of the rows selected in the checkbox column, optional
  * - warnings: a note per format on top of the dialog, for example {csv: "…"}, optional
  * - settings: fields of the grid for the dialog, optional. Their values go into the parameters.
@@ -15,32 +14,82 @@ opendxp.element.gridexport.runner = Class.create({
     },
 
     start: function () {
+        var parameters = this.config.getParameters();
         var selectedIds = this.config.getSelectedIds ? this.config.getSelectedIds() : [];
 
         if (selectedIds.length === 0) {
-            this.showSettings([]);
+            this.showFilterQuestion(parameters);
             return;
         }
 
+        var message = sprintf(t("grid_export_only_selected"), selectedIds.length);
+
+        this.showQuestion(message, t("grid_export_selected_rows"), function (button) {
+            if (button === "yes") {
+                this.showSettings(parameters, selectedIds);
+            } else if (button === "no") {
+                this.showFilterQuestion(parameters);
+            }
+        }.bind(this));
+    },
+
+    showFilterQuestion: function (parameters) {
+        var filters = this.config.filters || {};
+        var activeFilters = Object.keys(filters).filter(function (name) {
+            return this.isFiltering(parameters[name], filters[name]);
+        }, this);
+
+        if (activeFilters.length === 0) {
+            this.showSettings(parameters, []);
+            return;
+        }
+
+        this.showQuestion(t("filter_active_message"), t("grid_export_filtered_rows"), function (button) {
+            if (button === "no") {
+                activeFilters.forEach(function (name) {
+                    parameters[name] = filters[name];
+                });
+            }
+
+            if (button === "yes" || button === "no") {
+                this.showSettings(parameters, []);
+            }
+        }.bind(this));
+    },
+
+    showQuestion: function (message, yesText, callback) {
         Ext.Msg.show({
             title: t("export"),
-            message: sprintf(t("grid_export_only_selected"), selectedIds.length),
-            icon: Ext.Msg.QUESTION,
+            msg: message,
             buttons: Ext.Msg.YESNO,
             buttonText: {
+                yes: yesText,
                 no: t("grid_export_all_rows")
             },
-            fn: function (button) {
-                if (button === "yes") {
-                    this.showSettings(selectedIds);
-                } else if (button === "no") {
-                    this.showSettings([]);
-                }
-            }.bind(this)
+            icon: Ext.Msg.QUESTION,
+            fn: callback
         });
     },
 
-    showSettings: function (selectedIds) {
+    isFiltering: function (value, unfilteredValue) {
+        if (value === null || value === undefined || value === "") {
+            return false;
+        }
+
+        if (Ext.isArray(value)) {
+            return value.length > 0;
+        }
+
+        if (Ext.isObject(value)) {
+            return Ext.Object.getValues(value).some(function (item) {
+                return this.isFiltering(item, null);
+            }, this);
+        }
+
+        return value !== unfilteredValue;
+    },
+
+    showSettings: function (parameters, selectedIds) {
         var warnings = this.config.warnings || {};
 
         var warning = new Ext.Component({
@@ -116,7 +165,6 @@ opendxp.element.gridexport.runner = Class.create({
                     }
 
                     var values = formPanel.getForm().getFieldValues();
-                    var parameters = this.config.getParameters();
 
                     settings.forEach(function (setting) {
                         setting.query("field").forEach(function (field) {
@@ -298,9 +346,6 @@ opendxp.element.gridexport.runner = Class.create({
     }
 });
 
-/**
- * Returns the parameters that a store sends to load its rows: the extra parameters, the filters and the sorting.
- */
 opendxp.element.gridexport.runner.getStoreParameters = function (store) {
     var proxy = store.getProxy();
     var parameters = Ext.apply({}, proxy.getExtraParams());
