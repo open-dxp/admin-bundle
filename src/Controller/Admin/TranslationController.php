@@ -28,8 +28,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\Translation\CleanupTranslations\CleanupTr
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\CleanupTranslations\CleanupTranslationsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\CreateTranslation\CreateTranslationHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\DeleteTranslation\DeleteTranslationHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\ExportTranslations\ExportTranslationsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Translation\ExportTranslations\ExportTranslationsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\GetTranslationDomains\GetTranslationDomainsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\GetTranslations\GetTranslationsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\GetWebsiteTranslationLanguages\GetWebsiteTranslationLanguagesHandler;
@@ -76,24 +74,6 @@ class TranslationController extends AdminAbstractController
         UploadTranslationImportFilePayload $payload,
     ): JsonResponse {
         return $this->apiJson($handler($payload));
-    }
-
-    #[Route('/export', name: 'opendxp_admin_translation_export', methods: ['GET'])]
-    public function exportAction(
-        ExportTranslationsHandler $handler,
-        ExportTranslationsPayload $payload,
-    ): Response {
-        $this->checkPermission(($payload->domain === Translation::DOMAIN_ADMIN ? 'admin_' : '') . 'translations');
-
-        $result = $handler($payload);
-
-        $response = new Response("\xEF\xBB\xBF" . $result->csv);
-        $response->headers->set('Content-Encoding', 'UTF-8');
-        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
-        $response->headers->set('Content-Disposition', 'attachment; filename="export_' . $result->domain . '_translations.csv"');
-        ini_set('display_errors', '0'); //to prevent warning messages in csv
-
-        return $response;
     }
 
     #[Route('/add-admin-translation-keys', name: 'opendxp_admin_translation_addadmintranslationkeys', methods: ['POST'])]

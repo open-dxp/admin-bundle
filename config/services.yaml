@@ -165,6 +165,23 @@ services:
     OpenDxp\Bundle\AdminBundle\Service\Admin\InstanceIdentityService: ~
 
     #
+    # Grid Export
+    #
+
+    OpenDxp\Bundle\AdminBundle\GridExport\GridExportSourceRegistry: ~
+    OpenDxp\Bundle\AdminBundle\GridExport\GridExportBatchStorage: ~
+
+    OpenDxp\Bundle\AdminBundle\GridExport\GridExportCleanupTask:
+        tags:
+            - { name: opendxp.maintenance.task, type: grid_export_cleanup }
+
+    OpenDxp\Bundle\AdminBundle\GridExport\Writer\:
+        resource: '../src/GridExport/Writer'
+
+    OpenDxp\Bundle\AdminBundle\GridExport\Source\:
+        resource: '../src/GridExport/Source'
+
+    #
     # Repositories
     #
     OpenDxp\Bundle\AdminBundle\Repository\:

@@ -792,150 +792,54 @@ opendxp.element.helpers.gridColumnConfig = {
         });
     },
 
-    exportPrepare: function (settings, exportType) {
-        let params = this.getGridParams();
-
-        var fields = this.getGridConfig().columns;
-        var fieldKeys = Object.entries(fields).map(([key, value]) => ({ key: key, label: value.fieldConfig?.label || key }));
-        fieldKeys = Ext.encode(fieldKeys);
-        params["fields[]"] = fieldKeys;
-        if (this.context) {
-            params["context"] = Ext.encode(this.context);
-        }
-
-        settings = Ext.encode(settings);
-        params["settings"] = settings;
-        Ext.Ajax.request({
-            method: 'POST',
-            url: this.exportPrepareUrl,
-            params: params,
-            success: function (response) {
-                var rdata = Ext.decode(response.responseText);
-
-                if (rdata.success && rdata.jobs) {
-                    const exportSize = rdata.jobs.reduce((a, b) => a + b.length, 0)
-                    if (exportSize > 25) {
-                        Ext.Msg.confirm("Confirmation", sprintf(t('batch_export_confirmation'), `<b>${new Intl.NumberFormat(navigator.language).format(exportSize)}</b>`),
-                            (btn) => {
-                                if (btn === "yes") {
-                                    this.exportProcess(rdata.jobs, rdata.fileHandle, fieldKeys, true, settings, exportType);
-                                } else {
-                                    return;
-                                }
-                            });
-                    } else {
-                        this.exportProcess(rdata.jobs, rdata.fileHandle, fieldKeys, true, settings, exportType);
-                    }
-                }
+    startExport: function () {
+        new opendxp.element.gridexport.runner({
+            source: this.exportSource,
+            warnings: this.exportWarnings,
+            settings: this.getExportSettings(),
+            getParameters: this.getExportParameters.bind(this),
+            filters: {
+                filter: "",
+                query: "",
+                tagIds: [],
+                only_direct_children: false,
+                filter_by_object_type: "all_objects",
+                only_unreferenced: false
+            },
+            getSelectedIds: function () {
+                return this.grid.getSelectionModel().getSelection().map(function (record) {
+                    return record.get("id");
+                });
             }.bind(this)
-        });
+        }).start();
     },
 
-    exportProcess: function (jobs, fileHandle, fields, initial, settings, exportType) {
-        if (initial) {
-            this.exportErrors = [];
-            this.exportJobCurrent = 0;
+    getExportParameters: function () {
+        var gridParameters = this.getGridParams(false);
+        var columns = this.getGridConfig().columns;
+        var parameters = {};
 
-            this.exportParameters = {
-                fileHandle: fileHandle,
-                language: this.gridLanguage,
-                settings: settings
-            };
-            this.exportProgressBar = new Ext.ProgressBar({
-                text: t('initializing'),
-                style: "margin-top: 0px;",
-                width: 500
-            });
-
-            this.cancelBtn = Ext.create('Ext.Button', {
-                scale: 'small',
-                text: t('cancel'),
-                tooltip: t('cancel'),
-                icon: '/bundles/opendxpadmin/img/flat-color-icons/cancel.svg',
-                style: 'margin-left:5px;height:30px',
-                handler: () => {
-                    // Stop the batch processing
-                    this.exportJobCurrent = Infinity;
-                }
-            });
-
-            this.progressPanel = Ext.create('Ext.panel.Panel', {
-                layout: {
-                    type: 'hbox',
-                },
-                items: [
-                    this.exportProgressBar,
-                    this.cancelBtn
-                ],
-            });
-
-            this.exportProgressWin = new Ext.Window({
-                title: t("export"),
-                items: [this.progressPanel],
-                layout: 'fit',
-                width: 650,
-                bodyStyle: "padding: 10px;",
-                closable: false,
-                plain: true,
-                listeners: opendxp.helpers.getProgressWindowListeners()
-            });
-            this.exportProgressWin.show();
-        }
-
-        if (this.exportJobCurrent >= jobs.length) {
-            this.exportProgressWin.close();
-
-            // error handling
-            if (this.exportErrors.length > 0) {
-                var jobErrors = [];
-                for (var i = 0; i < this.exportErrors.length; i++) {
-                    jobErrors.push(this.exportErrors[i].job);
-                }
-                Ext.Msg.alert(t("error"), t("error_jobs") + ": " + jobErrors.join(","));
-            } else {
-                opendxp.helpers.download(exportType.getDownloadUrl(fileHandle));
-            }
-
-            return;
-        }
-
-        var status = (this.exportJobCurrent / jobs.length);
-        var percent = Math.ceil(status * 100);
-        this.exportProgressBar.updateProgress(status, percent + "%");
-
-        this.exportParameters['ids[]'] = jobs[this.exportJobCurrent];
-        this.exportParameters["fields[]"] = fields;
-        this.exportParameters.classId = this.classId;
-        this.exportParameters.initial = initial ? 1 : 0;
-        this.exportParameters.language = this.gridLanguage;
-        this.exportParameters.context = Ext.encode(this.context);
-        this.exportParameters.userTimezone = getUserTimezone();
-
-        Ext.Ajax.request({
-            url: this.exportProcessUrl,
-            method: 'POST',
-            params: this.exportParameters,
-            success: function (jobs, currentJob, response) {
-
-                try {
-                    var rdata = Ext.decode(response.responseText);
-                    if (rdata) {
-                        if (!rdata.success) {
-                            throw "not successful";
-                        }
-                    }
-                } catch (e) {
-                    this.exportErrors.push({
-                        job: currentJob
-                    });
-                }
-
-                window.setTimeout(function () {
-                    this.exportJobCurrent++;
-                    this.exportProcess(jobs, fileHandle, fields, false, settings, exportType);
-                }.bind(this), this.batchJobDelay);
-            }.bind(this, jobs, jobs[this.exportJobCurrent])
+        // A form request needs brackets in the name of a list. The export sends its parameters as JSON.
+        Ext.Object.each(gridParameters, function (name, value) {
+            parameters[name.replace(/\[\]$/, "")] = value;
         });
+
+        parameters.columns = Object.keys(columns).map(function (key) {
+            return {
+                key: key,
+                label: columns[key].fieldConfig && columns[key].fieldConfig.label || key
+            };
+        });
+
+        if (this.store.getSorters().getCount() > 0) {
+            parameters.sort = this.store.getProxy().encodeSorters(this.store.getSorters().getRange());
+        }
+
+        if (this.context) {
+            parameters.context = this.context;
+        }
+
+        return parameters;
     },
 
     columnConfigurationSavedHandler: function (rdata) {

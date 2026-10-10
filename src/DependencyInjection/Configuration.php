@@ -40,6 +40,7 @@ final class Configuration implements ConfigurationInterface
         $rootNode->append($this->buildObjectsNode());
         $rootNode->append($this->buildAssetsNode());
         $rootNode->append($this->buildDocumentsNode());
+        $rootNode->append($this->buildGridExportNode());
         $rootNode->append($this->addNotificationsNode());
         $rootNode->append($this->addUserNode());
 
@@ -276,6 +277,25 @@ final class Configuration implements ConfigurationInterface
         ;
 
         return $documentsNode;
+    }
+
+    protected function buildGridExportNode(): ArrayNodeDefinition|NodeDefinition
+    {
+        $treeBuilder = new TreeBuilder('grid_export');
+        $gridExportNode = $treeBuilder->getRootNode();
+
+        $gridExportNode
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->integerNode('confirm_threshold')
+                    ->info('The admin asks for a confirmation before it exports more rows than this.')
+                    ->min(0)
+                    ->defaultValue(1000)
+                ->end()
+            ->end()
+        ;
+
+        return $gridExportNode;
     }
 
     /**

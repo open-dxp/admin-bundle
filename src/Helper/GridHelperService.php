@@ -16,8 +16,6 @@
 namespace OpenDxp\Bundle\AdminBundle\Helper;
 
 use Doctrine\DBAL\Query\QueryBuilder as DoctrineQueryBuilder;
-use League\Flysystem\FilesystemException;
-use League\Flysystem\FilesystemOperator;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Db;
 use OpenDxp\Logger;
@@ -27,12 +25,7 @@ use OpenDxp\Model\DataObject\ClassDefinition;
 use OpenDxp\Model\DataObject\Objectbrick;
 use OpenDxp\Model\Element\Service;
 use OpenDxp\Model\User;
-use PhpOffice\PhpSpreadsheet\Reader\Csv;
-use PhpOffice\PhpSpreadsheet\Writer\Exception;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\EventDispatcher\GenericEvent;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -950,31 +943,6 @@ class GridHelperService
         $query = rtrim($query, '+- ');
 
         return $query;
-    }
-
-    /**
-     * @throws FilesystemException
-     * @throws Exception|\PhpOffice\PhpSpreadsheet\Reader\Exception
-     */
-    public function createXlsxExportFile(FilesystemOperator $storage, string $fileHandle, string $csvFile): BinaryFileResponse
-    {
-        $csvReader = new Csv();
-        $csvReader->setDelimiter(';');
-        $csvReader->setSheetIndex(0);
-
-        $spreadsheet = $csvReader->loadSpreadsheetFromString($storage->read($csvFile));
-        $writer = new Xlsx($spreadsheet);
-        $xlsxFilename = OPENDXP_SYSTEM_TEMP_DIRECTORY. '/' .$fileHandle. '.xlsx';
-        $writer->save($xlsxFilename);
-
-        $response = new BinaryFileResponse($xlsxFilename);
-        $response->headers->set('Content-Type', 'application/xlsx');
-        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'export.xlsx');
-        $response->deleteFileAfterSend(true);
-
-        $storage->delete($csvFile);
-
-        return $response;
     }
 
     /**

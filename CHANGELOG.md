@@ -1,6 +1,11 @@
 # Changelog / Upgrade Notes
 
 ## 1.5.0
+* Feature: Every grid exports as CSV or XLSX. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md)
+* Feature: `GridExports::export()` runs a grid export in a test
+* Bugfix: Progress windows stay in the bottom right corner when the browser window is resized
+* Chore: Require `openspout/openspout` ^5.0. `phpoffice/phpspreadsheet` goes with 2.0
+* Chore: Remove the old export routes of the object, asset, email log and translation grids
 * Feature: The URL slug field shows the prefix of its slug generator, formats what an editor types and locks a stored slug. The domain of a site slug stands next to it [open-dxp/opendxp#159](https://github.com/open-dxp/opendxp/issues/159)
 * Feature: Download the images of a folder or a selection as a ZIP of thumbnails. "Download as ZIP" in the asset tree, the folder toolbar and the list view offers "Originals" and "Thumbnails", which asks for one of the thumbnails offered for download [#128](https://github.com/open-dxp/admin-bundle/issues/128)
 * Bugfix: The thumbnail download of the image detail view hands out only thumbnails that are offered for download [#128](https://github.com/open-dxp/admin-bundle/issues/128)

@@ -30,7 +30,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Translation\GetTranslations;
 
 use OpenDxp\Bundle\AdminBundle\Handler\Translation\TranslationPayload;
-use OpenDxp\Bundle\AdminBundle\Helper\QueryParams;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Translation\TranslationQueryService;
 use OpenDxp\Model\Translation;
@@ -52,55 +51,16 @@ final class GetTranslationsHandler
             ? Tool\Admin::getLanguages()
             : $this->userContext->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations();
 
-        $translation = new Translation();
-        $translation->setDomain($payload->domain);
-        $tableName = $translation->getDao()->getDatabaseTableName();
-
-        $list = new Translation\Listing();
-        $list->setDomain($payload->domain);
-        $list->setOrder('asc');
-        $list->setOrderKey($tableName . '.key', false);
-        $list->setLanguages($validLanguages);
+        $list = $this->translationQueryService->createListing(
+            $payload->domain,
+            $validLanguages,
+            $payload->requestParams ?? [],
+            $payload->filter,
+            $payload->searchString,
+        );
 
         $list->setLimit($payload->limit);
         $list->setOffset($payload->offset ?? 0);
-
-        $sortingSettings = QueryParams::extractSortingSettings($payload->requestParams ?? []);
-
-        $joins = [];
-
-        if ($orderKey = $sortingSettings['orderKey']) {
-            if (in_array(trim($orderKey, '_'), $validLanguages)) {
-                $orderKey = trim($orderKey, '_');
-                $joins[] = [
-                    'language' => $orderKey,
-                ];
-                $list->setOrderKey($orderKey);
-            } elseif ($list->isValidOrderKey($sortingSettings['orderKey'])) {
-                $list->setOrderKey($tableName . '.' . $sortingSettings['orderKey'], false);
-            }
-        }
-        if ($sortingSettings['order']) {
-            $list->setOrder($sortingSettings['order']);
-        }
-
-        $filterParameters = [
-            'filter' => $payload->filter,
-            'searchString' => $payload->searchString,
-        ];
-
-        $conditions = $this->translationQueryService->getGridFilterCondition($filterParameters, $tableName, false, $validLanguages);
-        $filters = $this->translationQueryService->getGridFilterCondition($filterParameters, $tableName, true, $validLanguages);
-
-        if ($filters) {
-            $joins = [...$joins, ...$filters['joins']];
-        }
-
-        if ($conditions !== []) {
-            $list->setCondition($conditions['condition'], $conditions['params']);
-        }
-
-        $this->translationQueryService->extendTranslationQuery($joins, $list, $tableName, $filters);
 
         $translations = [];
         foreach ($list->getTranslations() as $t) {
