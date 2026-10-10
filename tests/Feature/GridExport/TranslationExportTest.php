@@ -20,7 +20,7 @@ it('titles the columns with the key and the languages, as the import expects', f
     $file = exportThroughAdmin($this->admin, 'translations');
 
     expect($file)
-        ->header()
+        ->getHeader()
         ->toBe(['key', ...Tool::getValidLanguages()]);
 });
 
@@ -35,7 +35,7 @@ it('exports the translations that the search of the grid finds', function () {
     $file = exportThroughAdmin($this->admin, 'translations', parameters: ['searchString' => 'export.']);
 
     expect($file)
-        ->column('key')
+        ->getColumn('key')
         ->toBe(['export.found']);
 });
 
@@ -45,7 +45,7 @@ it('exports a translation that the import reads back unchanged', function (strin
         ->create(['key' => 'export.round-trip']);
 
     $file = exportThroughAdmin($this->admin, 'translations', parameters: ['searchString' => 'export.round-trip'])
-        ->writeTemporaryFile();
+        ->createTemporaryFile();
 
     $translation = Translation::getByKey('export.round-trip');
     $translation->addTranslation($this->language, 'changed');
@@ -70,7 +70,7 @@ it('exports the admin translations as a source of their own', function () {
     $file = exportThroughAdmin($this->admin, 'admin-translations', parameters: ['searchString' => 'export.admin']);
 
     expect($file)
-        ->column('key')
+        ->getColumn('key')
         ->toBe(['export.admin']);
 });
 

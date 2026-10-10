@@ -13,10 +13,8 @@ use LogicException;
 use OpenDxp\Tool\Storage;
 
 /**
- * Keeps the batches of a grid export in the temporary storage of OpenDXP.
- *
- * Every batch is a file of its own with one JSON line per row. The requests of one export can reach different servers.
- * A request never rewrites the rows of another request.
+ * Keeps every batch in a file of its own, with one JSON line per row. The requests of one export can reach different
+ * servers. A request never rewrites the rows of another request.
  */
 final class GridExportBatchStorage
 {
@@ -105,8 +103,6 @@ final class GridExportBatchStorage
     }
 
     /**
-     * Returns the values of a row in the order of the columns.
-     *
      * @param array<string, mixed> $row
      *
      * @return list<mixed>

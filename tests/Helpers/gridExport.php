@@ -66,9 +66,6 @@ function exportThroughAdmin(
     return new GridExportFile($filename[1] ?? '', $download->getInternalResponse()->getContent());
 }
 
-/**
- * Starts a grid export and returns its ID.
- */
 function startGridExport(User $user, string $source): string
 {
     $response = requestGridExport($user, $source)->content();

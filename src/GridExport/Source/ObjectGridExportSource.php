@@ -22,9 +22,6 @@ use OpenDxp\Tool\UserTimezone;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-/**
- * Exports the objects of a class with the columns of the object grid. DataObject\Service formats every value.
- */
 #[AsGridExportSource(name: 'objects', permission: CorePermission::Objects->value, batchSize: 20)]
 final class ObjectGridExportSource implements GridExportSourceInterface
 {

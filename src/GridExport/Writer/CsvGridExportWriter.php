@@ -24,8 +24,6 @@ final class CsvGridExportWriter
     }
 
     /**
-     * Writes the rows as text. The file starts with a byte order mark, so Excel reads it as UTF-8.
-     *
      * @throws FilesystemException
      */
     public function write(GridExport $export, string $path): void

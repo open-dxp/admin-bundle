@@ -7,8 +7,6 @@ namespace OpenDxp\Bundle\AdminBundle\GridExport;
 use OpenDxp\Bundle\AdminBundle\Attribute\AsGridExportSource;
 
 /**
- * Provides the rows of a grid for an export. A source reads the rows the same way the grid lists them.
- *
  * @see AsGridExportSource
  */
 interface GridExportSourceInterface

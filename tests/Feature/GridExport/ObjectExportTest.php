@@ -18,8 +18,6 @@ beforeEach(function () {
 });
 
 /**
- * Returns the parameters of an object grid of the class Inheritance that shows the given columns.
- *
  * @param array<string, string> $columns
  * @param array<string, string> $settings
  *
@@ -50,7 +48,7 @@ it('titles the columns with the labels of the grid', function () {
     $file = exportThroughAdmin($this->admin, 'objects', parameters: $parameters);
 
     expect($file)
-        ->header()
+        ->getHeader()
         ->toBe(['Normal input']);
 });
 
@@ -68,7 +66,7 @@ it('titles the columns with the system keys when the header asks for them', func
     );
 
     expect($file)
-        ->header()
+        ->getHeader()
         ->toBe(['normalinput']);
 });
 
@@ -81,7 +79,7 @@ it('exports the values of the objects', function () {
     $file = exportThroughAdmin($this->admin, 'objects', parameters: $parameters);
 
     expect($file)
-        ->column('Normal input')
+        ->getColumn('Normal input')
         ->toBe(['Exported']);
 });
 
@@ -104,7 +102,7 @@ it('exports inherited values when the export enables inheritance', function (str
     $file = exportThroughAdmin($this->admin, 'objects', parameters: $parameters);
 
     expect($file)
-        ->column('Normal input')
+        ->getColumn('Normal input')
         ->toBe($values);
 })->with([
     'enabled' => ['true', ['Inherited', 'Inherited']],
@@ -123,6 +121,6 @@ it('exports only the selected objects', function () {
     $file = exportThroughAdmin($this->admin, 'objects', parameters: $parameters, selectedIds: [$selected->getId()]);
 
     expect($file)
-        ->column('Normal input')
+        ->getColumn('Normal input')
         ->toBe(['Selected']);
 });

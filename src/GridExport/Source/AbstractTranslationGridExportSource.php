@@ -10,9 +10,6 @@ use OpenDxp\Bundle\AdminBundle\GridExport\GridExportSourceInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Translation\TranslationQueryService;
 use OpenDxp\Model\Translation;
 
-/**
- * Exports translations in the format of the translation import.
- */
 abstract class AbstractTranslationGridExportSource implements GridExportSourceInterface
 {
     public function __construct(private readonly TranslationQueryService $translationQueryService)
@@ -63,7 +60,7 @@ abstract class AbstractTranslationGridExportSource implements GridExportSourceIn
         $filter = $query->parameters['filter'] ?? null;
         $searchString = $query->parameters['searchString'] ?? null;
 
-        return $this->translationQueryService->createGridListing(
+        return $this->translationQueryService->createListing(
             $this->getDomain($query),
             $this->getLanguages($query),
             $query->parameters,

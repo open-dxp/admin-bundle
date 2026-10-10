@@ -3174,9 +3174,6 @@ opendxp.helpers.treeToolTipHide = function () {
 
 opendxp.helpers.progressWindows = [];
 
-/**
- * Stacks the open progress windows in the bottom right corner of the viewport, the oldest one at the bottom.
- */
 opendxp.helpers.alignProgressWindows = function () {
     let bottom = Ext.Element.getViewportHeight() - 50;
     let right = Ext.Element.getViewportWidth() - 40;

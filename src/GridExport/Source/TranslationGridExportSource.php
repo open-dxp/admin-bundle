@@ -11,9 +11,6 @@ use OpenDxp\Model\User;
 use OpenDxp\Security\CorePermission;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
-/**
- * Exports the translations of a website domain in the languages that the user may view.
- */
 #[AsGridExportSource(name: 'translations', permission: CorePermission::Translations->value)]
 final class TranslationGridExportSource extends AbstractTranslationGridExportSource
 {

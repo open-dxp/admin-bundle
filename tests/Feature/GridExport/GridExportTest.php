@@ -21,7 +21,7 @@ it('writes the rows of every batch in their order', function () {
     $file = GridExports::export($this->admin, 'mock');
 
     expect($file)
-        ->column('ID')
+        ->getColumn('ID')
         ->toBe(['1', '2', '3']);
 });
 
@@ -37,7 +37,7 @@ it('writes the titles of the columns the way the header asks for', function (Gri
     $file = GridExports::export($this->admin, 'mock', settings: new GridExportSettings(header: $header));
 
     expect($file)
-        ->header()
+        ->getHeader()
         ->toBe($titles);
 })->with([
     'the labels' => [GridExportHeader::LABEL, ['ID', 'Name', 'Price', 'Active', 'Released', 'Updated']],
@@ -57,21 +57,21 @@ it('keeps umlauts in every format', function (GridExportFormat $format) {
     $file = GridExports::export($this->admin, 'mock', settings: new GridExportSettings(format: $format));
 
     expect($file)
-        ->column('Name')
+        ->getColumn('Name')
         ->toContain('Jürgen');
 })->with(GridExportFormat::cases());
 
 it('separates the values of a CSV export with the delimiter of the settings', function () {
     $file = GridExports::export($this->admin, 'mock', settings: new GridExportSettings(delimiter: ','));
 
-    expect($file->rows()[1])->toBe(['1', 'Ada', '9.5', 'Yes', '2024-01-15', '2024-01-15 10:30:00']);
+    expect($file->getRows()[1])->toBe(['1', 'Ada', '9.5', 'Yes', '2024-01-15', '2024-01-15 10:30:00']);
 });
 
 it('escapes a value that looks like a formula in a CSV export', function () {
     $file = GridExports::export($this->admin, 'mock');
 
     expect($file)
-        ->column('Name')
+        ->getColumn('Name')
         ->toBe(['Ada', '\'=HYPERLINK("https://example.com")', 'Jürgen']);
 });
 
@@ -82,7 +82,7 @@ it('writes every value of an XLSX export with its type', function () {
         settings: new GridExportSettings(format: GridExportFormat::XLSX),
     );
 
-    expect($file->rows()[1])->toEqual([
+    expect($file->getRows()[1])->toEqual([
         1,
         'Ada',
         9.5,
@@ -100,10 +100,10 @@ it('writes a value that looks like a formula as text into an XLSX export', funct
     );
 
     expect($file)
-        ->worksheet()
+        ->getWorksheet()
         ->not->toContain('<f>')
         ->and($file)
-        ->column('Name')
+        ->getColumn('Name')
         ->toBe(['Ada', '=HYPERLINK("https://example.com")', 'Jürgen']);
 });
 
@@ -115,7 +115,7 @@ it('keeps the header row of an XLSX export visible and filters its columns', fun
     );
 
     expect($file)
-        ->worksheet()
+        ->getWorksheet()
         ->toMatch('/<pane[^>]* ySplit="1" topLeftCell="A2"[^>]* state="frozen"\/>/')
         ->toContain('<autoFilter ref="A1:F4"/>');
 });
@@ -124,6 +124,6 @@ it('exports only the selected rows', function () {
     $file = GridExports::export($this->admin, 'mock', selectedIds: [1, 3]);
 
     expect($file)
-        ->column('Name')
+        ->getColumn('Name')
         ->toBe(['Ada', 'Jürgen']);
 });

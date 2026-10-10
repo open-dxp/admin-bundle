@@ -10,12 +10,6 @@ use OpenDxp\Bundle\AdminBundle\GridExport\GridExportSourceRegistry;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
- * Registers a class as the source of a grid export.
- *
- * - The name identifies the source in the requests of the admin.
- * - A user needs the permission to export the grid.
- * - The batch size limits the rows of one request.
- *
  * @see GridExportSourceInterface
  */
 #[Attribute(Attribute::TARGET_CLASS)]

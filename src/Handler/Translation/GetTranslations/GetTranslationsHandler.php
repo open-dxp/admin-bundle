@@ -51,7 +51,7 @@ final class GetTranslationsHandler
             ? Tool\Admin::getLanguages()
             : $this->userContext->getAdminUser()->getAllowedLanguagesForViewingWebsiteTranslations();
 
-        $list = $this->translationQueryService->createGridListing(
+        $list = $this->translationQueryService->createListing(
             $payload->domain,
             $validLanguages,
             $payload->requestParams ?? [],

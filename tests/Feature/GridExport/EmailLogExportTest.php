@@ -19,7 +19,7 @@ it('exports the columns of the email log without the bodies', function () {
     $file = exportThroughAdmin($this->admin, 'email-logs', parameters: ['documentId' => $this->document->getId()]);
 
     expect($file)
-        ->header()
+        ->getHeader()
         ->toBe([
             'ID',
             'Document ID',
@@ -51,7 +51,7 @@ it('exports the email log of a document, the newest email first', function () {
     $file = exportThroughAdmin($this->admin, 'email-logs', parameters: ['documentId' => $this->document->getId()]);
 
     expect($file)
-        ->column('Subject')
+        ->getColumn('Subject')
         ->toBe(['Newer', 'Older']);
 });
 
@@ -64,7 +64,7 @@ it('exports the date an email was sent in the timezone of the user', function ()
     $file = exportThroughAdmin($this->admin, 'email-logs', parameters: ['documentId' => $this->document->getId()]);
 
     expect($file)
-        ->column('Date sent')
+        ->getColumn('Date sent')
         ->toBe(['2023-11-14 22:13:20']);
 });
 
@@ -79,6 +79,6 @@ it('exports only the selected emails', function () {
     $file = exportThroughAdmin($this->admin, 'email-logs', selectedIds: [$selected->getId()]);
 
     expect($file)
-        ->column('Subject')
+        ->getColumn('Subject')
         ->toBe(['Selected']);
 });

@@ -17,9 +17,6 @@ use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\User;
 use OpenDxp\Security\CorePermission;
 
-/**
- * Exports the assets of a folder with the columns of the asset grid.
- */
 #[AsGridExportSource(name: 'assets', permission: CorePermission::Assets->value, batchSize: 100)]
 final class AssetGridExportSource implements GridExportSourceInterface
 {

@@ -43,12 +43,10 @@ final class TranslationQueryService
     }
 
     /**
-     * Creates the listing of a translation grid with the filters and the sorting of the grid.
-     *
      * @param list<string> $languages
      * @param array<string, mixed> $requestParams
      */
-    public function createGridListing(
+    public function createListing(
         string $domain,
         array $languages,
         array $requestParams,

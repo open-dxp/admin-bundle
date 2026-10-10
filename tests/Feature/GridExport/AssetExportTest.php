@@ -16,8 +16,6 @@ beforeEach(function () {
 });
 
 /**
- * Returns the parameters of an asset grid that shows the given columns.
- *
  * @param array<string, string> $columns
  * @param array<string, string> $filters
  *
@@ -47,7 +45,7 @@ it('exports the columns of the grid without the preview', function () {
     $file = exportThroughAdmin($this->admin, 'assets', parameters: $parameters);
 
     expect($file)
-        ->header()
+        ->getHeader()
         ->toBe(['Filename', 'Size']);
 });
 
@@ -63,7 +61,7 @@ it('exports the system values of an asset', function () {
 
     $file = exportThroughAdmin($this->admin, 'assets', parameters: $parameters);
 
-    expect($file->rows()[1])->toBe([
+    expect($file->getRows()[1])->toBe([
         (string) $image->getId(),
         'export.jpg',
         (string) $image->getFileSize(),
@@ -81,7 +79,7 @@ it('exports the metadata of an asset in the language of its column', function ()
     $file = exportThroughAdmin($this->admin, 'assets', parameters: $parameters);
 
     expect($file)
-        ->column('Title (de)')
+        ->getColumn('Title (de)')
         ->toBe(['Titel']);
 });
 
@@ -104,7 +102,7 @@ it('exports only the direct children of the folder when the grid shows only them
     $file = exportThroughAdmin($this->admin, 'assets', parameters: $parameters);
 
     expect($file)
-        ->column('Filename')
+        ->getColumn('Filename')
         ->toBe(['child.jpg']);
 });
 
@@ -120,6 +118,6 @@ it('exports only the selected assets', function () {
     $file = exportThroughAdmin($this->admin, 'assets', parameters: $parameters, selectedIds: [$selected->getId()]);
 
     expect($file)
-        ->column('Filename')
+        ->getColumn('Filename')
         ->toBe(['selected.jpg']);
 });

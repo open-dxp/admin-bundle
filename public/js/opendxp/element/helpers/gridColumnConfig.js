@@ -814,14 +814,12 @@ opendxp.element.helpers.gridColumnConfig = {
         }).start();
     },
 
-    /**
-     * Returns the parameters of the grid. A name loses the brackets that a form request needs for a list.
-     */
     getExportParameters: function () {
         var gridParameters = this.getGridParams(false);
         var columns = this.getGridConfig().columns;
         var parameters = {};
 
+        // A form request needs brackets in the name of a list. The export sends its parameters as JSON.
         Ext.Object.each(gridParameters, function (name, value) {
             parameters[name.replace(/\[\]$/, "")] = value;
         });

@@ -33,8 +33,6 @@ final class XlsxGridExportWriter
     }
 
     /**
-     * Writes the rows with a type per cell. A header row stays visible while scrolling and filters its column.
-     *
      * @throws FilesystemException
      */
     public function write(GridExport $export, string $path): void
