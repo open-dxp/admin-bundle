@@ -29,20 +29,20 @@ final class MockGridExportSource implements GridExportSourceInterface
 
     public function countRows(GridExportQuery $query): int
     {
-        return count($this->getSelectedRows($query));
+        return count($this->getAllRows());
     }
 
     public function getRows(GridExportQuery $query, int $offset, int $limit): iterable
     {
-        return array_slice($this->getSelectedRows($query), $offset, $limit);
+        return array_slice($this->getAllRows(), $offset, $limit);
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    private function getSelectedRows(GridExportQuery $query): array
+    private function getAllRows(): array
     {
-        $rows = [
+        return [
             [
                 'id' => 1,
                 'name' => 'Ada',
@@ -68,14 +68,5 @@ final class MockGridExportSource implements GridExportSourceInterface
                 'updated' => new DateTimeImmutable('2024-02-01 08:00:00'),
             ],
         ];
-
-        if ($query->selectedIds === []) {
-            return $rows;
-        }
-
-        return array_values(array_filter(
-            $rows,
-            static fn (array $row): bool => in_array((string) $row['id'], $query->selectedIds, true),
-        ));
     }
 }

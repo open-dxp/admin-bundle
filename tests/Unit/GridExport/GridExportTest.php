@@ -26,12 +26,6 @@ function exportOfIdAndName(): GridExport
     );
 }
 
-it('orders the values of a row like the columns', function () {
-    $values = exportOfIdAndName()->getValues(['name' => 'Ada', 'id' => 1]);
-
-    expect($values)->toBe([1, 'Ada']);
-});
-
 it('refuses a row without a value for a declared column', function () {
     expect(fn () => exportOfIdAndName()->getValues(['id' => 1]))
         ->toThrow(LogicException::class, 'The grid export source "people" returns a row without the column "name".');

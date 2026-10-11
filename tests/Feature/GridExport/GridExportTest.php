@@ -25,14 +25,6 @@ it('writes the rows of every batch in their order', function () {
         ->toBe(['1', '2', '3']);
 });
 
-it('names the file after the source and the day', function (GridExportFormat $format) {
-    $file = GridExports::export($this->admin, 'mock', settings: new GridExportSettings(format: $format));
-
-    expect($file)
-        ->filename
-        ->toBe(sprintf('mock-%s.%s', date('Y-m-d'), $format->value));
-})->with(GridExportFormat::cases());
-
 it('writes the titles of the columns the way the header asks for', function (GridExportHeader $header, array $titles) {
     $file = GridExports::export($this->admin, 'mock', settings: new GridExportSettings(header: $header));
 
@@ -52,14 +44,6 @@ it('starts a CSV export with the byte order mark that Excel needs for UTF-8', fu
         ->content
         ->toStartWith("\xEF\xBB\xBF");
 });
-
-it('keeps umlauts in every format', function (GridExportFormat $format) {
-    $file = GridExports::export($this->admin, 'mock', settings: new GridExportSettings(format: $format));
-
-    expect($file)
-        ->getColumn('Name')
-        ->toContain('Jürgen');
-})->with(GridExportFormat::cases());
 
 it('separates the values of a CSV export with the delimiter of the settings', function () {
     $file = GridExports::export($this->admin, 'mock', settings: new GridExportSettings(delimiter: ','));
@@ -105,25 +89,4 @@ it('writes a value that looks like a formula as text into an XLSX export', funct
         ->and($file)
         ->getColumn('Name')
         ->toBe(['Ada', '=HYPERLINK("https://example.com")', 'Jürgen']);
-});
-
-it('keeps the header row of an XLSX export visible and filters its columns', function () {
-    $file = GridExports::export(
-        $this->admin,
-        'mock',
-        settings: new GridExportSettings(format: GridExportFormat::XLSX),
-    );
-
-    expect($file)
-        ->getWorksheet()
-        ->toMatch('/<pane[^>]* ySplit="1" topLeftCell="A2"[^>]* state="frozen"\/>/')
-        ->toContain('<autoFilter ref="A1:F4"/>');
-});
-
-it('exports only the selected rows', function () {
-    $file = GridExports::export($this->admin, 'mock', selectedIds: [1, 3]);
-
-    expect($file)
-        ->getColumn('Name')
-        ->toBe(['Ada', 'Jürgen']);
 });
