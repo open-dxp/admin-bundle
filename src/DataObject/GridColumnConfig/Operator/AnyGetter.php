@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Operator;
 use Exception;
 use OpenDxp\Model\AbstractModel;
 use OpenDxp\Model\Element\ElementInterface;
+use OpenDxp\Model\User;
 use OpenDxp\Tool\Admin;
 use stdClass;
 
@@ -41,7 +42,8 @@ final class AnyGetter extends AbstractOperator
 
     public function __construct(stdClass $config, array $context = [])
     {
-        if (!Admin::getCurrentUser()->isAdmin()) {
+        $user = $this->findUser($context);
+        if ($user === null || !$user->isAdmin()) {
             throw new Exception('AnyGetter only allowed for admin users');
         }
 
@@ -196,5 +198,21 @@ final class AnyGetter extends AbstractOperator
     public function setReturnLastResult(bool $returnLastResult): void
     {
         $this->returnLastResult = $returnLastResult;
+    }
+
+    private function findUser(array $context): ?User
+    {
+        if (!array_key_exists('user', $context)) {
+            trigger_deprecation(
+                'open-dxp/admin-bundle',
+                '1.5',
+                'Building the AnyGetter grid operator without a "user" in its context is deprecated'
+                . ' and will throw an exception in 2.0.',
+            );
+
+            return Admin::getCurrentUser();
+        }
+
+        return $context['user'] instanceof User ? $context['user'] : null;
     }
 }

@@ -161,7 +161,11 @@ final class ObjectGridExportSource implements GridExportSourceInterface
             $this->localeService,
             $header,
             true,
-            ['source' => 'opendxp-export', ...($query->parameters['context'] ?? [])],
+            [
+                'source' => 'opendxp-export',
+                ...($query->parameters['context'] ?? []),
+                'user' => User::getById($query->userId),
+            ],
         );
     }
 

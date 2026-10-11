@@ -138,7 +138,7 @@ final class DataObjectGridService
                         $this->localeService,
                         'title',
                         false,
-                        $allParams['context']
+                        [...$allParams['context'], 'user' => $this->userContext->getAdminUser()]
                     );
 
                     // respect isAllowed method which can be extended via object DI for custom permissions

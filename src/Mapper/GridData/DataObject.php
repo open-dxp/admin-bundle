@@ -75,7 +75,12 @@ class DataObject extends Element
                 if (str_starts_with($key, '#')) {
                     if (!empty($helperDefinitions[$key])) {
                         $context['fieldname'] = $key;
-                        $data[$key] = \OpenDxp\Model\DataObject\Service::calculateCellValue($object, $helperDefinitions, $key, $context);
+                        $data[$key] = Service::calculateCellValue(
+                            $object,
+                            $helperDefinitions,
+                            $key,
+                            [...$context, 'user' => $user],
+                        );
                     }
                 } elseif (str_starts_with($key, '~')) {
                     $type = $keyParts[1];
