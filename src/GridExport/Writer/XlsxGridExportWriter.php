@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\GridExport\Writer;
 
-use League\Flysystem\FilesystemException;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExport;
-use OpenDxp\Bundle\AdminBundle\GridExport\GridExportBatchStorage;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportColumnType;
 use OpenSpout\Common\Entity\Cell;
 use OpenSpout\Common\Entity\Cell\StringCell;
@@ -26,16 +24,16 @@ final class XlsxGridExportWriter
 
     private readonly Style $dateTimeStyle;
 
-    public function __construct(private readonly GridExportBatchStorage $batchStorage)
+    public function __construct()
     {
         $this->dateStyle = (new Style())->withFormat('yyyy-mm-dd');
         $this->dateTimeStyle = (new Style())->withFormat('yyyy-mm-dd hh:mm:ss');
     }
 
     /**
-     * @throws FilesystemException
+     * @param iterable<list<mixed>> $rows
      */
-    public function write(GridExport $export, string $path): void
+    public function write(GridExport $export, iterable $rows, string $path): void
     {
         $types = array_column($export->columns, 'type');
         $titles = $export->settings->header->getTitles($export->columns);
@@ -56,7 +54,7 @@ final class XlsxGridExportWriter
         }
 
         $rowCount = 0;
-        foreach ($this->batchStorage->readRows($export) as $row) {
+        foreach ($rows as $row) {
             $cells = [];
             foreach ($row as $index => $value) {
                 $cells[] = $this->createCell($types[$index], $value);

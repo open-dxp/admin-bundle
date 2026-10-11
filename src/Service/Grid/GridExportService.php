@@ -112,9 +112,10 @@ final class GridExportService
         $extension = $export->settings->format->value;
         $path = sprintf('%s/grid-export-%s.%s', OPENDXP_SYSTEM_TEMP_DIRECTORY, $export->id, $extension);
 
+        $rows = $this->batchStorage->readRows($export);
         match ($export->settings->format) {
-            GridExportFormat::CSV => $this->csvWriter->write($export, $path),
-            GridExportFormat::XLSX => $this->xlsxWriter->write($export, $path),
+            GridExportFormat::CSV => $this->csvWriter->write($export, $rows, $path),
+            GridExportFormat::XLSX => $this->xlsxWriter->write($export, $rows, $path),
         };
 
         $this->deleteExport($export->id);

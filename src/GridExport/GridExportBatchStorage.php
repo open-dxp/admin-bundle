@@ -9,7 +9,6 @@ use DateTimeInterface;
 use Generator;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\StorageAttributes;
-use LogicException;
 use OpenDxp\Tool\Storage;
 
 /**
@@ -29,7 +28,7 @@ final class GridExportBatchStorage
     {
         $lines = '';
         foreach ($rows as $row) {
-            $values = array_map($this->encodeValue(...), $this->orderValues($export, $row));
+            $values = array_map($this->encodeValue(...), $export->getValues($row));
             $lines .= json_encode($values, JSON_THROW_ON_ERROR) . "\n";
         }
 
@@ -100,38 +99,6 @@ final class GridExportBatchStorage
             ->filter(static fn (StorageAttributes $attributes): bool => $attributes->isDir())
             ->map(static fn (StorageAttributes $attributes): string => basename($attributes->path()))
             ->toArray();
-    }
-
-    /**
-     * @param array<string, mixed> $row
-     *
-     * @return list<mixed>
-     */
-    private function orderValues(GridExport $export, array $row): array
-    {
-        $values = [];
-        foreach ($export->columns as $column) {
-            if (!array_key_exists($column->key, $row)) {
-                throw new LogicException(sprintf(
-                    'The grid export source "%s" returns a row without the column "%s".',
-                    $export->source,
-                    $column->key,
-                ));
-            }
-
-            $values[] = $row[$column->key];
-        }
-
-        $undeclared = array_diff(array_keys($row), array_column($export->columns, 'key'));
-        if ($undeclared !== []) {
-            throw new LogicException(sprintf(
-                'The grid export source "%s" returns a row with the undeclared columns "%s".',
-                $export->source,
-                implode('", "', $undeclared),
-            ));
-        }
-
-        return $values;
     }
 
     private function getBatchPath(string $exportId, int $batch): string

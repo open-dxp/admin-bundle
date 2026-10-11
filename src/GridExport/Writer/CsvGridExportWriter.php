@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\GridExport\Writer;
 
-use League\Flysystem\FilesystemException;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExport;
-use OpenDxp\Bundle\AdminBundle\GridExport\GridExportBatchStorage;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportColumnType;
 use OpenDxp\Model\Element\Service;
 use OpenSpout\Common\Entity\Cell\StringCell;
@@ -17,16 +15,14 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CsvGridExportWriter
 {
-    public function __construct(
-        private readonly GridExportBatchStorage $batchStorage,
-        private readonly TranslatorInterface $translator,
-    ) {
+    public function __construct(private readonly TranslatorInterface $translator)
+    {
     }
 
     /**
-     * @throws FilesystemException
+     * @param iterable<list<mixed>> $rows
      */
-    public function write(GridExport $export, string $path): void
+    public function write(GridExport $export, iterable $rows, string $path): void
     {
         $writer = new Writer(new Options(FIELD_DELIMITER: $export->settings->delimiter));
         $writer->openToFile($path);
@@ -37,7 +33,7 @@ final class CsvGridExportWriter
         }
 
         $types = array_column($export->columns, 'type');
-        foreach ($this->batchStorage->readRows($export) as $row) {
+        foreach ($rows as $row) {
             $writer->addRow($this->createRow(array_map(
                 fn (GridExportColumnType $type, mixed $value): string => $this->formatValue($export, $type, $value),
                 $types,
