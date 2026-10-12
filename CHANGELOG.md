@@ -1,7 +1,7 @@
 # Changelog / Upgrade Notes
 
 ## 1.5.0
-* Feature: Every grid exports as CSV or XLSX. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md)
+* Feature: Every grid of the admin exports through one export. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md)
 * Feature: `GridExports::export()` runs a grid export in a test
 * Bugfix: Progress windows stay in the bottom right corner when the browser window is resized
 * Chore: Require `openspout/openspout` ^5.0. `phpoffice/phpspreadsheet` goes with 2.0
