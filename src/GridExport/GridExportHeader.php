@@ -6,9 +6,9 @@ namespace OpenDxp\Bundle\AdminBundle\GridExport;
 
 enum GridExportHeader: string
 {
-    case LABEL = 'title';
-    case KEY = 'name';
-    case NONE = 'no_header';
+    case LABEL = 'label';
+    case KEY = 'key';
+    case NONE = 'none';
 
     /**
      * @param list<GridExportColumn> $columns

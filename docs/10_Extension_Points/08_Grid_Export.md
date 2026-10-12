@@ -14,6 +14,14 @@ rows, it asks before it starts.
   visible while scrolling and filters its column.
 - A value that starts like a formula, for example with `=`, stays text in both formats.
 
+## Header
+
+The editor picks the first row of the file. `GridExportHeader` names the choice in code:
+
+- Label (`LABEL`) writes the labels of the columns, as the grid shows them. This is the default.
+- System Key (`KEY`) writes the keys of the columns, for example the names of the fields of an object.
+- No Header (`NONE`) writes no header row.
+
 ## Configure the confirmation
 
 The admin asks before it exports more rows than this:

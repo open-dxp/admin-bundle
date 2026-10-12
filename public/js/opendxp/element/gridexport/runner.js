@@ -127,11 +127,11 @@ opendxp.element.gridexport.runner = Class.create({
             fieldLabel: t("header"),
             name: "header",
             store: [
-                ["title", t("label")],
-                ["name", t("system_key")],
-                ["no_header", t("no_header")]
+                ["label", t("label")],
+                ["key", t("system_key")],
+                ["none", t("no_header")]
             ],
-            value: "title",
+            value: "label",
             editable: false,
             forceSelection: true
         }, delimiterField];
