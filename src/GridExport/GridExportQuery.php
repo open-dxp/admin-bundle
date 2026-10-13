@@ -21,6 +21,7 @@ final readonly class GridExportQuery
     /**
      * @param array<string, mixed> $parameters
      * @param list<int|string> $selectedIds
+     * @param array<string, mixed> $sessionParameters
      */
     public function __construct(
         public int $userId,
@@ -28,6 +29,7 @@ final readonly class GridExportQuery
         public string $timezone,
         public array $parameters = [],
         public array $selectedIds = [],
+        public array $sessionParameters = [],
     ) {
     }
 }

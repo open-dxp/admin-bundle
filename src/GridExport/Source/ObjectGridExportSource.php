@@ -16,14 +16,16 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\GridExport\Source;
 
+use InvalidArgumentException;
 use OpenDxp\Bundle\AdminBundle\Attribute\AsGridExportSource;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportColumn;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportQuery;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportSourceInterface;
+use OpenDxp\Bundle\AdminBundle\GridExport\SessionGridExportSourceInterface;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
-use OpenDxp\Bundle\AdminBundle\Mapper\GridData\DataObject as GridData;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
+use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\DataObject\Listing;
@@ -31,23 +33,47 @@ use OpenDxp\Model\DataObject\Service;
 use OpenDxp\Model\User;
 use OpenDxp\Security\CorePermission;
 use OpenDxp\Tool\UserTimezone;
+use stdClass;
 use Symfony\Component\EventDispatcher\GenericEvent;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsGridExportSource(name: 'objects', permission: CorePermission::Objects->value, batchSize: 20)]
-final class ObjectGridExportSource implements GridExportSourceInterface
+final class ObjectGridExportSource implements GridExportSourceInterface, SessionGridExportSourceInterface
 {
     // The system keys of DataObject\Service are the titles of the header "name". They are unique within a row.
     private const string KEY_HEADER = 'name';
 
     private const string LABEL_HEADER = 'title';
 
+    // A key of this prefix names an operator column. Its definition exists only in the session.
+    private const string OPERATOR_KEY_PREFIX = '#';
+
     public function __construct(
         private readonly GridHelperService $gridHelperService,
         private readonly LocaleServiceInterface $localeService,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly CurrentControllerContextInterface $currentControllerContext,
+        private readonly GridColumnConfigSessionGateway $gridColumnConfigSession,
+        private readonly RequestStack $requestStack,
     ) {
+    }
+
+    /**
+     * Keeps the definitions of the operator columns as JSON, because the TmpStore unserializes no stdClass.
+     */
+    public function getSessionParameters(GridExportQuery $query): array
+    {
+        if (!$this->requestStack->getCurrentRequest()?->hasSession()) {
+            return [];
+        }
+
+        $helperDefinitions = array_intersect_key(
+            $this->gridColumnConfigSession->getHelperColumns(),
+            array_flip(array_column($this->getFields($query), 'key')),
+        );
+
+        return ['helperDefinitions' => json_encode($helperDefinitions, JSON_THROW_ON_ERROR)];
     }
 
     /**
@@ -56,6 +82,8 @@ final class ObjectGridExportSource implements GridExportSourceInterface
      */
     public function getColumns(GridExportQuery $query): array
     {
+        $helperDefinitions = $this->getHelperDefinitions($query);
+
         $listing = $this->createListing($query);
         $listing->setLimit(1);
         $object = $listing->getObjects()[0] ?? null;
@@ -66,8 +94,6 @@ final class ObjectGridExportSource implements GridExportSourceInterface
                 $this->getFields($query),
             );
         }
-
-        $helperDefinitions = GridData::getHelperDefinitions();
 
         return array_map(
             static fn (string $key, string $label): GridExportColumn => new GridExportColumn($key, $label),
@@ -102,7 +128,7 @@ final class ObjectGridExportSource implements GridExportSourceInterface
         $this->localeService->setLocale($this->getLanguage($query));
 
         try {
-            $helperDefinitions = GridData::getHelperDefinitions();
+            $helperDefinitions = $this->getHelperDefinitions($query);
 
             foreach ($listing->getObjects() as $object) {
                 if (!$object instanceof Concrete) {
@@ -143,7 +169,31 @@ final class ObjectGridExportSource implements GridExportSourceInterface
     }
 
     /**
-     * @param array<string, mixed> $helperDefinitions
+     * @return array<string, stdClass>
+     */
+    private function getHelperDefinitions(GridExportQuery $query): array
+    {
+        // An empty list of definitions comes back as an array, any other as an object.
+        $helperDefinitions = (array) json_decode(
+            $query->sessionParameters['helperDefinitions'] ?? '[]',
+            flags: JSON_THROW_ON_ERROR,
+        );
+
+        foreach ($this->getFields($query) as $field) {
+            $isOperator = str_starts_with($field['key'], self::OPERATOR_KEY_PREFIX);
+            if ($isOperator && !isset($helperDefinitions[$field['key']])) {
+                throw new InvalidArgumentException(sprintf(
+                    'The object grid export has no definition of the operator column "%s".',
+                    $field['key'],
+                ));
+            }
+        }
+
+        return $helperDefinitions;
+    }
+
+    /**
+     * @param array<string, stdClass> $helperDefinitions
      *
      * @return array<string, mixed>
      */

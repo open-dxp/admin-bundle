@@ -1,0 +1,10 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportJobRunService: ~
+
+    OpenDxp\Bundle\AdminBundle\Messenger\Handler\WriteGridExportHandler:
+        tags:
+            - { name: messenger.message_handler, bus: generic.execution.engine.bus }

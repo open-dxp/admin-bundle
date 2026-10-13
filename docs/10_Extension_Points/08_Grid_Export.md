@@ -32,6 +32,23 @@ opendxp_admin:
         confirm_threshold: 1000
 ```
 
+## Run exports in the background
+
+With the option `generic_execution_engine`, every export runs as a job run of the Generic Execution Engine. The editor
+goes on working, and a worker writes the file. The menu of the job runs shows the progress and offers the download at
+the end. The job run disappears once the file is downloaded.
+
+```yaml
+opendxp_admin:
+    grid_export:
+        generic_execution_engine: true
+```
+
+- The option is off by default. A worker consumes the transport `opendxp_generic_execution_engine`. Without a worker,
+  the export does not start.
+- An export runs in the browser when the engine is not installed.
+- The job run uses the execution context `admin_grid_export`. It fails at its first error.
+
 ## Add a source
 
 A source provides the rows of one grid. It implements `GridExportSourceInterface`, and the attribute
@@ -101,9 +118,28 @@ final class ProductGridExportSource implements GridExportSourceInterface
   or holds one that the source does not declare.
 - A value matches the type of its column. A date is a `DateTimeInterface`, and `null` stands for an empty value.
 
+## Read the session in a source
+
+A job run has no session. A source that needs a value from the session of the admin implements
+`SessionGridExportSourceInterface` in addition:
+
+```php
+public function getSessionParameters(GridExportQuery $query): array
+{
+    return ['currency' => $this->requestStack->getSession()->get('currency')];
+}
+```
+
+- The export calls `getSessionParameters()` once when it starts, before it asks for the columns.
+- `GridExportQuery::$sessionParameters` holds the values. The source reads them there in the browser and in a job run.
+- The export keeps the query in the TmpStore. A value is a scalar, an array or `null`, but no object.
+- The objects source keeps the definitions of the operator columns there. An operator column without a definition
+  stops the export.
+
 ## Start an export in the admin
 
-`opendxp.element.gridexport.runner` asks for the settings, writes the batches and downloads the file:
+`opendxp.element.gridexport.runner` asks for the settings, writes the batches and downloads the file. With the Generic
+Execution Engine, it starts a job run instead:
 
 ```javascript
 new opendxp.element.gridexport.runner({

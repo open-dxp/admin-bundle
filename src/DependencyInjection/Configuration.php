@@ -292,6 +292,10 @@ final class Configuration implements ConfigurationInterface
                     ->min(0)
                     ->defaultValue(1000)
                 ->end()
+                ->booleanNode('generic_execution_engine')
+                    ->info('Every grid export runs as a job run of the Generic Execution Engine. It needs a worker.')
+                    ->defaultFalse()
+                ->end()
             ->end()
         ;
 

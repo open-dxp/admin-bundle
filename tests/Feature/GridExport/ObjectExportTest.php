@@ -16,11 +16,14 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Tests\Feature\GridExport;
 
+use InvalidArgumentException;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportHeader;
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExportQuery;
+use OpenDxp\Bundle\AdminBundle\GridExport\Source\ObjectGridExportSource;
 use OpenDxp\Bundle\AdminBundle\Tests\Factory\InheritanceFactory;
-use OpenDxp\Model\DataObject\ClassDefinition;
 use OpenDxp\Test\Factory\DataObjectFolderFactory;
 use OpenDxp\Test\Factory\UserFactory;
+use OpenDxp\TestFoundation\Container;
 
 beforeEach(function () {
     $this->admin = UserFactory::new()
@@ -28,28 +31,6 @@ beforeEach(function () {
         ->create();
     $this->folder = DataObjectFolderFactory::createOne();
 });
-
-/**
- * @param array<string, string> $columns
- * @param array<string, string> $settings
- *
- * @return array<string, mixed>
- */
-function objectGridParameters(int $folderId, array $columns, array $settings = []): array
-{
-    return [
-        'folderId' => (string) $folderId,
-        'classId' => ClassDefinition::getByName('Inheritance')->getId(),
-        'language' => 'en',
-        'fields' => array_keys($columns),
-        'columns' => array_map(
-            static fn (string $key, string $label): array => ['key' => $key, 'label' => $label],
-            array_keys($columns),
-            $columns,
-        ),
-        ...$settings,
-    ];
-}
 
 it('titles the columns with the labels of the grid', function () {
     InheritanceFactory::new()
@@ -135,4 +116,34 @@ it('exports only the selected objects', function () {
     expect($file)
         ->getColumn('Normal input')
         ->toBe(['Selected']);
+});
+
+it('exports an operator column of the object grid', function () {
+    InheritanceFactory::new()
+        ->withParent($this->folder)
+        ->create(['normalinput' => 'Exported']);
+    $exportId = startObjectGridExportWithAnyGetter($this->admin, $this->folder->getId(), 'Any getter', 'normalinput');
+
+    $file = writeGridExportFile($this->admin, $exportId);
+
+    expect($file)
+        ->getColumn('Any getter')
+        ->toBe(['Exported']);
+});
+
+it('refuses an operator column without its definition', function () {
+    InheritanceFactory::new()
+        ->withParent($this->folder)
+        ->create();
+    $query = new GridExportQuery(
+        userId: $this->admin->getId(),
+        language: 'en',
+        timezone: 'UTC',
+        parameters: objectGridParameters($this->folder->getId(), ['#missing' => 'Missing']),
+    );
+
+    expect(fn () => Container::get(ObjectGridExportSource::class)->getColumns($query))->toThrow(
+        InvalidArgumentException::class,
+        'The object grid export has no definition of the operator column "#missing".',
+    );
 });

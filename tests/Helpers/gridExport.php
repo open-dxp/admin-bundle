@@ -17,6 +17,7 @@ declare(strict_types=1);
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExport;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Bundle\AdminBundle\Test\GridExport\GridExportFile;
+use OpenDxp\Model\DataObject\ClassDefinition;
 use OpenDxp\Model\User;
 use OpenDxp\TestFoundation\Browser;
 use OpenDxp\TestFoundation\Container;
@@ -62,8 +63,12 @@ function exportThroughAdmin(
     array $selectedIds = [],
 ): GridExportFile {
     $response = requestGridExport($user, $source, $parameters, $settings, $selectedIds)->content();
-    $id = json_decode($response, true, flags: JSON_THROW_ON_ERROR)['id'];
 
+    return writeGridExportFile($user, json_decode($response, true, flags: JSON_THROW_ON_ERROR)['id']);
+}
+
+function writeGridExportFile(User $user, string $id): GridExportFile
+{
     for ($batch = 0; $batch < findGridExport($id)->getBatchCount(); $batch++) {
         writeGridExportBatch($user, $id, $batch);
     }
@@ -100,6 +105,11 @@ function downloadGridExport(User $user, string $id): KernelBrowser
     return Browser::actingAs($user)->visit(sprintf('/admin/grid-export/download?id=%s', $id));
 }
 
+function createGridExportJobRun(User $user, string $id): KernelBrowser
+{
+    return Browser::actingAs($user)->post('/admin/grid-export/create-job-run', ['body' => ['id' => $id]]);
+}
+
 function deleteGridExport(User $user, string $id): KernelBrowser
 {
     return Browser::actingAs($user)->post('/admin/grid-export/delete', ['body' => ['id' => $id]]);
@@ -108,4 +118,64 @@ function deleteGridExport(User $user, string $id): KernelBrowser
 function findGridExport(string $id): ?GridExport
 {
     return Container::get(GridExportService::class)->findExport($id);
+}
+
+/**
+ * Returns the parameters of an object grid of the class Inheritance that shows the given columns.
+ *
+ * @param array<string, string> $columns
+ * @param array<string, string> $settings
+ *
+ * @return array<string, mixed>
+ */
+function objectGridParameters(int $folderId, array $columns, array $settings = []): array
+{
+    return [
+        'folderId' => (string) $folderId,
+        'classId' => ClassDefinition::getByName('Inheritance')->getId(),
+        'language' => 'en',
+        'fields' => array_keys($columns),
+        'columns' => array_map(
+            static fn (string $key, string $label): array => ['key' => $key, 'label' => $label],
+            array_keys($columns),
+            $columns,
+        ),
+        ...$settings,
+    ];
+}
+
+/**
+ * The admin keeps the definition of an operator column in the session. Both requests therefore share one browser.
+ */
+function startObjectGridExportWithAnyGetter(User $user, int $folderId, string $label, string $attribute): string
+{
+    $browser = Browser::actingAs($user);
+    $prepared = $browser->post('/admin/object-helper/prepare-helper-column-configs', [
+        'body' => [
+            'columns' => json_encode([
+                [
+                    'isOperator' => true,
+                    'attributes' => [
+                        'type' => 'operator',
+                        'class' => 'AnyGetter',
+                        'label' => $label,
+                        'attribute' => $attribute,
+                        'children' => [],
+                    ],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        ],
+    ])->content();
+    $key = json_decode($prepared, true, flags: JSON_THROW_ON_ERROR)['columns'][0]['key'];
+
+    $started = $browser->post('/admin/grid-export/start', [
+        'body' => [
+            'source' => 'objects',
+            'parameters' => json_encode(objectGridParameters($folderId, [$key => $label]), JSON_THROW_ON_ERROR),
+            'language' => 'en',
+            'timezone' => 'UTC',
+        ],
+    ])->content();
+
+    return json_decode($started, true, flags: JSON_THROW_ON_ERROR)['id'];
 }

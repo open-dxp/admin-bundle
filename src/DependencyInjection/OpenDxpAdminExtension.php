@@ -86,6 +86,15 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
             'opendxp_admin.grid_export.confirm_threshold',
             $config['grid_export']['confirm_threshold'],
         );
+
+        /** @var array<string, class-string> $bundles */
+        $bundles = $container->getParameter('kernel.bundles');
+
+        if ($config['grid_export']['generic_execution_engine']
+            && array_key_exists('OpenDxpGenericExecutionEngineBundle', $bundles)
+        ) {
+            $loader->load('generic_execution_engine.yaml');
+        }
     }
 
     public function prepend(ContainerBuilder $container): void
@@ -112,6 +121,18 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
                 ],
             ],
         ]);
+
+        if ($container->hasExtension('opendxp_generic_execution_engine')) {
+            $container->prependExtensionConfig('opendxp_generic_execution_engine', [
+                'execution_context' => [
+                    'admin_grid_export' => [
+                        'translations_domain' => 'admin',
+                        'error_handling' => 'stop_on_first_error',
+                        'disposable' => true,
+                    ],
+                ],
+            ]);
+        }
 
         $container->prependExtensionConfig('webpack_encore', [
             'output_path' => false,

@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\GridExport\StartGridExport;
 
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportQuery;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportJobRunService;
 use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 
 final class StartGridExportHandler
@@ -25,6 +26,8 @@ final class StartGridExportHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly GridExportService $gridExportService,
+        // The service exists only when grid exports run in the Generic Execution Engine.
+        private readonly ?GridExportJobRunService $gridExportJobRunService,
     ) {
     }
 
@@ -45,6 +48,7 @@ final class StartGridExportHandler
             total: $export->total,
             batchSize: $export->batchSize,
             batchCount: $export->getBatchCount(),
+            canCreateJobRun: $this->gridExportJobRunService?->canCreateJobRun() ?? false,
         );
     }
 }

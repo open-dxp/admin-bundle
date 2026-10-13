@@ -25,6 +25,7 @@ final readonly class StartGridExportResult implements ResultInterface
         public int $total,
         public int $batchSize,
         public int $batchCount,
+        public bool $canCreateJobRun,
     ) {
     }
 }

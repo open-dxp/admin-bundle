@@ -213,7 +213,7 @@ opendxp.element.gridexport.runner = Class.create({
                 var gridExport = Ext.decode(response.responseText);
 
                 if (gridExport.total <= opendxp.settings.grid_export_confirm_threshold) {
-                    this.showProgress(gridExport);
+                    this.writeExport(gridExport);
                     return;
                 }
 
@@ -221,13 +221,33 @@ opendxp.element.gridexport.runner = Class.create({
 
                 Ext.Msg.confirm(t("export"), sprintf(t("grid_export_confirmation"), total), function (button) {
                     if (button === "yes") {
-                        this.showProgress(gridExport);
+                        this.writeExport(gridExport);
                         return;
                     }
 
                     this.deleteExport(gridExport);
                 }.bind(this));
             }.bind(this)
+        });
+    },
+
+    writeExport: function (gridExport) {
+        if (gridExport.canCreateJobRun) {
+            this.createJobRun(gridExport);
+            return;
+        }
+
+        this.showProgress(gridExport);
+    },
+
+    createJobRun: function (gridExport) {
+        opendxp.bundle.genericexecutionengine.jobrun.runner.start({
+            url: Routing.generate("opendxp_admin_gridexport_createjobrun"),
+            params: {
+                id: gridExport.id
+            },
+            title: t("export"),
+            message: t("grid_export_job_run_started")
         });
     },
 

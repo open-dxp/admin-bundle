@@ -37,6 +37,14 @@ it('refuses settings that the export does not know', function (array $settings) 
     'a timezone' => [['timezone' => 'Europe/Nowhere']],
 ]);
 
+it('runs an export in the browser and refuses a job run while the option is off', function () {
+    $answer = json_decode(requestGridExport($this->admin, 'mock')->content(), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($answer)->toHaveKey('canCreateJobRun', false);
+
+    createGridExportJobRun($this->admin, $answer['id'])->assertStatus(409);
+});
+
 it('refuses a batch that the export does not have', function () {
     $id = startGridExport($this->admin, 'mock');
 

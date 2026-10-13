@@ -21,6 +21,7 @@ use League\Flysystem\FilesystemException;
 use OpenDxp\Bundle\AdminBundle\Controller\AdminAbstractController;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExport;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportSourceRegistry;
+use OpenDxp\Bundle\AdminBundle\Handler\GridExport\CreateGridExportJobRun\CreateGridExportJobRunHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\GridExport\StartGridExport\StartGridExportHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\GridExport\StartGridExport\StartGridExportPayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\StringIdBodyPayload;
@@ -87,6 +88,15 @@ final class GridExportController extends AdminAbstractController
         }
 
         return $gridExportService->createDownload($export);
+    }
+
+    #[Route('/create-job-run', name: 'createjobrun', methods: ['POST'])]
+    public function createJobRunAction(
+        StringIdBodyPayload $payload,
+        GridExportService $gridExportService,
+        CreateGridExportJobRunHandler $handler,
+    ): JsonResponse {
+        return $this->apiJson($handler($this->getOwnExport($gridExportService, $payload->id)));
     }
 
     /**

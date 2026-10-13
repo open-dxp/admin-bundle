@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\Grid;
 
+use Generator;
 use InvalidArgumentException;
 use League\Flysystem\FilesystemException;
 use LogicException;
@@ -25,6 +26,7 @@ use OpenDxp\Bundle\AdminBundle\GridExport\GridExportFormat;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportQuery;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportSettings;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportSourceRegistry;
+use OpenDxp\Bundle\AdminBundle\GridExport\SessionGridExportSourceInterface;
 use OpenDxp\Bundle\AdminBundle\GridExport\Writer\CsvGridExportWriter;
 use OpenDxp\Bundle\AdminBundle\GridExport\Writer\XlsxGridExportWriter;
 use OpenDxp\Model\Tool\TmpStore;
@@ -52,6 +54,17 @@ final class GridExportService
     {
         $exportSource = $this->sourceRegistry->getSource($source);
 
+        if ($exportSource instanceof SessionGridExportSourceInterface) {
+            $query = new GridExportQuery(
+                userId: $query->userId,
+                language: $query->language,
+                timezone: $query->timezone,
+                parameters: $query->parameters,
+                selectedIds: $query->selectedIds,
+                sessionParameters: $exportSource->getSessionParameters($query),
+            );
+        }
+
         $export = new GridExport(
             id: Uuid::v4()->toRfc4122(),
             source: $source,
@@ -75,9 +88,11 @@ final class GridExportService
     }
 
     /**
-     * @throws FilesystemException
+     * Returns the values of each row in the order of the columns.
+     *
+     * @return Generator<int, list<mixed>>
      */
-    public function writeBatch(GridExport $export, int $batch): void
+    public function getRows(GridExport $export, int $batch): Generator
     {
         if ($batch < 0 || $batch >= $export->getBatchCount()) {
             throw new InvalidArgumentException(sprintf('The export has no batch %d.', $batch));
@@ -87,7 +102,17 @@ final class GridExportService
             ->getSource($export->source)
             ->getRows($export->query, $batch * $export->batchSize, $export->batchSize);
 
-        $this->batchStorage->writeBatch($export, $batch, $rows);
+        foreach ($rows as $row) {
+            yield $export->getValues($row);
+        }
+    }
+
+    /**
+     * @throws FilesystemException
+     */
+    public function writeBatch(GridExport $export, int $batch): void
+    {
+        $this->batchStorage->writeBatch($export, $batch, $this->getRows($export, $batch));
     }
 
     /**
@@ -105,30 +130,42 @@ final class GridExportService
      */
     public function createDownload(GridExport $export): BinaryFileResponse
     {
+        $path = sprintf(
+            '%s/grid-export-%s.%s',
+            OPENDXP_SYSTEM_TEMP_DIRECTORY,
+            $export->id,
+            $export->settings->format->value,
+        );
+
         if (!$this->isComplete($export)) {
             throw new LogicException(sprintf('The export "%s" misses batches.', $export->id));
         }
 
-        $extension = $export->settings->format->value;
-        $path = sprintf('%s/grid-export-%s.%s', OPENDXP_SYSTEM_TEMP_DIRECTORY, $export->id, $extension);
-
-        $rows = $this->batchStorage->readRows($export);
-        match ($export->settings->format) {
-            GridExportFormat::CSV => $this->csvWriter->write($export, $rows, $path),
-            GridExportFormat::XLSX => $this->xlsxWriter->write($export, $rows, $path),
-        };
-
+        $this->writeFile($export, $this->batchStorage->readRows($export), $path);
         $this->deleteExport($export->id);
 
         $response = new BinaryFileResponse($path);
         $response->headers->set('Content-Type', $export->settings->format->getContentType());
-        $response->setContentDisposition(
-            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            sprintf('%s-%s.%s', $export->source, date('Y-m-d'), $extension),
-        );
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $this->getFilename($export));
         $response->deleteFileAfterSend();
 
         return $response;
+    }
+
+    /**
+     * @param iterable<list<mixed>> $rows
+     */
+    public function writeFile(GridExport $export, iterable $rows, string $localPath): void
+    {
+        match ($export->settings->format) {
+            GridExportFormat::CSV => $this->csvWriter->write($export, $rows, $localPath),
+            GridExportFormat::XLSX => $this->xlsxWriter->write($export, $rows, $localPath),
+        };
+    }
+
+    public function getFilename(GridExport $export): string
+    {
+        return sprintf('%s-%s.%s', $export->source, date('Y-m-d'), $export->settings->format->value);
     }
 
     /**

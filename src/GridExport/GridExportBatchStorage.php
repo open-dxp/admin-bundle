@@ -32,7 +32,7 @@ final class GridExportBatchStorage
     private const string DIRECTORY = 'grid-export';
 
     /**
-     * @param iterable<array<string, mixed>> $rows
+     * @param iterable<list<mixed>> $rows
      *
      * @throws FilesystemException
      */
@@ -40,8 +40,7 @@ final class GridExportBatchStorage
     {
         $lines = '';
         foreach ($rows as $row) {
-            $values = array_map($this->encodeValue(...), $export->getValues($row));
-            $lines .= json_encode($values, JSON_THROW_ON_ERROR) . "\n";
+            $lines .= json_encode(array_map($this->encodeValue(...), $row), JSON_THROW_ON_ERROR) . "\n";
         }
 
         Storage::get('temp')->write($this->getBatchPath($export->id, $batch), $lines);
