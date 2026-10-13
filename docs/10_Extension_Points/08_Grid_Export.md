@@ -34,14 +34,14 @@ opendxp_admin:
 
 ## Run exports in the background
 
-With the option `generic_execution_engine`, every export runs as a job run of the Generic Execution Engine. The editor
-goes on working, and a worker writes the file. The menu of the job runs shows the progress and offers the download at
-the end. The job run disappears once the file is downloaded.
+With background jobs, every export runs as a job run of the Generic Execution Engine. The editor goes on working, and a
+worker writes the file. The menu of the job runs shows the progress and offers the download at the end. The job run
+disappears once the file is downloaded.
 
 ```yaml
 opendxp_admin:
-    grid_export:
-        generic_execution_engine: true
+    background_jobs:
+        enabled: true
 ```
 
 - The option is off by default. A worker consumes the transport `opendxp_generic_execution_engine`. Without a worker,

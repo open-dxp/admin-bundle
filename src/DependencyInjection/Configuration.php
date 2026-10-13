@@ -41,6 +41,7 @@ final class Configuration implements ConfigurationInterface
         $rootNode->append($this->buildAssetsNode());
         $rootNode->append($this->buildDocumentsNode());
         $rootNode->append($this->buildGridExportNode());
+        $rootNode->append($this->buildBackgroundJobsNode());
         $rootNode->append($this->addNotificationsNode());
         $rootNode->append($this->addUserNode());
 
@@ -292,14 +293,23 @@ final class Configuration implements ConfigurationInterface
                     ->min(0)
                     ->defaultValue(1000)
                 ->end()
-                ->booleanNode('generic_execution_engine')
-                    ->info('Every grid export runs as a job run of the Generic Execution Engine. It needs a worker.')
-                    ->defaultFalse()
-                ->end()
             ->end()
         ;
 
         return $gridExportNode;
+    }
+
+    protected function buildBackgroundJobsNode(): ArrayNodeDefinition|NodeDefinition
+    {
+        $treeBuilder = new TreeBuilder('background_jobs');
+        $backgroundJobsNode = $treeBuilder->getRootNode();
+
+        $backgroundJobsNode
+            ->canBeEnabled()
+            ->info('Grid exports run as job runs of the Generic Execution Engine. It needs a worker.')
+        ;
+
+        return $backgroundJobsNode;
     }
 
     /**

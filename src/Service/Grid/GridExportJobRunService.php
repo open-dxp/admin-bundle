@@ -30,7 +30,7 @@ use OpenDxp\Model\Tool\TmpStore;
 use Symfony\Component\Lock\LockFactory;
 
 /**
- * Exists only when the engine is in the kernel and the option opendxp_admin.grid_export.generic_execution_engine is on.
+ * Exists only when the engine is in the kernel and the option opendxp_admin.background_jobs is on.
  */
 final class GridExportJobRunService
 {

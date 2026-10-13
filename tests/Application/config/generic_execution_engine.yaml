@@ -9,5 +9,4 @@ framework:
                 dsn: 'in-memory://'
 
 opendxp_admin:
-    grid_export:
-        generic_execution_engine: true
+    background_jobs: true

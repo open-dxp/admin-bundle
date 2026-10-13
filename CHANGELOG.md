@@ -3,7 +3,7 @@
 ## 1.5.0
 * Feature: Every grid of the admin exports through one export. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md)
 * Feature: `GridExports::export()` runs a grid export in a test
-* Feature: A grid export runs in the background with `opendxp_admin.grid_export.generic_execution_engine`. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md#run-exports-in-the-background)
+* Feature: A grid export runs in the background with `opendxp_admin.background_jobs`. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md#run-exports-in-the-background)
 * Bugfix: Progress windows stay in the bottom right corner when the browser window is resized
 * Chore: Require `openspout/openspout` ^5.0. `phpoffice/phpspreadsheet` goes with 2.0
 * Chore: Remove the old export routes of the object, asset, email log and translation grids

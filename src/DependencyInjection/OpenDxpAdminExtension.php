@@ -90,7 +90,7 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
         /** @var array<string, class-string> $bundles */
         $bundles = $container->getParameter('kernel.bundles');
 
-        if ($config['grid_export']['generic_execution_engine']
+        if ($config['background_jobs']['enabled']
             && array_key_exists('OpenDxpGenericExecutionEngineBundle', $bundles)
         ) {
             $loader->load('generic_execution_engine.yaml');
