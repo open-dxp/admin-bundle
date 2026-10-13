@@ -222,7 +222,7 @@ opendxp.notification.helper.setLastUpdateTimestamp();
 opendxp.notification.helper.updateFromServer = function () {
     var user = opendxp.globalmanager.get("user");
     if (!document.hidden && user.isAllowed("notifications")) {
-        Ext.Ajax.request({
+        opendxp.backgroundConnection.request({
             url: Routing.generate('opendxp_admin_notification_findlastunread'),
             params: {
                 lastUpdate: this.lastUpdateTimestamp

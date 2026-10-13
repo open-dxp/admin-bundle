@@ -161,10 +161,19 @@ Ext.onReady(function () {
     Ext.Ajax.setDisableCaching(true);
     Ext.Ajax.setTimeout(900000);
     Ext.Ajax.setMethod('GET');
-    Ext.Ajax.setDefaultHeaders({
+
+    const requestHeaders = {
         'X-opendxp-csrf-token': opendxp.settings['csrfToken'],
         'X-opendxp-extjs-version-major': Ext.getVersion().getMajor(),
         'X-opendxp-extjs-version-minor': Ext.getVersion().getMinor()
+    };
+
+    Ext.Ajax.setDefaultHeaders(requestHeaders);
+
+    opendxp.backgroundConnection = new Ext.data.Connection({
+        disableCaching: true,
+        method: 'GET',
+        defaultHeaders: requestHeaders
     });
 
     Ext.Ajax.on('requestexception', function (conn, response, options) {
@@ -945,6 +954,10 @@ if (opendxp.settings.checknewnotification_enabled) {
     opendxp['intervals']['checkNewNotification'] = window.setInterval(function () {
         opendxp.notification.helper.updateFromServer();
     }, opendxp.settings.checknewnotification_interval);
+
+    document.addEventListener('visibilitychange', function () {
+        opendxp.notification.helper.updateFromServer();
+    });
 }
 
 // refreshes the layout
