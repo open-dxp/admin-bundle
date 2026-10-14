@@ -111,8 +111,6 @@ Ext.define('opendxp.FieldSetTools', {
     },
 });
 
-
-
 Ext.define('opendxp.filters', {
     extend: 'Ext.grid.filters.Filters',
     alias: 'plugin.opendxp.gridfilters',
@@ -239,114 +237,568 @@ Ext.define('Ext.overrides.grid.View', {
 );
 
 Ext.define('opendxp.tree.Panel', {
-    extend: 'Ext.tree.Panel'
+    extend: 'Ext.tree.Panel',
+
+    initComponent: function () {
+        // Ext.tree.Panel builds the same automatic column, but always as a plain treecolumn.
+        if (!this.columns) {
+            this.isAutoTree = true;
+            this.addCls(this.autoWidthCls);
+            this.viewConfig = Ext.apply({isAutoTree: true}, this.viewConfig);
+            this.columns = [{xtype: 'opendxptreecolumn', flex: 1, dataIndex: this.displayField}];
+        }
+
+        this.callParent();
+    }
+});
+
+Ext.define('opendxp.tree.Column', {
+    extend: 'Ext.tree.Column',
+    alias: 'widget.opendxptreecolumn',
+
+    cellTpl: Ext.tree.Column.prototype.cellTpl.concat('<tpl if="folderBar">{folderBar}</tpl>'),
+
+    initTemplateRendererData: function () {
+        const data = this.callParent(arguments);
+
+        if (opendxp.tree.FolderBar.isShown(data.record)) {
+            // Ext hides the expander of a loaded folder without children, as after a search without results.
+            data.expandable = true;
+            data.metaData.tdCls = Ext.String.trim((data.metaData.tdCls || '') + ' opendxp_tree_paged_node');
+            // The bar starts below the icon of its folder, behind the lines and the elbow of the folder.
+            data.folderBar = opendxp.tree.FolderBar.getHtml(data.record, data.lines.length + 1);
+        }
+
+        return data;
+    }
+});
+
+Ext.define('opendxp.tree.FolderBar', {
+    singleton: true,
+
+    fullWidth: 156,
+
+    compactWidth: 114,
+
+    tpl: new Ext.XTemplate(
+        '<button type="button" data-action="widen" title="{widenText}" aria-label="{widenText}"',
+            ' class="opendxp_tree_folder_widen"></button>',
+        '<div class="opendxp_tree_folder_bar<tpl if="filter"> opendxp_tree_folder_bar_searching</tpl>"',
+            ' role="toolbar" data-node-id="{nodeId}">',
+            '<div class="opendxp_tree_folder_bar_indent">{indent}</div>',
+            '<div class="opendxp_tree_folder_bar_controls">',
+                '<button type="button" data-action="open-search" title="{searchText}" aria-label="{searchText}"',
+                    ' class="opendxp_tree_folder_bar_open_search"></button>',
+                '<label class="opendxp_tree_folder_bar_search">',
+                    '<input type="text" value="{filter:htmlEncode}" placeholder="{searchText}"',
+                        ' aria-label="{searchText}" autocomplete="off" spellcheck="false">',
+                    '<tpl if="filter">',
+                        '<button type="button" data-action="clear" title="{clearText}" aria-label="{clearText}"',
+                            ' class="opendxp_tree_folder_bar_clear"></button>',
+                    '</tpl>',
+                '</label>',
+                '<div class="opendxp_tree_folder_bar_pager">',
+                    '<button type="button" data-action="previous" title="{previousText}"',
+                        ' aria-label="{previousText}" class="opendxp_tree_folder_bar_previous"',
+                        '<tpl if="isFirstPage"> disabled</tpl>></button>',
+                    '<button type="button" data-action="jump" title="{pageText}"',
+                        ' class="opendxp_tree_folder_bar_page">{page} / {pageCount}</button>',
+                    '<button type="button" data-action="next" title="{nextText}" aria-label="{nextText}"',
+                        ' class="opendxp_tree_folder_bar_next"<tpl if="isLastPage"> disabled</tpl>></button>',
+                '</div>',
+            '</div>',
+        '</div>',
+        '<tpl if="isEmpty">',
+            '<div class="opendxp_tree_folder_bar_empty">',
+                '<div class="opendxp_tree_folder_bar_indent">{indent}<div class="x-tree-elbow-img"></div></div>',
+                '<span>{emptyText}</span>',
+            '</div>',
+        '</tpl>'
+    ),
+
+    isShown: function (node) {
+        const pagingData = node.pagingData;
+
+        return node.isExpanded() && !!pagingData && (pagingData.total > pagingData.limit || !!node.filter);
+    },
+
+    getHtml: function (node, indent) {
+        const pagingData = node.pagingData;
+        const pageCount = Math.ceil(pagingData.total / pagingData.limit);
+        const page = pageCount === 0 ? 0 : pagingData.offset / pagingData.limit + 1;
+
+        return this.tpl.apply({
+            nodeId: node.getId(),
+            indent: Ext.String.repeat('<div class="x-tree-elbow-img x-tree-elbow-empty"></div>', indent),
+            filter: node.filter,
+            page: page,
+            pageCount: pageCount,
+            isFirstPage: page <= 1,
+            isLastPage: page >= pageCount,
+            isEmpty: pagingData.total === 0,
+            emptyText: t('no_items_found'),
+            searchText: t('search'),
+            clearText: t('clear_filters'),
+            previousText: t('previous_page'),
+            nextText: t('next_page'),
+            pageText: t('page'),
+            widenText: t('widen_tree_to_search')
+        });
+    }
 });
 
 Ext.define('opendxp.tree.View', {
     extend: 'Ext.tree.View',
     alias: 'widget.opendxptreeview',
-    listeners: {
-        refresh: function() {
-            this.updatePaging();
-        },
-        beforeitemupdate: function(record) {
-            if(record.ptb) {
-                delete record.ptb;
-            }
-        },
 
-        itemupdate: function(record) {
-            if (record.needsPaging && typeof record.ptb == "undefined" && typeof record.itemUpdated == "undefined") {
-                record.itemUpdated = true;
-                this.doUpdatePaging(record);
-            }
+    initComponent: function () {
+        this.callParent();
+
+        this.searchTask = new Ext.util.DelayedTask();
+        this.on({
+            beforeitemkeydown: this.onTreeKeyDown,
+            render: this.onFolderBarRender,
+            refresh: this.updateFolderBars,
+            itemupdate: this.updateFolderBars,
+            itemadd: this.updateFolderBars,
+            itemremove: this.updateFolderBars,
+            resize: this.updateFolderBars,
+            scope: this
+        });
+    },
+
+    renderRow: function (record, rowIdx, out) {
+        this.callParent(arguments);
+        this.fireEvent('itemafterrender', record, rowIdx, out);
+    },
+
+    processUIEvent: function (event) {
+        // A folder bar lives in the row of its folder, but its clicks and keys do not act on the folder.
+        if (event.getTarget('.opendxp_tree_folder_bar, .opendxp_tree_folder_widen', this.el)) {
+            return false;
+        }
+
+        return this.callParent([event]);
+    },
+
+    onFolderBarRender: function () {
+        this.stickyFolderEl = this.el.parent().createChild({
+            cls: 'opendxp_tree_sticky_folder x-tree-view',
+            hidden: true
+        });
+        this.getScrollable().on('scroll', this.onFolderScroll, this);
+
+        [this.el, this.stickyFolderEl].forEach(function (el) {
+            el.on({
+                click: {fn: this.onFolderBarClick, delegate: '[data-action]', scope: this},
+                input: {fn: this.onFolderBarInput, delegate: '.opendxp_tree_folder_bar_search input', scope: this},
+                keydown: {fn: this.onFolderBarKeyDown, delegate: '.opendxp_tree_folder_bar input', scope: this}
+            });
+            // The event system of Ext does not deliver focusout to a delegate.
+            el.dom.addEventListener('focusout', this.onFolderSearchBlur.bind(this));
+        }, this);
+        this.stickyFolderEl.on('click', this.onStickyFolderClick, this);
+    },
+
+    getFolderBarNode: function (event) {
+        const bar = event.getTarget('.opendxp_tree_folder_bar');
+
+        return this.getStore().getNodeById(bar.getAttribute('data-node-id'));
+    },
+
+    onFolderBarClick: function (event, button) {
+        const action = button.getAttribute('data-action');
+
+        if (action === 'widen') {
+            this.widenTree(button.parentNode.querySelector('.opendxp_tree_folder_bar_controls'));
+            return;
+        }
+
+        const node = this.getFolderBarNode(event);
+        const pagingData = node.pagingData;
+        const focus = {event: event, selector: '[data-action=' + action + ']'};
+
+        if (action === 'clear') {
+            this.loadFolderPage(node, 0, '', {event: event, selector: '.opendxp_tree_folder_bar_search input'});
+        } else if (action === 'previous') {
+            this.loadFolderPage(node, pagingData.offset - pagingData.limit, node.filter, focus);
+        } else if (action === 'next') {
+            this.loadFolderPage(node, pagingData.offset + pagingData.limit, node.filter, focus);
+        } else if (action === 'jump') {
+            this.showPageInput(node, button);
+        } else if (action === 'open-search') {
+            this.openFolderSearch(button.closest('.opendxp_tree_folder_bar'));
         }
     },
 
-    queue: {},
+    showPageInput: function (node, button) {
+        const input = Ext.dom.Helper.insertAfter(button, {
+            tag: 'input',
+            type: 'text',
+            inputmode: 'numeric',
+            cls: 'opendxp_tree_folder_bar_page',
+            value: node.pagingData.offset / node.pagingData.limit + 1,
+            'aria-label': t('page')
+        });
 
-    renderRow: function(record, rowIdx, out) {
-        var me = this;
-        if (record.needsPaging) {
-            me.queue[record.id] = record;
-        }
-
-        me.superclass.renderRow.call(this, record, rowIdx, out);
-
-        // do not update paging again, if already done in "itemupdate" event
-        if (record.needsPaging && typeof record.ptb == "undefined" && typeof record.itemUpdated == "undefined") {
-            this.doUpdatePaging(record);
-        }
-
-        this.fireEvent("itemafterrender", record, rowIdx, out);
+        button.hidden = true;
+        input.focus();
+        input.select();
+        input.addEventListener('blur', function () {
+            Ext.removeNode(input);
+            button.hidden = false;
+        });
     },
 
-    doUpdatePaging: function(node) {
+    openFolderSearch: function (bar) {
+        const input = bar.querySelector('.opendxp_tree_folder_bar_search input');
 
-        const tree = node.getOwnerTree();
+        Ext.fly(bar).addCls('opendxp_tree_folder_bar_searching');
+        input.focus();
 
-        if (node.data.expanded && node.needsPaging && tree) {
+        return input;
+    },
 
-            node.ptb = ptb = Ext.create('opendxp.toolbar.Paging', {
-                    node: node,
-                    width: 260
+    onFolderSearchBlur: function (event) {
+        const input = event.target;
+        const bar = input.closest('.opendxp_tree_folder_bar');
+
+        if (!input.matches('.opendxp_tree_folder_bar_search input') || input.value !== '') {
+            return;
+        }
+
+        if (!this.getStore().getNodeById(bar.getAttribute('data-node-id')).filter) {
+            bar.classList.remove('opendxp_tree_folder_bar_searching');
+        }
+    },
+
+    widenTree: function (controls) {
+        const panel = this.ownerGrid.up('[region]');
+
+        if (panel) {
+            panel.setWidth(panel.getWidth() + opendxp.tree.FolderBar.fullWidth - controls.offsetWidth);
+        }
+    },
+
+    onFolderBarInput: function (event, input) {
+        const node = this.getFolderBarNode(event);
+
+        this.searchTask.delay(300, this.loadFolderPage, this, [node, 0, input.value, {
+            event: event,
+            selector: '.opendxp_tree_folder_bar_search input'
+        }]);
+    },
+
+    onFolderBarKeyDown: function (event, input) {
+        const node = this.getFolderBarNode(event);
+        const key = event.getKey();
+
+        if (Ext.fly(input).hasCls('opendxp_tree_folder_bar_page')) {
+            this.onPageInputKeyDown(node, event, input);
+            return;
+        }
+
+        if (key === event.ENTER) {
+            this.searchTask.cancel();
+            this.loadFolderPage(node, 0, input.value, {
+                event: event,
+                selector: '.opendxp_tree_folder_bar_search input'
+            });
+        } else if (key === event.ESC) {
+            this.searchTask.cancel();
+            this.loadFolderPage(node, 0, '', {focusNode: true});
+        } else if (key === event.DOWN && node.firstChild) {
+            event.preventDefault();
+            this.getNavigationModel().setPosition(node.firstChild);
+        }
+    },
+
+    onTreeKeyDown: function (view, record, item, index, event) {
+        const node = opendxp.tree.FolderBar.isShown(record) ? record : record.parentNode;
+
+        if (!node || !opendxp.tree.FolderBar.isShown(node)) {
+            return;
+        }
+
+        const character = event.browserEvent.key;
+        if (character.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey && character !== ' ') {
+            event.preventDefault();
+            const input = this.openFolderSearch(this.findFolderBar(node, true));
+            input.value += character;
+            input.dispatchEvent(new Event('input', {bubbles: true}));
+            return false;
+        }
+    },
+
+    onPageInputKeyDown: function (node, event, input) {
+        const pagingData = node.pagingData;
+        const pageCount = Math.ceil(pagingData.total / pagingData.limit);
+        const currentPage = pagingData.offset / pagingData.limit + 1;
+        const step = event.shiftKey ? 10 : 1;
+        const pages = {
+            [event.ENTER]: parseInt(input.value, 10) || currentPage,
+            [event.UP]: currentPage + step,
+            [event.PAGE_UP]: currentPage + step,
+            [event.DOWN]: currentPage - step,
+            [event.PAGE_DOWN]: currentPage - step,
+            [event.HOME]: 1,
+            [event.END]: pageCount
+        };
+
+        if (event.getKey() === event.ESC) {
+            input.previousSibling.hidden = false;
+            input.previousSibling.focus();
+            return;
+        }
+
+        if (pages[event.getKey()] === undefined) {
+            return;
+        }
+
+        event.preventDefault();
+        const page = Ext.Number.constrain(pages[event.getKey()], 1, pageCount);
+        this.loadFolderPage(node, (page - 1) * pagingData.limit, node.filter, {event: event, pageInput: true});
+    },
+
+    /**
+     * Loads one page of the children of a folder. The folder row renders anew, so the focus option names what gets
+     * the focus afterwards:
+     * - selector: an element of the folder bar, in the sticky copy when the event came from there
+     * - pageInput: the page field
+     * - focusNode: the folder row
+     */
+    loadFolderPage: function (node, offset, filter, focus) {
+        const search = Ext.String.trim(filter || '');
+        const inSticky = !!(focus && focus.event && focus.event.getTarget('.opendxp_tree_sticky_folder'));
+        const caret = focus && focus.event && focus.event.target.selectionStart;
+        const barTop = focus && focus.event ? this.getFolderTop(node, inSticky) : null;
+
+        this.setFolderBarLoading(node, true);
+        this.getStore().loadPage(
+            node,
+            Math.max(0, offset),
+            search === '' ? {inSearch: 0} : {filter: search, inSearch: 1},
+            function (success) {
+                this.refreshNode(node);
+                this.setFolderBarLoading(node, false);
+
+                if (!success) {
+                    return;
                 }
-            );
 
-            node.ptb.node = node;
-            node.ptb.store = this.store;
+                if (barTop !== null) {
+                    this.keepFolderAt(node, barTop);
+                }
 
+                if (focus && focus.focusNode) {
+                    this.getNavigationModel().setPosition(node);
+                } else if (focus && focus.pageInput) {
+                    this.showPageInput(node, this.findFolderBar(node, inSticky).querySelector('[data-action=jump]'));
+                } else if (focus && focus.selector) {
+                    this.focusFolderBar(node, focus.selector, inSticky, caret);
+                }
+            },
+            this
+        );
+    },
 
-            var view = tree.getView();
-            var nodeEl = Ext.fly(view.getNodeByRecord(node));
-            if (!nodeEl) {
-                //console.log("Could not resolve node " + node.id);
+    setFolderBarLoading: function (node, loading) {
+        [this.findFolderBar(node, false), this.findFolderBar(node, true)].forEach(function (bar) {
+            if (bar) {
+                Ext.fly(bar).toggleCls('opendxp_tree_folder_bar_loading', loading);
+                bar.querySelector('.opendxp_tree_folder_bar_search input').readOnly = loading;
+            }
+        });
+    },
+
+    getFolderTop: function (node, inSticky) {
+        return inSticky ? 0 : Ext.fly(this.getNode(node)).getY() - this.el.getY();
+    },
+
+    /**
+     * Scrolls the folder row back to where it was before the load. A short page cannot scroll that far, so a spacer
+     * below the rows makes the room.
+     */
+    keepFolderAt: function (node, top) {
+        const dom = this.el.dom;
+        const scroller = this.getScrollable();
+        const container = this.getNodeContainer();
+        const target = dom.scrollTop + Ext.fly(this.getNode(node)).getY() - this.el.getY() - top;
+        const neededHeight = target + dom.clientHeight - container.offsetTop;
+
+        if (container.offsetHeight < neededHeight) {
+            this.folderSpacer = neededHeight + 'px';
+            container.style.minHeight = this.folderSpacer;
+        }
+
+        scroller.scrollTo(null, target);
+        // The scroller restores this position after every layout. Only a scroll of the user updates it otherwise.
+        scroller.trackingScrollTop = target;
+        this.updateStickyFolder();
+    },
+
+    onFolderScroll: function () {
+        this.releaseFolderSpacer();
+        this.updateStickyFolder();
+    },
+
+    releaseFolderSpacer: function () {
+        const container = this.getNodeContainer();
+        const lastRow = container && container.lastElementChild;
+
+        if (!container || !this.folderSpacer) {
+            return;
+        }
+
+        // A refresh of the view renders a new container without the spacer.
+        container.style.minHeight = this.folderSpacer;
+
+        const rowsBottom = lastRow ? lastRow.offsetTop + lastRow.offsetHeight : 0;
+        if (Math.max(0, rowsBottom - this.el.dom.clientHeight) >= this.el.dom.scrollTop) {
+            this.folderSpacer = null;
+            container.style.minHeight = '';
+        }
+    },
+
+    findFolderBar: function (node, inSticky) {
+        if (inSticky && this.stickyFolderNode === node) {
+            return this.stickyFolderEl.down('.opendxp_tree_folder_bar', true);
+        }
+
+        const row = this.getNode(node);
+
+        return row && row.querySelector('.opendxp_tree_folder_bar');
+    },
+
+    focusFolderBar: function (node, selector, inSticky, caret) {
+        const bar = this.findFolderBar(node, inSticky);
+        let target = bar && bar.querySelector(selector);
+
+        if (target && target.disabled) {
+            target = bar.querySelector('[data-action=jump]');
+        }
+
+        if (!target) {
+            return;
+        }
+
+        target.focus({preventScroll: true});
+        if (typeof caret === 'number' && target.setSelectionRange) {
+            target.setSelectionRange(caret, caret);
+        }
+    },
+
+    updateFolderBars: function () {
+        if (!this.rendered) {
+            return;
+        }
+
+        this.releaseFolderSpacer();
+
+        // The tree table grows with its widest row, and a theme can move the tree column left of the view.
+        const cell = this.el.down('.x-grid-cell-inner-treecolumn');
+        const width = this.el.dom.clientWidth + (cell ? this.el.getX() - cell.getX() : 0);
+        [this.el, this.stickyFolderEl].forEach(function (el) {
+            el.dom.style.setProperty('--opendxp-tree-width', width + 'px');
+        });
+        this.updateFolderBarStages(this.el.dom);
+        this.updateStickyFolder();
+    },
+
+    updateFolderBarStages: function (root) {
+        const folderBar = opendxp.tree.FolderBar;
+
+        root.querySelectorAll('.opendxp_tree_folder_bar').forEach(function (bar) {
+            const width = bar.querySelector('.opendxp_tree_folder_bar_controls').offsetWidth;
+            const narrow = width < folderBar.compactWidth;
+
+            bar.classList.toggle('opendxp_tree_folder_bar_compact', !narrow && width < folderBar.fullWidth);
+            bar.classList.toggle('opendxp_tree_folder_bar_narrow', narrow);
+            bar.parentNode.classList.toggle('opendxp_tree_folder_narrow', narrow);
+        });
+    },
+
+    updateStickyFolder: function () {
+        if (!this.stickyFolderEl) {
+            return;
+        }
+
+        const node = this.findStickyFolderNode();
+
+        if (!node) {
+            this.stickyFolderNode = null;
+            this.stickyFolderEl.setHtml('');
+            this.stickyFolderEl.hide();
+            return;
+        }
+
+        // The tree column can start left of the view.
+        const parent = this.el.parent();
+        this.stickyFolderEl.setStyle({
+            left: (Ext.fly(this.getNode(node)).getX() - parent.getX()) + 'px',
+            top: (this.el.getY() - parent.getY()) + 'px',
+            width: this.el.dom.clientWidth + 'px'
+        });
+
+        const row = this.getStickyFolderRow(node);
+        if (this.stickyFolderNode === node && this.stickyFolderMarkup === row.outerHTML) {
+            return;
+        }
+
+        this.stickyFolderNode = node;
+        this.stickyFolderMarkup = row.outerHTML;
+        this.stickyFolderEl.setHtml('');
+        this.stickyFolderEl.appendChild(row);
+        this.stickyFolderEl.show();
+    },
+
+    findStickyFolderNode: function () {
+        const viewTop = this.el.getY();
+        let found = null;
+
+        Ext.each(this.el.query('.opendxp_tree_paged_node'), function (cell) {
+            const row = Ext.fly(cell).up(this.itemSelector, null, true);
+            const node = this.getRecord(row);
+
+            // A row on its way out of the view has no record any more.
+            if (!node) {
                 return;
             }
-            nodeEl = nodeEl.getFirstChild();
-            nodeEl = nodeEl.query(".x-tree-node-text");
-            nodeEl = nodeEl[0];
-            var el = nodeEl;
 
-            //el.addCls('x-grid-header-inner');
-            el = Ext.DomHelper.insertAfter(el, {
-                tag: 'span',
-                "class": "opendxp_pagingtoolbar_container"
-            }, true);
+            let last = node.lastChild;
 
-            el.addListener("click", function(e) {
-                e.stopPropagation();
-            });
-
-
-            el.addListener("mousedown", function(e) {
-                e.stopPropagation();
-            });
-
-            ptb.render(el);
-            tree.updateLayout();
-
-            if (node.filter) {
-                node.ptb.filterField.focus([node.filter.length, node.filter.length]);
-            } else if (node.fromPaging) {
-                node.ptb.numberItem.focus();
+            while (last && last.isExpanded() && last.lastChild) {
+                last = last.lastChild;
             }
-        }
 
+            const lastRow = last && this.getNode(last);
+            if (Ext.fly(row).getY() < viewTop && lastRow && Ext.fly(lastRow).getY() > viewTop) {
+                found = node;
+            }
+        }, this);
+
+        return found;
     },
 
-    updatePaging: function() {
-        var me = this;
-        var queue = me.queue;
+    getStickyFolderRow: function (node) {
+        const row = this.getNode(node).cloneNode(true);
 
-        var names = Object.getOwnPropertyNames(queue);
+        [row].concat(Array.from(row.querySelectorAll('[id]'))).forEach(function (element) {
+            element.removeAttribute('id');
+        });
+        row.removeAttribute('data-recordid');
+        row.removeAttribute('data-boundview');
+        Ext.fly(row).removeCls(['x-grid-item-over', 'x-grid-item-selected', 'x-grid-item-focused']);
 
-        for (i = 0; i < names.length; i++) {
-            var node = queue[names[i]];
-            this.doUpdatePaging(node);
+        return row;
+    },
+
+    onStickyFolderClick: function (event) {
+        if (event.getTarget('.opendxp_tree_folder_bar, .opendxp_tree_folder_widen')) {
+            return;
         }
 
-        me.queue = {}
+        this.getNavigationModel().setPosition(this.stickyFolderNode);
     }
 });
 
@@ -354,41 +806,14 @@ Ext.define('opendxp.data.PagingTreeStore', {
 
     extend: 'Ext.data.TreeStore',
 
-    ptb: false,
-
     onProxyLoad: function(operation) {
         try {
             var me = this;
             var options = operation.initialConfig
             var node = options.node;
             var proxy = me.getProxy();
-            var extraParams = proxy.getExtraParams();
 
-
-            var response = operation.getResponse();
-            var data = response.responseJson;
-
-            node.fromPaging = data.fromPaging;
-            node.filter = data.filter;
-            node.inSearch = data.inSearch;
-            node.overflow = data.overflow;
-
-            proxy.setExtraParam("fromPaging", 0);
-
-            var total = data.total;
-
-            var text = node.data.text;
-            if (typeof total == "undefined") {
-                total = 0;
-            }
-
-            node.addListener("expand", function (node) {
-                var tree = node.getOwnerTree();
-                if (tree) {
-                    var view = tree.getView();
-                    view.updatePaging();
-                }
-            }.bind(this));
+            me.setPagingData(node, operation.getResponse().responseJson);
 
             //to hide or show the expanding icon depending if children are available or not
             node.addListener('remove', function (node, removedNode, isMove) {
@@ -400,503 +825,77 @@ Ext.define('opendxp.data.PagingTreeStore', {
                 node.set('expandable', true);
             });
 
-            node.needsPaging = true;
-            node.pagingData = {
-                total: data.total,
-                offset: data.offset,
-                limit: data.limit,
-                canSortManually: data.total < data.limit
-            }
-
             me.superclass.onProxyLoad.call(this, operation);
-            var proxy = this.getProxy();
             proxy.setExtraParam("start", 0);
         } catch (e) {
             console.log(e);
         }
+    },
+
+    setPagingData: function (node, data) {
+        node.filter = data.filter;
+        node.inSearch = data.inSearch;
+        node.pagingData = {
+            total: data.total,
+            offset: data.offset,
+            limit: data.limit,
+            canSortManually: !data.filter && data.total < data.limit
+        };
+    },
+
+    /**
+     * Loads one page of the children of an open folder. The load of Ext.data.TreeStore empties and closes the folder
+     * until the answer arrives. A page keeps the old children until it swaps them.
+     */
+    loadPage: function (node, offset, params, callback, scope) {
+        const pageRequest = node.pageRequest = (node.pageRequest || 0) + 1;
+        const options = {
+            node: node,
+            id: node.getId(),
+            params: params,
+            pageRequest: pageRequest,
+            internalScope: this,
+            internalCallback: this.onPageLoad,
+            callback: function (records, operation, success) {
+                if (pageRequest === node.pageRequest) {
+                    Ext.callback(callback, scope, [success]);
+                }
+            }
+        };
+
+        // The proxy sends its extra parameter start in place of the start of the operation.
+        this.getProxy().setExtraParam('start', offset);
+        this.setLoadOptions(options);
+        const operation = this.createOperation('read', options);
+
+        if (this.fireEvent('beforeload', this, operation) !== false) {
+            operation.execute();
+        }
+    },
+
+    onPageLoad: function (operation) {
+        const options = operation.initialConfig;
+        const node = options.node;
+
+        this.getProxy().setExtraParam('start', 0);
+
+        if (options.pageRequest !== node.pageRequest || !operation.wasSuccessful()) {
+            return;
+        }
+
+        this.setPagingData(node, operation.getResponse().responseJson);
+
+        // A load of Ext.data.TreeStore sets loading as well, so that the store keeps no removed records.
+        // Destroying the old children would send a destroy request for each.
+        this.loading = true;
+        node.removeAll(false);
+        this.loading = false;
+        node.appendChild(operation.getRecords());
+
+        this.fireEvent('load', this, operation.getRecords(), true, operation, node);
     }
 });
 
-
-Ext.define('opendxp.toolbar.Paging', {
-    extend: 'Ext.toolbar.Toolbar',
-    requires: [
-        'Ext.toolbar.TextItem',
-        'Ext.form.field.Number'
-    ],
-
-    displayInfo: false,
-
-    prependButtons: false,
-
-    displayMsg: t('Displaying {0} - {1} of {2}'),
-
-    emptyMsg: t('no_data_to_display'),
-
-    beforePageText: t('page'),
-
-    afterPageText: '/ {0}',
-
-    firstText: t('first_page'),
-
-    prevText: t('previous_page'),
-
-    nextText: t('next_page'),
-
-    lastText: t('last_page'),
-
-    refreshText: t('refresh'),
-
-    width: 280,
-
-    height: 20,
-
-    border: false,
-
-    emptyPageData: {
-        total: 0,
-        currentPage: 0,
-        pageCount: 0,
-        toRecord: 0,
-        fromRecord: 0
-    },
-
-    doCancelSearch: function (node) {
-        this.inSearch = 0;
-        this.cancelFilterButton.hide();
-        this.filterButton.show();
-        this.filterField.setValue("");
-        this.filterField.hide();
-
-        var store = this.store;
-        store.load({
-                node: node,
-                params: {
-                    "inSearch": 0
-                }
-            }
-        );
-
-
-        this.first.show();
-        this.prev.show();
-        this.numberItem.show();
-        this.spacer.show();
-        this.afterItem.show();
-        this.next.show();
-        this.last.show();
-    },
-
-    getPagingItems: function () {
-        var me = this,
-            inputListeners = {
-                scope: me,
-                blur: me.onPagingBlur
-            };
-
-        var node = me.node;
-        var pagingData = me.node.pagingData;
-
-        var currPage = pagingData.offset / pagingData.limit + 1;
-
-        this.inSearch = node.inSearch;
-        var hidePagination = this.inSearch || pagingData.total <= pagingData.limit;
-        opendxp.isTreeFiltering = false;
-
-        inputListeners[Ext.supports.SpecialKeyDownRepeat ? 'keydown' : 'keypress'] = me.onPagingKeyDown;
-
-        this.filterField = new Ext.form.field.Text({
-            name: 'filter',
-            width: 160,
-            border: true,
-            cls: "opendxp_pagingtoolbar_container_filter",
-            fieldStyle: "padding: 0 10px 0 10px;",
-            height: 18,
-            value: node.filter ? node.filter : "",
-            enableKeyEvents: true,
-            hidden: !this.inSearch,
-            listeners: {
-                "keydown": function (node, inputField, event) {
-                    if (event.keyCode == 13) {
-                        var store = this.store;
-                        var proxy = store.getProxy();
-                        this.currentFilter = this.filterField.getValue();
-
-
-                        try {
-                            store.load({
-                                    node: node,
-                                    params: {
-                                        "filter": this.filterField.getValue(),
-                                        "inSearch": this.inSearch
-                                    }
-                                }
-                            );
-                        } catch (e) {
-
-                        }
-
-
-                    }
-                }.bind(this, node)
-            }
-
-        });
-
-        var result = [this.filterField];
-
-        this.overflow = new Ext.button.Button(
-            {
-                tooltip: t("there_are_more_items"),
-                overflowText: t("there_are_more_items"),
-                iconCls: "opendxp_icon_warning",
-                disabled: false,
-                scope: me,
-                border: false,
-                hidden: !node.overflow
-            });
-
-
-        this.filterButton = new Ext.button.Button(
-            {
-                itemId: 'filterButton',
-                tooltip: t("filter"),
-                overflowText: t("filter"),
-                iconCls: Ext.baseCSSPrefix + 'tbar-page-filter',
-                margin: '-1 2 3 2',
-                handler: function () {
-                    this.inSearch = 1;
-                    this.cancelFilterButton.show();
-                    this.filterButton.hide();
-                    this.filterField.setValue("");
-                    this.filterField.show();
-
-                    this.filterField.focus();
-
-                    this.first.hide();
-                    this.prev.hide();
-                    this.numberItem.hide();
-                    this.spacer.hide();
-                    this.afterItem.hide();
-                    this.next.hide();
-                    this.last.hide();
-                }.bind(this),
-                scope: me,
-                hidden: this.inSearch || pagingData.total < 30
-            });
-
-        this.cancelFilterButton = new Ext.button.Button(
-            {
-                itemId: 'cancelFlterButton',
-                tooltip: t("clear"),
-                overflowText: t("clear"),
-                margin: '-1 2 3 2',
-                iconCls: Ext.baseCSSPrefix + 'tbar-page-cancel-filter',
-                handler: function () {
-                    this.doCancelSearch(node);
-
-                }.bind(this),
-                scope: me,
-                hidden: !this.inSearch
-            });
-
-        this.afterItem = Ext.create('Ext.form.NumberField', {
-
-            cls: Ext.baseCSSPrefix + 'tbar-page-number',
-            value: Math.ceil(pagingData.total / pagingData.limit),
-            hideTrigger: true,
-            heightLabel: true,
-            height: 18,
-            width: 38,
-            disabled: true,
-            margin: '-1 2 3 2',
-            hidden: hidePagination
-        });
-
-
-        this.numberItem = new Ext.form.field.Number({
-            xtype: 'numberfield',
-            itemId: 'inputItem',
-            name: 'inputItem',
-            heightLabel: true,
-            cls: Ext.baseCSSPrefix + 'tbar-page-number',
-            allowDecimals: false,
-            minValue: 1,
-            maxValue: this.getMaxPageNum(),
-            value: currPage,
-            hideTrigger: true,
-            enableKeyEvents: true,
-            keyNavEnabled: false,
-            selectOnFocus: true,
-            submitValue: false,
-            height: 18,
-            width: 40,
-            isFormField: false,
-            margin: '-1 2 3 2',
-            listeners: inputListeners,
-            hidden: hidePagination
-        });
-
-
-        this.first = new Ext.button.Button(
-            {
-                itemId: 'first',
-                tooltip: me.firstText,
-                overflowText: me.firstText,
-                iconCls: Ext.baseCSSPrefix + 'tbar-page-first',
-                disabled: me.node.pagingData.offset == 0,
-                handler: me.moveFirst,
-                scope: me,
-                border: false,
-                hidden: hidePagination
-
-            });
-
-
-        this.prev = new Ext.button.Button({
-            itemId: 'prev',
-            tooltip: me.prevText,
-            overflowText: me.prevText,
-            iconCls: Ext.baseCSSPrefix + 'tbar-page-prev',
-            disabled: me.node.pagingData.offset == 0,
-            handler: me.movePrevious,
-            scope: me,
-            border: false,
-            hidden: hidePagination
-        });
-
-
-        this.spacer = new Ext.toolbar.Spacer({
-            xtype: "tbspacer",
-            hidden: hidePagination
-        });
-
-
-        this.next = new Ext.button.Button({
-            itemId: 'next',
-            tooltip: me.nextText,
-            overflowText: me.nextText,
-            iconCls: Ext.baseCSSPrefix + 'tbar-page-next',
-            disabled: (Math.ceil(me.node.pagingData.total / me.node.pagingData.limit) - 1) * me.node.pagingData.limit == me.node.pagingData.offset,
-            handler: me.moveNext,
-            scope: me,
-            hidden: hidePagination
-        });
-
-
-        this.last = new Ext.button.Button({
-            itemId: 'last',
-            tooltip: me.lastText,
-            overflowText: me.lastText,
-            iconCls: Ext.baseCSSPrefix + 'tbar-page-last',
-            disabled: (Math.ceil(me.node.pagingData.total / me.node.pagingData.limit) - 1) * me.node.pagingData.limit == me.node.pagingData.offset,
-            handler: me.moveLast,
-            scope: me,
-            hidden: hidePagination
-        });
-
-
-        result.push(this.overflow);
-        result.push(this.filterButton);
-        result.push(this.cancelFilterButton);
-
-        result.push(this.filterField);
-        result.push(this.first);
-        result.push(this.prev);
-        result.push(this.numberItem);
-        result.push(this.spacer);
-        result.push(this.afterItem);
-        result.push(this.next);
-        result.push(this.last);
-
-
-        return result;
-    },
-
-    getMaxPageNum: function() {
-        var me = this;
-        return Math.ceil(me.node.pagingData.total / me.node.pagingData.limit)
-    },
-
-    initComponent: function(config) {
-        var me = this,
-            userItems = me.items || me.buttons || [],
-            pagingItems;
-
-        pagingItems = me.getPagingItems();
-        if (me.prependButtons) {
-            me.items = userItems.concat(pagingItems);
-        } else {
-            me.items = pagingItems.concat(userItems);
-        }
-        delete me.buttons;
-        if (me.displayInfo) {
-            me.items.push('->');
-            me.items.push({
-                xtype: 'tbtext',
-                itemId: 'displayItem'
-            });
-        }
-        me.callParent();
-    },
-
-
-    getInputItem: function() {
-        return this.child('#inputItem');
-    },
-
-
-    onPagingBlur: function(e) {
-        var inputItem = this.getInputItem(),
-            curPage;
-        if (inputItem) {
-            //curPage = this.getPageData().currentPage;
-            //inputItem.setValue(curPage);
-        }
-    },
-
-    onPagingKeyDown: function(field, e) {
-        this.processKeyEvent(field, e);
-    },
-
-    readPageFromInput: function() {
-        var inputItem = this.getInputItem(),
-            pageNum = false,
-            v;
-        if (inputItem) {
-            v = inputItem.getValue();
-            pageNum = parseInt(v, 10);
-        }
-        return pageNum;
-    },
-
-
-    processKeyEvent: function(field, e) {
-        var me = this,
-            k = e.getKey(),
-        //pageData = me.getPageData(),
-            increment = e.shiftKey ? 10 : 1,
-            pageNum;
-        if (k == e.RETURN) {
-            e.stopEvent();
-            pageNum = me.readPageFromInput();
-            if (pageNum !== false) {
-                pageNum = Math.min(Math.max(1, pageNum), this.getMaxPageNum());
-                this.moveToPage(pageNum);
-            }
-
-
-        } else if (k == e.HOME) {
-            e.stopEvent();
-            this.moveFirst();
-        } else if (k == e.END) {
-            e.stopEvent();
-            this.moveLast();
-        } else if (k == e.UP || k == e.PAGE_UP || k == e.DOWN || k == e.PAGE_DOWN) {
-            e.stopEvent();
-            pageNum = me.readPageFromInput();
-            if (pageNum) {
-                if (k == e.DOWN || k == e.PAGE_DOWN) {
-                    increment *= -1;
-                }
-                pageNum += increment;
-                if (pageNum >= 1 && pageNum <= this.getMaxPageNum()) {
-                    this.moveToPage(pageNum);
-                }
-            }
-        }
-    },
-
-    moveToPage: function(page) {
-        var me = this;
-        var node = me.node;
-        var pagingData = node.pagingData;
-        var store = node.getTreeStore();
-
-        var proxy = store.getProxy();
-        proxy.setExtraParam("start",  pagingData.limit * (page - 1));
-        proxy.setExtraParam("fromPaging", 1);
-        store.load({
-            node: node
-        });
-    },
-
-    moveFirst: function() {
-        var me = this;
-        var node = me.node;
-        var pagingData = node.pagingData;
-        var store = node.getTreeStore();
-        var page = pagingData.offset / pagingData.total;
-
-        var proxy = store.getProxy();
-        proxy.setExtraParam("start", 0);
-        store.load({
-            node: node
-        });
-    },
-
-    movePrevious: function() {
-        var me = this;
-        var node = me.node;
-        var pagingData = node.pagingData;
-        var store = node.getTreeStore();
-        var page = pagingData.offset / pagingData.total;
-
-        var proxy = store.getProxy();
-        proxy.setExtraParam("start", pagingData.offset - pagingData.limit);
-        store.load({
-            node: node
-        });
-    },
-
-    moveNext: function() {
-        var me = this;
-        var node = me.node;
-        var pagingData = node.pagingData;
-        var store = node.getTreeStore();
-        var page = pagingData.offset / pagingData.total;
-
-        var proxy = store.getProxy();
-        proxy.setExtraParam("start", pagingData.offset + pagingData.limit);
-        store.load({
-            node: node
-        });
-
-    },
-
-    moveLast: function() {
-        var me = this;
-        var node = me.node;
-        var pagingData = node.pagingData;
-        var store = node.getTreeStore();
-        var offset = (Math.ceil(pagingData.total / pagingData.limit) - 1) * pagingData.limit;
-
-        var proxy = store.getProxy();
-        proxy.setExtraParam("start", offset);
-        store.load({
-            node: node
-        });
-    },
-
-    doRefresh: function() {
-        var me = this;
-        var node = me.node;
-        var pagingData = node.pagingData;
-        var store = node.getTreeStore();
-        var page = pagingData.offset / pagingData.total;
-
-        var proxy = store.getProxy();
-        proxy.setExtraParam("start", pagingData.offset);
-        store.load({
-            node: node
-        });
-    },
-
-    onDestroy: function() {
-        //this.bindStore(null);
-        this.callParent();
-    }
-});
 
 /**
  * Fixes ID validation to include more characters as we need the colon for nested editable names

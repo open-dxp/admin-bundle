@@ -27,7 +27,6 @@ final readonly class TreeGetDataObjectChildrenPayload implements ExtJsPayloadInt
         public int $start = 0,
         public int $limit = 100000000,
         public string $view = '',
-        public int $fromPaging = 0,
         public array $allParams = [],
         public int $inSearch = 0,
     ) {
@@ -46,7 +45,6 @@ final readonly class TreeGetDataObjectChildrenPayload implements ExtJsPayloadInt
             start: $request->query->getInt('start'),
             limit: $request->query->getInt('limit', 100000000),
             view: $request->query->getString('view'),
-            fromPaging: $request->query->getInt('fromPaging'),
             allParams: $request->query->all(),
             inSearch: $request->query->getInt('inSearch'),
         );

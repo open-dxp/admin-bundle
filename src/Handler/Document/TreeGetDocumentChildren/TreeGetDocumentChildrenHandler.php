@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Document\TreeGetDocumentChildren;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\TreeSearch;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
@@ -56,15 +57,7 @@ final class TreeGetDocumentChildrenHandler
         $offset = (int)($payload->allParams['start'] ?? 0);
 
         $filter = $payload->allParams['filter'] ?? null;
-        $sqlFilter = $filter;
-        if (!is_null($sqlFilter)) {
-            if (!str_ends_with($sqlFilter, '*')) {
-                $sqlFilter .= '*';
-            }
-            $sqlFilter = str_replace('*', '%', $sqlFilter);
-            $limit = 100;
-            $offset = 0;
-        }
+        $sqlFilter = $filter === null ? null : TreeSearch::toLikePattern($filter);
 
         $document = Document::getById((int) $payload->allParams['node']);
         if (!$document) {
@@ -74,6 +67,7 @@ final class TreeGetDocumentChildrenHandler
         $adminUser = $this->userContext->getAdminUser();
         $documents = [];
         $cv = [];
+        $filteredTotalCount = 0;
         if ($document->hasChildren()) {
             if ($payload->allParams['view'] ?? null) {
                 $cv = $this->elementService->getCustomViewById($payload->allParams['view']);
@@ -118,6 +112,7 @@ final class TreeGetDocumentChildrenHandler
             $list = $beforeListLoadEvent->getArgument('list');
 
             $documents = $this->loadChildren($list);
+            $filteredTotalCount = $list->getTotalCount();
         }
 
         $event = new GenericEvent($this->currentControllerContext->getController(), ['documents' => $documents]);
@@ -132,7 +127,7 @@ final class TreeGetDocumentChildrenHandler
             nodes: $documents,
             offset: $offset,
             limit: $limit,
-            total: $document->getChildAmount($adminUser),
+            total: $filter !== null ? $filteredTotalCount : $document->getChildAmount($adminUser),
             filter: $filter ?? '',
             inSearch: $payload->inSearch,
         );

@@ -5,6 +5,7 @@
 * Feature: `GridExports::export()` runs a grid export in a test
 * Feature: A grid export runs in the background with `opendxp_admin.background_jobs`. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md#run-exports-in-the-background)
 * Bugfix: Progress windows stay in the bottom right corner when the browser window is resized
+* Feature: A large tree folder has a bar to search its children by any part of the key and to page through children and search results [open-dxp/opendxp#228](https://github.com/open-dxp/opendxp/issues/228)
 * Chore: Require `openspout/openspout` ^5.0. `phpoffice/phpspreadsheet` goes with 2.0
 * Chore: Remove the old export routes of the object, asset, email log and translation grids
 * Feature: The URL slug field shows the prefix of its slug generator, formats what an editor types and locks a stored slug. The domain of a site slug stands next to it [open-dxp/opendxp#159](https://github.com/open-dxp/opendxp/issues/159)
