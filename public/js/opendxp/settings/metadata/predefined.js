@@ -300,7 +300,6 @@ opendxp.settings.metadata.predefined = Class.create({
 
             viewConfig: {
                 listeners: {
-                    rowupdated: this.updateRows.bind(this, "rowupdated"),
                     refresh: this.updateRows.bind(this, "refresh")
                 },
                 forceFit: true,

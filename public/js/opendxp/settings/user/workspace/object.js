@@ -153,7 +153,6 @@ opendxp.settings.user.workspace.object = Class.create({
             viewConfig: {
                 forceFit: true,
                 listeners: {
-                    rowupdated: this.updateRows.bind(this),
                     refresh: this.updateRows.bind(this)
                 }
             }

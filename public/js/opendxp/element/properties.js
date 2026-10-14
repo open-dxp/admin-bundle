@@ -240,8 +240,6 @@ opendxp.element.properties = Class.create({
             this.propertyGrid = Ext.create('Ext.grid.Panel', {
                 autoScroll: true,
                 region: "center",
-                //reference: this,
-                sm:  Ext.create('Ext.selection.RowModel', {}),
                 bufferedRenderer: false,
                 trackMouseOver: true,
                 store: store,
@@ -259,17 +257,10 @@ opendxp.element.properties = Class.create({
                     handler: this.addSetFromUserDefined.bind(this, customKey, customType),
                     iconCls: "opendxp_icon_add"
                 }],
-                //plugins: checkColumn,
                 clicksToEdit: 1,
                 features: [
-                    Ext.create('Ext.grid.feature.Grouping', {
-                        listeners: {
-                            rowupdated: this.updateRows.bind(this, "rowupdated"),
-                            refresh: this.updateRows.bind(this, "refresh")
-                        }
-                    })
+                    Ext.create('Ext.grid.feature.Grouping')
                 ],
-                autoExpandColumn: "property_value_col",
                 columnLines: true,
                 stripeRows: true,
                 columns: [
