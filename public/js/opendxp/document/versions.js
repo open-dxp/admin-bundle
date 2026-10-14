@@ -160,10 +160,7 @@ opendxp.document.versions = Class.create({
                 stripeRows: true,
                 width: 620,
                 region: "west",
-                split: true,
-                viewConfig: {
-                    xtype: 'patchedgridview'
-                }
+                split: true
             });
 
             //this.grid.on("rowclick", this.onRowClick.bind(this));

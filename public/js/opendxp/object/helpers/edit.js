@@ -40,25 +40,6 @@ opendxp.object.helpers.edit = {
 
         var panelListenerConfig = {};
 
-        var tabpanelCorrection = function (panel) {
-            window.setTimeout(function () {
-                try {
-                    if(typeof panel["opendxpLayoutCorrected"] == "undefined") {
-                        var parentEl = panel.body.findParent(".x-tab-panel");
-                        if(parentEl && Ext.get(parentEl).getWidth()) {
-                            panel.setWidth(Ext.get(parentEl).getWidth()-50);
-                            //panel.getEl().applyStyles("position:relative;");
-                            panel.ownerCt.updateLayout();
-
-                            panel["opendxpLayoutCorrected"] = true;
-                        }
-                    }
-                } catch (e) {
-                    console.log(e);
-                }
-            }, 2000);
-        };
-
         var xTypeLayoutMapping = {
             accordion: {
                 xtype: "panel",
@@ -114,10 +95,7 @@ opendxp.object.helpers.edit = {
                 forceLayout: true,
                 hideMode: "offsets",
                 enableTabScroll: true,
-                listeners: {
-                    afterrender:tabpanelCorrection,
-                    tabchange: tabpanelCorrection
-                }
+                listeners: panelListenerConfig
             },
             button: {
                 xtype: "button",
@@ -143,24 +121,24 @@ opendxp.object.helpers.edit = {
             l.title = t(l.title);
         }
 
-        if (l.datatype == "layout") {
+        if (l.datatype === "layout") {
             if (skipLayoutChildren !== true && l.children && typeof l.children == "object") {
                 if (l.children.length > 0) {
                     l.items = [];
                     for (var i = 0; i < l.children.length; i++) {
                         var childConfig = l.children[i];
-                        if (typeof childConfig.labelWidth == "undefined" && l.labelWidth != "undefined") {
+                        if (typeof childConfig.labelWidth == "undefined" && typeof l.labelWidth !== "undefined") {
                             childConfig.labelWidth = l.labelWidth;
                         }
-                        if (typeof childConfig.labelAlign == "undefined" && l.labelAlign != "undefined") {
+                        if (typeof childConfig.labelAlign == "undefined" && typeof l.labelAlign !== "undefined") {
                             childConfig.labelAlign = l.labelAlign;
                         }
 
-                        if (typeof childConfig.fieldLabel == "undefined" && l.fieldLabel != "undefined") {
+                        if (typeof childConfig.fieldLabel == "undefined" && typeof l.fieldLabel !== "undefined") {
                             childConfig.fieldLabel = l.fieldLabel;
                         }
 
-                        if(l.fieldtype =='tabpanel' && !disableLazyRendering) {
+                        if(l.fieldtype ==='tabpanel' && !disableLazyRendering) {
                             tmpItems = this.getRecursiveLayout(childConfig, noteditable, context, true, false, dataProvider, disableLazyRendering);
                             if (tmpItems) {
                                 if (!tmpItems['listeners']) {
@@ -209,7 +187,7 @@ opendxp.object.helpers.edit = {
                 if (in_array(configKeys[u], validKeys)) {
 
                     // handlers must be eval()
-                    if(configKeys[u] == "handler") {
+                    if(configKeys[u] === "handler") {
                         try {
                             if(l[configKeys[u]] && Ext.isString(l[configKeys[u]]) && l[configKeys[u]].length > 10) {
                                 l[configKeys[u]] = eval(l[configKeys[u]]).bind(this);
@@ -221,8 +199,7 @@ opendxp.object.helpers.edit = {
                     }
 
                     if(l[configKeys[u]]) {
-                        //if (typeof l[configKeys[u]] != "undefined") {
-                        if(configKeys[u] == "html"){
+                        if(configKeys[u] === "html"){
                             newConfig[configKeys[u]] = l["renderingClass"] ? l[configKeys[u]] : t(l[configKeys[u]]);
                         } else {
                             newConfig[configKeys[u]] = l[configKeys[u]];
@@ -270,7 +247,7 @@ opendxp.object.helpers.edit = {
 
             return newConfig;
         }
-        else if (l.datatype == "data") {
+        else if (l.datatype === "data") {
 
             if (l.invisible) {
                 return false;
@@ -304,7 +281,7 @@ opendxp.object.helpers.edit = {
                 let icons = '';
                 let wasMandatory = false;
 
-                if (context.containerType == 'localizedfield') {
+                if (context.containerType === 'localizedfield') {
                     if (l.mandatory && !in_array(context.language, opendxp.settings.requiredLanguages)) {
                         l.mandatory = false;
                         wasMandatory = true;
@@ -443,7 +420,7 @@ opendxp.object.helpers.edit = {
                                     var tooltipHtml = Ext.util.Format.htmlEncode(field.tooltip);
 
                                     // classification-store tooltips are already translated
-                                    if (context.type != "classificationstore") {
+                                    if (context.type !== "classificationstore") {
                                         tooltipHtml = t(tooltipHtml);
                                     }
 

@@ -163,9 +163,7 @@ Ext.onReady(function () {
     Ext.Ajax.setMethod('GET');
 
     const requestHeaders = {
-        'X-opendxp-csrf-token': opendxp.settings['csrfToken'],
-        'X-opendxp-extjs-version-major': Ext.getVersion().getMajor(),
-        'X-opendxp-extjs-version-minor': Ext.getVersion().getMinor()
+        'X-opendxp-csrf-token': opendxp.settings['csrfToken']
     };
 
     Ext.Ajax.setDefaultHeaders(requestHeaders);

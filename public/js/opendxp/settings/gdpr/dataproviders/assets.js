@@ -173,8 +173,7 @@ opendxp.settings.gdpr.dataproviders.assets = Class.create({
             stripeRows: true,
             plugins: ['opendxp.gridfilters'],
             viewConfig: {
-                forceFit: false,
-                xtype: 'patchedgridview'
+                forceFit: false
             },
             cls: 'opendxp_asset_grid_panel',
             selModel: Ext.create('Ext.selection.RowModel', {}),

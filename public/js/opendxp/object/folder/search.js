@@ -316,7 +316,6 @@ opendxp.object.search = Class.create(opendxp.object.helpers.gridTabAbstract, {
             plugins: plugins,
             viewConfig: {
                 forceFit: false,
-                xtype: 'patchedgridview',
                 enableTextSelection: true,
                 listeners: {
                     refresh: function (dataview) {

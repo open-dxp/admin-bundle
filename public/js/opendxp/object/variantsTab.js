@@ -205,7 +205,6 @@ opendxp.object.variantsTab = Class.create(opendxp.object.helpers.gridTabAbstract
             trackMouseOver: true,
             viewConfig: {
                 forceFit: false,
-                xtype: 'patchedgridview',
                 enableTextSelection: true
             },
             selModel: gridHelper.getSelectionColumn(),

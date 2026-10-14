@@ -351,8 +351,7 @@ opendxp.settings.website = Class.create({
                     rowupdated: this.updateRows.bind(this, "rowupdated"),
                     refresh: this.updateRows.bind(this, "refresh")
                 },
-                forceFit:true,
-                xtype: 'patchedgridview'
+                forceFit:true
             }
         });
 

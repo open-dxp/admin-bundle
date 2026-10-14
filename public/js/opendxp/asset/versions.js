@@ -11,7 +11,7 @@
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
-opendxp.registerNS("opendxp.asset.versions");
+opendxp.registerNS('opendxp.asset.versions');
 /**
  * @private
  */
@@ -107,10 +107,7 @@ opendxp.asset.versions = Class.create({
                 stripeRows: true,
                 width: 450,
                 region: "west",
-                split: true,
-                viewConfig: {
-                    xtype: 'patchedgridview'
-                }
+                split: true
             });
 
             grid.on("rowclick", this.onRowClick.bind(this));

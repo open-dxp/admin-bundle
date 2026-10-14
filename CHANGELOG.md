@@ -5,6 +5,10 @@
 * Feature: `GridExports::export()` runs a grid export in a test
 * Feature: A grid export runs in the background with `opendxp_admin.background_jobs`. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md#run-exports-in-the-background)
 * Bugfix: Progress windows stay in the bottom right corner when the browser window is resized
+* Bugfix: A data object closed right after opening logs no error in the console
+* Deprecation: The grid view `patchedgridview` is deprecated. A grid uses the default view of Ext JS.
+* Deprecation: The navigation model `quicksearch.boundlist` is deprecated. A bound list uses the default navigation model of Ext JS.
+* Chore: Requests from the admin no longer send the headers `X-opendxp-extjs-version-major` and `X-opendxp-extjs-version-minor`
 * Feature: A large tree folder has a bar to search its children by any part of the key and to page through children and search results [open-dxp/opendxp#228](https://github.com/open-dxp/opendxp/issues/228)
 * Chore: Require `openspout/openspout` ^5.0. `phpoffice/phpspreadsheet` goes with 2.0
 * Chore: Remove the old export routes of the object, asset, email log and translation grids
