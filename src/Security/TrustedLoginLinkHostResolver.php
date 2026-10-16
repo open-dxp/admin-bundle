@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Security;
 
+use OpenDxp\Http\Request\Host\GeneralHostProviderInterface;
 use OpenDxp\Http\Request\Host\GeneralHostResolver;
 use OpenDxp\Model\Site;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,6 +33,6 @@ final class TrustedLoginLinkHostResolver implements TrustedLoginLinkHostResolver
             return $request->getHost();
         }
 
-        return $this->generalHostResolver->resolve(['source' => $request]);
+        return $this->generalHostResolver->resolve([GeneralHostProviderInterface::CONTEXT_SOURCE => $request]);
     }
 }
