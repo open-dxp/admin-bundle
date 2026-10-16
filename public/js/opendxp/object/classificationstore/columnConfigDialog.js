@@ -20,10 +20,11 @@ opendxp.object.classificationstore.columnConfigDialog = Class.create({
     keysAdded: 0,
     requestIsPending: false,
 
-    getConfigDialog: function(ownerTree, node, selectionPanel) {
+    getConfigDialog: function(ownerTree, node, selectionPanel, callback) {
         this.ownerTree = ownerTree;
         this.node = node;
         this.selectionPanel = selectionPanel;
+        this.callback = callback;
 
         var selectionWindow = new opendxp.object.classificationstore.relationSelectionWindow(this, node.data.layout.storeId);
         selectionWindow.show();
@@ -90,6 +91,8 @@ opendxp.object.classificationstore.columnConfigDialog = Class.create({
 
         if (this.keysAdded == 0) {
             this.node.remove();
+        } else if (this.callback) {
+            this.callback();
         }
     }
 });

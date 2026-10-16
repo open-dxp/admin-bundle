@@ -589,6 +589,9 @@ opendxp.element.helpers.gridColumnConfig = {
             var tagType = fieldInfo.layout.type;
             var editor = new opendxp.object.tags[tagType](null, fieldInfo.layout.layout);
             editor.setObject(this.object);
+            editor.updateContext({
+                fieldname: fieldInfo.dataIndex
+            });
         } else {
             let layoutInfo = this.fieldObject[fieldInfo.dataIndex].layout;
             const tagType = this.fieldObject[fieldInfo.dataIndex].type ?? layout.fieldtype;

@@ -140,25 +140,23 @@ final class DataObjectGridColumnConfigResolver
                         $keyParts = explode('~', $key);
 
                         if (str_starts_with($key, '~')) {
-                            $type = $keyParts[1];
-                            $groupAndKeyId = explode('-', $keyParts[3]);
-                            $keyId = (int) $groupAndKeyId[1];
+                            $gridColumn = $class ? DataObject\Service::findGridColumn($class, $key) : null;
+                            $fieldConfig = $gridColumn
+                                ? $this->getFieldGridConfig(
+                                    $gridColumn->definition,
+                                    $gridType,
+                                    (string) $sc['position'],
+                                    true,
+                                    null,
+                                    $class,
+                                    $objectId,
+                                )
+                                : null;
 
-                            if ($type === 'classificationstore') {
-                                $keyDef = DataObject\Classificationstore\KeyConfig::getById($keyId);
-                                if ($keyDef) {
-                                    $keyFieldDef = json_decode($keyDef->getDefinition(), true);
-                                    if ($keyFieldDef) {
-                                        $keyFieldDef = DataObject\Classificationstore\Service::getFieldDefinitionFromJson($keyFieldDef, $keyDef->getType());
-                                        $fieldConfig = $this->getFieldGridConfig($keyFieldDef, $gridType, (string) $sc['position'], true, null, $class, $objectId);
-                                        if ($fieldConfig) {
-                                            $fieldConfig['key'] = $key;
-                                            $fieldConfig['label'] = '#' . $keyFieldDef->getTitle();
-                                            $fieldConfig = $this->injectCustomLayoutValues($fieldConfig, $sc);
-                                            $availableFields[] = $fieldConfig;
-                                        }
-                                    }
-                                }
+                            if ($fieldConfig) {
+                                $fieldConfig['key'] = $key;
+                                $fieldConfig = $this->injectCustomLayoutValues($fieldConfig, $sc);
+                                $availableFields[] = $fieldConfig;
                             }
                         } elseif (count($keyParts) > 1) {
                             $brick = $keyParts[0];

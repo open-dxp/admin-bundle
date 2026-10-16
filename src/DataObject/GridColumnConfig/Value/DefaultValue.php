@@ -19,7 +19,6 @@ namespace OpenDxp\Bundle\AdminBundle\DataObject\GridColumnConfig\Value;
 use Exception;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Model\DataObject\ClassDefinition\Data;
-use OpenDxp\Model\DataObject\Classificationstore;
 use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\DataObject\Objectbrick;
 use OpenDxp\Model\DataObject\Service;
@@ -98,52 +97,28 @@ final class DefaultValue extends AbstractValue
         return $result;
     }
 
-    private function getClassificationStoreValueForObject(Concrete $object, string $key): ?stdClass
+    private function getGridColumnValueForObject(Concrete $object, string $key): ?stdClass
     {
-        $keyParts = explode('~', $key);
+        $gridColumn = Service::findGridColumn($object->getClass(), $key);
 
-        if (str_starts_with($key, '~')) {
-            $type = $keyParts[1];
-            if ($type === 'classificationstore') {
-                $field = $keyParts[2];
-                $groupKeyId = explode('-', $keyParts[3]);
-
-                $groupId = (int) $groupKeyId[0];
-                $keyid = (int) $groupKeyId[1];
-                $getter = 'get' . ucfirst($field);
-
-                if (method_exists($object, $getter)) {
-                    /** @var Classificationstore $classificationStoreData */
-                    $classificationStoreData = $object->$getter();
-
-                    /** @var Data\Classificationstore $csFieldDefinition */
-                    $csFieldDefinition = $object->getClass()->getFieldDefinition($field);
-                    $csLanguage = $this->localeService->getLocale();
-
-                    if ($csLanguage === null || !$csFieldDefinition->isLocalized()) {
-                        $csLanguage = 'default';
-                    }
-
-                    $fielddata = $classificationStoreData->getLocalizedKeyValue($groupId, $keyid, $csLanguage, true, true);
-
-                    $keyConfig = Classificationstore\KeyConfig::getById($keyid);
-                    $type = $keyConfig->getType();
-                    $definition = json_decode($keyConfig->getDefinition(), true);
-                    $definition = Classificationstore\Service::getFieldDefinitionFromJson($definition, $type);
-
-                    $result = new stdClass();
-                    $result->value = $fielddata;
-                    $result->label = $definition->getTitle();
-                    $result->def = $definition;
-                    $result->empty = $definition->isEmpty($fielddata);
-                    $result->objectid = $object->getId();
-
-                    return $result;
-                }
-            }
+        if (!$gridColumn) {
+            return null;
         }
 
-        return null;
+        $language = $this->localeService->getLocale() ?? 'default';
+        $value = Service::useInheritedValues(
+            true,
+            static fn () => $gridColumn->getValue($object, ['language' => $language]),
+        );
+
+        $result = new stdClass();
+        $result->value = $value;
+        $result->label = $gridColumn->definition->getTitle();
+        $result->def = $gridColumn->definition;
+        $result->empty = $gridColumn->definition->isEmpty($value);
+        $result->objectid = $object->getId();
+
+        return $result;
     }
 
     private function getDefaultValue(mixed $value): stdClass
@@ -172,9 +147,7 @@ final class DefaultValue extends AbstractValue
 
         if ($element instanceof Concrete) {
             if (str_starts_with($this->attribute, '~')) {
-                // key value, ignore for now
-
-                return $this->getClassificationStoreValueForObject($element, $this->attribute);
+                return $this->getGridColumnValueForObject($element, $this->attribute);
             }
             if (count($attributeParts) > 1) {
                 $json = json_decode(trim($attributeParts[0], '?'));

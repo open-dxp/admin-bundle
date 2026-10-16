@@ -1,6 +1,9 @@
 # Changelog / Upgrade Notes
 
 ## 1.5.0
+* Feature: A data type shows its value in several grid columns with `GridColumnsInterface`. See [Adding Object Datatypes](https://github.com/open-dxp/opendxp/blob/1.x/doc/20_Extending_OpenDxp/13_Bundle_Developers_Guide/11_Adding_Object_Datatypes.md#grid-columns)
+* Bugfix: A grid filters by a classification store key and a slug at the same time
+* Bugfix: A grid filters a number of a classification store key between a lower and an upper bound
 * Feature: Every grid of the admin exports through one export. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md)
 * Feature: `GridExports::export()` runs a grid export in a test
 * Feature: A grid export runs in the background with `opendxp_admin.background_jobs`. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md#run-exports-in-the-background)

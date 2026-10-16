@@ -15,6 +15,7 @@
 
 namespace OpenDxp\Bundle\AdminBundle\Helper;
 
+use Closure;
 use Doctrine\DBAL\Query\QueryBuilder as DoctrineQueryBuilder;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Db;
@@ -38,12 +39,11 @@ class GridHelperService
 
     }
 
-    public function getFeatureAndSlugFilters(string $filterJson, ClassDefinition $class, string $requestedLanguage): array
+    public function getFilterJoins(string $filterJson, ClassDefinition $class): array
     {
-        $featureJoins = [];
         $slugJoins = [];
-        $slugConditions = [];
-        $featureConditions = [];
+        $gridColumnJoins = [];
+        $gridColumnConditions = [];
 
         if ($filterJson) {
             $filters = json_decode($filterJson, true);
@@ -81,71 +81,18 @@ class GridHelperService
 
                 $keyParts = explode('~', $filterField);
 
-                $slugFd = null;
-                $field = null;
-                $slugKey = null;
-                $mappedKey = null;
-
                 if (str_starts_with($filterField, '~')) {
-                    $type = $keyParts[1];
-                    if ($type !== 'classificationstore') {
-                        continue;
-                    }
+                    $gridColumn = Model\DataObject\Service::findGridColumn($class, $filterField);
 
-                    $fieldName = $keyParts[2];
-                    $groupKeyId = explode('-', $keyParts[3]);
+                    if ($gridColumn && isset($filter['value'])) {
+                        $alias = $this->getGridColumnAlias($filterField);
+                        $condition = $gridColumn->getFilterCondition($filter['value'], $operator, $alias);
 
-                    /** @var Model\DataObject\ClassDefinition\Data\Classificationstore $csFieldDefinition */
-                    $csFieldDefinition = $class->getFieldDefinition($fieldName);
-
-                    $language = $requestedLanguage;
-                    if (!$csFieldDefinition->isLocalized()) {
-                        $language = 'default';
-                    }
-
-                    $groupId = (int) $groupKeyId[0];
-                    $keyid = (int) $groupKeyId[1];
-
-                    $keyConfig = Model\DataObject\Classificationstore\KeyConfig::getById($keyid);
-                    $type = $keyConfig->getType();
-                    $definition = json_decode($keyConfig->getDefinition(), true);
-                    $field = \OpenDxp\Model\DataObject\Classificationstore\Service::getFieldDefinitionFromJson($definition, $type);
-
-                    if ($field instanceof Model\DataObject\ClassDefinition\Data) {
-                        $featureJoin = [
-                            'fieldname' => $fieldName,
-                            'groupId' => $groupId,
-                            'keyId' => $keyid,
-                            'language' => $language,
-                        ];
-
-                        // Some fields need a secondary value, e.g. the unit of a QuantityValue
-                        if ($field instanceof Model\DataObject\ClassDefinition\Data\QuantityValue) {
-                            $featureJoin['secondaryValue'] = $filter['value'][0][1] ?? null;
-                        }
-                        $featureJoins[] = $featureJoin;
-
-                        $mappedKey = 'cskey_' . $fieldName . '_' . $groupId . '_' . $keyid;
-                        if (isset($filter['value'])) {
-                            $featureCondition = $field->getFilterConditionExt(
-                                $filter['value'],
-                                $operator,
-                                [
-                                    'name' => $mappedKey, ]
-                            );
-
-                            if (!empty($featureCondition)) {
-                                // if both greater than and less than are used, we need to combine them
-                                if (
-                                    $field instanceof Model\DataObject\ClassDefinition\Data\QuantityValue &&
-                                    isset($featureConditions[$mappedKey])
-                                ) {
-                                    $featureConditions[$mappedKey] =
-                                        '(' . $featureConditions[$mappedKey] . ' AND ' . $featureCondition . ')';
-                                } else {
-                                    $featureConditions[$mappedKey] = $featureCondition;
-                                }
-                            }
+                        if ($condition !== '') {
+                            $gridColumnJoins[$alias] = $filterField;
+                            $gridColumnConditions[$alias] = isset($gridColumnConditions[$alias])
+                                ? '(' . $gridColumnConditions[$alias] . ' AND ' . $condition . ')'
+                                : $condition;
                         }
                     }
                 } elseif (count($keyParts) > 1) {
@@ -159,33 +106,19 @@ class GridHelperService
                     }
 
                     $brickDef = Objectbrick\Definition::getByKey($brickType);
-                    if ($slugFd = $brickDef->getFieldDefinition($brickKey) instanceof ClassDefinition\Data\UrlSlug) {
-                        $slugKey = $brickKey;
+                    if ($brickDef->getFieldDefinition($brickKey) instanceof ClassDefinition\Data\UrlSlug) {
                         $slugJoins[] = ['fieldname' => $brickKey];
                     }
-                } elseif ($slugFd = $class->getFieldDefinition($filterField) instanceof ClassDefinition\Data\UrlSlug) {
-                    $slugKey = $filterField;
+                } elseif ($class->getFieldDefinition($filterField) instanceof ClassDefinition\Data\UrlSlug) {
                     $slugJoins[] = ['fieldname' => $filterField];
-                }
-
-                if ($field && $slugFd) {
-                    $slugCondition = $field->getFilterConditionExt(
-                        $filter['value'],
-                        $operator,
-                        [
-                            'name' => $slugKey, ]
-                    );
-
-                    $slugConditions[$mappedKey] = $slugCondition;
                 }
             }
         }
 
         return [
-            'featureJoins' => $featureJoins,
             'slugJoins' => $slugJoins,
-            'featureConditions' => $featureConditions,
-            'slugConditions' => $slugConditions,
+            'gridColumnJoins' => $gridColumnJoins,
+            'gridColumnConditions' => $gridColumnConditions,
         ];
     }
 
@@ -440,73 +373,46 @@ class GridHelperService
     }
 
     /**
-     * Adds all the query stuff that is needed for displaying, filtering and exporting the feature grid data.
+     * @param array<string, string> $gridColumnJoins grid column key by alias
+     * @param array<string, string> $gridColumnConditions condition by alias
      */
-    public function addGridFeatureJoins(DataObject\Listing\Concrete $list, array $featureJoins, ClassDefinition $class, array $featureAndSlugFilters): void
-    {
-        if ($featureJoins) {
-            $me = $list;
-
-            $list->onCreateQueryBuilder(function (DoctrineQueryBuilder $select) use (
-                $featureJoins,
+    public function addGridJoins(
+        DataObject\Listing\Concrete $list,
+        ClassDefinition $class,
+        array $slugJoins,
+        array $gridColumnJoins,
+        array $gridColumnConditions,
+        string $requestedLanguage,
+    ): void {
+        $callbacks = array_filter([
+            $this->createSlugJoinsCallback($list, $slugJoins),
+            $this->createGridColumnJoinsCallback(
+                $list,
                 $class,
-                $featureAndSlugFilters,
-                $me
-            ): void {
-                $db = Db::get();
+                $gridColumnJoins,
+                $gridColumnConditions,
+                $requestedLanguage,
+            ),
+        ]);
 
-                $alreadyJoined = [];
-
-                foreach ($featureJoins as $featureJoin) {
-                    $fieldname = $featureJoin['fieldname'];
-                    $mappedKey = 'cskey_' . $fieldname . '_' . $featureJoin['groupId'] . '_' . $featureJoin['keyId'];
-                    if (isset($alreadyJoined[$mappedKey])) {
-                        continue;
-                    }
-                    $alreadyJoined[$mappedKey] = 1;
-
-                    if (isset($featureJoin['secondaryValue'])) {
-                        $secondValue = ' and ' . $mappedKey . '.value2 = ' . $db->quote($featureJoin['secondaryValue']);
-                    }
-
-                    $table = $me->getDao()->getTableName();
-                    $select->addSelect($mappedKey . '.value AS ' . $mappedKey);
-
-                    $select->leftJoin(
-                        $table,
-                        'object_classificationstore_data_' . $class->getId(),
-                        $mappedKey,
-                        '('
-                        . $mappedKey . '.id = ' . $table . '.id'
-                        . ' and ' . $mappedKey . '.fieldname = ' . $db->quote($fieldname)
-                        . ' and ' . $mappedKey . '.groupId=' . $featureJoin['groupId']
-                        . ' and ' . $mappedKey . '.keyId=' . $featureJoin['keyId']
-                        . ' and ' . $mappedKey . '.language = ' . $db->quote($featureJoin['language'])
-                        . ($secondValue ?? '')
-                        . ')'
-                    );
-                }
-
-                $havings = $featureAndSlugFilters['featureConditions'] ?? null;
-                if ($havings) {
-                    $havings = implode(' AND ', $havings);
-                    $select->having($havings);
-                }
-            });
+        if ($callbacks === []) {
+            return;
         }
+
+        $list->onCreateQueryBuilder(static function (DoctrineQueryBuilder $select) use ($callbacks): void {
+            foreach ($callbacks as $callback) {
+                $callback($select);
+            }
+        });
     }
 
-    /**
-     * Adds all the query stuff that is needed for displaying, filtering and exporting the slug grid data.
-     */
-    public function addSlugJoins(DataObject\Listing\Concrete $list, array $slugJoins, array $featureAndSlugFilters): void
+    private function createSlugJoinsCallback(DataObject\Listing\Concrete $list, array $slugJoins): ?Closure
     {
         if ($slugJoins) {
             $me = $list;
 
-            $list->onCreateQueryBuilder(function (DoctrineQueryBuilder $select) use (
+            return function (DoctrineQueryBuilder $select) use (
                 $slugJoins,
-                $featureAndSlugFilters,
                 $me
             ): void {
                 $db = Db::get();
@@ -531,14 +437,48 @@ class GridHelperService
                         . ')'
                     );
                 }
-
-                $havings = $featureAndSlugFilters['slugConditions'];
-                if ($havings) {
-                    $havings = implode(' AND ', $havings);
-                    $select->having($havings);
-                }
-            });
+            };
         }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, string> $gridColumnJoins grid column key by alias
+     * @param array<string, string> $gridColumnConditions condition by alias
+     */
+    private function createGridColumnJoinsCallback(
+        DataObject\Listing\Concrete $list,
+        ClassDefinition $class,
+        array $gridColumnJoins,
+        array $gridColumnConditions,
+        string $requestedLanguage,
+    ): ?Closure {
+        if ($gridColumnJoins === []) {
+            return null;
+        }
+
+        return function (DoctrineQueryBuilder $select) use (
+            $list,
+            $class,
+            $gridColumnJoins,
+            $gridColumnConditions,
+            $requestedLanguage,
+        ): void {
+            foreach ($gridColumnJoins as $alias => $key) {
+                Model\DataObject\Service::findGridColumn($class, $key)?->addToQuery(
+                    $select,
+                    $class,
+                    $list->getDao()->getTableName(),
+                    $alias,
+                    ['language' => $requestedLanguage],
+                );
+            }
+
+            if ($gridColumnConditions !== []) {
+                $select->andHaving('(' . implode(') AND (', $gridColumnConditions) . ')');
+            }
+        };
     }
 
     public function prepareListingForGrid(array $requestParams, string $requestedLanguage, User $adminUser): DataObject\Listing\Concrete
@@ -649,17 +589,17 @@ class GridHelperService
             $conditionFilters[] = $this->getPermittedPathsByUser('object', $adminUser);
         }
 
-        $featureJoins = [];
         $slugJoins = [];
-        $featureAndSlugFilters = [];
+        $gridColumnJoins = [];
+        $filterJoins = [];
 
         // create filter condition
         if (!empty($requestParams['filter'])) {
             $conditionFilters[] = $this->getFilterCondition($requestParams['filter'], $class, $list->getDao()->getTableName());
-            $featureAndSlugFilters = $this->getFeatureAndSlugFilters($requestParams['filter'], $class, $requestedLanguage);
-            if ($featureAndSlugFilters) {
-                $featureJoins = [...$featureJoins, ...$featureAndSlugFilters['featureJoins']];
-                $slugJoins = [...$slugJoins, ...$featureAndSlugFilters['slugJoins']];
+            $filterJoins = $this->getFilterJoins($requestParams['filter'], $class);
+            if ($filterJoins) {
+                $slugJoins = [...$slugJoins, ...$filterJoins['slugJoins']];
+                $gridColumnJoins = $filterJoins['gridColumnJoins'];
             }
         }
         if (!empty($requestParams['condition']) && $adminUser->isAdmin()) {
@@ -700,18 +640,13 @@ class GridHelperService
             $list->setOffset($start);
         }
 
-        if (isset($sortingSettings['isFeature']) && $sortingSettings['isFeature']) {
-            $orderKey = 'cskey_' . $sortingSettings['fieldname'] . '_' . $sortingSettings['groupId'] . '_' . $sortingSettings['keyId'];
-            $list->setOrderKey($orderKey);
-            $list->setGroupBy('oo_id');
-
-            $parts = explode('_', $orderKey);
-
-            $fieldname = $parts[1];
-            /** @var DataObject\ClassDefinition\Data\Classificationstore $csFieldDefinition */
-            $csFieldDefinition = $class->getFieldDefinition($fieldname);
-            $sortingSettings['language'] = $csFieldDefinition->isLocalized() ? $requestedLanguage : 'default';
-            $featureJoins[] = $sortingSettings;
+        if (
+            str_starts_with((string) $orderKey, '~')
+            && Model\DataObject\Service::findGridColumn($class, $orderKey)
+        ) {
+            $alias = $this->getGridColumnAlias($orderKey);
+            $gridColumnJoins[$alias] = $orderKey;
+            $list->setOrderKey($alias, false);
         } else {
             $list->setOrderKey($orderKey, !$doNotQuote);
         }
@@ -742,8 +677,14 @@ class GridHelperService
             }
         }
 
-        $this->addGridFeatureJoins($list, $featureJoins, $class, $featureAndSlugFilters);
-        $this->addSlugJoins($list, $slugJoins, $featureAndSlugFilters);
+        $this->addGridJoins(
+            $list,
+            $class,
+            $slugJoins,
+            $gridColumnJoins,
+            $filterJoins['gridColumnConditions'] ?? [],
+            $requestedLanguage,
+        );
 
         $list->setLocale($requestedLanguage);
 
@@ -1063,5 +1004,10 @@ class GridHelperService
         }
 
         return '('.implode(' OR ', $allowedTypes) .')';
+    }
+
+    private function getGridColumnAlias(string $key): string
+    {
+        return 'gridcolumn_' . md5($key);
     }
 }
