@@ -34,7 +34,7 @@ Admin UI features specific to document and site management.
 | [Site Custom Settings](20_Documents/01_Site_Custom_Settings.md) | Adding custom fields to the site configuration panel |
 
 ### [90 Testing](90_Testing/README.md)
-How to write and run tests for this bundle.
+The test API for grid export sources, and the suite of this bundle.
 
 ---
 
