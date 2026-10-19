@@ -30,6 +30,7 @@ use OpenDxp\Model\DataObject\Classificationstore\StoreConfig;
 use OpenDxp\Model\DataObject\Data\QuantityValue;
 use OpenDxp\Model\DataObject\Inheritance;
 use OpenDxp\Model\DataObject\QuantityValue\Unit;
+use OpenDxp\Test\Elements;
 use OpenDxp\Test\Factory\UserFactory;
 use OpenDxp\TestFoundation\Admin;
 use OpenDxp\TestFoundation\Container;
@@ -59,7 +60,7 @@ function createUnit(string $abbreviation): Unit
 
 function getTeststoreValue(Inheritance $object, string $key): mixed
 {
-    return Inheritance::getById($object->getId(), ['force' => true])->getTeststore()->getLocalizedKeyValue(
+    return Elements::refresh($object)->getTeststore()->getLocalizedKeyValue(
         testgroup()->getId(),
         KeyConfig::getByName($key, testgroup()->getStoreId())->getId(),
     );

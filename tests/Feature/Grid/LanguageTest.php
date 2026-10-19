@@ -22,7 +22,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatch\ExecuteBat
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatch\ExecuteBatchPayload;
 use OpenDxp\Bundle\AdminBundle\Tests\Factory\InheritanceFactory;
 use OpenDxp\Localization\LocaleServiceInterface;
-use OpenDxp\Model\DataObject\Inheritance;
+use OpenDxp\Test\Elements;
 use OpenDxp\Test\Factory\UserFactory;
 use OpenDxp\TestFoundation\Admin;
 use OpenDxp\TestFoundation\Container;
@@ -62,7 +62,7 @@ it('saves a grid edit in the language of the grid, not of the admin interface', 
         locale: 'en',
     ));
 
-    expect(Inheritance::getById($this->object->getId(), ['force' => true]))
+    expect(Elements::refresh($this->object))
         ->getInput('de')->toBe('from-grid-de')
         ->getInput('en')->toBe('initial-en');
 });
@@ -80,7 +80,7 @@ it('saves a batch edit in the language of the grid, not of the admin interface',
         hasData: true,
     ));
 
-    expect(Inheritance::getById($this->object->getId(), ['force' => true]))
+    expect(Elements::refresh($this->object))
         ->getInput('de')->toBe('from-batch-de')
         ->getInput('en')->toBe('initial-en');
 });
