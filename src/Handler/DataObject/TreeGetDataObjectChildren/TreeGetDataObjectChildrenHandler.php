@@ -31,6 +31,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\DataObject\TreeGetDataObjectChildre
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\TreeSearch;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
@@ -57,7 +58,6 @@ final class TreeGetDataObjectChildrenHandler
         $start = $payload->start;
         $limit = $payload->limit;
         $view = $payload->view;
-        $fromPaging = $payload->fromPaging;
         $requestQueryAll = $payload->allParams;
 
         $object = DataObject::getById($node) ?? throw new DataObjectNotFoundException($node);
@@ -71,25 +71,16 @@ final class TreeGetDataObjectChildrenHandler
         }
 
         $objects = [];
-        $offset = $total = $filteredTotalCount = 0;
+        $offset = $total = 0;
 
         if ($object->hasChildren($objectTypes)) {
             $offset = $start;
 
-            $filterForCondition = $filter;
-            $effectiveLimit = $limit;
-
-            if (!is_null($filterForCondition)) {
-                if (!str_ends_with($filterForCondition, '*')) {
-                    $filterForCondition .= '*';
-                }
-                $filterForCondition = str_replace('*', '%', $filterForCondition);
-                $effectiveLimit = 100;
-            }
+            $filterForCondition = $filter === null ? null : TreeSearch::toLikePattern($filter);
 
             $childrenList = new DataObject\Listing();
             $childrenList->setCondition($this->buildChildrenCondition($object, $filterForCondition, $view));
-            $childrenList->setLimit($effectiveLimit);
+            $childrenList->setLimit($limit);
             $childrenList->setOffset($offset);
 
             if ($object->getChildrenSortBy() === 'index') {
@@ -118,8 +109,12 @@ final class TreeGetDataObjectChildrenHandler
             /** @var DataObject\Listing $childrenList */
             $childrenList = $beforeListLoadEvent->getArgument('list');
 
-            [$objects, $total, $filteredTotalCount] = $this->loadChildren($object, $childrenList, $view);
-            $limit = $effectiveLimit;
+            [$objects, $filteredTotalCount] = $this->loadChildren($childrenList);
+
+            // A custom view and a search count what they let through. The plain tree counts every child.
+            $total = $cv || $filter !== null
+                ? $filteredTotalCount
+                : $object->getChildAmount(null, $this->userContext->getAdminUser());
         }
 
         $event = new GenericEvent($this->currentControllerContext->getController(), ['objects' => $objects]);
@@ -135,19 +130,14 @@ final class TreeGetDataObjectChildrenHandler
             offset: $offset,
             limit: $limit,
             total: $total,
-            overflow: !is_null($filter) && ($filteredTotalCount > $limit),
-            fromPaging: $fromPaging,
             filter: $filter ?? '',
             inSearch: $payload->inSearch,
         );
     }
 
-    private function loadChildren(DataObject\AbstractObject $object, DataObject\Listing $childrenList, string $view): array
+    private function loadChildren(DataObject\Listing $childrenList): array
     {
-        $adminUser = $this->userContext->getAdminUser();
         $objects = [];
-
-        $cv = $view ? ($this->elementService->getCustomViewById($view) ?? []) : [];
 
         $children = $childrenList->load();
         $filteredTotalCount = $childrenList->getTotalCount();
@@ -160,12 +150,7 @@ final class TreeGetDataObjectChildrenHandler
             }
         }
 
-        //pagination for custom view
-        $total = $cv
-            ? $filteredTotalCount
-            : $object->getChildAmount(null, $adminUser);
-
-        return [$objects, $total, $filteredTotalCount];
+        return [$objects, $filteredTotalCount];
     }
 
     private function buildChildrenCondition(DataObject\AbstractObject $object, ?string $filter, ?string $view): string

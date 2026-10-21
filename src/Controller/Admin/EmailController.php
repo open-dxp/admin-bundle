@@ -25,13 +25,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\Email\BlocklistPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\CleanupEmailLogs\CleanupEmailLogsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\CleanupEmailLogs\CleanupEmailLogsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\DeleteEmailLog\DeleteEmailLogHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\DoEmailLogExport\DoEmailLogExportHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\DoEmailLogExport\DoEmailLogExportPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\GetBlocklist\GetBlocklistHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\GetEmailLogs\GetEmailLogsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\GetEmailLogs\GetEmailLogsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\PrepareEmailLogExport\PrepareEmailLogExportHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\Email\PrepareEmailLogExport\PrepareEmailLogExportPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\ResendEmail\ResendEmailHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\ResendEmail\ResendEmailPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\Email\SendTestEmail\SendTestEmailHandler;
@@ -43,10 +39,8 @@ use OpenDxp\Bundle\AdminBundle\Handler\Email\ShowEmailLog\GetEmailLogText\GetEma
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdQueryPayload;
 use OpenDxp\Bundle\AdminBundle\Security\AdminPermission;
-use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Http\RequestHelper;
 use OpenDxp\Security\CorePermission;
-use RuntimeException;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -71,39 +65,6 @@ class EmailController extends AdminAbstractController
         GetEmailLogsPayload $payload,
     ): JsonResponse {
         return $this->apiJson($handler($payload));
-    }
-
-    #[IsGranted(CorePermission::Emails->value)]
-    #[Route('/export-email-logs/prepare', name: 'opendxp_admin_email_exportemaillogs_prepare', methods: ['POST'])]
-    public function prepareEmailLogExportAction(
-        PrepareEmailLogExportHandler $handler,
-        PrepareEmailLogExportPayload $payload,
-    ): JsonResponse {
-        return $this->apiJson($handler($payload));
-    }
-
-    #[IsGranted(CorePermission::Emails->value)]
-    #[Route('/export-email-logs', name: 'opendxp_admin_email_exportemaillogs', methods: ['POST'])]
-    public function doEmailLogExportAction(
-        DoEmailLogExportHandler $handler,
-        DoEmailLogExportPayload $payload,
-    ): JsonResponse {
-        $handler($payload);
-
-        return $this->apiOk();
-    }
-
-    #[IsGranted(CorePermission::Emails->value)]
-    #[Route('/export-email-logs/download', name: 'opendxp_admin_email_exportemaillogs_download', methods: ['GET'])]
-    public function downloadEmailLogExportAction(
-        GridExportService $gridExportService,
-        #[MapQueryParameter] ?string $fileHandle = null,
-    ): Response {
-        try {
-            return $gridExportService->downloadCsvFile($fileHandle ?? '');
-        } catch (RuntimeException) {
-            throw $this->createNotFoundException('CSV file not found');
-        }
     }
 
     #[IsGranted(CorePermission::Emails->value)]

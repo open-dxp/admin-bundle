@@ -1,0 +1,84 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
+namespace OpenDxp\Bundle\AdminBundle\Tests\Application\GridExport;
+
+use DateTimeImmutable;
+use OpenDxp\Bundle\AdminBundle\Attribute\AsGridExportSource;
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExportColumn;
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExportColumnType;
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExportQuery;
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExportSourceInterface;
+use OpenDxp\Security\CorePermission;
+
+#[AsGridExportSource(name: 'mock', permission: CorePermission::Objects->value, batchSize: 2)]
+final class MockGridExportSource implements GridExportSourceInterface
+{
+    public function getColumns(GridExportQuery $query): array
+    {
+        return [
+            new GridExportColumn('id', 'ID', GridExportColumnType::INTEGER),
+            new GridExportColumn('name', 'Name'),
+            new GridExportColumn('price', 'Price', GridExportColumnType::FLOAT),
+            new GridExportColumn('active', 'Active', GridExportColumnType::BOOLEAN),
+            new GridExportColumn('released', 'Released', GridExportColumnType::DATE),
+            new GridExportColumn('updated', 'Updated', GridExportColumnType::DATETIME),
+        ];
+    }
+
+    public function countRows(GridExportQuery $query): int
+    {
+        return count($this->getAllRows());
+    }
+
+    public function getRows(GridExportQuery $query, int $offset, int $limit): iterable
+    {
+        return array_slice($this->getAllRows(), $offset, $limit);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function getAllRows(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'name' => 'Ada',
+                'price' => 9.5,
+                'active' => true,
+                'released' => new DateTimeImmutable('2024-01-15'),
+                'updated' => new DateTimeImmutable('2024-01-15 10:30:00'),
+            ],
+            [
+                'id' => 2,
+                'name' => '=HYPERLINK("https://example.com")',
+                'price' => null,
+                'active' => false,
+                'released' => null,
+                'updated' => null,
+            ],
+            [
+                'id' => 3,
+                'name' => 'Jürgen',
+                'price' => 3,
+                'active' => true,
+                'released' => new DateTimeImmutable('2024-02-01'),
+                'updated' => new DateTimeImmutable('2024-02-01 08:00:00'),
+            ],
+        ];
+    }
+}

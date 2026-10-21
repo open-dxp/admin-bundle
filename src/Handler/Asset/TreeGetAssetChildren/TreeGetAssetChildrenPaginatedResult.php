@@ -38,7 +38,6 @@ final readonly class TreeGetAssetChildrenPaginatedResult implements ResultInterf
         public int $offset,
         public int $limit,
         public int $total,
-        public bool $overflow,
         public string $filter,
         public int $inSearch,
     ) {

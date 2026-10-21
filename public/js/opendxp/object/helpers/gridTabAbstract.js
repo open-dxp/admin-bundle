@@ -18,16 +18,16 @@ opendxp.registerNS("opendxp.object.helpers.gridTabAbstract");
 opendxp.object.helpers.gridTabAbstract = Class.create({
 
     objecttype: 'object',
+    exportSource: 'objects',
+    exportWarnings: {
+        csv: t('csv_object_export_warning')
+    },
     batchPrepareUrl: null,
     batchProcessUrl: null,
-    exportPrepareUrl: null,
-    exportProcessUrl: null,
 
     initialize: function() {
         this.batchPrepareUrl = Routing.generate('opendxp_admin_dataobject_dataobjecthelper_getbatchjobs');
         this.batchProcessUrl = Routing.generate('opendxp_admin_dataobject_dataobjecthelper_batch');
-        this.exportPrepareUrl = Routing.generate('opendxp_admin_dataobject_dataobjecthelper_getexportjobs');
-        this.exportProcessUrl = Routing.generate('opendxp_admin_dataobject_dataobjecthelper_doexport');
     },
 
     openColumnConfig: function (allowPreview) {
@@ -276,14 +276,10 @@ opendxp.object.helpers.gridTabAbstract = Class.create({
                 }
             });
 
-            var exportButtons = this.getExportButtons();
-            var firstButton = exportButtons.shift();
-
-            this.exportButton = new Ext.SplitButton({
-                text: firstButton.text,
-                iconCls: firstButton.iconCls,
-                handler: firstButton.handler,
-                menu: exportButtons,
+            this.exportButton = new Ext.Button({
+                text: t('export'),
+                iconCls: 'opendxp_icon_export',
+                handler: this.startExport.bind(this)
             });
         }
 
@@ -367,24 +363,19 @@ opendxp.object.helpers.gridTabAbstract = Class.create({
         return toolbar;
     },
 
-    getExportButtons: function () {
-        var buttons = [];
-        opendxp.globalmanager.get("opendxp.object.gridexport").forEach(function (exportType) {
-            buttons.push({
-                text: t(exportType.text),
-                iconCls: exportType.icon || "opendxp_icon_export",
-                handler: function () {
-                    this.startExport(exportType);
-                }.bind(this),
+    getExportSettings: function () {
+        return [
+            new Ext.form.FieldSet({
+                title: t('object_settings'),
+                items: [
+                    new Ext.form.Checkbox({
+                        fieldLabel: t('enable_inheritance'),
+                        name: 'enableInheritance',
+                        inputValue: true,
+                        value: true
+                    })
+                ]
             })
-        }.bind(this));
-
-        return buttons;
-    },
-
-    startExport: function (exportType) {
-        opendxp.helpers.exportWarning(exportType, function (settings) {
-            this.exportPrepare(settings, exportType);
-        }.bind(this));
+        ];
     }
 });

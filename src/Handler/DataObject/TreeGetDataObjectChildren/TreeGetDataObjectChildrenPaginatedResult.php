@@ -38,8 +38,6 @@ final readonly class TreeGetDataObjectChildrenPaginatedResult implements ResultI
         public int $offset,
         public int $limit,
         public int $total,
-        public bool $overflow,
-        public int $fromPaging,
         public string $filter,
         public int $inSearch,
     ) {

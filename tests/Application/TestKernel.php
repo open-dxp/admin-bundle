@@ -16,8 +16,18 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Tests\Application;
 
+use OpenDxp\Bundle\GenericExecutionEngineBundle\OpenDxpGenericExecutionEngineBundle;
+use OpenDxp\HttpKernel\BundleCollection\BundleCollection;
 use OpenDxp\TestFoundation\Kernel\TestKernel as BaseTestKernel;
+use Override;
 
 final class TestKernel extends BaseTestKernel
 {
+    #[Override]
+    protected function registerCoreBundlesToCollection(BundleCollection $collection): void
+    {
+        parent::registerCoreBundlesToCollection($collection);
+
+        $collection->addBundle(new OpenDxpGenericExecutionEngineBundle());
+    }
 }

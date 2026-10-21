@@ -1,0 +1,3 @@
+services:
+    OpenDxp\Bundle\AdminBundle\Tests\Application\GridExport\MockGridExportSource:
+        autoconfigure: true

@@ -469,7 +469,7 @@ opendxp.object.helpers.grid = Class.create({
                         continue;
                     }
 
-                    if (this.isSearch && fields[i].key.startsWith("~classificationstore")) {
+                    if (this.isSearch && fields[i].key.startsWith("~")) {
                         continue;
                     }
 

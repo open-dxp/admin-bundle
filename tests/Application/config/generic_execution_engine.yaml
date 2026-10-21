@@ -1,0 +1,12 @@
+imports:
+    - { resource: test.yaml }
+
+framework:
+    messenger:
+        transports:
+            # A test works through the messages itself, so they stay in memory instead of a table.
+            opendxp_generic_execution_engine:
+                dsn: 'in-memory://'
+
+opendxp_admin:
+    background_jobs: true

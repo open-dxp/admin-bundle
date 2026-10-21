@@ -138,7 +138,7 @@ final class DataObjectGridService
                         $this->localeService,
                         'title',
                         false,
-                        $allParams['context']
+                        [...$allParams['context'], 'user' => $this->userContext->getAdminUser()]
                     );
 
                     // respect isAllowed method which can be extended via object DI for custom permissions
@@ -207,42 +207,14 @@ final class DataObjectGridService
         foreach ($data as $key => $value) {
             $parts = explode('~', $key);
             if (str_starts_with($key, '~')) {
-                [, $type, $field, $keyId] = $parts;
+                $gridColumn = DataObject\Service::findGridColumn($class, $key);
 
-                if ($type === 'classificationstore') {
-                    $groupKeyId = array_map(intval(...), explode('-', $keyId));
-                    [$groupId, $keyId] = $groupKeyId;
-
-                    $getter = 'get' . ucfirst($field);
-                    if (method_exists($object, $getter)) {
-                        /** @var DataObject\ClassDefinition\Data\Classificationstore $csFieldDefinition */
-                        $csFieldDefinition = $object->getClass()->getFieldDefinition($field);
-                        $csLanguage = $requestedLanguage;
-                        if (!$csFieldDefinition->isLocalized()) {
-                            $csLanguage = 'default';
-                        }
-
-                        /** @var DataObject\Classificationstore $classificationStoreData */
-                        $classificationStoreData = $object->$getter();
-
-                        $keyConfig = DataObject\Classificationstore\KeyConfig::getById($keyId);
-                        if ($keyConfig) {
-                            $fieldDefinition = DataObject\Classificationstore\Service::getFieldDefinitionFromJson(
-                                json_decode($keyConfig->getDefinition(), true),
-                                $keyConfig->getType()
-                            );
-                            if ($fieldDefinition && method_exists($fieldDefinition, 'getDataFromGridEditor')) {
-                                $value = $fieldDefinition->getDataFromGridEditor($value, $object, []);
-                            }
-                        }
-
-                        $object->markFieldDirty($field);
-
-                        $activeGroups = $classificationStoreData->getActiveGroups() ?: [];
-                        $activeGroups[$groupId] = true;
-                        $classificationStoreData->setActiveGroups($activeGroups);
-                        $classificationStoreData->setLocalizedKeyValue($groupId, $keyId, $value, $csLanguage);
+                if ($gridColumn) {
+                    if (method_exists($gridColumn->definition, 'getDataFromGridEditor')) {
+                        $value = $gridColumn->definition->getDataFromGridEditor($value, $object, []);
                     }
+
+                    $gridColumn->setValue($object, $value, ['language' => $requestedLanguage]);
                 }
             } elseif (count($parts) > 1) {
                 $brickType = $parts[0];

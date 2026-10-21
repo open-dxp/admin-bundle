@@ -376,10 +376,16 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
 
                                         var ownerTree = this.selectionPanel;
 
-                                        if (record.data.dataType == 'classificationstore') {
+                                        var columnDialog = this.createColumnConfigDialog(record);
+
+                                        if (columnDialog) {
                                             setTimeout(function () {
-                                                var ccd = new opendxp.object.classificationstore.columnConfigDialog();
-                                                ccd.getConfigDialog(ownerTree, copy, this.selectionPanel);
+                                                columnDialog.getConfigDialog(
+                                                    ownerTree,
+                                                    copy,
+                                                    this.selectionPanel,
+                                                    this.updatePreview.bind(this)
+                                                );
                                             }.bind(this), 100);
                                         }
                                         data.records = [copy]; // assign the copy as the new dropNode
@@ -558,9 +564,15 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
 
                     var ownerTree = this.selectionPanel;
 
-                    if (record.data.dataType == 'classificationstore') {
-                        var ccd = new opendxp.object.classificationstore.columnConfigDialog();
-                        ccd.getConfigDialog(ownerTree, copy, this.selectionPanel);
+                    var columnDialog = this.createColumnConfigDialog(record);
+
+                    if (columnDialog) {
+                        columnDialog.getConfigDialog(
+                            ownerTree,
+                            copy,
+                            this.selectionPanel,
+                            this.updatePreview.bind(this)
+                        );
                     } else {
                         this.updatePreview();
                     }
@@ -569,6 +581,16 @@ opendxp.object.helpers.gridConfigDialog = Class.create(opendxp.element.helpers.g
         }.bind(this));
 
         return tree;
+    },
+
+    createColumnConfigDialog: function (record) {
+        var tag = opendxp.object.tags[record.data.dataType];
+
+        if (tag && typeof tag.prototype.createGridColumnConfigDialog === 'function') {
+            return tag.prototype.createGridColumnConfigDialog();
+        }
+
+        return null;
     },
 
     getOperatorTrees: function () {

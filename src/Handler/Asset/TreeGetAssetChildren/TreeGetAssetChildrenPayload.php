@@ -41,12 +41,7 @@ final readonly class TreeGetAssetChildrenPayload implements ExtJsPayloadInterfac
     public static function fromRequest(Request $request): static
     {
         $filter = $request->query->has('filter') ? $request->query->getString('filter') : null;
-        $limit = (int) $request->query->getString('limit');
-        if ($filter !== null) {
-            $limit = 100;
-        } elseif (!$limit) {
-            $limit = 100000000;
-        }
+        $limit = (int) $request->query->getString('limit') ?: 100000000;
 
         return new static(
             nodeId:       (int) $request->query->getString('node'),

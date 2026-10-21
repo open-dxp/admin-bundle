@@ -23,8 +23,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAll\Ap
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ApplyGridConfigToAll\ApplyGridConfigToAllPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DeleteGridColumnConfig\DeleteGridColumnConfigPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DoDataObjectExport\DoDataObjectExportHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\DoDataObjectExport\DoDataObjectExportPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatch\ExecuteBatchHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatch\ExecuteBatchPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetAvailableVisibleFields\GetAvailableVisibleFieldsHandler;
@@ -33,8 +31,6 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetBatchJobs\GetBatchJo
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetBatchJobs\GetBatchJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportConfigs\GetExportConfigsHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportConfigs\GetExportConfigsPayload;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportJobs\GetExportJobsHandler;
-use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetExportJobs\GetExportJobsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetGridColumnConfig\GetGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\GetGridColumnConfig\GetGridColumnConfigPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ImportUpload\ImportUploadHandler;
@@ -47,14 +43,9 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\PrepareHelperColumnConf
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\PrepareHelperColumnConfigs\PrepareHelperColumnConfigsPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfig\SaveDataObjectGridColumnConfigHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\SaveDataObjectGridColumnConfig\SaveDataObjectGridColumnConfigPayload;
-use OpenDxp\Bundle\AdminBundle\Service\Grid\GridExportService;
 use OpenDxp\Bundle\AdminBundle\Session\Gateway\GridColumnConfigSessionGateway;
-use RuntimeException;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -63,10 +54,6 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/object-helper', name: 'opendxp_admin_dataobject_dataobjecthelper_')]
 class DataObjectHelperController extends AdminAbstractController
 {
-    public function __construct(private readonly GridExportService $gridExportService)
-    {
-    }
-
     #[Route('/load-object-data', name: 'loadobjectdata', methods: ['GET'])]
     #[SessionGatewayAware(GridColumnConfigSessionGateway::class)]
     public function loadObjectDataAction(
@@ -149,56 +136,6 @@ class DataObjectHelperController extends AdminAbstractController
         $handler($payload);
 
         return $this->apiOk();
-    }
-
-    #[Route('/get-export-jobs', name: 'getexportjobs', methods: ['POST'])]
-    public function getExportJobsAction(
-        GetExportJobsPayload $payload,
-        GetExportJobsHandler $handler,
-        Request $request,
-    ): JsonResponse {
-        if ($payload->requestedLanguage !== $request->getLocale()) {
-            $request->setLocale($payload->requestedLanguage);
-        }
-
-        return $this->apiJson($handler($payload));
-    }
-
-    #[Route('/do-export', name: 'doexport', methods: ['POST'])]
-    public function doExportAction(
-        DoDataObjectExportPayload $payload,
-        DoDataObjectExportHandler $handler,
-        Request $request,
-    ): JsonResponse {
-        if ($payload->requestedLanguage !== $request->getLocale()) {
-            $request->setLocale($payload->requestedLanguage);
-        }
-
-        $handler($payload);
-
-        return $this->apiOk();
-    }
-
-    #[Route('/download-csv-file', name: 'downloadcsvfile', methods: ['GET'])]
-    public function downloadCsvFileAction(
-        #[MapQueryParameter] ?string $fileHandle = null,
-    ): Response {
-        try {
-            return $this->gridExportService->downloadCsvFile($fileHandle ?? '');
-        } catch (RuntimeException) {
-            throw $this->createNotFoundException('CSV file not found');
-        }
-    }
-
-    #[Route('/download-xlsx-file', name: 'downloadxlsxfile', methods: ['GET'])]
-    public function downloadXlsxFileAction(
-        #[MapQueryParameter] ?string $fileHandle = null,
-    ): BinaryFileResponse {
-        try {
-            return $this->gridExportService->downloadXlsxFile($fileHandle ?? '');
-        } catch (RuntimeException) {
-            throw $this->createNotFoundException('XLSX file not found');
-        }
     }
 
     #[Route('/get-batch-jobs', name: 'getbatchjobs', methods: ['POST'])]

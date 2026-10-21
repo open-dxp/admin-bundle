@@ -95,6 +95,8 @@ final readonly class AdminSettingsDto
         public bool $notificationsEnabled,
         public bool $checkNewNotificationEnabled,
         public int $checkNewNotificationInterval,
+        // Grid export
+        public int $gridExportConfirmThreshold,
         // CSRF
         public string $csrfToken,
     ) {
@@ -175,6 +177,8 @@ final readonly class AdminSettingsDto
             'notifications_enabled'         => $this->notificationsEnabled,
             'checknewnotification_enabled'  => $this->checkNewNotificationEnabled,
             'checknewnotification_interval' => $this->checkNewNotificationInterval,
+
+            'grid_export_confirm_threshold' => $this->gridExportConfirmThreshold,
 
             'csrfToken' => $this->csrfToken,
         ];

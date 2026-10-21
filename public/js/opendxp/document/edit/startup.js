@@ -77,9 +77,7 @@ Ext.Ajax.setDisableCaching(true);
 Ext.Ajax.setTimeout(900000);
 Ext.Ajax.setMethod("GET");
 Ext.Ajax.setDefaultHeaders({
-    'X-opendxp-csrf-token': parent.opendxp.settings["csrfToken"],
-    'X-opendxp-extjs-version-major': Ext.getVersion().getMajor(),
-    'X-opendxp-extjs-version-minor': Ext.getVersion().getMinor()
+    'X-opendxp-csrf-token': parent.opendxp.settings["csrfToken"]
 });
 
 Ext.Loader.setConfig({

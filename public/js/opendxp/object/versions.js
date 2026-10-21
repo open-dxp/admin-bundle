@@ -140,7 +140,6 @@ opendxp.object.versions = Class.create({
                     mode: 'MULTI'
                 }),
                 viewConfig: {
-                    xtype: 'patchedgridview',
                     enableTextSelection: true
                 }
             });

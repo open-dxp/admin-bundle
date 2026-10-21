@@ -68,6 +68,10 @@ opendxp.object.tags.classificationstore = Class.create(opendxp.object.tags.abstr
         return false;
     },
 
+    createGridColumnConfigDialog: function () {
+        return new opendxp.object.classificationstore.columnConfigDialog();
+    },
+
     getGridColumnFilter: function(field) {
         return false;
     },

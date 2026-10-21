@@ -16,20 +16,16 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Service\Asset;
 
-use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Db;
 use OpenDxp\Db\Helper;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Asset\Image;
 use OpenDxp\Model\Asset\Image\Thumbnail\Config;
+use OpenDxp\Model\User;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final readonly class AssetDownloadService
 {
-    public function __construct(private AdminUserContextInterface $userContext)
-    {
-    }
-
     public function getDownloadableThumbnailConfig(string $name): Config
     {
         $config = Config::getByName($name);
@@ -57,24 +53,28 @@ final readonly class AssetDownloadService
     /**
      * @param list<int> $selectedIds
      */
-    public function getZipFileListing(Asset $folder, array $selectedIds): Asset\Listing
+    public function getZipFileListing(Asset $folder, array $selectedIds, User $user): Asset\Listing
     {
-        return $this->getZipListing($folder, $selectedIds, "`type` != 'folder'");
+        return $this->getZipListing($folder, $selectedIds, $user, "`type` != 'folder'");
     }
 
     /**
      * @param list<int> $selectedIds
      */
-    public function getZipImageListing(Asset $folder, array $selectedIds): Asset\Listing
+    public function getZipImageListing(Asset $folder, array $selectedIds, User $user): Asset\Listing
     {
-        return $this->getZipListing($folder, $selectedIds, "`type` = 'image'");
+        return $this->getZipListing($folder, $selectedIds, $user, "`type` = 'image'");
     }
 
     /**
      * @param list<int> $selectedIds
      */
-    private function getZipListing(Asset $folder, array $selectedIds, string $typeCondition): Asset\Listing
-    {
+    private function getZipListing(
+        Asset $folder,
+        array $selectedIds,
+        User $user,
+        string $typeCondition,
+    ): Asset\Listing {
         $db = Db::get();
         $parentPath = $folder->getId() === 1 ? '' : $folder->getRealFullPath();
 
@@ -87,10 +87,8 @@ final readonly class AssetDownloadService
             $conditions[] = 'id IN (' . implode(',', $selectedIds) . ')';
         }
 
-        $adminUser = $this->userContext->getAdminUser();
-
-        if (!$adminUser->isAdmin()) {
-            $userIds = implode(',', [...$adminUser->getRoles(), $adminUser->getId()]);
+        if (!$user->isAdmin()) {
+            $userIds = implode(',', [...$user->getRoles(), $user->getId()]);
             $conditions[] = ' (
                (select list from users_workspaces_asset where userId in (' . $userIds . ') and LOCATE(CONCAT(`path`, filename),cpath)=1  ORDER BY LENGTH(cpath) DESC LIMIT 1)=1
                OR

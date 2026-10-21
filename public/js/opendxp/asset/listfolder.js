@@ -225,14 +225,10 @@ opendxp.asset.listfolder = Class.create(opendxp.asset.helpers.gridTabAbstract, {
 
         this.buildColumnConfigMenu();
 
-        var exportButtons = this.getExportButtons();
-        var firstButton = exportButtons.shift();
-
-        this.exportButton = new Ext.SplitButton({
-            text: firstButton.text,
-            iconCls: firstButton.iconCls,
-            handler: firstButton.handler,
-            menu: exportButtons,
+        this.exportButton = new Ext.Button({
+            text: t("export"),
+            iconCls: "opendxp_icon_export",
+            handler: this.startExport.bind(this)
         });
 
         this.downloadSelectedZipButton = new Ext.Button({
@@ -431,21 +427,8 @@ opendxp.asset.listfolder = Class.create(opendxp.asset.helpers.gridTabAbstract, {
         }
     },
 
-    getExportButtons: function () {
-        var buttons = [];
-        opendxp.globalmanager.get("opendxp.asset.gridexport").forEach(function (exportType) {
-            buttons.push({
-                text: t(exportType.text),
-                iconCls: exportType.icon || "opendxp_icon_export",
-                handler: function () {
-                    opendxp.helpers.exportWarning(exportType, function (settings) {
-                        this.exportPrepare(settings, exportType);
-                    }.bind(this));
-                }.bind(this),
-            })
-        }.bind(this));
-
-        return buttons;
+    getExportSettings: function () {
+        return [];
     },
 
     getGridConfig: function ($super) {

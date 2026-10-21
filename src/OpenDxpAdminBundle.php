@@ -18,6 +18,7 @@ namespace OpenDxp\Bundle\AdminBundle;
 
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\ContentSecurityPolicyUrlsPass;
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\GDPRDataProviderPass;
+use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\GridExportSourcePass;
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\ImportExportLocatorsPass;
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\SerializerPass;
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\TranslatorPass;
@@ -61,6 +62,7 @@ class OpenDxpAdminBundle extends AbstractOpenDxpBundle implements DependentBundl
 
         $container->addCompilerPass(new SerializerPass());
         $container->addCompilerPass(new GDPRDataProviderPass());
+        $container->addCompilerPass(new GridExportSourcePass());
         $container->addCompilerPass(new ImportExportLocatorsPass());
         $container->addCompilerPass(new TranslatorPass());
         $container->addCompilerPass(new ContentSecurityPolicyUrlsPass());

@@ -348,11 +348,9 @@ opendxp.settings.website = Class.create({
             },
             viewConfig: {
                 listeners: {
-                    rowupdated: this.updateRows.bind(this, "rowupdated"),
                     refresh: this.updateRows.bind(this, "refresh")
                 },
-                forceFit:true,
-                xtype: 'patchedgridview'
+                forceFit:true
             }
         });
 
@@ -512,9 +510,6 @@ opendxp.settings.website = Class.create({
     add: function (key, type, value, config, inherited, inheritable) {
 
         var store = this.grid.getStore();
-
-        //this.cellEditing.editors.each(Ext.destroy, Ext);
-        //this.cellEditing.editors.clear();
 
         // check for duplicate name
         var dublicateIndex = store.findBy(function (key, record, id) {

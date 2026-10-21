@@ -22,7 +22,6 @@ use OpenDxp\Model;
 use OpenDxp\Model\DataObject\AbstractObject;
 use OpenDxp\Model\DataObject\ClassDefinition;
 use OpenDxp\Model\DataObject\ClassDefinition\Data;
-use OpenDxp\Model\DataObject\Classificationstore;
 use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\DataObject\Objectbrick;
 use OpenDxp\Model\DataObject\Service;
@@ -75,12 +74,24 @@ class DataObject extends Element
                 if (str_starts_with($key, '#')) {
                     if (!empty($helperDefinitions[$key])) {
                         $context['fieldname'] = $key;
-                        $data[$key] = \OpenDxp\Model\DataObject\Service::calculateCellValue($object, $helperDefinitions, $key, $context);
+                        $data[$key] = Service::calculateCellValue(
+                            $object,
+                            $helperDefinitions,
+                            $key,
+                            [...$context, 'user' => $user],
+                        );
                     }
                 } elseif (str_starts_with($key, '~')) {
-                    $type = $keyParts[1];
-                    if ($type === 'classificationstore') {
-                        $data[$key] = self::getStoreValueForObject($object, $key, $requestedLanguage);
+                    $gridColumn = Service::findGridColumn($object->getClass(), $key);
+
+                    if ($gridColumn) {
+                        $data = self::addGridColumnData(
+                            $data,
+                            $gridColumn,
+                            $object,
+                            $requestedLanguage,
+                            [...$params, 'context' => $context],
+                        );
                     }
                 } elseif (count($keyParts) > 1) {
                     // brick
@@ -177,28 +188,6 @@ class DataObject extends Element
                                 }
                             } else {
                                 $data[$dataKey] = $valueObject->value;
-                            }
-                        }
-                    }
-
-                    // because the key for the classification store has not a direct getter, you have to check separately if the data is inheritable
-                    if (
-                        str_starts_with($key, '~') &&
-                        ($keyParts[1] ?? null) === 'classificationstore'
-                    ) {
-                        $fieldDef = self::getClassificationStoreFieldDefinition($key);
-                        $value = self::normalizeValue($data[$key]);
-
-                        if ($fieldDef->isEmpty($value)) {
-                            $inheritedData = static::getInheritedData($object, $key, $requestedLanguage);
-
-                            if ($inheritedData !== []) {
-                                $parent = $inheritedData['parent'];
-                                $data[$dataKey] = $inheritedData['value'];
-                                $data['inheritedFields'][$dataKey] = [
-                                    'inherited' => $parent->getId() !== $object->getId(),
-                                    'objectid'  => $parent->getId(),
-                                ];
                             }
                         }
                     }
@@ -305,101 +294,35 @@ class DataObject extends Element
         return $result;
     }
 
-    /**
-     * gets store value for given object and key
-     */
-    private static function getStoreValueForObject(Concrete $object, string $key, ?string $requestedLanguage): mixed
-    {
-        $keyParts = explode('~', $key);
+    private static function addGridColumnData(
+        array $data,
+        Data\FieldGridColumn $gridColumn,
+        Concrete $object,
+        ?string $requestedLanguage,
+        array $params,
+    ): array {
+        $definition = $gridColumn->definition;
+        $getValue = static fn (Concrete $owner) => $gridColumn->getValue($owner, ['language' => $requestedLanguage]);
+        $value = Service::useInheritedValues(true, $getValue, [$object]);
+        $owner = $object;
 
-        if (str_starts_with($key, '~')) {
-            $type = $keyParts[1];
-            if ($type === 'classificationstore') {
-                $field = $keyParts[2];
-                $groupKeyId = explode('-', $keyParts[3]);
-
-                $groupId = (int) $groupKeyId[0];
-                $keyid = (int) $groupKeyId[1];
-                $getter = 'get' . ucfirst($field);
-
-                if (method_exists($object, $getter)) {
-                    /** @var Classificationstore $classificationStoreData */
-                    $classificationStoreData = $object->$getter();
-
-                    /** @var Model\DataObject\ClassDefinition\Data\Classificationstore $csFieldDefinition */
-                    $csFieldDefinition = $object->getClass()->getFieldDefinition($field);
-                    $csLanguage = $requestedLanguage;
-
-                    if (!$csFieldDefinition->isLocalized()) {
-                        $csLanguage = 'default';
-                    }
-
-                    $fielddata = $classificationStoreData->getLocalizedKeyValue($groupId, $keyid, $csLanguage, true, true);
-
-                    $keyConfig = Model\DataObject\Classificationstore\KeyConfig::getById($keyid);
-                    $type = $keyConfig->getType();
-                    $definition = json_decode($keyConfig->getDefinition(), true);
-                    $definition = \OpenDxp\Model\DataObject\Classificationstore\Service::getFieldDefinitionFromJson($definition, $type);
-
-                    if (method_exists($definition, 'getDataForGrid')) {
-                        return $definition->getDataForGrid($fielddata, $object);
-                    }
-
-                    return $fielddata;
-                }
-            }
+        while (
+            !$definition->isEmpty($value)
+            && $definition->isEmpty(Service::useInheritedValues(false, $getValue, [$owner]))
+            && ($parent = Service::hasInheritableParentObject($owner))
+        ) {
+            $owner = $parent;
         }
 
-        return null;
-    }
-
-    protected static function getInheritedData(Concrete $object, string $key, string $requestedLanguage): array
-    {
-        if (!$parent = Service::hasInheritableParentObject($object)) {
-            return [];
-        }
-
-        $inheritedValue = self::normalizeValue(self::getStoreValueForObject($parent, $key, $requestedLanguage));
-
-        if (!static::getClassificationStoreFieldDefinition($key)->isEmpty($inheritedValue)) {
-            return [
-                'parent' => $parent,
-                'value' => $inheritedValue,
-            ];
-        }
-
-        return self::getInheritedData($parent, $key, $requestedLanguage);
-    }
-
-    /**
-     * The actual data could be a plain array for tables,
-     * an associative array for RGB or Quantity Value where the value is a key.
-     */
-    private static function normalizeValue(mixed $data): mixed
-    {
-        if (is_array($data)) {
-            if (array_is_list($data)) {
-                return $data;
-            }
-            if (array_key_exists('value', $data)) {
-                return $data['value'];
-            }
-        }
+        $key = $gridColumn->getKey();
+        $data[$key] = method_exists($definition, 'getDataForGrid')
+            ? $definition->getDataForGrid($value, $object, $params)
+            : $value;
+        $data['inheritedFields'][$key] = [
+            'inherited' => $owner->getId() !== $object->getId(),
+            'objectid' => $owner->getId(),
+        ];
 
         return $data;
-    }
-
-    protected static function getClassificationStoreFieldDefinition(string $key): Data
-    {
-        $keyParts = explode('~', $key);
-        $groupKeyId = explode('-', $keyParts[3]);
-
-        $keyid = (int) $groupKeyId[1];
-
-        $keyConfig = Model\DataObject\Classificationstore\KeyConfig::getById($keyid);
-        $type = $keyConfig->getType();
-        $definition = json_decode($keyConfig->getDefinition(), true);
-
-        return \OpenDxp\Model\DataObject\Classificationstore\Service::getFieldDefinitionFromJson($definition, $type);
     }
 }

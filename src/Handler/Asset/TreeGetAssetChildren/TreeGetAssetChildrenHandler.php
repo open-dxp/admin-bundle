@@ -31,6 +31,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\TreeGetAssetChildren;
 
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Handler\Element\TreeSearch;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\CurrentControllerContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
@@ -66,15 +67,7 @@ final class TreeGetAssetChildrenHandler
         $cv = [];
         $filteredTotalCount = 0;
 
-        $sqlFilter = $filter;
-        if ($sqlFilter !== null) {
-            if (!str_ends_with($sqlFilter, '*')) {
-                $sqlFilter .= '*';
-            }
-            $sqlFilter = str_replace('*', '%', $sqlFilter);
-            $limit = 100;
-            $offset = 0;
-        }
+        $sqlFilter = $filter === null ? null : TreeSearch::toLikePattern($filter);
 
         if ($asset->hasChildren()) {
             if ($customViewId) {
@@ -127,8 +120,7 @@ final class TreeGetAssetChildrenHandler
             nodes: $assets,
             offset: $offset,
             limit: $limit,
-            total: $asset->getChildAmount($adminUser),
-            overflow: $filter !== null && ($filteredTotalCount > $limit),
+            total: $filter !== null ? $filteredTotalCount : $asset->getChildAmount($adminUser),
             filter: $filter ?? '',
             inSearch: $payload->inSearch,
         );

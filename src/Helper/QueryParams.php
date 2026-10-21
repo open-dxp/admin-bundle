@@ -39,28 +39,7 @@ class QueryParams
 
             $order = strtoupper($sortParam['direction']) === 'DESC' ? 'DESC' : 'ASC';
 
-            if (!str_starts_with($sortParam['property'], '~')) {
-                $orderKey = $sortParam['property'];
-            } else {
-                $orderKey = $sortParam['property'];
-
-                $parts = explode('~', $orderKey);
-
-                $fieldname = $parts[2];
-                $groupKeyId = $parts[3];
-                $groupKeyId = explode('-', $groupKeyId);
-                $groupId = (int) $groupKeyId[0];
-                $keyid = (int) $groupKeyId[1];
-
-                return [
-                    'orderKey' => $sortParam['property'],
-                    'fieldname' => $fieldname,
-                    'groupId' => $groupId,
-                    'keyId' => $keyid,
-                    'order' => $order,
-                    'isFeature' => 1,
-                ];
-            }
+            $orderKey = $sortParam['property'];
         }
 
         return [

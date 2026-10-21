@@ -2815,84 +2815,6 @@ opendxp.helpers.getNicePathHandlerStore = function (store, config, gridView, res
     gridView.updateLayout();
 };
 
-opendxp.helpers.exportWarning = function (type, callback) {
-    var iconComponent = new Ext.Component({
-        cls: "x-message-box-warning x-dlg-icon"
-    });
-
-    var textContainer = Ext.Component({
-        html: type.warningText
-    });
-
-    var promptContainer = new Ext.container.Container({
-        flex: 1,
-        layout: {
-            type: 'vbox',
-            align: 'stretch'
-        },
-        padding: '0px 0px 0px 10px',
-        items: [textContainer]
-    });
-
-    var topContainer = new Ext.container.Container({
-            layout: 'hbox',
-            padding: 10,
-            style: {
-                overflow: 'hidden'
-            },
-            items: [iconComponent, promptContainer]
-        }
-    );
-
-    var objectSettingsContainer = type.getObjectSettingsContainer();
-
-    var formPanelItems = [];
-
-    if (objectSettingsContainer) {
-        formPanelItems.push(objectSettingsContainer);
-    }
-
-    var exportSettingsContainer = type.getExportSettingsContainer();
-
-    if (exportSettingsContainer) {
-        formPanelItems.push(exportSettingsContainer);
-    }
-
-    var formPanel = new Ext.form.FormPanel({
-        bodyStyle: 'padding:10px',
-        items: formPanelItems
-    });
-
-    var window = new Ext.Window({
-        modal: true,
-        title: type.text,
-        width: 600,
-        bodyStyle: "padding: 10px;",
-        buttonAlign: "center",
-        shadow: false,
-        closable: true,
-        items: [topContainer, formPanel],
-        buttons: [{
-            text: t("OK"),
-            handler: function () {
-                if (formPanel.isValid()) {
-                    callback(formPanel.getValues());
-                    window.close();
-                }
-            }.bind(this)
-        },
-            {
-                text: t("cancel"),
-                handler: function () {
-                    window.close();
-                }
-            }
-        ]
-    });
-
-    window.show();
-};
-
 opendxp.helpers.generatePassword = function (len) {
     var length = (len) ? (len) : (20);
     var string = "abcdefghijklmnopqrstuvwxyz"; //to upper
@@ -3250,25 +3172,29 @@ opendxp.helpers.treeToolTipHide = function () {
     Ext.get('opendxp_tooltip').hide();
 };
 
-opendxp.helpers.progressWindowOffsets = [-50];
+opendxp.helpers.progressWindows = [];
+
+opendxp.helpers.alignProgressWindows = function () {
+    let bottom = Ext.Element.getViewportHeight() - 50;
+    let right = Ext.Element.getViewportWidth() - 40;
+
+    opendxp.helpers.progressWindows.forEach(function (win) {
+        win.setPagePosition(right - win.getWidth(), bottom - win.getHeight());
+        bottom -= win.getHeight() + 20;
+    });
+};
+
+Ext.on("resize", opendxp.helpers.alignProgressWindows);
 
 opendxp.helpers.getProgressWindowListeners = function () {
     return {
-        show: function(win) {
-            let winY = opendxp.helpers.progressWindowOffsets.reduce(function(a, b) {
-                return Math.min(a, b);
-            });
-
-            win.alignTo(Ext.getBody(), "br-br", [-40, winY]);
-            let newOffset = winY - (win.getHeight()+20);
-            opendxp.helpers.progressWindowOffsets.push(newOffset);
-            win.myProgressWinOffset = newOffset;
+        show: function (win) {
+            opendxp.helpers.progressWindows.push(win);
+            opendxp.helpers.alignProgressWindows();
         },
-        destroy: function(win) {
-            let index = opendxp.helpers.progressWindowOffsets.indexOf(win.myProgressWinOffset);
-            if (index !== -1) {
-                opendxp.helpers.progressWindowOffsets.splice(index, 1);
-            }
+        destroy: function (win) {
+            Ext.Array.remove(opendxp.helpers.progressWindows, win);
+            opendxp.helpers.alignProgressWindows();
         }
     };
 };

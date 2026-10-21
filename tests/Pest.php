@@ -14,6 +14,7 @@ declare(strict_types=1);
  * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
  */
 
+use OpenDxp\Bundle\AdminBundle\Tests\TestCase\GenericExecutionEngineTestCase;
 use OpenDxp\Bundle\AdminBundle\Tests\TestCase\LoginLinkTestCase;
 use OpenDxp\TestFoundation\TestCase;
 
@@ -23,8 +24,10 @@ pest()->extend(TestCase::class)->in(
     'Feature/Classificationstore',
     'Feature/Document',
     'Feature/Grid',
+    'Feature/GridExport',
     'Feature/Security',
     'Feature/Tree',
     'Feature/UrlSlug',
 );
+pest()->extend(GenericExecutionEngineTestCase::class)->in('Feature/GridExportJobRun');
 pest()->extend(LoginLinkTestCase::class)->in('Feature/LoginLink');

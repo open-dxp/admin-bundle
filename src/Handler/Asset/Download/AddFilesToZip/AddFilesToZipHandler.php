@@ -31,14 +31,17 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZip;
 
 use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetDownloadService;
 use OpenDxp\Model\Asset;
 use ZipArchive;
 
 final class AddFilesToZipHandler
 {
-    public function __construct(private readonly AssetDownloadService $assetDownloadService)
-    {
+    public function __construct(
+        private readonly AssetDownloadService $assetDownloadService,
+        private readonly AdminUserContextInterface $userContext,
+    ) {
     }
 
     public function __invoke(AddFilesToZipPayload $payload): void
@@ -60,9 +63,10 @@ final class AddFilesToZipHandler
             throw new AdminOperationFailedException('Failed to open zip archive: ' . $zipFile);
         }
 
+        $user = $this->userContext->getAdminUser();
         $assetList = $thumbnailConfig === null
-            ? $this->assetDownloadService->getZipFileListing($asset, $payload->selectedIds)
-            : $this->assetDownloadService->getZipImageListing($asset, $payload->selectedIds);
+            ? $this->assetDownloadService->getZipFileListing($asset, $payload->selectedIds, $user)
+            : $this->assetDownloadService->getZipImageListing($asset, $payload->selectedIds, $user);
         $assetList->setOffset($payload->offset);
         $assetList->setLimit($payload->limit);
 

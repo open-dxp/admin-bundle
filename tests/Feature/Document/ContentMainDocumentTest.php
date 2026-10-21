@@ -20,6 +20,7 @@ use OpenDxp\Bundle\AdminBundle\Handler\Document\Page\SavePage\SavePagePayload;
 use OpenDxp\Bundle\AdminBundle\Mapper\Document\DocumentPayloadMapper;
 use OpenDxp\Model\Document\Editable\Input;
 use OpenDxp\Model\Document\Page;
+use OpenDxp\Test\Elements;
 use OpenDxp\Test\Factory\DocumentPageFactory;
 use OpenDxp\TestFoundation\Container;
 
@@ -30,7 +31,7 @@ use OpenDxp\TestFoundation\Container;
  */
 function publishPage(Page $page, ?array $editables): Page
 {
-    $page = Page::getById($page->getId(), ['force' => true]);
+    $page = Elements::refresh($page);
     $payload = new SavePagePayload(
         id: $page->getId(),
         task: 'publish',
@@ -45,7 +46,7 @@ function publishPage(Page $page, ?array $editables): Page
     Container::get(DocumentPayloadMapper::class)->applyPagePayload($payload, $page, 'publish');
     $page->save();
 
-    return Page::getById($page->getId(), ['force' => true]);
+    return Elements::refresh($page);
 }
 
 beforeEach(function () {

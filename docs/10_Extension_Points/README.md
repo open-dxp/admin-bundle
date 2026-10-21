@@ -26,6 +26,7 @@ The admin-bundle exposes extension points at two levels:
 | [05](05_Permissions.md)         | Permissions         | Adding custom permission keys                                    |
 | [06](06_Deeplinks.md)           | Deeplinks           | Linking directly into admin from external apps                   |
 | [07](07_Custom_Admin_Login.md)  | Custom Admin Login  | Changing the `/admin` entry point                                |
+| [08](08_Grid_Export.md)         | Grid Export         | Exporting the rows of a grid, adding a source for a grid         |
 
 ## How Events Work
 

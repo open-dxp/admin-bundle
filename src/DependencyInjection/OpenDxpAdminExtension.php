@@ -16,8 +16,16 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\DependencyInjection;
 
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExport;
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExportColumn;
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExportColumnType;
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExportFormat;
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExportHeader;
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExportQuery;
+use OpenDxp\Bundle\AdminBundle\GridExport\GridExportSettings;
 use OpenDxp\Bundle\CoreBundle\DependencyInjection\ConfigurationHelper;
 use OpenDxp\Config\LocationAwareConfigRepository;
+use OpenDxp\Tool\SerializationScope;
 use Override;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -74,6 +82,19 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
 
         $container->setParameter('opendxp_admin.config', $config);
         $container->setParameter('opendxp_admin.translations.path', $config['translations']['path']);
+        $container->setParameter(
+            'opendxp_admin.grid_export.confirm_threshold',
+            $config['grid_export']['confirm_threshold'],
+        );
+
+        /** @var array<string, class-string> $bundles */
+        $bundles = $container->getParameter('kernel.bundles');
+
+        if ($config['background_jobs']['enabled']
+            && array_key_exists('OpenDxpGenericExecutionEngineBundle', $bundles)
+        ) {
+            $loader->load('generic_execution_engine.yaml');
+        }
     }
 
     public function prepend(ContainerBuilder $container): void
@@ -84,6 +105,34 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
             'opendxpAdmin' => realpath(__DIR__ . '/../../public/build/admin'),
             'opendxpAdminImageEditor' => realpath(__DIR__ . '/../../public/build/imageEditor'),
         ];
+
+        $container->prependExtensionConfig('opendxp', [
+            'serialization' => [
+                SerializationScope::TmpStore->value => [
+                    'allowed_classes' => [
+                        GridExport::class => true,
+                        GridExportColumn::class => true,
+                        GridExportColumnType::class => true,
+                        GridExportFormat::class => true,
+                        GridExportHeader::class => true,
+                        GridExportQuery::class => true,
+                        GridExportSettings::class => true,
+                    ],
+                ],
+            ],
+        ]);
+
+        if ($container->hasExtension('opendxp_generic_execution_engine')) {
+            $container->prependExtensionConfig('opendxp_generic_execution_engine', [
+                'execution_context' => [
+                    'admin_grid_export' => [
+                        'translations_domain' => 'admin',
+                        'error_handling' => 'stop_on_first_error',
+                        'disposable' => true,
+                    ],
+                ],
+            ]);
+        }
 
         $container->prependExtensionConfig('webpack_encore', [
             'output_path' => false,

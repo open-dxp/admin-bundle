@@ -1,6 +1,20 @@
 # Changelog / Upgrade Notes
 
 ## 1.5.0
+* Feature: A data type shows its value in several grid columns with `GridColumnsInterface`. See [Adding Object Datatypes](https://github.com/open-dxp/opendxp/blob/1.x/doc/20_Extending_OpenDxp/13_Bundle_Developers_Guide/11_Adding_Object_Datatypes.md#grid-columns)
+* Bugfix: A grid filters by a classification store key and a slug at the same time
+* Bugfix: A grid filters a number of a classification store key between a lower and an upper bound
+* Feature: Every grid of the admin exports through one export. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md)
+* Feature: `GridExports::export()` runs a grid export in a test
+* Feature: A grid export runs in the background with `opendxp_admin.background_jobs`. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md#run-exports-in-the-background)
+* Bugfix: Progress windows stay in the bottom right corner when the browser window is resized
+* Bugfix: A data object closed right after opening logs no error in the console
+* Deprecation: The grid view `patchedgridview` is deprecated. A grid uses the default view of Ext JS.
+* Deprecation: The navigation model `quicksearch.boundlist` is deprecated. A bound list uses the default navigation model of Ext JS.
+* Chore: Requests from the admin no longer send the headers `X-opendxp-extjs-version-major` and `X-opendxp-extjs-version-minor`
+* Feature: A large tree folder has a bar to search its children by any part of the key and to page through children and search results [open-dxp/opendxp#228](https://github.com/open-dxp/opendxp/issues/228)
+* Chore: Require `openspout/openspout` ^5.0. `phpoffice/phpspreadsheet` goes with 2.0
+* Chore: Remove the old export routes of the object, asset, email log and translation grids
 * Feature: The URL slug field shows the prefix of its slug generator, formats what an editor types and locks a stored slug. The domain of a site slug stands next to it [open-dxp/opendxp#159](https://github.com/open-dxp/opendxp/issues/159)
 * Feature: Download the images of a folder or a selection as a ZIP of thumbnails. "Download as ZIP" in the asset tree, the folder toolbar and the list view offers "Originals" and "Thumbnails", which asks for one of the thumbnails offered for download [#128](https://github.com/open-dxp/admin-bundle/issues/128)
 * Bugfix: The thumbnail download of the image detail view hands out only thumbnails that are offered for download [#128](https://github.com/open-dxp/admin-bundle/issues/128)
@@ -12,6 +26,7 @@
 * Bugfix: Opening a deeplink works in a long running process, for example FrankenPHP in worker mode.
 * Bugfix: In a long running process, every session keeps its own CSRF token.
 * Deprecation: Printing the Twig global `csrfToken` outside the admin is deprecated. It throws an exception in 2.0.
+* Deprecation: Building the AnyGetter grid operator without a `user` in its context is deprecated. It throws an exception in 2.0.
 * Bugfix: A classification store key takes only a name that is valid for a data object field [#126](https://github.com/open-dxp/admin-bundle/pull/126)
 * Bugfix: The grids of the classification store configuration show why a change could not be saved and take the change back [#126](https://github.com/open-dxp/admin-bundle/pull/126)
 * Bugfix: A page that inherits its content from a content main document keeps that content when it is saved [#135](https://github.com/open-dxp/admin-bundle/pull/135)

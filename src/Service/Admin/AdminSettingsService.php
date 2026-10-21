@@ -61,6 +61,8 @@ final class AdminSettingsService
         private readonly InstanceIdentityService $instanceIdentity,
         #[Autowire('%opendxp_admin.custom_admin_route_name%')]
         private readonly string $customAdminRouteName,
+        #[Autowire('%opendxp_admin.grid_export.confirm_threshold%')]
+        private readonly int $gridExportConfirmThreshold,
     ) {
     }
 
@@ -187,6 +189,8 @@ final class AdminSettingsService
             notificationsEnabled: $notificationsEnabled,
             checkNewNotificationEnabled: $notificationsEnabled && (bool) $config['notifications']['check_new_notification']['enabled'],
             checkNewNotificationInterval: $config['notifications']['check_new_notification']['interval'] * 1000,
+
+            gridExportConfirmThreshold: $this->gridExportConfirmThreshold,
 
             csrfToken: $this->csrfProtection->getCsrfToken($this->requestStack->getSession()) ?? '',
         );

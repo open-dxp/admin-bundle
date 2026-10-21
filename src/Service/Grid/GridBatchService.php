@@ -222,47 +222,22 @@ final class GridBatchService
         $parts = explode('~', $name);
 
         if (str_starts_with($name, '~')) {
-            $type = $parts[1];
-            $field = $parts[2];
-            $keyId = $parts[3];
+            $gridColumn = DataObject\Service::findGridColumn($class, $name);
 
-            if ($type === 'classificationstore') {
-                $groupKeyId = explode('-', $keyId);
-                $groupId = (int) $groupKeyId[0];
-                $keyId = (int) $groupKeyId[1];
+            if ($gridColumn) {
+                $gridColumnParams = ['language' => $requestedLanguage];
+                $newData = $gridColumn->definition->getDataFromEditmode($value, $object);
 
-                $getter = 'get' . ucfirst($field);
-                if (method_exists($object, $getter)) {
-                    /** @var DataObject\ClassDefinition\Data\Classificationstore $csFieldDefinition */
-                    $csFieldDefinition = $object->getClass()->getFieldDefinition($field);
-                    $csLanguage = $requestedLanguage;
-                    if (!$csFieldDefinition->isLocalized()) {
-                        $csLanguage = 'default';
-                    }
-
-                    /** @var DataObject\ClassDefinition\Data\Classificationstore $fd */
-                    $fd = $class->getFieldDefinition($field);
-                    $keyConfig = $fd->getKeyConfiguration($keyId);
-                    $dataDefinition = DataObject\Classificationstore\Service::getFieldDefinitionFromKeyConfig($keyConfig);
-
-                    /** @var DataObject\Classificationstore $classificationStoreData */
-                    $classificationStoreData = $object->$getter();
-                    if ($append) {
-                        $oldValue = $classificationStoreData->getLocalizedKeyValue($groupId, $keyId, $csLanguage);
-                        $value = $dataDefinition->appendData($oldValue, $value);
-                    }
-                    if ($remove) {
-                        $oldValue = $classificationStoreData->getLocalizedKeyValue($groupId, $keyId, $csLanguage);
-                        $value = $dataDefinition->removeData($oldValue, $value);
-                    }
-                    $classificationStoreData->setLocalizedKeyValue(
-                        $groupId,
-                        $keyId,
-                        $dataDefinition->getDataFromEditmode($value),
-                        $csLanguage
-                    );
-                    $object->markFieldDirty($field);
+                if ($append) {
+                    $existingData = $gridColumn->getValue($object, $gridColumnParams);
+                    $newData = $gridColumn->definition->appendData($existingData, $newData);
                 }
+                if ($remove) {
+                    $existingData = $gridColumn->getValue($object, $gridColumnParams);
+                    $newData = $gridColumn->definition->removeData($existingData, $newData);
+                }
+
+                $gridColumn->setValue($object, $newData, $gridColumnParams);
             }
         } elseif (count($parts) > 1) {
             // check for bricks

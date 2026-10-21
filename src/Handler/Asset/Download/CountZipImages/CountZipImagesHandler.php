@@ -17,13 +17,16 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\CountZipImages;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetDownloadService;
 use OpenDxp\Model\Asset;
 
 final readonly class CountZipImagesHandler
 {
-    public function __construct(private AssetDownloadService $assetDownloadService)
-    {
+    public function __construct(
+        private AssetDownloadService $assetDownloadService,
+        private AdminUserContextInterface $userContext,
+    ) {
     }
 
     public function __invoke(CountZipImagesPayload $payload): CountZipImagesResult
@@ -34,7 +37,11 @@ final readonly class CountZipImagesHandler
             return new CountZipImagesResult(0);
         }
 
-        $assetList = $this->assetDownloadService->getZipImageListing($asset, $payload->selectedIds);
+        $assetList = $this->assetDownloadService->getZipImageListing(
+            $asset,
+            $payload->selectedIds,
+            $this->userContext->getAdminUser(),
+        );
 
         return new CountZipImagesResult($assetList->getTotalCount());
     }

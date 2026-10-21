@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\GetDownloadZipJobs;
 
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Asset\AssetDownloadService;
 use OpenDxp\Model\Asset;
 use Symfony\Component\Routing\RouterInterface;
@@ -41,6 +42,7 @@ final class GetDownloadZipJobsHandler
     public function __construct(
         private readonly AssetDownloadService $assetDownloadService,
         private readonly RouterInterface $router,
+        private readonly AdminUserContextInterface $userContext,
     ) {
     }
 
@@ -53,11 +55,12 @@ final class GetDownloadZipJobsHandler
             return new GetDownloadZipJobsResult(jobId: $jobId, jobs: []);
         }
 
+        $user = $this->userContext->getAdminUser();
         if ($payload->thumbnail === null) {
-            $assetList = $this->assetDownloadService->getZipFileListing($asset, $payload->selectedIds);
+            $assetList = $this->assetDownloadService->getZipFileListing($asset, $payload->selectedIds, $user);
         } else {
             $this->assetDownloadService->getDownloadableThumbnailConfig($payload->thumbnail);
-            $assetList = $this->assetDownloadService->getZipImageListing($asset, $payload->selectedIds);
+            $assetList = $this->assetDownloadService->getZipImageListing($asset, $payload->selectedIds, $user);
         }
 
         $jobAmount = (int) ceil($assetList->getTotalCount() / self::FILES_PER_JOB);
