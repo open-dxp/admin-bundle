@@ -1,6 +1,7 @@
 # Changelog / Upgrade Notes
 
 ## 1.5.0
+* Improvement: Login links use the host of the request whenever OpenDXP trusts it, also a host from `opendxp.security.trusted_hosts`. See [Domain and Host Handling](https://github.com/open-dxp/opendxp/blob/1.x/doc/02_MVC/04_Routing_and_URLs/06_Domain_and_Host_Handling.md#trusted-hosts)
 * Feature: A data type shows its value in several grid columns with `GridColumnsInterface`. See [Adding Object Datatypes](https://github.com/open-dxp/opendxp/blob/1.x/doc/20_Extending_OpenDxp/13_Bundle_Developers_Guide/11_Adding_Object_Datatypes.md#grid-columns)
 * Bugfix: A grid filters by a classification store key and a slug at the same time
 * Bugfix: A grid filters a number of a classification store key between a lower and an upper bound
