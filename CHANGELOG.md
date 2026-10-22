@@ -5,7 +5,8 @@
 - [NEW FEATURE] A data type shows its value in several grid columns with `GridColumnsInterface`. See [Adding Object Datatypes](https://github.com/open-dxp/opendxp/blob/1.x/doc/20_Extending_OpenDxp/13_Bundle_Developers_Guide/11_Adding_Object_Datatypes.md#grid-columns)
 - [BUGFIX] A grid filters by a classification store key and a slug at the same time
 - [BUGFIX] A grid filters a number of a classification store key between a lower and an upper bound
-- [NEW FEATURE] Every grid of the admin exports through one export. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md)
+- [NEW FEATURE] [HIGHLIGHT] Every grid of the admin exports through one export. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md)
+  > Every grid in the admin uses the same export.
 - [NEW FEATURE] `GridExports::export()` runs a grid export in a test
 - [NEW FEATURE] A grid export runs in the background with `opendxp_admin.background_jobs`. See [Grid Export](docs/10_Extension_Points/08_Grid_Export.md#run-exports-in-the-background)
 - [BUGFIX] Progress windows stay in the bottom right corner when the browser window is resized
@@ -13,11 +14,13 @@
 - [DEPRECATION] The grid view `patchedgridview` is deprecated. A grid uses the default view of Ext JS.
 - [DEPRECATION] The navigation model `quicksearch.boundlist` is deprecated. A bound list uses the default navigation model of Ext JS.
 - [CHORE] Requests from the admin no longer send the headers `X-opendxp-extjs-version-major` and `X-opendxp-extjs-version-minor`
-- [NEW FEATURE] A large tree folder has a bar to search its children by any part of the key and to page through children and search results [open-dxp/opendxp#228](https://github.com/open-dxp/opendxp/issues/228)
+- [NEW FEATURE] [HIGHLIGHT] A large tree folder has a bar to search its children by any part of the key and to page through children and search results [open-dxp/opendxp#228](https://github.com/open-dxp/opendxp/issues/228)
+  > Large folders in the tree get a search bar. Find children by any part of their key, and page through the children and the search results.
 - [CHORE] Require `openspout/openspout` ^5.0. `phpoffice/phpspreadsheet` goes with 2.0
 - [CHORE] Remove the old export routes of the object, asset, email log and translation grids
 - [NEW FEATURE] The URL slug field shows the prefix of its slug generator, formats what an editor types and locks a stored slug. The domain of a site slug stands next to it [open-dxp/opendxp#159](https://github.com/open-dxp/opendxp/issues/159)
-- [NEW FEATURE] Download the images of a folder or a selection as a ZIP of thumbnails. "Download as ZIP" in the asset tree, the folder toolbar and the list view offers "Originals" and "Thumbnails", which asks for one of the thumbnails offered for download [#128](https://github.com/open-dxp/admin-bundle/issues/128)
+- [NEW FEATURE] [HIGHLIGHT] Download the images of a folder or a selection as a ZIP of thumbnails. "Download as ZIP" in the asset tree, the folder toolbar and the list view offers "Originals" and "Thumbnails", which asks for one of the thumbnails offered for download [#128](https://github.com/open-dxp/admin-bundle/issues/128)
+  > Download the images of a folder or a selection as a ZIP, either as originals or as thumbnails.
 - [BUGFIX] The thumbnail download of the image detail view hands out only thumbnails that are offered for download [#128](https://github.com/open-dxp/admin-bundle/issues/128)
 - [CHORE] Replace Codeception with Pest and `open-dxp/test-foundation`
 - [CHORE] Require `open-dxp/opendxp` ^1.5
