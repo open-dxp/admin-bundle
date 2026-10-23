@@ -1,6 +1,8 @@
 # Changelog
 
 ## 1.5.0
+- [SECURITY] The object and asset grids open a workspace only for its own path and the paths below it. A workspace on `/shop_de` does not open `/shopXde`, and a quote in the name of a workspace does not break the query [#151](https://github.com/open-dxp/admin-bundle/pull/151)
+- [BUGFIX] The object and asset grids hide a closed folder also when another closed folder holds an open one [#151](https://github.com/open-dxp/admin-bundle/pull/151)
 - [ENHANCEMENT] Login links use the host of the request whenever OpenDXP trusts it, also a host from `opendxp.security.trusted_hosts`. See [Domain and Host Handling](https://github.com/open-dxp/opendxp/blob/1.x/doc/02_MVC/04_Routing_and_URLs/06_Domain_and_Host_Handling.md#trusted-hosts)
 - [NEW FEATURE] A data type shows its value in several grid columns with `GridColumnsInterface`. See [Adding Object Datatypes](https://github.com/open-dxp/opendxp/blob/1.x/doc/20_Extending_OpenDxp/13_Bundle_Developers_Guide/11_Adding_Object_Datatypes.md#grid-columns)
 - [BUGFIX] A grid filters by a classification store key and a slug at the same time

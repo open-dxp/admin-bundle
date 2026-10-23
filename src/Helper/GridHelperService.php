@@ -19,6 +19,7 @@ use Closure;
 use Doctrine\DBAL\Query\QueryBuilder as DoctrineQueryBuilder;
 use OpenDxp\Bundle\AdminBundle\Event\AdminEvents;
 use OpenDxp\Db;
+use OpenDxp\Db\Helper;
 use OpenDxp\Logger;
 use OpenDxp\Model;
 use OpenDxp\Model\DataObject;
@@ -896,15 +897,16 @@ class GridHelperService
             return '`path` LIKE "/%"';
         }
 
+        $db = Db::get();
         $pathParts = explode('/', $fullpath);
         $leaf = array_pop($pathParts);
         $path = implode('/', $pathParts);
         $queryColumn = $type === 'asset' ? '`filename`' : '`key`';
 
         return '(
-            (`path` = "' . $path . '/" AND ' . $queryColumn .  ' = "' . $leaf . '")
+            (`path` = ' . $db->quote($path . '/') . ' AND ' . $queryColumn .  ' = ' . $db->quote($leaf) . ')
             OR
-            `path` LIKE "' . $fullpath . '/%"
+            `path` LIKE ' . $db->quote(Helper::escapeLike($fullpath) . '/%') . '
         )';
     }
 
@@ -917,6 +919,7 @@ class GridHelperService
         bool $onlyChildren = false,
         string $type = 'object'
     ): string {
+        $db = Db::get();
         $pathParts = explode('/', $fullpath);
         $leaf = array_pop($pathParts);
         $path = implode('/', $pathParts);
@@ -931,13 +934,13 @@ class GridHelperService
         }
 
         if ($onlyChildren) {
-            return '`path` NOT LIKE "' . $fullpath . '/%"';
+            return '`path` NOT LIKE ' . $db->quote(Helper::escapeLike($fullpath) . '/%');
         }
 
         return '(
-            NOT (`path` = "' . $path . '/" AND ' . $queryColumn .  ' = "' . $leaf . '")
+            NOT (`path` = ' . $db->quote($path . '/') . ' AND ' . $queryColumn .  ' = ' . $db->quote($leaf) . ')
             AND
-            `path` NOT LIKE "' . $fullpath . '/%"
+            `path` NOT LIKE ' . $db->quote(Helper::escapeLike($fullpath) . '/%') . '
         )';
 
     }
@@ -951,11 +954,11 @@ class GridHelperService
 
         if ($user->isAllowed($type . 's')) { //the permissions are just plural
             $elementPaths = Service::findForbiddenPaths($type, $user);
-            $onlyChildren = false;
             $forbiddenPathSql = [];
             $allowedPathSql = [];
             foreach ($elementPaths['forbidden'] as $forbiddenPath => $allowedPaths) {
                 $exceptions = '';
+                $onlyChildren = false;
                 if ($allowedPaths) {
                     $exceptionsConcat = '';
                     foreach ($allowedPaths as $path) {
