@@ -23,6 +23,7 @@ pest()->extend(TestCase::class)->in(
     'Feature/Asset',
     'Feature/Classificationstore',
     'Feature/Document',
+    'Feature/Element',
     'Feature/Grid',
     'Feature/GridExport',
     'Feature/Security',

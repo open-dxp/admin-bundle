@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.5.0
+- [BUGFIX] Notes on documents and on objects offer the note types configured for their own element type [#152](https://github.com/open-dxp/admin-bundle/pull/152)
 - [SECURITY] The object and asset grids open a workspace only for its own path and the paths below it. A workspace on `/shop_de` does not open `/shopXde`, and a quote in the name of a workspace does not break the query [#151](https://github.com/open-dxp/admin-bundle/pull/151)
 - [BUGFIX] The object and asset grids hide a closed folder also when another closed folder holds an open one [#151](https://github.com/open-dxp/admin-bundle/pull/151)
 - [ENHANCEMENT] Login links use the host of the request whenever OpenDXP trusts it, also a host from `opendxp.security.trusted_hosts`. See [Domain and Host Handling](https://github.com/open-dxp/opendxp/blob/1.x/doc/02_MVC/04_Routing_and_URLs/06_Domain_and_Host_Handling.md#trusted-hosts)

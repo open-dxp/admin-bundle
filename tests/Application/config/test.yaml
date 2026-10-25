@@ -1,3 +1,11 @@
 services:
     OpenDxp\Bundle\AdminBundle\Tests\Application\GridExport\MockGridExportSource:
         autoconfigure: true
+
+opendxp_admin:
+    documents:
+        notes_events:
+            types: ['', 'seo']
+    objects:
+        notes_events:
+            types: ['', 'stock']
