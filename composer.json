@@ -25,6 +25,9 @@
         "openspout/openspout": "^5.0",
         "symfony/webpack-encore-bundle": "^2.1.1"
     },
+    "conflict": {
+        "open-dxp/advanced-object-search-bundle": "<1.1"
+    },
     "require-dev": {
         "open-dxp/test-foundation": "^1.0",
         "phpstan/phpstan": "2.1.33",

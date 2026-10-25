@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.5.0
+- [CHORE] Conflict with `open-dxp/advanced-object-search-bundle` <1.1. Its result grid uses the export routes that 1.5 removes.
 - [BUGFIX] Notes on documents and on objects offer the note types configured for their own element type [#152](https://github.com/open-dxp/admin-bundle/pull/152)
 - [SECURITY] The object and asset grids open a workspace only for its own path and the paths below it. A workspace on `/shop_de` does not open `/shopXde`, and a quote in the name of a workspace does not break the query [#151](https://github.com/open-dxp/admin-bundle/pull/151)
 - [BUGFIX] The object and asset grids hide a closed folder also when another closed folder holds an open one [#151](https://github.com/open-dxp/admin-bundle/pull/151)
