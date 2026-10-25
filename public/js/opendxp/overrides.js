@@ -31,6 +31,9 @@ Ext.define('opendxp.overrides.dd.DragDropManager', {
 
 Ext.define('opendxp.overrides.dom.Element', {
     override: 'Ext.dom.Element',
+    // An editable takes its element id from its name. The name of an editable in a block holds a colon and a dot.
+    validIdRe: /^[a-z][a-z0-9\-_:.]*$/i,
+
     // A drop zone can destroy its component on drop. The mouseup afterwards focuses the destroyed element.
     focus: function (defer, dom) {
         if (!dom && !this.dom) {
