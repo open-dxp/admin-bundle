@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.1
+- [BUGFIX] Correct German translation of `no_items_found`
+
 ## 1.5.0
 - [SECURITY] The notification grid filters only by title and date
 - [CHORE] Conflict with `open-dxp/advanced-object-search-bundle` <1.1. Its result grid uses the export routes that 1.5 removes.
