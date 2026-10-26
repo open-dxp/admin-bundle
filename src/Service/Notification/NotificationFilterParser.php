@@ -56,6 +56,10 @@ final class NotificationFilterParser
         $result = [];
 
         foreach ($filter as $item) {
+            if (!isset($this->properties[$item[self::KEY_PROPERTY] ?? ''])) {
+                continue;
+            }
+
             $type = $item[self::KEY_TYPE];
 
             switch ($type) {
@@ -161,8 +165,6 @@ final class NotificationFilterParser
 
     private function getDbProperty(array $item): string
     {
-        $property = $item[self::KEY_PROPERTY];
-
-        return $this->properties[$property] ?? $property;
+        return $this->properties[$item[self::KEY_PROPERTY]];
     }
 }
