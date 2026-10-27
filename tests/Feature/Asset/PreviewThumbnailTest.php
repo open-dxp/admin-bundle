@@ -26,8 +26,6 @@ beforeEach(function () {
         ->admin()
         ->create();
     $this->image = AssetImageFactory::createOne();
-    // Thumbnails live outside the transaction. A run with the same faker seed finds the files of the last one.
-    $this->image->clearThumbnails(force: true);
 });
 
 it('shows a preview that is not generated yet in the image editor', function () {
