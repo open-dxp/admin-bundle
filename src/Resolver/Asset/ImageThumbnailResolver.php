@@ -74,10 +74,12 @@ final class ImageThumbnailResolver
 
         if ($hasThumbnailPreview) {
             $thumbnailConfig = Asset\Image\Thumbnail\Config::getPreviewConfig();
-            if (!$image->getThumbnail($thumbnailConfig)->exists()) {
+            // Only the tree and the folder preview load many previews at once and wait for the worker.
+            // Every other caller, like the image editor, generates the missing preview right away.
+            if (in_array($origin, ['treeNode', 'folderPreview'], true) && !$image->getThumbnail($thumbnailConfig)->exists()) {
                 $this->messageBus->dispatch(new AssetPreviewImageMessage($image->getId()));
 
-                if ($origin !== 'folderPreview') {
+                if ($origin === 'treeNode') {
                     throw new NotFoundHttpException(sprintf('Tree preview thumbnail not available for asset %d', $id));
                 }
 

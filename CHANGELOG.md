@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.5.1
+- [BUGFIX] The image editor shows an image whose preview thumbnail is not generated yet instead of a broken image [#157](https://github.com/open-dxp/admin-bundle/issues/157)
 - [BUGFIX] Correct German translation of `no_items_found`
 
 ## 1.5.0
