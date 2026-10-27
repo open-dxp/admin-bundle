@@ -192,7 +192,7 @@ opendxp.element.gridexport.runner = Class.create({
             return "";
         }
 
-        return '<div class="opendxp_grid_export_warning">' + Ext.util.Format.htmlEncode(text) + '</div>';
+        return '<div class="opendxp_callout opendxp_callout_warning">' + Ext.util.Format.htmlEncode(text) + '</div>';
     },
 
     createExport: function (values, parameters, selectedIds) {

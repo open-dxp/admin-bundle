@@ -56,19 +56,84 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
     },
 
     addSlugElements: function () {
-        this.addFallbackSlug();
+        this.addSlugErrors();
+
+        if (this.getAvailableSiteIds() === null) {
+            this.component.add({
+                xtype: 'component',
+                cls: 'opendxp_callout opendxp_callout_info opendxp_url_slug_callout',
+                html: '<div>' + t('url_slug_language_unavailable') + '</div>'
+            });
+        } else {
+            this.addFallbackSlug();
+        }
+
         if (this.data.length > 0) {
             for (var i = 0; i < this.data.length; i++) {
                 this.addSiteElement(this.data[i]);
             }
         }
 
+        this.addSitesWithOtherPrefix();
         this.updateSiteFilter();
     },
 
     /**
-     * Saving waits for the formatting, because the formatted slug goes public. Saving may fill or extend a slug, so
-     * the slugs are loaded again afterwards.
+     * A site whose prefix differs from the prefix of the fallback slug needs a slug of its own.
+     */
+    addSitesWithOtherPrefix: function () {
+        const language = this.getContext().language || '';
+        const prefixes = (this.fieldConfig.slugPrefixes || {})[language];
+        const siteIds = this.getAvailableSiteIds();
+
+        if (!prefixes || !Array.isArray(siteIds) || (this.fieldConfig.slugErrors || {})[language]) {
+            return;
+        }
+
+        const sitesStore = opendxp.globalmanager.get("sites");
+
+        siteIds.forEach(function (siteId) {
+            if (this.elements[siteId] || !prefixes.hasOwnProperty(siteId) || prefixes[siteId] === prefixes[0]) {
+                return;
+            }
+
+            const site = sitesStore.getById(siteId);
+
+            this.addSiteElement({
+                siteId: siteId,
+                domain: site ? site.get('domain') : ''
+            });
+        }.bind(this));
+    },
+
+    addSlugErrors: function () {
+        const errors = (this.fieldConfig.slugErrors || {})[this.getContext().language || ''];
+
+        if (!errors) {
+            return;
+        }
+
+        this.component.add({
+            xtype: 'component',
+            cls: 'opendxp_callout opendxp_callout_error opendxp_url_slug_callout',
+            html: '<div>' + [...new Set(errors)].map(Ext.util.Format.htmlEncode).join('<br>') + '</div>'
+        });
+    },
+
+    /**
+     * Returns the ids of the sites a slug of the current language can belong to.
+     * It is null when the language has no slug, and undefined when the field sends no sites.
+     */
+    getAvailableSiteIds: function () {
+        const sites = this.fieldConfig.slugSites || {};
+        const language = this.getContext().language || '';
+
+        return sites.hasOwnProperty(language) ? sites[language] : undefined;
+    },
+
+    /**
+     * Saving waits for the formatting, because the formatted slug goes public.
+     * Saving may fill or extend a slug, so the slugs are loaded again afterwards.
      */
     listenToObjectSave: function () {
         const preSave = function (event) {
@@ -234,7 +299,7 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
         var title = this.fieldConfig.title ? this.fieldConfig.title : this.fieldConfig.name;
         var storedSlug = siteData['slug'] || '';
         var prefix = this.getPrefix(siteData['siteId']);
-        var prefixed = prefix !== null && (storedSlug === '' || storedSlug.startsWith(prefix + '/'));
+        var displayPrefix = this.getDisplayPrefix(storedSlug, prefix);
         var locked = storedSlug !== '' && !this.fieldConfig.noteditable;
         var triggers = {};
 
@@ -250,12 +315,12 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
             fieldLabel: title + domain,
             name: "slug",
             labelWidth: this.getLabelWidth(),
-            value: prefixed ? storedSlug.substring(prefix.length + 1) : storedSlug,
+            value: displayPrefix === null ? storedSlug : storedSlug.substring(displayPrefix.length + 1),
             readOnly: locked,
             triggers: triggers,
-            emptyText: this.fieldConfig.fillEmptySlug && !siteData['siteId'] ? t("url_slug_filled_on_save") : '',
-            componentCls: this.getWrapperClassNames(prefix === null ? '' : 'opendxp_url_slug_prefixed'),
-            afterLabelTpl: this.getPrefixTpl(prefixed ? prefix : null),
+            emptyText: this.fieldConfig.fillEmptySlug ? t("url_slug_filled_on_save") : '',
+            componentCls: this.getWrapperClassNames(this.hasSlugGenerator() ? 'opendxp_url_slug_prefixed' : ''),
+            afterLabelTpl: this.getPrefixTpl(displayPrefix),
             validator: function(value) {
                 if (value) {
                     if (text.slugPrefix !== null) {
@@ -287,10 +352,6 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
             textConfig.width = 350;
         }
 
-        if (prefixed) {
-            textConfig.width += this.measure(prefix + '/') + 4;
-        }
-
         // data type allows to configure a field-level label width, otherwise the parent label width gets applied.
         if (this.fieldConfig.domainLabelWidth) {
             textConfig.labelWidth = this.fieldConfig.domainLabelWidth;
@@ -306,11 +367,12 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
 
         var text = new Ext.form.TextField(textConfig);
         text.siteId = siteData['siteId'];
-        text.slugPrefix = prefixed ? prefix : null;
+        text.slugPrefix = displayPrefix;
+        text.storedPrefix = displayPrefix;
         text.storedSlug = storedSlug;
         text.storedValue = textConfig.value;
         text.formattedText = textConfig.value;
-        text.lockTooltip = t(prefix === null || prefixed ? "url_slug_locked" : "url_slug_other_prefix");
+        text.lockTooltip = t(prefix === null || displayPrefix === prefix ? "url_slug_locked" : "url_slug_other_prefix");
 
         text.on('afterrender', function (field) {
             const lock = field.getTrigger('lock');
@@ -361,6 +423,12 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
             allSitesStore.each(function (record, id) {
                 let siteId = record.get("id");
                 if (siteId !== "default") {
+                    const availableSiteIds = this.getAvailableSiteIds();
+
+                    if (availableSiteIds === null || (Array.isArray(availableSiteIds) && !in_array(siteId, availableSiteIds))) {
+                        return;
+                    }
+
                     if (this.fieldConfig.availableSites !== null && this.fieldConfig.availableSites.length > 0
                         && !in_array(siteId, this.fieldConfig.availableSites)) {
                         return;
@@ -417,12 +485,36 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
         Ext.resumeLayouts();
     },
 
+    hasSlugGenerator: function () {
+        return !!this.fieldConfig.slugGeneratorClass;
+    },
+
+    /**
+     * A slug saved with another prefix, or with a prefix the generator cannot tell, shows the prefix it was saved
+     * with. Every slug of the field then shows a prefix in front of its last path segment.
+     */
+    getDisplayPrefix: function (storedSlug, prefix) {
+        if (!this.hasSlugGenerator() || (storedSlug !== '' && !storedSlug.startsWith('/'))) {
+            return null;
+        }
+
+        if (storedSlug === '' || (prefix !== null && storedSlug.startsWith(prefix + '/'))) {
+            return prefix;
+        }
+
+        return storedSlug.substring(0, storedSlug.lastIndexOf('/'));
+    },
+
     getPrefixTpl: function (prefix) {
-        if (prefix === null) {
+        if (!this.hasSlugGenerator()) {
             return '';
         }
 
-        return '<div class="opendxp_url_slug_prefix">' + Ext.util.Format.htmlEncode(prefix + '/') + '</div>';
+        return '<div class="opendxp_url_slug_prefix">' + this.getPrefixHtml(prefix) + '</div>';
+    },
+
+    getPrefixHtml: function (prefix) {
+        return prefix === null ? '' : Ext.util.Format.htmlEncode(prefix + '/');
     },
 
     measure: function (text) {
@@ -447,10 +539,9 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
      * A slug saved with another prefix gets the current prefix once it is unlocked, and keeps its last path segment.
      */
     unlock: function (field, prefix) {
-        if (prefix !== null && field.slugPrefix === null) {
+        if (prefix !== null && field.slugPrefix !== prefix) {
             field.slugPrefix = prefix;
-            field.setValue(field.storedSlug.split('/').pop());
-            field.bodyEl.insertHtml('beforeBegin', this.getPrefixTpl(prefix));
+            field.el.down('.opendxp_url_slug_prefix').setHtml(this.getPrefixHtml(prefix));
         }
 
         field.setReadOnly(false);
@@ -460,9 +551,9 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
     },
 
     lock: function (field) {
-        if (field.storedValue === field.storedSlug && field.slugPrefix !== null) {
-            field.slugPrefix = null;
-            field.el.down('.opendxp_url_slug_prefix').destroy();
+        if (field.slugPrefix !== field.storedPrefix) {
+            field.slugPrefix = field.storedPrefix;
+            field.el.down('.opendxp_url_slug_prefix').setHtml(this.getPrefixHtml(field.storedPrefix));
         }
 
         field.setValue(field.storedValue);
@@ -533,7 +624,7 @@ opendxp.object.tags.urlSlug = Class.create(opendxp.object.tags.abstract, {
         for (let key in this.elements) {
             if (this.elements.hasOwnProperty(key)) {
                 let textfield = this.elements[key];
-                if (textfield.isDirty()) {
+                if (textfield.isDirty() || textfield.slugPrefix !== textfield.storedPrefix) {
                     this.dirty = true;
                     return true;
                 }

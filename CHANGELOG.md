@@ -1,6 +1,10 @@
 # Changelog
 
 ## 1.5.1
+- [ENHANCEMENT] The slug field offers only the sites of its language and shows a row for every site with another prefix
+- [ENHANCEMENT] The slug field shows the message of a slug generator that fails, and the object still opens
+- [ENHANCEMENT] `opendxp_callout` with `opendxp_callout_info`, `opendxp_callout_warning` and `opendxp_callout_error` shows a notice in the admin. `opendxp_grid_export_warning` is deprecated and 2.0 removes it, use `opendxp_callout opendxp_callout_warning` instead
+- [CHORE] Require `open-dxp/opendxp` ^1.5.1
 - [BUGFIX] The image editor shows an image whose preview thumbnail is not generated yet instead of a broken image [#157](https://github.com/open-dxp/admin-bundle/issues/157)
 - [BUGFIX] Correct German translation of `no_items_found`
 

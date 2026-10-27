@@ -2606,10 +2606,16 @@ ul.leaflet-draw-actions.leaflet-draw-actions-top.leaflet-draw-actions-bottom li:
 .opendxp_url_slug_prefix {
     display: table-cell;
     vertical-align: middle;
-    width: 1px;
-    padding-right: 4px;
+    padding: 0 8px;
+    border: 1px solid var(--color-opendxp-neutral-g);
+    border-right: 0;
+    background: var(--color-opendxp-neutral-h);
+    color: var(--color-opendxp-neutral-e);
     white-space: nowrap;
-    color: var(--color-opendxp-neutral-d);
+}
+
+.opendxp_url_slug_prefix:empty {
+    display: none;
 }
 
 .opendxp_url_slug_domain {
@@ -2621,20 +2627,50 @@ ul.leaflet-draw-actions.leaflet-draw-actions-top.leaflet-draw-actions-bottom li:
     white-space: nowrap;
 }
 
+/*
+    .opendxp_grid_export_warning is deprecated since 1.5.1 and will be removed in 2.0,
+    use opendxp_callout opendxp_callout_warning instead
+*/
+.opendxp_callout,
 .opendxp_grid_export_warning {
     display: flex;
     gap: 10px;
     align-items: center;
     padding: 10px 12px;
-    border-left: 4px solid var(--opendxp-orange-100);
+    border-left: 4px solid var(--opendxp-callout-color);
     border-radius: 4px;
-    background: color-mix(in srgb, var(--opendxp-orange-100) 12%, var(--color-opendxp-white));
+    background: color-mix(in srgb, var(--opendxp-callout-color) 12%, var(--color-opendxp-white));
     line-height: 1.4;
 }
 
+.opendxp_callout:before,
 .opendxp_grid_export_warning:before {
     content: '';
     flex: 0 0 20px;
     height: 20px;
-    background: url(/bundles/opendxpadmin/img/flat-color-icons/warning.svg) center / 20px no-repeat;
+    background: var(--opendxp-callout-icon) center / 20px no-repeat;
+}
+
+.opendxp_callout_info {
+    --opendxp-callout-color: var(--color-opendxp-blue-a);
+}
+
+.opendxp_callout_info:before {
+    background: var(--opendxp-callout-color);
+    mask: url(/bundles/opendxpadmin/img/material-icons/outline-info-24px.svg) center / 20px no-repeat;
+}
+
+.opendxp_callout_warning,
+.opendxp_grid_export_warning {
+    --opendxp-callout-color: var(--color-opendxp-orange-a);
+    --opendxp-callout-icon: url(/bundles/opendxpadmin/img/flat-color-icons/warning.svg);
+}
+
+.opendxp_callout_error {
+    --opendxp-callout-color: var(--color-opendxp-red-a);
+    --opendxp-callout-icon: url(/bundles/opendxpadmin/img/flat-color-icons/high_priority.svg);
+}
+
+.opendxp_url_slug_callout {
+    margin-bottom: 6px;
 }
