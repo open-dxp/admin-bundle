@@ -2164,7 +2164,11 @@ span.warning {
 
 .opendxp_main_accordion .opendxp_tree_no_root_node .x-tree-view .x-grid-item-container {
     padding-top: 0;
-    padding-left: 30px;
+    padding-left: 18px;
+}
+
+.opendxp_main_accordion .opendxp_tree_no_root_node .x-tree-view .x-grid-cell-inner-treecolumn {
+    margin-left: 0;
 }
 
 .opendxp_main_splitter {
