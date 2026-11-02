@@ -38,6 +38,13 @@ final class UploadCustomLogoHandler
             throw new Exception('Unsupported file format.');
         }
 
-        Tool\Storage::get('admin')->writeStream(self::LOGO_PATH, fopen($payload->logoFile->getPathname(), 'rb'));
+        Tool\Storage::get('admin')->writeStream(
+            self::LOGO_PATH,
+            fopen(
+                $payload->logoFile->getPathname(),
+                'rb'
+            ),
+            ['mimetype' => $payload->logoFile->getMimeType()],
+        );
     }
 }
