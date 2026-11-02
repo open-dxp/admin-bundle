@@ -46,18 +46,24 @@ final class DataObjectPayloadMapper
     {
     }
 
-    public function applyPayload(SaveDataObjectPayload $payload, DataObject\Concrete $object, DataObject\Concrete $objectFromDatabase): void
-    {
+    public function applyPayload(
+        SaveDataObjectPayload $payload,
+        DataObject\Concrete $object,
+        DataObject\Concrete $objectFromDatabase,
+    ): DataObject\Concrete {
         if ($payload->data !== []) {
             try {
                 $this->applyChanges($object, $payload->data);
             } catch (Throwable) {
-                $this->applyChanges($objectFromDatabase, $payload->data);
+                $object = $objectFromDatabase;
+                $this->applyChanges($object, $payload->data);
             }
         }
 
         $this->assignProperties($payload->properties, $object);
         $this->applyScheduler($payload->scheduler, $object);
+
+        return $object;
     }
 
     public function applyChanges(DataObject\Concrete $object, array $changes): void

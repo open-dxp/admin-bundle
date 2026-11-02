@@ -31,9 +31,6 @@ opendxp.object.tags.fieldcollections = Class.create(opendxp.object.tags.abstract
             this.data = data;
         }
         this.fieldConfig = fieldConfig;
-
-        document.addEventListener(opendxp.events.postSaveObject, this.postSaveObject.bind(this));
-
     },
 
     setObject:function (object) {
@@ -146,9 +143,12 @@ opendxp.object.tags.fieldcollections = Class.create(opendxp.object.tags.abstract
 
         this.component = new Ext.Panel(panelConf);
 
+        const postSave = this.postSaveObject.bind(this);
+        document.addEventListener(opendxp.events.postSaveObject, postSave);
+
         this.component.on("destroy", function() {
-            document.removeEventListener(opendxp.events.postSaveObject, this.postSaveObject.bind(this));
-        }.bind(this));
+            document.removeEventListener(opendxp.events.postSaveObject, postSave);
+        });
 
         return this.component;
     },

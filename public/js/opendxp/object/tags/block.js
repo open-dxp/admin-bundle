@@ -63,6 +63,21 @@ opendxp.object.tags.block = Class.create(opendxp.object.tags.abstract, {
 
         this.component = new Ext.Panel(panelConf);
 
+        // The server resolves oIndex against the last saved version, also an auto save. oIndex must follow its order.
+        const postSave = function (event) {
+            if (event.detail.object === this.object) {
+                this.component.items.each(function (item, index) {
+                    item.opendxp_oIndex = index;
+                });
+            }
+        }.bind(this);
+
+        document.addEventListener(opendxp.events.postSaveObject, postSave);
+
+        this.component.on('destroy', function () {
+            document.removeEventListener(opendxp.events.postSaveObject, postSave);
+        });
+
         this.component.addListener("render", function() {
             if(this.object.data.metaData[this.getName()] && this.object.data.metaData[this.getName()].hasParentValue) {
                 this.addInheritanceSourceButton(this.object.data.metaData[this.getName()]);
