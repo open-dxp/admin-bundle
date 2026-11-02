@@ -3,6 +3,9 @@
 ## 1.5.2
 - [BUGFIX] Trees without a root node show the whole expander of top-level folders
 - [BUGFIX] The custom logo also shows when the admin storage is on S3
+- [BUGFIX] Block items keep their data after an auto save
+- [BUGFIX] Closing an object removes the save listener of its field collections
+- [BUGFIX] Saving an object whose draft no longer fits the changes keeps the changes
 - [CHORE] Require `open-dxp/opendxp` ^1.5.3
 
 ## 1.5.1

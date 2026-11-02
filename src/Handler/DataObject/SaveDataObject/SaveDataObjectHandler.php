@@ -56,7 +56,6 @@ final class SaveDataObjectHandler
 
         $adminUser = $this->userContext->getAdminUser();
         $object = DataObjectVersionHelper::resolveLatestDraft($objectFromDatabase, $adminUser?->getId());
-        $object->setUserModification($adminUser->getId());
 
         $objectFromVersion = $object !== $objectFromDatabase;
         if ($objectFromVersion) {
@@ -90,7 +89,8 @@ final class SaveDataObjectHandler
             throw new AccessDeniedHttpException();
         }
 
-        $this->mapper->applyPayload($payload, $object, $objectFromDatabase);
+        $object = $this->mapper->applyPayload($payload, $object, $objectFromDatabase);
+        $object->setUserModification($adminUser->getId());
 
         $persistenceData = $this->coordinator->save($object, $payload->task);
 
