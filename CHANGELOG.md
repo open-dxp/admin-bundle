@@ -2,6 +2,7 @@
 
 ## 1.5.2
 - [BUGFIX] Trees without a root node show the whole expander of top-level folders
+- [BUGFIX] Inherit mimetype of original asset on custom logo upload. Fixes rendering issues with S3 setups.
 
 ## 1.5.1
 - [ENHANCEMENT] The slug field offers only the sites of its language and shows a row for every site with another prefix
