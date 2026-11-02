@@ -3,6 +3,7 @@
 ## 1.5.2
 - [BUGFIX] Trees without a root node show the whole expander of top-level folders
 - [BUGFIX] The custom logo also shows when the admin storage is on S3
+- [CHORE] Require `open-dxp/opendxp` ^1.5.3
 
 ## 1.5.1
 - [ENHANCEMENT] The slug field offers only the sites of its language and shows a row for every site with another prefix

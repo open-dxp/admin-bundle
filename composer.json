@@ -21,7 +21,7 @@
         "cbschuld/browser.php": "^1.9.6",
         "endroid/qr-code": "^4 || ^5.1",
         "phpoffice/phpspreadsheet": "^2.2 || ^3.3",
-        "open-dxp/opendxp": "^1.5.1",
+        "open-dxp/opendxp": "^1.5.3",
         "openspout/openspout": "^5.0",
         "symfony/webpack-encore-bundle": "^2.1.1"
     },
@@ -29,7 +29,7 @@
         "open-dxp/advanced-object-search-bundle": "<1.1"
     },
     "require-dev": {
-        "open-dxp/test-foundation": "^1.0",
+        "open-dxp/test-foundation": "^1.2.7",
         "phpstan/phpstan": "2.1.33",
         "phpstan/phpstan-symfony": "^2.0.9",
         "symfony/dotenv": "^7.4",

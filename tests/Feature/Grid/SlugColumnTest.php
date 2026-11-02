@@ -17,15 +17,15 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Feature\Grid;
 
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
-use OpenDxp\Bundle\AdminBundle\Tests\Factory\SluggableFactory;
 use OpenDxp\Model\DataObject\Data\UrlSlug;
-use OpenDxp\Model\DataObject\Sluggable;
+use OpenDxp\Model\DataObject\TestArticle;
+use OpenDxp\Test\Factory\TestArticleFactory;
 use OpenDxp\Test\Factory\UserFactory;
 use OpenDxp\TestFoundation\Container;
 
 it('filters the grid by a URL slug', function () {
-    $shoes = SluggableFactory::new()->create(['slug' => [new UrlSlug('/shoes')]]);
-    SluggableFactory::new()->create(['slug' => [new UrlSlug('/shirts')]]);
+    $shoes = TestArticleFactory::new()->create(['slug' => [new UrlSlug('/shoes')]]);
+    TestArticleFactory::new()->create(['slug' => [new UrlSlug('/shirts')]]);
 
     $listing = Container::get(GridHelperService::class)->prepareListingForGrid(
         [
@@ -42,5 +42,5 @@ it('filters the grid by a URL slug', function () {
         UserFactory::new()->admin()->create(),
     );
 
-    expect(array_map(static fn (Sluggable $found) => $found->getId(), $listing->load()))->toBe([$shoes->getId()]);
+    expect(array_map(static fn (TestArticle $found) => $found->getId(), $listing->load()))->toBe([$shoes->getId()]);
 });

@@ -13,7 +13,9 @@
     <extensions>
         <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension"/>
         <bootstrap class="Zenstruck\Foundry\PHPUnit\FoundryExtension"/>
-        <bootstrap class="OpenDxp\TestFoundation\PHPUnit\InstallDefinitions"/>
+        <bootstrap class="OpenDxp\TestFoundation\PHPUnit\InstallDefinitions">
+            <parameter name="opendxp-definitions" value="true"/>
+        </bootstrap>
     </extensions>
     <php>
         <env name="KERNEL_CLASS" value="OpenDxp\Bundle\AdminBundle\Tests\Application\TestKernel"/>
