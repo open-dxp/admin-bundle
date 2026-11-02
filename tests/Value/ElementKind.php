@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Value;
 
 use Closure;
-use OpenDxp\Bundle\AdminBundle\Tests\Factory\InheritanceFactory;
 use OpenDxp\Model\Element\AbstractElement;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\User\UserRole;
@@ -28,6 +27,7 @@ use OpenDxp\Test\Factory\AssetImageFactory;
 use OpenDxp\Test\Factory\DataObjectFolderFactory;
 use OpenDxp\Test\Factory\DocumentFolderFactory;
 use OpenDxp\Test\Factory\DocumentPageFactory;
+use OpenDxp\Test\Factory\TestProductFactory;
 
 /**
  * An element kind has its own tree in the admin, its own permission and its own kind of workspace.
@@ -90,7 +90,7 @@ final readonly class ElementKind
             name: 'object',
             permission: 'objects',
             folders: DataObjectFolderFactory::new(),
-            leaves: static fn (string $key): InheritanceFactory => InheritanceFactory::new()
+            leaves: static fn (string $key): TestProductFactory => TestProductFactory::new()
                 ->with(['key' => $key]),
             workspace: static fn (
                 AbstractUserRoleFactory $owner,

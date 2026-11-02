@@ -20,8 +20,8 @@ use InvalidArgumentException;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportHeader;
 use OpenDxp\Bundle\AdminBundle\GridExport\GridExportQuery;
 use OpenDxp\Bundle\AdminBundle\GridExport\Source\ObjectGridExportSource;
-use OpenDxp\Bundle\AdminBundle\Tests\Factory\InheritanceFactory;
 use OpenDxp\Test\Factory\DataObjectFolderFactory;
+use OpenDxp\Test\Factory\TestProductFactory;
 use OpenDxp\Test\Factory\UserFactory;
 use OpenDxp\TestFoundation\Container;
 
@@ -33,23 +33,23 @@ beforeEach(function () {
 });
 
 it('titles the columns with the labels of the grid', function () {
-    InheritanceFactory::new()
+    TestProductFactory::new()
         ->withParent($this->folder)
         ->create();
-    $parameters = objectGridParameters($this->folder->getId(), ['normalinput' => 'Normal input']);
+    $parameters = objectGridParameters($this->folder->getId(), ['sku' => 'SKU']);
 
     $file = exportThroughAdmin($this->admin, 'objects', parameters: $parameters);
 
     expect($file)
         ->getHeader()
-        ->toBe(['Normal input']);
+        ->toBe(['SKU']);
 });
 
 it('titles the columns with the system keys when the header asks for them', function () {
-    InheritanceFactory::new()
+    TestProductFactory::new()
         ->withParent($this->folder)
         ->create();
-    $parameters = objectGridParameters($this->folder->getId(), ['normalinput' => 'Normal input']);
+    $parameters = objectGridParameters($this->folder->getId(), ['sku' => 'SKU']);
 
     $file = exportThroughAdmin(
         $this->admin,
@@ -60,34 +60,34 @@ it('titles the columns with the system keys when the header asks for them', func
 
     expect($file)
         ->getHeader()
-        ->toBe(['normalinput']);
+        ->toBe(['sku']);
 });
 
 it('exports the values of the objects', function () {
-    InheritanceFactory::new()
+    TestProductFactory::new()
         ->withParent($this->folder)
-        ->create(['normalinput' => 'Exported']);
-    $parameters = objectGridParameters($this->folder->getId(), ['normalinput' => 'Normal input']);
+        ->create(['sku' => 'Exported']);
+    $parameters = objectGridParameters($this->folder->getId(), ['sku' => 'SKU']);
 
     $file = exportThroughAdmin($this->admin, 'objects', parameters: $parameters);
 
     expect($file)
-        ->getColumn('Normal input')
+        ->getColumn('SKU')
         ->toBe(['Exported']);
 });
 
 it('exports inherited values when the export enables inheritance', function (string $enabled, array $values) {
-    $parent = InheritanceFactory::new()
+    $parent = TestProductFactory::new()
         ->withParent($this->folder)
-        ->create(['normalinput' => 'Inherited']);
-    InheritanceFactory::new()
+        ->create(['sku' => 'Inherited']);
+    TestProductFactory::new()
         ->withParent($parent)
         ->create();
     $parameters = objectGridParameters(
         $this->folder->getId(),
         [
             'key' => 'Key',
-            'normalinput' => 'Normal input',
+            'sku' => 'SKU',
         ],
         ['enableInheritance' => $enabled],
     );
@@ -95,7 +95,7 @@ it('exports inherited values when the export enables inheritance', function (str
     $file = exportThroughAdmin($this->admin, 'objects', parameters: $parameters);
 
     expect($file)
-        ->getColumn('Normal input')
+        ->getColumn('SKU')
         ->toBe($values);
 })->with([
     'enabled' => ['true', ['Inherited', 'Inherited']],
@@ -103,26 +103,26 @@ it('exports inherited values when the export enables inheritance', function (str
 ]);
 
 it('exports only the selected objects', function () {
-    $selected = InheritanceFactory::new()
+    $selected = TestProductFactory::new()
         ->withParent($this->folder)
-        ->create(['normalinput' => 'Selected']);
-    InheritanceFactory::new()
+        ->create(['sku' => 'Selected']);
+    TestProductFactory::new()
         ->withParent($this->folder)
         ->create();
-    $parameters = objectGridParameters($this->folder->getId(), ['normalinput' => 'Normal input']);
+    $parameters = objectGridParameters($this->folder->getId(), ['sku' => 'SKU']);
 
     $file = exportThroughAdmin($this->admin, 'objects', parameters: $parameters, selectedIds: [$selected->getId()]);
 
     expect($file)
-        ->getColumn('Normal input')
+        ->getColumn('SKU')
         ->toBe(['Selected']);
 });
 
 it('exports an operator column of the object grid', function () {
-    InheritanceFactory::new()
+    TestProductFactory::new()
         ->withParent($this->folder)
-        ->create(['normalinput' => 'Exported']);
-    $exportId = startObjectGridExportWithAnyGetter($this->admin, $this->folder->getId(), 'Any getter', 'normalinput');
+        ->create(['sku' => 'Exported']);
+    $exportId = startObjectGridExportWithAnyGetter($this->admin, $this->folder->getId(), 'Any getter', 'sku');
 
     $file = writeGridExportFile($this->admin, $exportId);
 
@@ -132,7 +132,7 @@ it('exports an operator column of the object grid', function () {
 });
 
 it('refuses an operator column without its definition', function () {
-    InheritanceFactory::new()
+    TestProductFactory::new()
         ->withParent($this->folder)
         ->create();
     $query = new GridExportQuery(

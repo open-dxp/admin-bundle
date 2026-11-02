@@ -27,7 +27,7 @@ dataset('sources and their permissions', [
         'objects',
         fn () => [
             'folderId' => '1',
-            'classId' => ClassDefinition::getByName('Inheritance')->getId(),
+            'classId' => ClassDefinition::getByName('TestProduct')->getId(),
         ],
     ],
     'translations' => ['translations', 'translations', []],

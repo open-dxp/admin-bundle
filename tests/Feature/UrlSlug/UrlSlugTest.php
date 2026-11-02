@@ -16,9 +16,9 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Tests\Feature\UrlSlug;
 
-use OpenDxp\Bundle\AdminBundle\Tests\Factory\SluggableFactory;
 use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\User;
+use OpenDxp\Test\Factory\TestArticleFactory;
 use OpenDxp\Test\Factory\UserFactory;
 use OpenDxp\TestFoundation\Browser;
 use Zenstruck\Browser\KernelBrowser;
@@ -71,13 +71,13 @@ beforeEach(function () {
         ->create();
     $this->germanSlug = [
         'containerType' => 'localizedfield',
-        'fieldname' => 'lslug',
+        'fieldname' => 'localizedSlug',
         'language' => 'de',
     ];
 });
 
 it('formats the text behind the prefix', function () {
-    $object = SluggableFactory::createOne();
+    $object = TestArticleFactory::createOne();
 
     $browser = formatSlug($this->admin, $object, $this->germanSlug, 'Grünes Rad');
 
@@ -85,15 +85,15 @@ it('formats the text behind the prefix', function () {
 });
 
 it('hands back the saved slugs of a language', function () {
-    $object = SluggableFactory::new()
-        ->withLocalizedSlug('de', '/de/things/rad')
+    $object = TestArticleFactory::new()
+        ->withLocalizedSlug('de', '/de/articles/rad')
         ->create();
 
     $browser = savedSlugs($this->admin, $object, $this->germanSlug);
 
     expect(response($browser)['slugs'])->toBe([
         [
-            'slug' => '/de/things/rad',
+            'slug' => '/de/articles/rad',
             'siteId' => 0,
             'domain' => null,
         ],
@@ -102,7 +102,7 @@ it('hands back the saved slugs of a language', function () {
 
 it('refuses a user who may not view the object', function () {
     $user = UserFactory::createOne();
-    $object = SluggableFactory::createOne();
+    $object = TestArticleFactory::createOne();
 
     $browser = formatSlug($user, $object, $this->germanSlug, 'Grünes Rad');
 
@@ -110,10 +110,10 @@ it('refuses a user who may not view the object', function () {
 });
 
 it('rejects a context that names no slug field', function () {
-    $object = SluggableFactory::createOne();
+    $object = TestArticleFactory::createOne();
     $context = [
         'containerType' => 'object',
-        'fieldname' => 'name',
+        'fieldname' => 'title',
     ];
 
     $browser = formatSlug($this->admin, $object, $context, 'Grünes Rad');

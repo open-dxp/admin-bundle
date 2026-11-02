@@ -121,7 +121,7 @@ function findGridExport(string $id): ?GridExport
 }
 
 /**
- * Returns the parameters of an object grid of the class Inheritance that shows the given columns.
+ * Returns the parameters of an object grid of the class TestProduct that shows the given columns.
  *
  * @param array<string, string> $columns
  * @param array<string, string> $settings
@@ -132,7 +132,7 @@ function objectGridParameters(int $folderId, array $columns, array $settings = [
 {
     return [
         'folderId' => (string) $folderId,
-        'classId' => ClassDefinition::getByName('Inheritance')->getId(),
+        'classId' => ClassDefinition::getByName('TestProduct')->getId(),
         'language' => 'en',
         'fields' => array_keys($columns),
         'columns' => array_map(

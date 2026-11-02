@@ -17,12 +17,12 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Tests\Feature\GridExportJobRun;
 
 use OpenDxp\Bundle\AdminBundle\Test\GridExport\GridExportFile;
-use OpenDxp\Bundle\AdminBundle\Tests\Factory\InheritanceFactory;
 use OpenDxp\Bundle\GenericExecutionEngineBundle\Agent\JobExecutionAgentInterface;
 use OpenDxp\Bundle\GenericExecutionEngineBundle\Entity\JobRun;
 use OpenDxp\Bundle\GenericExecutionEngineBundle\Storage\JobRunArtifactStorage;
 use OpenDxp\Model\User;
 use OpenDxp\Test\Factory\DataObjectFolderFactory;
+use OpenDxp\Test\Factory\TestProductFactory;
 use OpenDxp\Test\Factory\UserFactory;
 use OpenDxp\TestFoundation\Container;
 use OpenDxp\Tool\Storage;
@@ -105,14 +105,14 @@ it('starts a new job run for an export whose job run is gone', function () {
 
 it('writes an operator column of the object grid in the job run', function () {
     $folder = DataObjectFolderFactory::createOne();
-    InheritanceFactory::new()
+    TestProductFactory::new()
         ->withParent($folder)
         ->sequence([
-            ['normalinput' => 'First'],
-            ['normalinput' => 'Second'],
+            ['sku' => 'First'],
+            ['sku' => 'Second'],
         ])
         ->create();
-    $exportId = startObjectGridExportWithAnyGetter($this->admin, $folder->getId(), 'Any getter', 'normalinput');
+    $exportId = startObjectGridExportWithAnyGetter($this->admin, $folder->getId(), 'Any getter', 'sku');
     $jobRunId = createJobRunOfExport($this->admin, $exportId);
 
     $this->consumeJobMessages();

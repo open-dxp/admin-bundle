@@ -20,16 +20,16 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxy\DataObject
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\DataObjectGridProxy\DataObjectGridProxyPayload;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatch\ExecuteBatchHandler;
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatch\ExecuteBatchPayload;
-use OpenDxp\Bundle\AdminBundle\Tests\Factory\InheritanceFactory;
 use OpenDxp\Localization\LocaleServiceInterface;
 use OpenDxp\Test\Elements;
+use OpenDxp\Test\Factory\TestProductFactory;
 use OpenDxp\Test\Factory\UserFactory;
 use OpenDxp\TestFoundation\Admin;
 use OpenDxp\TestFoundation\Container;
 
 beforeEach(function () {
-    $this->object = InheritanceFactory::new()
-        ->withLocalizedValues('input', [
+    $this->object = TestProductFactory::new()
+        ->withLocalizedValues('name', [
             'en' => 'initial-en',
             'de' => 'initial-de',
         ])
@@ -54,7 +54,7 @@ it('saves a grid edit in the language of the grid, not of the admin interface', 
             'data' => json_encode(
                 [
                     'id' => $this->object->getId(),
-                    'input' => 'from-grid-de',
+                    'name' => 'from-grid-de',
                 ],
                 JSON_THROW_ON_ERROR,
             ),
@@ -63,15 +63,15 @@ it('saves a grid edit in the language of the grid, not of the admin interface', 
     ));
 
     expect(Elements::refresh($this->object))
-        ->getInput('de')->toBe('from-grid-de')
-        ->getInput('en')->toBe('initial-en');
+        ->getName('de')->toBe('from-grid-de')
+        ->getName('en')->toBe('initial-en');
 });
 
 it('saves a batch edit in the language of the grid, not of the admin interface', function () {
     Container::get(ExecuteBatchHandler::class)(new ExecuteBatchPayload(
         params: [
             'job' => $this->object->getId(),
-            'name' => 'input',
+            'name' => 'name',
             'value' => 'from-batch-de',
             'valueType' => 'primitive',
             'language' => 'de',
@@ -81,6 +81,6 @@ it('saves a batch edit in the language of the grid, not of the admin interface',
     ));
 
     expect(Elements::refresh($this->object))
-        ->getInput('de')->toBe('from-batch-de')
-        ->getInput('en')->toBe('initial-en');
+        ->getName('de')->toBe('from-batch-de')
+        ->getName('en')->toBe('initial-en');
 });

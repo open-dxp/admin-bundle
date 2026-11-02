@@ -25,14 +25,14 @@ use OpenDxp\Model\DataObject\Classificationstore\KeyConfig;
 use OpenDxp\Model\DataObject\Classificationstore\StoreConfig;
 use OpenDxp\TestFoundation\Container;
 
-function teststoreId(): int
+function storeId(): int
 {
-    return StoreConfig::getByName('teststore')->getId();
+    return StoreConfig::getByName('TestSpecifications')->getId();
 }
 
 function addKey(string $name): void
 {
-    Container::get(AddPropertyHandler::class)(new AddPropertyPayload($name, teststoreId()));
+    Container::get(AddPropertyHandler::class)(new AddPropertyPayload($name, storeId()));
 }
 
 it('refuses to add a key with an invalid name', function () {
@@ -41,7 +41,7 @@ it('refuses to add a key with an invalid name', function () {
 });
 
 it('refuses to rename a key to an invalid name', function () {
-    $key = KeyConfig::getByName('input', teststoreId());
+    $key = KeyConfig::getByName('input', storeId());
     $definition = json_decode($key->getDefinition(), true);
     $payload = new UpdatePropertyPayload(
         hasData: true,

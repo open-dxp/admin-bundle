@@ -22,30 +22,30 @@ use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatch\ExecuteBat
 use OpenDxp\Bundle\AdminBundle\Handler\DataObject\Helper\ExecuteBatch\ExecuteBatchPayload;
 use OpenDxp\Bundle\AdminBundle\Helper\GridHelperService;
 use OpenDxp\Bundle\AdminBundle\Mapper\GridData\DataObject as GridData;
-use OpenDxp\Bundle\AdminBundle\Tests\Factory\InheritanceFactory;
 use OpenDxp\Model\DataObject\ClassDefinition;
 use OpenDxp\Model\DataObject\Classificationstore\GroupConfig;
 use OpenDxp\Model\DataObject\Classificationstore\KeyConfig;
 use OpenDxp\Model\DataObject\Classificationstore\StoreConfig;
 use OpenDxp\Model\DataObject\Data\QuantityValue;
-use OpenDxp\Model\DataObject\Inheritance;
 use OpenDxp\Model\DataObject\QuantityValue\Unit;
+use OpenDxp\Model\DataObject\TestProduct;
 use OpenDxp\Test\Elements;
+use OpenDxp\Test\Factory\TestProductFactory;
 use OpenDxp\Test\Factory\UserFactory;
 use OpenDxp\TestFoundation\Admin;
 use OpenDxp\TestFoundation\Container;
 
-function testgroup(): GroupConfig
+function valuesGroup(): GroupConfig
 {
-    return GroupConfig::getByName('testgroup2', StoreConfig::getByName('teststore')->getId());
+    return GroupConfig::getByName('values', StoreConfig::getByName('TestSpecifications')->getId());
 }
 
-function teststoreColumn(string $key): string
+function specificationsColumn(string $key): string
 {
     return sprintf(
-        '~classificationstore~teststore~%d-%d',
-        testgroup()->getId(),
-        KeyConfig::getByName($key, testgroup()->getStoreId())->getId(),
+        '~classificationstore~specifications~%d-%d',
+        valuesGroup()->getId(),
+        KeyConfig::getByName($key, valuesGroup()->getStoreId())->getId(),
     );
 }
 
@@ -58,15 +58,15 @@ function createUnit(string $abbreviation): Unit
     return $unit;
 }
 
-function getTeststoreValue(Inheritance $object, string $key): mixed
+function getSpecificationsValue(TestProduct $object, string $key): mixed
 {
-    return Elements::refresh($object)->getTeststore()->getLocalizedKeyValue(
-        testgroup()->getId(),
-        KeyConfig::getByName($key, testgroup()->getStoreId())->getId(),
+    return Elements::refresh($object)->getSpecifications()->getLocalizedKeyValue(
+        valuesGroup()->getId(),
+        KeyConfig::getByName($key, valuesGroup()->getStoreId())->getId(),
     );
 }
 
-function getGridObjectIds(Inheritance $object, array $request): array
+function getGridObjectIds(TestProduct $object, array $request): array
 {
     $listing = Container::get(GridHelperService::class)->prepareListingForGrid(
         [
@@ -78,7 +78,7 @@ function getGridObjectIds(Inheritance $object, array $request): array
         UserFactory::new()->admin()->create(),
     );
 
-    return array_map(static fn (Inheritance $found) => $found->getId(), $listing->load());
+    return array_map(static fn (TestProduct $found) => $found->getId(), $listing->load());
 }
 
 beforeEach(function () {
@@ -86,18 +86,18 @@ beforeEach(function () {
 });
 
 it('shows the value of a classification store key its object inherits', function () {
-    $parent = InheritanceFactory::new()
-        ->withClassificationValues('teststore', testgroup(), ['input' => 'red'])
+    $parent = TestProductFactory::new()
+        ->withClassificationValues('specifications', valuesGroup(), ['input' => 'red'])
         ->create();
-    $child = InheritanceFactory::new()
+    $child = TestProductFactory::new()
         ->withParent($parent)
         ->create();
 
-    $row = GridData::getData($child, [teststoreColumn('input')], 'en');
+    $row = GridData::getData($child, [specificationsColumn('input')], 'en');
 
-    expect($row[teststoreColumn('input')])
+    expect($row[specificationsColumn('input')])
         ->toBe('red')
-        ->and($row['inheritedFields'][teststoreColumn('input')])
+        ->and($row['inheritedFields'][specificationsColumn('input')])
         ->toBe([
             'inherited' => true,
             'objectid' => $parent->getId(),
@@ -106,19 +106,19 @@ it('shows the value of a classification store key its object inherits', function
 
 it('filters the grid by a classification store key', function (string $key, callable $values) {
     [$matchingValue, $otherValues, $filters] = $values();
-    $matching = InheritanceFactory::new()
-        ->withClassificationValues('teststore', testgroup(), [$key => $matchingValue])
+    $matching = TestProductFactory::new()
+        ->withClassificationValues('specifications', valuesGroup(), [$key => $matchingValue])
         ->create();
 
     foreach ($otherValues as $otherValue) {
-        InheritanceFactory::new()
-            ->withClassificationValues('teststore', testgroup(), [$key => $otherValue])
+        TestProductFactory::new()
+            ->withClassificationValues('specifications', valuesGroup(), [$key => $otherValue])
             ->create();
     }
 
     $ids = getGridObjectIds($matching, [
         'filter' => json_encode(array_map(
-            static fn (array $filter) => ['property' => teststoreColumn($key), ...$filter],
+            static fn (array $filter) => ['property' => specificationsColumn($key), ...$filter],
             $filters,
         )),
     ]);
@@ -167,22 +167,22 @@ it('filters the grid by a classification store key', function (string $key, call
 ]);
 
 it('sorts the grid by a classification store key', function () {
-    $second = InheritanceFactory::new()
-        ->withClassificationValues('teststore', testgroup(), ['input' => 'b'])
+    $second = TestProductFactory::new()
+        ->withClassificationValues('specifications', valuesGroup(), ['input' => 'b'])
         ->create();
-    $first = InheritanceFactory::new()
-        ->withClassificationValues('teststore', testgroup(), ['input' => 'a'])
+    $first = TestProductFactory::new()
+        ->withClassificationValues('specifications', valuesGroup(), ['input' => 'a'])
         ->create();
 
     $ids = getGridObjectIds($first, [
-        'sort' => json_encode([['property' => teststoreColumn('input'), 'direction' => 'ASC']]),
+        'sort' => json_encode([['property' => specificationsColumn('input'), 'direction' => 'ASC']]),
     ]);
 
     expect($ids)->toBe([$first->getId(), $second->getId()]);
 });
 
 it('saves a grid edit of a classification store key', function () {
-    $object = InheritanceFactory::new()->create();
+    $object = TestProductFactory::new()->create();
 
     Container::get(DataObjectGridProxyHandler::class)(new DataObjectGridProxyPayload(
         allParams: [
@@ -192,7 +192,7 @@ it('saves a grid edit of a classification store key', function () {
             'data' => json_encode(
                 [
                     'id' => $object->getId(),
-                    teststoreColumn('input') => 'from-grid',
+                    specificationsColumn('input') => 'from-grid',
                 ],
                 JSON_THROW_ON_ERROR,
             ),
@@ -200,16 +200,16 @@ it('saves a grid edit of a classification store key', function () {
         locale: 'en',
     ));
 
-    expect(getTeststoreValue($object, 'input'))->toBe('from-grid');
+    expect(getSpecificationsValue($object, 'input'))->toBe('from-grid');
 });
 
 it('saves a batch edit of a classification store key', function () {
-    $object = InheritanceFactory::new()->create();
+    $object = TestProductFactory::new()->create();
 
     Container::get(ExecuteBatchHandler::class)(new ExecuteBatchPayload(
         params: [
             'job' => $object->getId(),
-            'name' => teststoreColumn('input'),
+            'name' => specificationsColumn('input'),
             'value' => 'from-batch',
             'valueType' => 'primitive',
             'language' => 'en',
@@ -218,24 +218,24 @@ it('saves a batch edit of a classification store key', function () {
         hasData: true,
     ));
 
-    expect(getTeststoreValue($object, 'input'))->toBe('from-batch');
+    expect(getSpecificationsValue($object, 'input'))->toBe('from-batch');
 });
 
 it('keeps the join of a grid column when a slug column is filtered too', function () {
-    $listing = new Inheritance\Listing();
+    $listing = new TestProduct\Listing();
 
     Container::get(GridHelperService::class)->addGridJoins(
         $listing,
-        ClassDefinition::getByName('inheritance'),
+        ClassDefinition::getByName('TestProduct'),
         [['fieldname' => 'slug']],
-        ['gridcolumn_input' => teststoreColumn('input')],
+        ['gridcolumn_input' => specificationsColumn('input')],
         ['gridcolumn_input' => "`gridcolumn_input` LIKE '%t%'"],
         'en',
     );
 
     expect($listing->getDao()->getQueryBuilder()->getSQL())->toContain(
         'LEFT JOIN object_url_slugs slug',
-        'LEFT JOIN object_classificationstore_data_inheritance cskey_gridcolumn_input',
+        'LEFT JOIN object_classificationstore_data_TestProduct cskey_gridcolumn_input',
         "HAVING (`gridcolumn_input` LIKE '%t%')",
     );
 });
