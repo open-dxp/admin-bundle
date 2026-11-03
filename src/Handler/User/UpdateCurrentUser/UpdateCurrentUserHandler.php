@@ -39,6 +39,17 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class UpdateCurrentUserHandler
 {
+    private const array PROFILE_FIELDS = [
+        'firstname',
+        'lastname',
+        'email',
+        'language',
+        'datetimeLocale',
+        'welcomescreen',
+        'memorizeTabs',
+        'contentLanguages',
+    ];
+
     public function __construct(
         private readonly ValidatorInterface $validator,
         private readonly AdminUserContextInterface $userContext,
@@ -54,7 +65,7 @@ final class UpdateCurrentUserHandler
     {
         $user = $this->userContext->getAdminUser();
         $values = $payload->values;
-        unset($values['name'], $values['id'], $values['admin'], $values['permissions'], $values['roles'], $values['active']);
+        $profile = array_intersect_key($values, array_flip(self::PROFILE_FIELDS));
 
         if (!empty($values['new_password'])) {
             $oldPasswordCheck = false;
@@ -78,7 +89,7 @@ final class UpdateCurrentUserHandler
                     throw new Exception('The new password cannot be the same as the old one');
                 }
 
-                $values['password'] = Tool\Authentication::getPasswordHash($user->getName(), $values['new_password']);
+                $profile['password'] = Tool\Authentication::getPasswordHash($user->getName(), $values['new_password']);
             } else {
                 if (!$oldPasswordCheck) {
                     throw new AdminOperationFailedException('incorrect_password');
@@ -88,7 +99,7 @@ final class UpdateCurrentUserHandler
             }
         }
 
-        $user->setValues($values);
+        $user->setValues($profile);
 
         if ($payload->keyBindingsJson !== null) {
             $keyBindings = json_decode($payload->keyBindingsJson, true);
