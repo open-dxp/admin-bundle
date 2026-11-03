@@ -54,8 +54,10 @@ final class DeleteUserHandler
             throw new NotFoundHttpException('User not found');
         }
 
-        if (($user instanceof User\Folder && !$adminUser?->isAdmin())
-            || ($user instanceof User && $user->isAdmin() && !$adminUser?->isAdmin())
+        if (
+            ($user instanceof User\Folder && !$adminUser?->isAdmin()) ||
+            ($user instanceof User && $user->isAdmin() && !$adminUser?->isAdmin()) ||
+            $user->getId() === $currentUserId
         ) {
             throw new AccessDeniedHttpException('You are not allowed to delete this user');
         }

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.3
+- [BUGFIX] Saving the own profile changes only the fields of the profile form
+- [BUGFIX] Only an admin resets the 2FA of an admin
+- [BUGFIX] A user can no longer delete its own user
+
 ## 1.5.2
 - [BUGFIX] Trees without a root node show the whole expander of top-level folders
 - [BUGFIX] The custom logo also shows when the admin storage is on S3

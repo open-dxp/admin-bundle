@@ -29,16 +29,26 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\Reset2FaSecret;
 
+use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Model\User;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class Reset2FaSecretHandler
 {
+    public function __construct(private readonly AdminUserContextInterface $userContext)
+    {
+    }
+
     public function __invoke(Reset2FaSecretPayload $payload): void
     {
         $user = User::getById($payload->id);
         if (!$user) {
             throw new NotFoundHttpException('User not found');
+        }
+
+        if ($user->isAdmin() && !$this->userContext->getAdminUser()?->isAdmin()) {
+            throw new AccessDeniedHttpException('Only admin users are allowed to reset the 2FA of admin users');
         }
 
         $user->setTwoFactorAuthentication('enabled', false);
