@@ -5,7 +5,7 @@
 - [BUGFIX] Only an admin resets the 2FA of an admin
 - [BUGFIX] A user can no longer delete its own user
 - [BUGFIX] The YouTube preview of a video field also plays when the admin sends a strict `Referrer-Policy`, such as `same-origin`
-- [BUGFIX] Browsers no longer fill the saved password into the code field of the 2FA login and setup
+- [BUGFIX] The code field of the 2FA login and setup shows the typed code instead of dots, and browsers no longer fill the saved password into it
 
 ## 1.5.2
 - [BUGFIX] Trees without a root node show the whole expander of top-level folders
