@@ -353,9 +353,9 @@ opendxp.object.tags.video = Class.create(opendxp.object.tags.abstract, {
             content = '<img src="'+path+'" />';
         } else if (this.data.type == "youtube") {
             if (this.data.data.indexOf('PL') === 0) {
-                content = '<iframe width="' + width + '" height="' + height + '" src="https://www.youtube-nocookie.com/embed/videoseries?list=' + this.data.data + '" frameborder="0" allowfullscreen></iframe>';
+                content = '<iframe width="' + width + '" height="' + height + '" src="https://www.youtube-nocookie.com/embed/videoseries?list=' + this.data.data + '" referrerpolicy="strict-origin-when-cross-origin" frameborder="0" allowfullscreen></iframe>';
             } else {
-                content = '<iframe width="' + width + '" height="' + height + '" src="https://www.youtube-nocookie.com/embed/' + this.data.data + '" frameborder="0" allowfullscreen></iframe>';
+                content = '<iframe width="' + width + '" height="' + height + '" src="https://www.youtube-nocookie.com/embed/' + this.data.data + '" referrerpolicy="strict-origin-when-cross-origin" frameborder="0" allowfullscreen></iframe>';
             }
         } else if (this.data.type == "vimeo") {
             content = '<iframe src="https://player.vimeo.com/video/' + this.data.data + '?title=0&amp;byline=0&amp;portrait=0" width="' + width + '" height="' + height + '" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
