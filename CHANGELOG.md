@@ -4,6 +4,7 @@
 - [BUGFIX] Saving the own profile changes only the fields of the profile form
 - [BUGFIX] Only an admin resets the 2FA of an admin
 - [BUGFIX] A user can no longer delete its own user
+- [BUGFIX] The YouTube preview of a video field also plays when the admin sends a strict `Referrer-Policy`, such as `same-origin`
 
 ## 1.5.2
 - [BUGFIX] Trees without a root node show the whole expander of top-level folders
