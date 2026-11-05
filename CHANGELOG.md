@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.4
+- [CHORE] Check dependencies, code and commits for security issues
+
 ## 1.5.3
 - [BUGFIX] Saving the own profile changes only the fields of the profile form
 - [BUGFIX] Only an admin resets the 2FA of an admin
