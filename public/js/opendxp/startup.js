@@ -398,7 +398,7 @@ Ext.onReady(function () {
     // translation admin keys
     opendxp.globalmanager.add('translations_admin_missing', []);
     opendxp.globalmanager.add('translations_admin_added', []);
-    opendxp.globalmanager.add('translations_admin_translated_values', []);
+    opendxp.globalmanager.add('translations_admin_translated_values', new Set());
 
     const objectClassFields = [
         {name: 'id'},

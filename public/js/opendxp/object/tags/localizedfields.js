@@ -299,28 +299,55 @@ opendxp.object.tags.localizedfields = Class.create(opendxp.object.tags.abstract,
 
                 wrapperConfig.items = [];
 
-                for (var i = nrOfLanguages - 1; i >= 0; i--) {
-                    var currentLanguage = this.frontendLanguages[i];
-                    this.currentLanguage = currentLanguage;         // remember active language
+                var visibleLanguage = this.globalLanguage && in_array(this.globalLanguage, this.frontendLanguages)
+                    ? this.globalLanguage
+                    : this.frontendLanguages[0];
 
-                    var dataProvider = this.getDataProvider(currentLanguage);
+                this.currentLanguage = visibleLanguage;
+                this.pendingLanguageItems = {};
+
+                for (var i = nrOfLanguages - 1; i >= 0; i--) {
+
+                    var currentLanguage = this.frontendLanguages[i],
+                        isVisible = currentLanguage === visibleLanguage;
 
                     this.languageElements[currentLanguage] = [];
 
-                    var editable = !showMode && (opendxp.currentuser.admin ||
-                        this.fieldConfig.permissionEdit === undefined || this.fieldConfig.permissionEdit === null || this.fieldConfig.permissionEdit.length == 0 || in_array(currentLanguage, this.fieldConfig.permissionEdit));
+                    // Only the visible language is built now. Every other language is built on its first
+                    // selection, because building all of them makes opening a tab slow with many languages.
+                    var buildItems = function (language) {
 
-                    var runtimeContext = Ext.clone(this.context);
-                    runtimeContext.language = Ext.clone(currentLanguage);
-                    var items = this.getRecursiveLayout(this.fieldConfig, !editable, runtimeContext, false, false, dataProvider).items;
+                        var dataProvider = this.getDataProvider(language),
+                            runtimeContext = Ext.clone(this.context),
+                            editable =
+                                !showMode &&
+                                (
+                                    opendxp.currentuser.admin ||
+                                    this.fieldConfig.permissionEdit === undefined ||
+                                    this.fieldConfig.permissionEdit === null ||
+                                    this.fieldConfig.permissionEdit.length == 0 ||
+                                    in_array(language, this.fieldConfig.permissionEdit)
+                                );
+
+                        runtimeContext.language = Ext.clone(language);
+
+                        // getLayoutEdit() turns the configuration back into a data field when it returns
+                        var layoutConfig = Object.assign({}, this.fieldConfig, {datatype: 'layout', fieldtype: 'panel'});
+
+                        return this.getRecursiveLayout(layoutConfig, !editable, runtimeContext, false, false, dataProvider).items;
+                    }.bind(this, currentLanguage);
 
                     var panelConf = {
                         height: "auto",
                         border: false,
                         padding: "10px",
-                        items: items,
-                        hidden: (this.globalLanguage ? this.globalLanguage !== currentLanguage : i > 0)
+                        items: isVisible ? buildItems() : [],
+                        hidden: !isVisible
                     };
+
+                    if (!isVisible) {
+                        this.pendingLanguageItems[currentLanguage] = buildItems;
+                    }
 
                     if (this.fieldConfig.height) {
                         panelConf.height = this.fieldConfig.height;
@@ -1008,11 +1035,18 @@ opendxp.object.tags.localizedfields = Class.create(opendxp.object.tags.abstract,
     },
 
     switchLocalizedPanels: function (oldLanguage, newLanguage){
+        Ext.suspendLayouts();
+
+        if (this.pendingLanguageItems && this.pendingLanguageItems[newLanguage]) {
+            this.availablePanels[newLanguage].add(this.pendingLanguageItems[newLanguage]());
+            delete this.pendingLanguageItems[newLanguage];
+        }
+
         this.availablePanels[oldLanguage].hide();
-        this.component.updateLayout();
         this.availablePanels[newLanguage].show();
         this.currentLanguage = newLanguage;
-        this.component.updateLayout();
+
+        Ext.resumeLayouts(true);
     }
 });
 

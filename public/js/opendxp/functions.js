@@ -16,9 +16,9 @@ function t(key, defaultValue, placeholders) {
     }
 
     var alreadyTranslated = opendxp.globalmanager.get("translations_admin_translated_values");
-    if(!alreadyTranslated) {
-        alreadyTranslated = [];
-        opendxp.globalmanager.add("translations_admin_translated_values", []);
+    if (!(alreadyTranslated instanceof Set)) {
+        alreadyTranslated = new Set(alreadyTranslated || []);
+        opendxp.globalmanager.add("translations_admin_translated_values", alreadyTranslated);
     }
 
     // make sure 'key' is a string
@@ -56,13 +56,18 @@ function t(key, defaultValue, placeholders) {
             }
         }
 
-        opendxp.globalmanager.get("translations_admin_translated_values").push(trans);
+        alreadyTranslated.add(trans);
+
         return trans;
     }
 
-    var transKeys = opendxp && opendxp.system_i18n ? Object.keys(opendxp.system_i18n) : {};
-    if(opendxp && opendxp.system_i18n && transKeys.indexOf(key) === -1 && transKeys.indexOf(originalKey) === -1){
-        if(!defaultValue && !in_array(key, alreadyTranslated)) {
+    // A lookup per call, because listing all keys of the catalogue costs a millisecond on every untranslated text
+    var hasKey = function (catalogue, id) {
+        return Object.prototype.hasOwnProperty.call(catalogue, id);
+    };
+
+    if(opendxp && opendxp.system_i18n && !hasKey(opendxp.system_i18n, key) && !hasKey(opendxp.system_i18n, originalKey)){
+        if(!defaultValue && !alreadyTranslated.has(key)) {
             if(opendxp.globalmanager.exists("translations_admin_missing")) {
                 if (!in_array(key, opendxp.globalmanager.get("translations_admin_added")) &&
                     !in_array(key, opendxp.globalmanager.get("translations_admin_missing"))) {
