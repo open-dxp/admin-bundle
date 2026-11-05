@@ -12,7 +12,7 @@
     {% endif %}
 
     <form method="post" action="{{ path('opendxp_admin_2fa-verify') }}">
-        <input name="_auth_code" id="_auth_code" autocomplete="one-time-code" type="password" placeholder="{{ '2fa_code'|trans([],'admin') }}" required autofocus>
+        <input name="_auth_code" id="_auth_code" autocomplete="one-time-code" type="text" placeholder="{{ '2fa_code'|trans([],'admin') }}" required autofocus>
         <input type="hidden" name="csrfToken" value="{{ opendxp_csrf.getCsrfToken(app.request.session) }}">
 
         <button type="submit">{{ 'Login'|trans([],'admin') }}</button>
