@@ -161,3 +161,34 @@ Ext.define('opendxp.overrides.grid.filters.filter.Number', {
         filterCollection.endUpdate();
     }
 });
+
+// The theme paints a panel grey and its body white, so the padding of a panel shows as a grey frame.
+// The body repeats that padding inside the frame, so the content does not touch the edge of the white area.
+Ext.define('opendxp.overrides.panel.Panel', {
+    override: 'Ext.panel.Panel',
+
+    initComponent: function () {
+        var padding = this.padding;
+
+        if (padding === undefined && this.style) {
+            padding = (Ext.isString(this.style) ? Ext.dom.Element.parseStyles(this.style) : this.style).padding;
+        }
+
+        var bodyStyle = Ext.isString(this.bodyStyle) ? Ext.dom.Element.parseStyles(this.bodyStyle) : (this.bodyStyle || {});
+        var box = padding ? Ext.dom.Element.parseBox(padding) : null;
+
+        // Padding on some sides only is a gap to the neighbours, not a frame.
+        if (
+            box && box.top > 0 && box.top === box.right && box.top === box.bottom && box.top === box.left &&
+            this.bodyPadding === undefined &&
+            bodyStyle.padding === undefined &&
+            this.ui === 'default' &&
+            !this.isWindow &&
+            !this.isXType('tablepanel')
+        ) {
+            this.bodyPadding = padding;
+        }
+
+        this.callParent(arguments);
+    }
+});
