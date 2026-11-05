@@ -1,6 +1,10 @@
 # Changelog
 
 ## 1.5.5
+- [ENHANCEMENT] Tabs of the object editor open faster. A text without an admin translation is looked up directly in the catalogue, instead of in a list of all its keys
+- [ENHANCEMENT] A localized field with a language dropdown builds a language when it is selected, not every language when the tab opens
+- [BUGFIX] The admin checks for new notifications only once the current user is loaded, so switching the browser tab while the admin starts throws no error
+- [BUGFIX] A panel with an even padding gets the same padding inside its body, so its content no longer touches the edge of the white area
 - [BUGFIX] Opening an element that another session is editing logs the edit lock at info level, no longer as a critical uncaught exception
 
 ## 1.5.4

@@ -57,6 +57,8 @@ Ext.require([
 
 Ext.ariaWarn = Ext.emptyFn;
 
+opendxp['intervals'] = {};
+
 Ext.onReady(function () {
 
     opendxp.helpers.colorpicker.initOverrides();
@@ -398,7 +400,7 @@ Ext.onReady(function () {
     // translation admin keys
     opendxp.globalmanager.add('translations_admin_missing', []);
     opendxp.globalmanager.add('translations_admin_added', []);
-    opendxp.globalmanager.add('translations_admin_translated_values', []);
+    opendxp.globalmanager.add('translations_admin_translated_values', new Set());
 
     const objectClassFields = [
         {name: 'id'},
@@ -882,9 +884,18 @@ Ext.onReady(function () {
     if (opendxp.currentuser.isPasswordReset) {
         opendxp.helpers.openProfile();
     }
-});
 
-opendxp['intervals'] = {};
+    // The check reads the permissions of the user, which exists only from here on
+    if (opendxp.settings.checknewnotification_enabled) {
+        opendxp['intervals']['checkNewNotification'] = window.setInterval(function () {
+            opendxp.notification.helper.updateFromServer();
+        }, opendxp.settings.checknewnotification_interval);
+
+        document.addEventListener('visibilitychange', function () {
+            opendxp.notification.helper.updateFromServer();
+        });
+    }
+});
 
 // add missing translation keys
 opendxp['intervals']['translations_admin_missing'] = window.setInterval(function () {
@@ -947,16 +958,6 @@ opendxp['intervals']['ping'] = window.setInterval(function () {
         }
     });
 }, (opendxp.settings.session_gc_maxlifetime - 60) * 1000);
-
-if (opendxp.settings.checknewnotification_enabled) {
-    opendxp['intervals']['checkNewNotification'] = window.setInterval(function () {
-        opendxp.notification.helper.updateFromServer();
-    }, opendxp.settings.checknewnotification_interval);
-
-    document.addEventListener('visibilitychange', function () {
-        opendxp.notification.helper.updateFromServer();
-    });
-}
 
 // refreshes the layout
 opendxp.registerNS('opendxp.layout.refresh');
