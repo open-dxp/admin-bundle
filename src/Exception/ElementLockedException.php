@@ -24,7 +24,7 @@ use Symfony\Component\HttpKernel\Attribute\WithLogLevel;
 /**
  * Signals that an element is locked for editing by another session.
  * AdminExceptionListener maps it to a 200 JSON response carrying an "editlock" payload, which the admin UI uses to show the lock dialog.
- * Symfony's ErrorListener logs it before that listener runs, so it is logged at info level instead of as a critical uncaught exception.
+ * Symfony's ErrorListener logs every exception, this one at info level.
  *
  * @see \OpenDxp\Bundle\AdminBundle\EventListener\AdminExceptionListener::onKernelException()
  */
