@@ -1,5 +1,8 @@
 # Changelog
 
+## [Unreleased]
+- [NEW FEATURE] The advanced settings of an image thumbnail have "Use CropBox": the pages of a PDF render inside their CropBox, the visible page area, instead of their MediaBox. With an OpenDXP release before the thumbnail option `useCropBox`, saving ignores the checkbox
+
 ## 1.5.5
 - [SECURITY] [OPENDXP-SA-2026-027] The public route that serves a rendered version diff hands out only the diff files, not every file that lies in the temp directory
 - [SECURITY] [OPENDXP-SA-2026-028] Deleting or editing a version requires the `versions` permission of the element, as listing its versions already does

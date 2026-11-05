@@ -628,6 +628,8 @@ url_slug_unlocked: 'Sperren Sie den Slug wieder, um den gespeicherten zu behalte
 url_to_custom_image_on_login_screen: 'URL zu einem eigenen Bild für den Login-Bereich'
 url_width: 'URL Breite'
 use_as_site: 'Als eigene Site benutzen'
+use_crop_box: 'CropBox verwenden'
+use_crop_box_info_text: 'Rendert die Seiten eines PDFs innerhalb ihrer CropBox, des sichtbaren Seitenbereichs, statt des ganzen Blatts mit seinen Rändern.'
 use_current_date: 'Aktuelles Datum verwenden'
 use_current_player_position_as_preview: 'Aktuelle Video-Position als Vorschau nutzen.'
 use_different_email_delivery_settings: 'Andere Einstellung für die Zustellung von Newsletter verwenden.'
