@@ -89,7 +89,7 @@ final class GetNoteListHandler
                     $conditions[] = '`user` IN (SELECT `id` FROM `users` WHERE `name` LIKE ' . $list->quote($value) . ')';
                 } elseif ($filter['type'] === 'date' && ($filter[$comparisonKey] ?? '') === 'eq') {
                     $maxTime = $value + (86400 - 1);
-                    $conditions[] = '`' . $filter[$propertyKey] . '` BETWEEN ' . $db->quote($value) . ' AND ' . $db->quote($maxTime);
+                    $conditions[] = $db->quoteIdentifier($filter[$propertyKey]) . ' BETWEEN ' . $db->quote($value) . ' AND ' . $db->quote($maxTime);
                 } else {
                     $conditions[] = $db->quoteIdentifier($filter[$propertyKey]) . ' ' . $operator . ' ' . $db->quote($value);
                 }
