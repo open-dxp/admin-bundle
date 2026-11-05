@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.5
+- [BUGFIX] Opening an element that another session is editing logs the edit lock at info level, no longer as a critical uncaught exception
+
 ## 1.5.4
 - [SECURITY] The date filter of the note list takes its property as a column name, never as SQL
 - [BUGFIX] The 2FA code field shows the typed digits, and browsers no longer fill the saved password into it
