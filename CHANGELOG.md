@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.5.4
+- [SECURITY] The date filter of the note list takes its property as a column name, never as SQL
 - [CHORE] Check dependencies, code and commits for security issues
 
 ## 1.5.3
