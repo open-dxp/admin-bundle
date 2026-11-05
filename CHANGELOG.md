@@ -2,6 +2,7 @@
 
 ## 1.5.4
 - [SECURITY] The date filter of the note list takes its property as a column name, never as SQL
+- [BUGFIX] The 2FA code field shows the typed digits, and browsers no longer fill the saved password into it
 - [CHORE] Check dependencies, code and commits for security issues
 
 ## 1.5.3
@@ -9,7 +10,6 @@
 - [BUGFIX] Only an admin resets the 2FA of an admin
 - [BUGFIX] A user can no longer delete its own user
 - [BUGFIX] The YouTube preview of a video field also plays when the admin sends a strict `Referrer-Policy`, such as `same-origin`
-- [BUGFIX] The code field of the 2FA login and setup shows the typed code instead of dots, and browsers no longer fill the saved password into it
 
 ## 1.5.2
 - [BUGFIX] Trees without a root node show the whole expander of top-level folders
