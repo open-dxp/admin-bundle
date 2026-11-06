@@ -23,7 +23,8 @@ use Symfony\Component\HttpKernel\Attribute\WithLogLevel;
 /**
  * Signals an expected, recoverable business-rule failure that the admin UI
  * handles locally via a `success:false` JSON body at HTTP 200.
- * Symfony's ErrorListener logs every exception, this one at warning level, not info, since some handlers wrap unexpected errors in it.
+ * Symfony's ErrorListener logs every exception, this one at warning level.
+ * Some handlers wrap unexpected errors in it.
  *
  * @see \OpenDxp\Bundle\AdminBundle\EventListener\AdminExceptionListener::onKernelException()
  */
