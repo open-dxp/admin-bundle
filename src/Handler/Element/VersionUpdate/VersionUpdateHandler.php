@@ -16,16 +16,23 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element\VersionUpdate;
 
+use OpenDxp\Bundle\AdminBundle\Service\Element\VersionPermissionChecker;
 use OpenDxp\Model\Version;
 
 final class VersionUpdateHandler
 {
+    public function __construct(private readonly VersionPermissionChecker $versionPermissionChecker)
+    {
+    }
+
     public function __invoke(VersionUpdatePayload $payload): void
     {
         $data = $payload->data ?? [];
         $version = Version::getById($data['id']);
 
         if ($version && ($data['public'] != $version->getPublic() || $data['note'] != $version->getNote())) {
+            $this->versionPermissionChecker->assertCanManageVersion($version);
+
             $version->setPublic($data['public']);
             $version->setNote($data['note']);
             $version->save();
