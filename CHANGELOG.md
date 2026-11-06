@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.5.5
+- [SECURITY] Deleting or editing a version requires the `versions` permission of the element, as listing its versions already does
 - [ENHANCEMENT] Tabs of the object editor open faster. A text without an admin translation is looked up directly in the catalogue, instead of in a list of all its keys
 - [ENHANCEMENT] A localized field with a language dropdown builds a language when it is selected, not every language when the tab opens
 - [BUGFIX] The admin checks for new notifications only once the current user is loaded, so switching the browser tab while the admin starts throws no error

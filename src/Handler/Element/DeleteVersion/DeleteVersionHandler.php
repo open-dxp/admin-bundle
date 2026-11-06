@@ -17,12 +17,23 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element\DeleteVersion;
 
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
+use OpenDxp\Bundle\AdminBundle\Service\Element\VersionPermissionChecker;
 use OpenDxp\Model\Version;
 
 final class DeleteVersionHandler
 {
+    public function __construct(private readonly VersionPermissionChecker $versionPermissionChecker)
+    {
+    }
+
     public function __invoke(IdBodyPayload $payload): void
     {
-        Version::getById($payload->id)?->delete();
+        $version = Version::getById($payload->id);
+        if (!$version) {
+            return;
+        }
+
+        $this->versionPermissionChecker->assertCanManageVersion($version);
+        $version->delete();
     }
 }
