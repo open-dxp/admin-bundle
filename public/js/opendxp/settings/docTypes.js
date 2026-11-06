@@ -116,6 +116,7 @@ opendxp.settings.document.doctypes = Class.create({
                 editor: new Ext.form.ComboBox({
                     store: new Ext.data.Store({
                         autoDestroy: true,
+                        autoLoad: true,
                         proxy: {
                             type: 'ajax',
                             url: Routing.generate('opendxp_admin_misc_getavailabletemplates'),
