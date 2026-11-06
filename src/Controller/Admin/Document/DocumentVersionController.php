@@ -50,6 +50,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/document')]
 class DocumentVersionController extends AdminAbstractController
 {
+    /**
+     * The files DiffVersionsHandler writes for the headless renderer. The route is reachable
+     * without a session, so it must not serve other files that happen to lie in the temp directory.
+     */
+    private const string DIFF_FILE_NAME = '/^version-diff-tmp-[A-Za-z0-9.-]+\.html$/';
+
     #[IsGranted(CorePermission::Documents->value)]
     #[Route('/version-to-session', name: 'opendxp_admin_document_document_versiontosession', methods: ['POST'])]
     #[SessionIdentityAware]
@@ -94,7 +100,12 @@ class DocumentVersionController extends AdminAbstractController
     public function diffVersionsHtmlAction(
         #[MapQueryParameter] ?string $id = null,
     ): BinaryFileResponse {
-        $file = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/' . basename($id ?? '');
+        $fileName = basename($id ?? '');
+        if (!preg_match(self::DIFF_FILE_NAME, $fileName)) {
+            throw $this->createNotFoundException('Version diff file not found');
+        }
+
+        $file = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/' . $fileName;
         if (file_exists($file)) {
             return new BinaryFileResponse($file);
         }
