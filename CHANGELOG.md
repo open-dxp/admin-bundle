@@ -7,6 +7,7 @@
 - [BUGFIX] A panel with an even padding gets the same padding inside its body, so its content no longer touches the edge of the white area
 - [BUGFIX] Opening an element that another session is editing logs the edit lock at info level, no longer as a critical uncaught exception
 - [BUGFIX] An admin operation that fails with a message for the user, such as an element that is not found, logs the failure at warning level, no longer as a critical uncaught exception
+- [BUGFIX] The template dropdown of a document type lists the available templates
 
 ## 1.5.4
 - [SECURITY] The date filter of the note list takes its property as a column name, never as SQL
