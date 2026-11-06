@@ -52,6 +52,7 @@ class ObjectBrickController extends AdminAbstractController
         return $this->apiJson($handler($payload), rootProperty: 'data');
     }
 
+    #[IsGranted(CorePermission::Objectbricks->value)]
     #[Route('/objectbrick-update', name: 'objectbrickupdate', methods: ['PUT', 'POST'])]
     public function objectbrickUpdateAction(UpdateObjectBrickHandler $handler, UpdateObjectBrickPayload $payload): JsonResponse
     {
