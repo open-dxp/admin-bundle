@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\AdminBundle\Exception;
 
 use RuntimeException;
+use Throwable;
 
 /**
  * Signals an expected, recoverable business-rule failure that the admin UI
@@ -31,9 +32,10 @@ final class AdminOperationFailedException extends RuntimeException
      */
     public function __construct(
         string $message = '',
-        private readonly array $extra = []
+        private readonly array $extra = [],
+        ?Throwable $previous = null,
     ) {
-        parent::__construct($message);
+        parent::__construct($message, 0, $previous);
     }
 
     /**

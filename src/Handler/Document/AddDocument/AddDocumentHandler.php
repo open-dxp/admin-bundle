@@ -128,7 +128,7 @@ final class AddDocumentHandler
         try {
             $document->save();
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
 
         return $document;
@@ -144,7 +144,7 @@ final class AddDocumentHandler
             try {
                 $document->save();
             } catch (Exception $e) {
-                throw new AdminOperationFailedException($e->getMessage());
+                throw new AdminOperationFailedException($e->getMessage(), previous: $e);
             }
 
             return $document;

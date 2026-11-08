@@ -44,7 +44,7 @@ final class GridProxyHandler
         try {
             $result = $this->assetGridService->gridProxy($params, $payload->language);
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
 
         return new GridProxyResult($result);

@@ -84,7 +84,7 @@ final class SaveGridColumnConfigHandler
         try {
             $this->gridColumnConfigService->updateGridConfigShares($gridConfig, $metadata ?? [], $adminUser);
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
 
         if (!$gridConfig) {
@@ -110,7 +110,7 @@ final class SaveGridColumnConfigHandler
             try {
                 $this->gridColumnConfigService->updateGridConfigFavourites($gridConfig, $metadata, $adminUser);
             } catch (Exception $e) {
-                throw new AdminOperationFailedException($e->getMessage());
+                throw new AdminOperationFailedException($e->getMessage(), previous: $e);
             }
         }
 

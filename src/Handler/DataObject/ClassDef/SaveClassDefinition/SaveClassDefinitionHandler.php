@@ -105,7 +105,7 @@ final class SaveClassDefinitionHandler
 
             $class->save();
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
 
         $class->setFieldDefinitions([]);

@@ -81,14 +81,14 @@ final class SaveDataObjectGridColumnConfigHandler
         try {
             $this->gridColumnConfigService->updateGridConfigShares($gridConfig, $metadata ?? [], $adminUser, adminCanEditAll: true);
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
 
         if ($gridConfig && !empty($metadata['setAsFavourite']) && $adminUser->isAdmin()) {
             try {
                 $this->gridColumnConfigService->updateGridConfigFavourites($gridConfig, $metadata, $adminUser, $payload->objectId);
             } catch (Exception $e) {
-                throw new AdminOperationFailedException($e->getMessage());
+                throw new AdminOperationFailedException($e->getMessage(), previous: $e);
             }
         }
 

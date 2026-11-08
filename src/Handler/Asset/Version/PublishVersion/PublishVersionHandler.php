@@ -68,7 +68,7 @@ final class PublishVersionHandler
         try {
             $asset->save();
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
 
         return new PublishVersionResult($this->elementService->getElementTreeNodeConfig($asset));

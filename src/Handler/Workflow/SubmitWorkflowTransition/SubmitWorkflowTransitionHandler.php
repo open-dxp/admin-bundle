@@ -69,9 +69,9 @@ final class SubmitWorkflowTransitionHandler
                 $reason = '<ul>' . implode('', array_map(static fn ($item) => '<li>' . $item . '</li>', $e->getSubItems())) . '</ul>';
             }
 
-            throw new AdminOperationFailedException($e->getMessage(), ['reasons' => [$reason]]);
+            throw new AdminOperationFailedException($e->getMessage(), ['reasons' => [$reason]], previous: $e);
         } catch (Exception $e) {
-            throw new AdminOperationFailedException('error performing action on this element', ['reasons' => [$e->getMessage()]]);
+            throw new AdminOperationFailedException('error performing action on this element', ['reasons' => [$e->getMessage()]], previous: $e);
         }
 
         return new SubmitWorkflowTransitionResult();

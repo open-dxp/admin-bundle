@@ -46,7 +46,7 @@ final class AddToRecyclebinHandler
         try {
             $this->addToRecyclebin($payload);
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
     }
 

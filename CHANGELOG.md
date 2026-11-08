@@ -6,6 +6,7 @@
 - [BUGFIX] The admin checks for new notifications only once the current user is loaded, so switching the browser tab while the admin starts throws no error
 - [BUGFIX] A panel with an even padding gets the same padding inside its body, so its content no longer touches the edge of the white area
 - [BUGFIX] An admin request that ends in a message for the user, such as a failed validation, an element that another session is editing or a configuration that cannot be written, is logged at info or warning level, no longer as a critical uncaught exception
+- [BUGFIX] The log entry of a failed admin operation names the error that caused it
 - [BUGFIX] The template dropdown of a document type lists the available templates
 
 ## 1.5.4

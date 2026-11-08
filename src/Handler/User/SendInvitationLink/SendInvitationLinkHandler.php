@@ -104,7 +104,7 @@ final class SendInvitationLinkHandler
             $mail->text("Login to OpenDXP and change your password using the following link. This temporary login link will expire in  24 hours: \r\n\r\n" . $loginUrl);
             $mail->send();
         } catch (\Symfony\Component\HttpKernel\Exception\BadRequestHttpException $e) {
-            throw new AdminOperationFailedException($e->getMessage() . ' <br />');
+            throw new AdminOperationFailedException($e->getMessage() . ' <br />', previous: $e);
         } catch (Exception) {
             throw new AdminOperationFailedException('could not send email');
         }

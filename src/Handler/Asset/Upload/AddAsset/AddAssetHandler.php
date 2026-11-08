@@ -31,7 +31,7 @@ final class AddAssetHandler
         try {
             $asset = $this->assetUploadService->addAsset($payload);
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
 
         return new AddAssetResult([
