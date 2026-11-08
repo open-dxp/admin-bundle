@@ -21,7 +21,9 @@ services:
     # EXCEPTION HANDLING
     #
 
-    OpenDxp\Bundle\AdminBundle\EventListener\AdminExceptionListener: ~
+    OpenDxp\Bundle\AdminBundle\EventListener\AdminExceptionListener:
+        tags:
+            - { name: monolog.logger, channel: request }
 
     OpenDxp\Bundle\AdminBundle\EventListener\HtmlContentTypeResponseListener: ~
 

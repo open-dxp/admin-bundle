@@ -25,6 +25,7 @@ pest()->extend(TestCase::class)->in(
     'Feature/DataObject',
     'Feature/Document',
     'Feature/Element',
+    'Feature/EventListener',
     'Feature/Grid',
     'Feature/GridExport',
     'Feature/Notification',
