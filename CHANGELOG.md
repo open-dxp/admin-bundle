@@ -3,6 +3,7 @@
 ## 1.5.5
 - [SECURITY] [OPENDXP-SA-2026-027] The public route that serves a rendered version diff hands out only the diff files, not every file that lies in the temp directory
 - [SECURITY] [OPENDXP-SA-2026-028] Deleting or editing a version requires the `versions` permission of the element, as listing its versions already does
+- [SECURITY] [OPENDXP-SA-2026-028] Publishing a version, comparing two document versions or loading a document version into the editor requires the `versions` permission of the element
 - [SECURITY] [OPENDXP-SA-2026-029] Creating or updating an object brick requires the `objectbricks` permission, like importing and deleting one already does
 - [SECURITY] [OPENDXP-SA-2026-030] Uploading or deleting the custom logo requires the `system_appearance_settings` permission, like changing the other appearance settings already does
 - [SECURITY] [OPENDXP-SA-2026-031] Importing quantity value units requires the `quantityValueUnits` permission, like managing them in the unit proxy already does

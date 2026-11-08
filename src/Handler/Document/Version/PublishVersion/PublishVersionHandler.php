@@ -36,6 +36,7 @@ use OpenDxp\Bundle\AdminBundle\Exception\Document\DocumentNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\VersionPermissionChecker;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -46,14 +47,16 @@ final class PublishVersionHandler
         private readonly AdminUserContextInterface $userContext,
         private readonly ElementDraftService $elementDraftService,
         private readonly AdminStyleEnricher $adminStyleEnricher,
+        private readonly VersionPermissionChecker $versionPermissionChecker,
     ) {
     }
 
     public function __invoke(IdBodyPayload $payload): PublishVersionResult
     {
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
-        $version = Version::getById($payload->id);
-        $document = $version?->loadData();
+        $version = Version::getById($payload->id) ?? throw new DocumentNotFoundException($payload->id);
+        $this->versionPermissionChecker->assertAllowed($version);
+        $document = $version->loadData();
 
         if (!$document instanceof Document) {
             throw new DocumentNotFoundException($payload->id);

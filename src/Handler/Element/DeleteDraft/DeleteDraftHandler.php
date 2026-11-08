@@ -31,7 +31,7 @@ final class DeleteDraftHandler
         $version = Version::getById($payload->id);
 
         if ($version) {
-            $this->versionPermissionChecker->assertCanManageVersion($version);
+            $this->versionPermissionChecker->assertAllowed($version);
             $version->delete();
         }
     }
