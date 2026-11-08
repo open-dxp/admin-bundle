@@ -49,6 +49,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class QuantityValueController extends AdminAbstractController
 {
     #[AsHtmlContentTypeResponse]
+    #[IsGranted(CorePermission::QuantityValueUnits->value)]
     #[Route('/unit-import', name: 'unitimport', methods: ['POST', 'PUT'])]
     public function unitImportAction(ImportQuantityValueUnitsPayload $payload, ImportQuantityValueUnitsHandler $handler): JsonResponse
     {
