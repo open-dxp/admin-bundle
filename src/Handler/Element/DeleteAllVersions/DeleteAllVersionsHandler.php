@@ -16,12 +16,23 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Element\DeleteAllVersions;
 
+use OpenDxp\Bundle\AdminBundle\Service\Element\VersionPermissionChecker;
 use OpenDxp\Model;
 
 final class DeleteAllVersionsHandler
 {
+    public function __construct(private readonly VersionPermissionChecker $versionPermissionChecker)
+    {
+    }
+
     public function __invoke(DeleteAllVersionsPayload $payload): void
     {
+        if ($payload->type === null) {
+            return;
+        }
+
+        $this->versionPermissionChecker->assertCanManageElement($payload->type, $payload->id);
+
         $versions = new Model\Version\Listing();
         $versions->setCondition(
             'cid = ' . $versions->quote($payload->id) .
