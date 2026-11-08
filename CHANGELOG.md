@@ -4,6 +4,7 @@
 - [SECURITY] [OPENDXP-SA-2026-027] The public route that serves a rendered version diff hands out only the diff files, not every file that lies in the temp directory
 - [SECURITY] [OPENDXP-SA-2026-028] Deleting or editing a version requires the `versions` permission of the element, as listing its versions already does
 - [SECURITY] [OPENDXP-SA-2026-029] Creating or updating an object brick requires the `objectbricks` permission, like importing and deleting one already does
+- [SECURITY] [OPENDXP-SA-2026-030] Uploading or deleting the custom logo requires the `system_appearance_settings` permission, like changing the other appearance settings already does
 - [ENHANCEMENT] Tabs of the object editor open faster. A text without an admin translation is looked up directly in the catalogue, instead of in a list of all its keys
 - [ENHANCEMENT] A localized field with a language dropdown builds a language when it is selected, not every language when the tab opens
 - [BUGFIX] The admin checks for new notifications only once the current user is loaded, so switching the browser tab while the admin starts throws no error
