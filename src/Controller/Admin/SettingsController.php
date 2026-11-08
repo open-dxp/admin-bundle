@@ -88,6 +88,7 @@ class SettingsController extends AdminAbstractController
     }
 
     #[AsHtmlContentTypeResponse]
+    #[IsGranted(AdminPermission::SystemAppearance->value)]
     #[Route('/upload-custom-logo', name: 'opendxp_admin_settings_uploadcustomlogo', methods: ['POST'])]
     public function uploadCustomLogoAction(UploadCustomLogoPayload $payload, UploadCustomLogoHandler $handler): JsonResponse
     {
@@ -96,6 +97,7 @@ class SettingsController extends AdminAbstractController
         return $this->apiOk();
     }
 
+    #[IsGranted(AdminPermission::SystemAppearance->value)]
     #[Route('/delete-custom-logo', name: 'opendxp_admin_settings_deletecustomlogo', methods: ['DELETE'])]
     public function deleteCustomLogoAction(DeleteCustomLogoHandler $handler): JsonResponse
     {

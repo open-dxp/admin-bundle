@@ -1,6 +1,11 @@
 # Changelog
 
 ## 1.5.5
+- [SECURITY] [OPENDXP-SA-2026-027] The public route that serves a rendered version diff hands out only the diff files, not every file that lies in the temp directory
+- [SECURITY] [OPENDXP-SA-2026-028] Deleting or editing a version requires the `versions` permission of the element, as listing its versions already does
+- [SECURITY] [OPENDXP-SA-2026-029] Creating or updating an object brick requires the `objectbricks` permission, like importing and deleting one already does
+- [SECURITY] [OPENDXP-SA-2026-030] Uploading or deleting the custom logo requires the `system_appearance_settings` permission, like changing the other appearance settings already does
+- [SECURITY] [OPENDXP-SA-2026-031] Importing quantity value units requires the `quantityValueUnits` permission, like managing them in the unit proxy already does
 - [ENHANCEMENT] Tabs of the object editor open faster. A text without an admin translation is looked up directly in the catalogue, instead of in a list of all its keys
 - [ENHANCEMENT] A localized field with a language dropdown builds a language when it is selected, not every language when the tab opens
 - [BUGFIX] The admin checks for new notifications only once the current user is loaded, so switching the browser tab while the admin starts throws no error
@@ -10,7 +15,7 @@
 - [BUGFIX] The template dropdown of a document type lists the available templates
 
 ## 1.5.4
-- [SECURITY] The date filter of the note list takes its property as a column name, never as SQL
+- [SECURITY] [OPENDXP-SA-2026-017] The date filter of the note list takes its property as a column name, never as SQL
 - [BUGFIX] The 2FA code field shows the typed digits, and browsers no longer fill the saved password into it
 - [CHORE] Check dependencies, code and commits for security issues
 
@@ -37,10 +42,10 @@
 - [BUGFIX] Correct German translation of `no_items_found`
 
 ## 1.5.0
-- [SECURITY] The notification grid filters only by title and date
+- [SECURITY] [OPENDXP-SA-2026-005] The notification grid filters only by title and date
 - [CHORE] Conflict with `open-dxp/advanced-object-search-bundle` <1.1. Its result grid uses the export routes that 1.5 removes.
 - [BUGFIX] Notes on documents and on objects offer the note types configured for their own element type [#152](https://github.com/open-dxp/admin-bundle/pull/152)
-- [SECURITY] The object and asset grids open a workspace only for its own path and the paths below it. A workspace on `/shop_de` does not open `/shopXde`, and a quote in the name of a workspace does not break the query [#151](https://github.com/open-dxp/admin-bundle/pull/151)
+- [SECURITY] [OPENDXP-SA-2026-007] The object and asset grids open a workspace only for its own path and the paths below it. A workspace on `/shop_de` does not open `/shopXde`, and a quote in the name of a workspace does not break the query [#151](https://github.com/open-dxp/admin-bundle/pull/151)
 - [BUGFIX] The object and asset grids hide a closed folder also when another closed folder holds an open one [#151](https://github.com/open-dxp/admin-bundle/pull/151)
 - [ENHANCEMENT] Login links use the host of the request whenever OpenDXP trusts it, also a host from `opendxp.security.trusted_hosts`. See [Domain and Host Handling](https://github.com/open-dxp/opendxp/blob/1.x/doc/02_MVC/04_Routing_and_URLs/06_Domain_and_Host_Handling.md#trusted-hosts)
 - [NEW FEATURE] A data type shows its value in several grid columns with `GridColumnsInterface`. See [Adding Object Datatypes](https://github.com/open-dxp/opendxp/blob/1.x/doc/20_Extending_OpenDxp/13_Bundle_Developers_Guide/11_Adding_Object_Datatypes.md#grid-columns)

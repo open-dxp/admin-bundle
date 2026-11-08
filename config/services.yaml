@@ -121,6 +121,7 @@ services:
 
     OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService: ~
     OpenDxp\Bundle\AdminBundle\Service\Element\EditLockService: ~
+    OpenDxp\Bundle\AdminBundle\Service\Element\VersionPermissionChecker: ~
 
     OpenDxp\Bundle\AdminBundle\Service\Email\UnusableRecipientDetector: ~
     OpenDxp\Bundle\AdminBundle\Service\Email\EmailLogListingFactory: ~
