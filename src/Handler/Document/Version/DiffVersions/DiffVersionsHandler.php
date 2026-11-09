@@ -31,6 +31,7 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Version\DiffVersions;
 
 use Imagick;
 use OpenDxp\Bundle\AdminBundle\Exception\Document\DocumentNotFoundException;
+use OpenDxp\Bundle\AdminBundle\Service\Element\VersionPermissionChecker;
 use OpenDxp\Config;
 use OpenDxp\Document\Renderer\DocumentRendererInterface;
 use OpenDxp\Image\HtmlToImage;
@@ -43,6 +44,7 @@ final class DiffVersionsHandler
     public function __construct(
         private readonly DocumentRendererInterface $documentRenderer,
         private readonly RouterInterface $router,
+        private readonly VersionPermissionChecker $versionPermissionChecker,
     ) {
     }
 
@@ -52,15 +54,17 @@ final class DiffVersionsHandler
             return new DiffVersionsResult(supported: false);
         }
 
-        $versionFrom = Version::getById($payload->from);
-        $docFrom = $versionFrom?->loadData();
+        $versionFrom = Version::getById($payload->from) ?? throw new DocumentNotFoundException($payload->from);
+        $this->versionPermissionChecker->assertAllowed($versionFrom);
+        $docFrom = $versionFrom->loadData();
 
         if (!$docFrom instanceof Document\PageSnippet) {
             throw new DocumentNotFoundException($payload->from);
         }
 
-        $versionTo = Version::getById($payload->to);
-        $docTo = $versionTo?->loadData();
+        $versionTo = Version::getById($payload->to) ?? throw new DocumentNotFoundException($payload->to);
+        $this->versionPermissionChecker->assertAllowed($versionTo);
+        $docTo = $versionTo->loadData();
 
         if (!$docTo instanceof Document\PageSnippet) {
             throw new DocumentNotFoundException($payload->to);

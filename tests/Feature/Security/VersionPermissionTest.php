@@ -19,6 +19,7 @@ namespace OpenDxp\Bundle\AdminBundle\Tests\Feature\Security;
 use OpenDxp\Model\DataObject\Concrete;
 use OpenDxp\Model\User;
 use OpenDxp\Model\Version;
+use OpenDxp\Test\Factory\DocumentPageFactory;
 use OpenDxp\Test\Factory\TestGuideFactory;
 use OpenDxp\Test\Factory\UserFactory;
 use OpenDxp\TestFoundation\Browser;
@@ -93,4 +94,25 @@ it('lets a user discard the own auto-save without version access', function () {
         ->assertStatus(200);
 
     expect(Version::getById($version->getId()))->toBeNull();
+});
+
+it('keeps a user who may publish the object but not see its versions from publishing a version', function () {
+    $object = TestGuideFactory::createOne();
+    $version = $object->saveVersion();
+    $user = UserFactory::new()
+        ->withPermissions('objects')
+        ->withObjectWorkspace($object, 'list', 'view', 'save', 'publish')
+        ->create();
+
+    Browser::actingAs($user)
+        ->post('/admin/object/publish-version', ['body' => ['id' => $version->getId()]])
+        ->assertStatus(403);
+});
+
+it('keeps a user without version access from loading a document version into the editor', function () {
+    $version = DocumentPageFactory::createOne()->saveVersion();
+
+    Browser::actingAs(UserFactory::new()->withPermissions('documents')->create())
+        ->post('/admin/document/version-to-session', ['body' => ['id' => $version->getId()]])
+        ->assertStatus(403);
 });

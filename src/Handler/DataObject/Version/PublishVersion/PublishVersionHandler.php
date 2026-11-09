@@ -35,6 +35,7 @@ use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\DataObject\DataObjectNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Element\VersionPermissionChecker;
 use OpenDxp\Model\DataObject;
 use OpenDxp\Model\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -44,14 +45,16 @@ final class PublishVersionHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly AdminStyleEnricher $adminStyleEnricher,
+        private readonly VersionPermissionChecker $versionPermissionChecker,
     ) {
     }
 
     public function __invoke(IdBodyPayload $payload): PublishVersionResult
     {
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
-        $version = Version::getById($payload->id);
-        $object = $version?->loadData();
+        $version = Version::getById($payload->id) ?? throw new DataObjectNotFoundException($payload->id);
+        $this->versionPermissionChecker->assertAllowed($version);
+        $object = $version->loadData();
 
         if (!$object instanceof DataObject\Concrete) {
             throw new DataObjectNotFoundException($payload->id);

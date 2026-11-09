@@ -31,7 +31,7 @@ final class VersionUpdateHandler
         $version = Version::getById($data['id']);
 
         if ($version && ($data['public'] != $version->getPublic() || $data['note'] != $version->getNote())) {
-            $this->versionPermissionChecker->assertCanManageVersion($version);
+            $this->versionPermissionChecker->assertAllowed($version);
 
             $version->setPublic($data['public']);
             $version->setNote($data['note']);

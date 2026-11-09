@@ -23,9 +23,8 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * Guards the routes that read or change the version history of an element. Listing the
- * versions already requires the `versions` permission of the element; deleting or editing
- * one has to ask for the same permission.
+ * Checks the `versions` permission of the element a version belongs to. Every route that reads, publishes or
+ * changes a version asks for it, as listing the versions does.
  *
  * @internal
  */
@@ -37,17 +36,17 @@ final class VersionPermissionChecker
     {
     }
 
-    public function assertCanManageVersion(Version $version): void
+    public function assertAllowed(Version $version): void
     {
-        // Discarding an auto-save is part of editing and does not touch a stored version.
+        // The own auto-save belongs to editing, not to the version history.
         if ($this->isOwnAutoSave($version)) {
             return;
         }
 
-        $this->assertCanManageElement($version->getCtype(), $version->getCid());
+        $this->assertAllowedForElement($version->getCtype(), $version->getCid());
     }
 
-    public function assertCanManageElement(string $elementType, int $elementId): void
+    public function assertAllowedForElement(string $elementType, int $elementId): void
     {
         if (!in_array($elementType, self::ALLOWED_TYPES, true)) {
             throw new NotFoundHttpException('Element type not found');

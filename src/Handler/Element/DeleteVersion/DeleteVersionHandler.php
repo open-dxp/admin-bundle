@@ -33,7 +33,7 @@ final class DeleteVersionHandler
             return;
         }
 
-        $this->versionPermissionChecker->assertCanManageVersion($version);
+        $this->versionPermissionChecker->assertAllowed($version);
         $version->delete();
     }
 }

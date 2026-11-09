@@ -32,19 +32,23 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Document\Version\SaveVersionToSessi
 use OpenDxp\Bundle\AdminBundle\Exception\Document\DocumentNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Payload\Common\IdBodyPayload;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementDraftService;
+use OpenDxp\Bundle\AdminBundle\Service\Element\VersionPermissionChecker;
 use OpenDxp\Model\Document;
 use OpenDxp\Model\Version;
 
 final class SaveVersionToSessionHandler
 {
-    public function __construct(private readonly ElementDraftService $elementDraftService)
-    {
+    public function __construct(
+        private readonly ElementDraftService $elementDraftService,
+        private readonly VersionPermissionChecker $versionPermissionChecker,
+    ) {
     }
 
     public function __invoke(IdBodyPayload $payload): void
     {
-        $version = Version::getById($payload->id);
-        $document = $version?->loadData();
+        $version = Version::getById($payload->id) ?? throw new DocumentNotFoundException($payload->id);
+        $this->versionPermissionChecker->assertAllowed($version);
+        $document = $version->loadData();
 
         if (!$document instanceof Document) {
             throw new DocumentNotFoundException($payload->id);

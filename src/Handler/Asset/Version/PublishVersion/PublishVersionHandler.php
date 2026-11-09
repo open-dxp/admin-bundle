@@ -34,6 +34,7 @@ use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetVersionNotFoundException;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Bundle\AdminBundle\Service\Element\ElementServiceInterface;
+use OpenDxp\Bundle\AdminBundle\Service\Element\VersionPermissionChecker;
 use OpenDxp\Model\Asset;
 use OpenDxp\Model\Version;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -43,6 +44,7 @@ final class PublishVersionHandler
     public function __construct(
         private readonly AdminUserContextInterface $userContext,
         private readonly ElementServiceInterface $elementService,
+        private readonly VersionPermissionChecker $versionPermissionChecker,
     ) {
     }
 
@@ -52,6 +54,7 @@ final class PublishVersionHandler
         $userId = $this->userContext->getAdminUser()?->getId() ?? 0;
         $version = Version::getById($versionId)
             ?? throw new AssetVersionNotFoundException($versionId);
+        $this->versionPermissionChecker->assertAllowed($version);
 
         $asset = $version->loadData();
         if (!$asset instanceof Asset) {

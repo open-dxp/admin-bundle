@@ -31,7 +31,7 @@ final class DeleteAllVersionsHandler
             return;
         }
 
-        $this->versionPermissionChecker->assertCanManageElement($payload->type, $payload->id);
+        $this->versionPermissionChecker->assertAllowedForElement($payload->type, $payload->id);
 
         $versions = new Model\Version\Listing();
         $versions->setCondition(
