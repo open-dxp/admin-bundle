@@ -72,7 +72,7 @@ final class SaveSelectOptionsHandler
         } catch (Exception $e) {
             Logger::error($e->getMessage());
 
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
     }
 }

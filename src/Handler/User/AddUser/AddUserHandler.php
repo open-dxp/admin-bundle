@@ -107,7 +107,7 @@ final class AddUserHandler
                 }
             }
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
 
         return new AddUserResult(id: $user->getId());

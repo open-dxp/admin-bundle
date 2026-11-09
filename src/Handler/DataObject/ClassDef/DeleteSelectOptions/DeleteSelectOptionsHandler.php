@@ -45,7 +45,7 @@ final class DeleteSelectOptionsHandler
         try {
             $selectOptions->delete();
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
     }
 }

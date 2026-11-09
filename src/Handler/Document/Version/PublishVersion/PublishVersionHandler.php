@@ -74,7 +74,7 @@ final class PublishVersionHandler
             $document->setUserModification($userId);
             $document->save();
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
 
         $treeData = [];

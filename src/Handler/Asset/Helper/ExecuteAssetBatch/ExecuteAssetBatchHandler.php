@@ -50,7 +50,7 @@ final class ExecuteAssetBatchHandler
         try {
             $this->gridBatchService->executeAssetBatch($data, $adminUser);
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
     }
 }

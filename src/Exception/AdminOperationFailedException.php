@@ -16,19 +16,15 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Exception;
 
-use Psr\Log\LogLevel;
 use RuntimeException;
-use Symfony\Component\HttpKernel\Attribute\WithLogLevel;
+use Throwable;
 
 /**
  * Signals an expected, recoverable business-rule failure that the admin UI
  * handles locally via a `success:false` JSON body at HTTP 200.
- * Symfony's ErrorListener logs every exception, this one at warning level.
- * Some handlers wrap unexpected errors in it.
  *
  * @see \OpenDxp\Bundle\AdminBundle\EventListener\AdminExceptionListener::onKernelException()
  */
-#[WithLogLevel(LogLevel::WARNING)]
 final class AdminOperationFailedException extends RuntimeException
 {
     /**
@@ -36,9 +32,10 @@ final class AdminOperationFailedException extends RuntimeException
      */
     public function __construct(
         string $message = '',
-        private readonly array $extra = []
+        private readonly array $extra = [],
+        ?Throwable $previous = null,
     ) {
-        parent::__construct($message);
+        parent::__construct($message, 0, $previous);
     }
 
     /**

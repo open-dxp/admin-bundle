@@ -91,7 +91,7 @@ final class UpdateAssetHandler
                 try {
                     $asset->save();
                 } catch (Exception $e) {
-                    throw new AdminOperationFailedException($e->getMessage());
+                    throw new AdminOperationFailedException($e->getMessage(), previous: $e);
                 }
 
                 return new UpdateAssetResult($this->elementService->getElementTreeNodeConfig($asset));
@@ -109,7 +109,7 @@ final class UpdateAssetHandler
             try {
                 $asset->save();
             } catch (Exception $e) {
-                throw new AdminOperationFailedException($e->getMessage());
+                throw new AdminOperationFailedException($e->getMessage(), previous: $e);
             }
 
             return new UpdateAssetResult($this->elementService->getElementTreeNodeConfig($asset));

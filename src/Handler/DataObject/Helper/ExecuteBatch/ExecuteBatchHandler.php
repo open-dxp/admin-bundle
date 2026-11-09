@@ -56,7 +56,7 @@ final class ExecuteBatchHandler
         try {
             $this->gridBatchService->executeObjectBatch($payload->params, $payload->locale, $adminUser);
         } catch (Exception $e) {
-            throw new AdminOperationFailedException($e->getMessage());
+            throw new AdminOperationFailedException($e->getMessage(), previous: $e);
         }
     }
 }

@@ -26,6 +26,8 @@ use OpenDxp\Bundle\CoreBundle\EventListener\Traits\OpenDxpContextAwareTrait;
 use OpenDxp\Http\Request\Resolver\OpenDxpContextResolver;
 use OpenDxp\Model\Element\ValidationException;
 use OpenDxp\Model\Exception\ConfigWriteException;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,11 +43,56 @@ class AdminExceptionListener implements EventSubscriberInterface
 {
     use OpenDxpContextAwareTrait;
 
+    /**
+     * An exception of these classes ends in an answer to the user, not in a crash. Each is logged at its level.
+     * Some handlers wrap unexpected errors in an AdminOperationFailedException, so it stays a warning.
+     */
+    private const array EXPECTED = [
+        ValidationException::class => LogLevel::INFO,
+        ElementLockedException::class => LogLevel::INFO,
+        ConfigWriteException::class => LogLevel::WARNING,
+        AdminOperationFailedException::class => LogLevel::WARNING,
+    ];
+
+    public function __construct(private readonly ?LoggerInterface $logger = null)
+    {
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
-            KernelEvents::EXCEPTION => 'onKernelException',
+            // Symfony's ErrorListener logs every exception at priority 0, as critical when it has no status code.
+            // An expected exception gets its answer before, which stops the event, so it is logged only here.
+            KernelEvents::EXCEPTION => [
+                ['onExpectedException', 1],
+                ['onKernelException', 0],
+            ],
         ];
+    }
+
+    public function onExpectedException(ExceptionEvent $event): void
+    {
+        $exception = $event->getThrowable();
+
+        foreach (self::EXPECTED as $class => $level) {
+            if (!$exception instanceof $class) {
+                continue;
+            }
+
+            $this->onKernelException($event);
+
+            if ($event->hasResponse()) {
+                $this->logger?->log($level, sprintf(
+                    'Handled PHP Exception %s: "%s" at %s line %s',
+                    $exception::class,
+                    $exception->getMessage(),
+                    basename($exception->getFile()),
+                    $exception->getLine(),
+                ), ['exception' => $exception]);
+            }
+
+            return;
+        }
     }
 
     public function onKernelException(ExceptionEvent $event): void
