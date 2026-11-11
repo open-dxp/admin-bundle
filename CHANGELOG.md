@@ -1,7 +1,7 @@
 # Changelog
 
 ## 1.5.6
-- [ENHANCEMENT] The advanced settings of an image thumbnail have "Use CropBox": the pages of a PDF render inside their CropBox, the visible page area, instead of their MediaBox. The option takes effect from OpenDXP 1.5.5
+- [ENHANCEMENT] The advanced settings of an image thumbnail have "Use CropBox": the pages of a PDF render inside their CropBox, the visible page area, instead of their MediaBox. It requires OpenDXP 1.5.5
 
 ## 1.5.5
 - [SECURITY] [OPENDXP-SA-2026-027] The public route that serves a rendered version diff hands out only the diff files, not every file that lies in the temp directory
