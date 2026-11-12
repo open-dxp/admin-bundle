@@ -33,7 +33,7 @@
 <table id="wrapper" width="100%" height="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
         <td class="error" align="center" valign="center">
-            {% if thumbnail is defined and thumbnail["status"] == "inprogress" %}
+            {% if thumbnail and thumbnail["status"] == "inprogress" %}
                 <style type="text/css">
                     .opendxp_editable_video_progress {
                         position:relative;
