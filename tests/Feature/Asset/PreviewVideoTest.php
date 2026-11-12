@@ -30,5 +30,5 @@ it('shows that the preview of a video whose conversion failed is not available',
     Browser::actingAs(UserFactory::new()->admin()->create())
         ->visit(sprintf('/admin/asset/get-preview-video?id=%d&config=%s', $video->getId(), $config))
         ->assertSuccessful()
-        ->assertSee('Error unknown, please check the log files');
+        ->assertSee('Preview not available');
 });
