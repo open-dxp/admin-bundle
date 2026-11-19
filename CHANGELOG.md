@@ -2,6 +2,7 @@
 
 ## 1.5.7
 - [BUGFIX] The preview of a video whose conversion failed says that the preview is not available. It failed with an error in debug mode before
+- [BUGFIX] After a batch edit, append or remove of the selected rows, a grid stays on its page. It went back to page 1 before
 
 ## 1.5.6
 - [ENHANCEMENT] The advanced settings of an image thumbnail have "Use CropBox": the pages of a PDF render inside their CropBox, the visible page area, instead of their MediaBox. It requires OpenDXP 1.5.5

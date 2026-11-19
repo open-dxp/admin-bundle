@@ -625,14 +625,14 @@ opendxp.element.helpers.gridColumnConfig = {
                                 Ext.Msg.confirm("Confirmation", sprintf(t('batch_confirmation'), `<b>${new Intl.NumberFormat(navigator.language).format(jobs.length)}</b>`),
                                     (btn) => {
                                         if (btn === "yes") {
-                                            this.batchProcess(jobs, append, remove, editor, fieldInfo, true);
+                                            this.batchProcess(jobs, append, remove, editor, fieldInfo, true, onlySelected);
                                         } else {
                                             this.batchWin.close()
                                             return;
                                         }
                                     });
                             } else {
-                                this.batchProcess(jobs, append, remove, editor, fieldInfo, true);
+                                this.batchProcess(jobs, append, remove, editor, fieldInfo, true, onlySelected);
                             }
                         }
                     }.bind(this)
@@ -656,10 +656,11 @@ opendxp.element.helpers.gridColumnConfig = {
         this.batchWin.updateLayout();
     },
 
-    batchProcess: function (jobs, append,  remove, editor, fieldInfo, initial) {
+    batchProcess: function (jobs, append,  remove, editor, fieldInfo, initial, onlySelected) {
         if (initial) {
             this.batchErrors = [];
             this.batchJobCurrent = 0;
+            this.batchOnlySelected = onlySelected;
 
             var newValue = editor.getValue();
 
@@ -724,7 +725,18 @@ opendxp.element.helpers.gridColumnConfig = {
 
         if (this.batchJobCurrent >= jobs.length) {
             this.batchProgressWin.close();
-            this.pagingtoolbar.moveFirst();
+            if (this.batchOnlySelected) {
+                const store = this.pagingtoolbar.getStore();
+                store.loadPage(store.currentPage, {
+                    callback: () => {
+                        if (store.getCount() === 0 && store.currentPage > 1) {
+                            this.pagingtoolbar.moveFirst();
+                        }
+                    }
+                });
+            } else {
+                this.pagingtoolbar.moveFirst();
+            }
             try {
                 var tree = opendxp.globalmanager.get("layout_object_tree").tree;
                 tree.getStore().load({
