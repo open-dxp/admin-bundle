@@ -725,9 +725,15 @@ opendxp.element.helpers.gridColumnConfig = {
 
         if (this.batchJobCurrent >= jobs.length) {
             this.batchProgressWin.close();
-            // After a change to the selected rows, stay on their page; after one to all rows, start at page 1.
             if (this.batchOnlySelected) {
-                this.pagingtoolbar.doRefresh();
+                const store = this.pagingtoolbar.getStore();
+                store.loadPage(store.currentPage, {
+                    callback: () => {
+                        if (store.getCount() === 0 && store.currentPage > 1) {
+                            this.pagingtoolbar.moveFirst();
+                        }
+                    }
+                });
             } else {
                 this.pagingtoolbar.moveFirst();
             }
