@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.5.7
+- [ENHANCEMENT] An auto save of a data object passes `isAutoSave` in the params of `getDataFromEditmode()`. A field can keep its stored value while the editor still fills it in
 - [BUGFIX] The preview of a video whose conversion failed says that the preview is not available. It failed with an error in debug mode before
 - [BUGFIX] After a batch edit, append or remove of the selected rows, a grid stays on its page. It went back to page 1 before
 
