@@ -54,7 +54,7 @@ final class DataObjectPayloadMapper
         if ($payload->data !== []) {
 
             $params = [
-                'isAutoSave' => $payload->task === 'autoSave'
+                'isAutoSave' => $payload->task === 'autoSave',
             ];
 
             try {
