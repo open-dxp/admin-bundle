@@ -52,11 +52,16 @@ final class DataObjectPayloadMapper
         DataObject\Concrete $objectFromDatabase,
     ): DataObject\Concrete {
         if ($payload->data !== []) {
+
+            $params = [
+                'isAutoSave' => $payload->task === 'autoSave'
+            ];
+
             try {
-                $this->applyChanges($object, $payload->data);
+                $this->applyChanges($object, $payload->data, $params);
             } catch (Throwable) {
                 $object = $objectFromDatabase;
-                $this->applyChanges($object, $payload->data);
+                $this->applyChanges($object, $payload->data, $params);
             }
         }
 
@@ -66,7 +71,7 @@ final class DataObjectPayloadMapper
         return $object;
     }
 
-    public function applyChanges(DataObject\Concrete $object, array $changes): void
+    public function applyChanges(DataObject\Concrete $object, array $changes, array $params = []): void
     {
         foreach ($changes as $key => $value) {
             $fd = $object->getClass()->getFieldDefinition($key);
@@ -96,7 +101,7 @@ final class DataObjectPayloadMapper
                         $this->processRemoteOwnerRelations($object, $toDelete, $toAdd, $fd->getOwnerFieldName());
                     }
                 } else {
-                    $object->setValue($key, $fd->getDataFromEditmode($value, $object));
+                    $object->setValue($key, $fd->getDataFromEditmode($value, $object, $params));
                 }
             }
         }
