@@ -12,3 +12,4 @@
 /CONTRIBUTING.md export-ignore
 /phpunit.xml.dist export-ignore
 /phpstan* export-ignore
+/psalm-taint-baseline.xml export-ignore
