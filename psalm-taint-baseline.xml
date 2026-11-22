@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="7.13.2">
+  <file src="src/Controller/Admin/DataObject/DataObjectController.php">
+    <TaintedRedirect>
+      <code>$handler($payload)</code>
+    </TaintedRedirect>
+  </file>
+  <file src="src/Controller/Admin/LoginController.php">
+    <TaintedRedirect>
+      <code>$result-&gt;redirectUrl</code>
+    </TaintedRedirect>
+  </file>
+  <file src="src/Helper/GridHelperService.php">
+    <TaintedSql>
+      <code>$condition</code>
+      <code>$condition</code>
+      <code>implode(' AND ', $conditionFilters)</code>
+    </TaintedSql>
+  </file>
+  <file src="src/Security/Authenticator/AdminAbstractAuthenticator.php">
+    <TaintedRedirect>
+      <code>$url</code>
+    </TaintedRedirect>
+  </file>
+  <file src="src/Service/DataObject/DataObjectGridService.php">
+    <TaintedCallable>
+      <code>$classname</code>
+    </TaintedCallable>
+  </file>
+</files>
