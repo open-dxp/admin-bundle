@@ -307,7 +307,7 @@ class GridHelperService
                     } elseif (in_array($filterField, $systemFields)) {
                         // system field
                         $lowerCasedFilterValue = strtolower($filter['value']); // lowercase for case insensitive search
-                        $lowerCasedFilterValue = str_replace('*', '%', $lowerCasedFilterValue); // replace wildcard
+                        $lowerCasedFilterValue = str_replace('*', '%', Helper::escapeLike($lowerCasedFilterValue)); // replace wildcard
                         if ($filterField === 'fullpath') {
                             $conditionPartsFilters[] = 'concat(lower(`path`), lower(`key`)) ' . $operator . ' ' . $db->quote('%' . $lowerCasedFilterValue . '%');
                         } elseif ($filterField === 'key') {
@@ -800,7 +800,7 @@ class GridHelperService
                 // system field
                 $value = $filter['value'] ?? '';
                 if ($operator === 'LIKE') {
-                    $value = $db->quote('%' . $value . '%');
+                    $value = $db->quote('%' . Helper::escapeLike($value) . '%');
                 } elseif ($operator === 'IN') {
                     if (empty($value)) {
                         continue;
