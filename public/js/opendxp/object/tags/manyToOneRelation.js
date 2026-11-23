@@ -28,7 +28,7 @@ opendxp.object.tags.manyToOneRelation = Class.create(opendxp.object.tags.abstrac
         if (data) {
             this.data = data;
         }
-        this.fieldConfig = fieldConfig;
+        this.fieldConfig = Ext.apply({}, fieldConfig);
 
         this.fieldConfig.classes = this.fieldConfig.classes.filter(function (x) {
             if (x.classes == 'folder') {
