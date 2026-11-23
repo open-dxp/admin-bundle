@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.8
+- [BUGFIX] A relation field in a block accepts data object folders in every block item. Only the first item accepted them before
+
 ## 1.5.7
 - [ENHANCEMENT] An auto save of a data object passes `isAutoSave` in the params of `getDataFromEditmode()`. A field can keep its stored value while the editor still fills it in
 - [BUGFIX] The preview of a video whose conversion failed says that the preview is not available. It failed with an error in debug mode before
