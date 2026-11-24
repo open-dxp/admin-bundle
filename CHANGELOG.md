@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.5.8
+- [BUGFIX] Logging out releases the edit locks of the session and dispatches `AdminEvents::LOGIN_LOGOUT`. Neither happened before
 - [BUGFIX] Key and path filters in the object grid and text filters in the asset grid match `_` and `%` literally
 - [BUGFIX] A relation field in a block accepts data object folders in every block item. Only the first item accepted them before
 
