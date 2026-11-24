@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.5.8
+- [BUGFIX] "Use current player position as preview" with the player at 0:00 sets the first frame of the video as its preview image. It set the frame at a third of the video before
 - [BUGFIX] An admin can no longer delete a user folder that holds the own user
 - [BUGFIX] Converting a document needs the publish permission on it and accepts only a document type
 - [BUGFIX] The key list of the classification store reads the given key and group ids as numbers
