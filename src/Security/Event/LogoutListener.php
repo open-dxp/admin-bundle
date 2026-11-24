@@ -50,7 +50,8 @@ class LogoutListener implements EventSubscriberInterface, LoggerAwareInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            LogoutEvent::class => 'onLogout',
+            // Before SessionLogoutListener (0) invalidates the session, which onLogoutSuccess() still reads.
+            LogoutEvent::class => ['onLogout', 1],
         ];
     }
 

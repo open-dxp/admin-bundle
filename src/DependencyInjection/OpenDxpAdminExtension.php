@@ -65,6 +65,7 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
         $loader->load('security_services.yaml');
         $loader->load('event_listeners.yaml');
         $loader->load('export.yaml');
+        $loader->load('logout_listener.yaml');
 
         //Set Config for GDPR data providers to container parameters
         $container->setParameter('opendxp.gdpr-data-extrator.dataobjects', $config['gdpr_data_extractor']['dataObjects']);
@@ -143,15 +144,6 @@ final class OpenDxpAdminExtension extends Extension implements PrependExtensionI
         if (!$container->hasParameter('opendxp_admin_bundle.firewall_settings')) {
             $containerConfig = ConfigurationHelper::getConfigNodeFromSymfonyTree($container, 'opendxp_admin');
             $container->setParameter('opendxp_admin_bundle.firewall_settings', $containerConfig['security_firewall']);
-        }
-
-        if ($container->has('security.event_dispatcher.opendxp_admin')) {
-            $loader = new YamlFileLoader(
-                $container,
-                new FileLocator(__DIR__ . '/../../config')
-            );
-
-            $loader->load('logout_listener.yaml');
         }
     }
 }

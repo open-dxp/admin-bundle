@@ -20,6 +20,7 @@ use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\ContentSecurityPolic
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\GDPRDataProviderPass;
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\GridExportSourcePass;
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\ImportExportLocatorsPass;
+use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\LogoutListenerPass;
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\SerializerPass;
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\Compiler\TranslatorPass;
 use OpenDxp\Bundle\AdminBundle\DependencyInjection\OpenDxpAdminExtension;
@@ -66,6 +67,7 @@ class OpenDxpAdminBundle extends AbstractOpenDxpBundle implements DependentBundl
         $container->addCompilerPass(new ImportExportLocatorsPass());
         $container->addCompilerPass(new TranslatorPass());
         $container->addCompilerPass(new ContentSecurityPolicyUrlsPass());
+        $container->addCompilerPass(new LogoutListenerPass());
     }
 
     #[Override]
