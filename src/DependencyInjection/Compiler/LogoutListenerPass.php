@@ -36,7 +36,7 @@ final class LogoutListenerPass implements CompilerPassInterface
             return;
         }
 
-        if (!$container->has(self::DISPATCHER)) {
+        if (!$container->hasDefinition(self::DISPATCHER)) {
             $container->removeDefinition(LogoutListener::class);
 
             return;
