@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.5.8
+- [BUGFIX] An admin can no longer delete a user folder that holds the own user
 - [BUGFIX] Converting a document needs the publish permission on it and accepts only a document type
 - [BUGFIX] The key list of the classification store reads the given key and group ids as numbers
 - [BUGFIX] A zip download and a zip import accept only the job id the admin created. The zip download needs the view permission on its asset

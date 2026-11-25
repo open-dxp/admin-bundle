@@ -65,3 +65,19 @@ it('keeps the own user of an admin who deletes it', function () {
     $browser->assertStatus(403);
     expect(User::getById($admin->getId(), true))->not->toBeNull();
 });
+
+it('keeps the folder of an admin who deletes it', function () {
+    $folder = new User\Folder();
+    $folder->setName('admins-' . uniqid());
+    $folder->save();
+    $admin = UserFactory::new()
+        ->admin()
+        ->create(['parentId' => $folder->getId()]);
+
+    $browser = Browser::actingAs($admin)->delete('/admin/user/delete', [
+        'body' => ['id' => $folder->getId()],
+    ]);
+
+    $browser->assertStatus(403);
+    expect(User::getById($admin->getId(), true))->not->toBeNull();
+});
