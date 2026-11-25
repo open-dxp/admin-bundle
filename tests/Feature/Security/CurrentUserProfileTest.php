@@ -45,7 +45,7 @@ it('saves the fields of the profile', function () {
         'language' => 'de',
     ]);
 
-    expect(User::getById($user->getId(), true))
+    expect(storedUser($user->getId()))
         ->getFirstname()
         ->toBe('Anna')
         ->getLastname()
@@ -67,7 +67,7 @@ it('changes the password when the old password is right', function () {
         'retype_password' => 'new-secret-password',
     ]);
 
-    expect(Authentication::verifyPassword(User::getById($user->getId(), true), 'new-secret-password'))->toBeTrue();
+    expect(Authentication::verifyPassword(storedUser($user->getId()), 'new-secret-password'))->toBeTrue();
 });
 
 it('keeps every field of the user outside the profile', function () {
@@ -90,7 +90,7 @@ it('keeps every field of the user outside the profile', function () {
         'classes' => 'all',
     ]);
 
-    expect(User::getById($user->getId(), true))
+    expect(storedUser($user->getId()))
         ->isAdmin()
         ->toBeFalse()
         ->getPermissions()

@@ -1,6 +1,11 @@
 # Changelog
 
 ## 1.5.8
+- [BUGFIX] An admin can no longer delete a user folder that holds the own user
+- [BUGFIX] Converting a document needs the publish permission on it and accepts only a document type
+- [BUGFIX] The key list of the classification store reads the given key and group ids as numbers
+- [BUGFIX] A zip download and a zip import accept only the job id the admin created. The zip download needs the view permission on its asset
+- [BUGFIX] The PHP operator of the grid unserializes a value without creating its objects
 - [BUGFIX] Logging out releases the edit locks of the session and dispatches `AdminEvents::LOGIN_LOGOUT`. Neither happened before
 - [BUGFIX] Key and path filters in the object grid and text filters in the asset grid match `_` and `%` literally
 - [BUGFIX] A relation field in a block accepts data object folders in every block item. Only the first item accepted them before

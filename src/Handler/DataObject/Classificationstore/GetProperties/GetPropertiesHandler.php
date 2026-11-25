@@ -137,17 +137,7 @@ final class GetPropertiesHandler
                 $col = 'id';
             }
 
-            $condition = $db->quoteIdentifier($col) . ' IN (';
-            $count = 0;
-            foreach ($ids as $theId) {
-                if ($count > 0) {
-                    $condition .= ',';
-                }
-                $condition .= $theId;
-                $count++;
-            }
-
-            $condition .= ')';
+            $condition = $db->quoteIdentifier($col) . ' IN (' . implode(',', array_map(intval(...), (array) $ids)) . ')';
             $list->setCondition($condition);
         }
 

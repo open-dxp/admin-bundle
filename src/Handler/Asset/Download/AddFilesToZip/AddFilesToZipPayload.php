@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\AddFilesToZip;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\ZipJobId;
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -41,7 +42,7 @@ final readonly class AddFilesToZipPayload implements ExtJsPayloadInterface
             selectedIds: array_values(array_filter(array_map(intval(...), explode(',', $request->query->getString('selectedIds'))))),
             offset:      $request->query->getInt('offset'),
             limit:       $request->query->getInt('limit'),
-            jobId:       $request->query->getString('jobId'),
+            jobId:       ZipJobId::fromRequest($request->query->getString('jobId')),
             thumbnail:   $request->query->getString('thumbnail') ?: null,
         );
     }

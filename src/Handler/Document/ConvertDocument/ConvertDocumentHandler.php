@@ -33,7 +33,7 @@ use Doctrine\DBAL\Connection;
 use OpenDxp\Cache\RuntimeCache;
 use OpenDxp\Config;
 use OpenDxp\Model\Document;
-use OpenDxp\Tool;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class ConvertDocumentHandler
@@ -49,8 +49,13 @@ final class ConvertDocumentHandler
             throw new NotFoundHttpException('Document not found');
         }
 
-        $class = '\\OpenDxp\\Model\\Document\\' . ucfirst($payload->type);
-        if (!Tool::classExists($class)) {
+        if (!$document->isAllowed('publish')) {
+            throw new AccessDeniedHttpException();
+        }
+
+        $typeDefinitions = Config::getSystemConfiguration('documents')['type_definitions']['map'] ?? [];
+        $class = $typeDefinitions[$payload->type]['class'] ?? null;
+        if ($class === null) {
             return;
         }
 

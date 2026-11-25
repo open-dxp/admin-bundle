@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\ZipJobId;
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -35,7 +36,7 @@ final readonly class ImportZipFilesPayload implements ExtJsPayloadInterface
     {
         return new static(
             parentId:      $request->request->getInt('parentId'),
-            jobId:         $request->request->getString('jobId'),
+            jobId:         ZipJobId::fromRequest($request->request->getString('jobId')),
             offset:        $request->request->getInt('offset'),
             limit:         $request->request->getInt('limit'),
             allowOverwrite: $request->request->getString('allowOverwrite') === 'true',

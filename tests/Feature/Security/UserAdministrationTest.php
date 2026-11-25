@@ -35,7 +35,7 @@ it('keeps the 2FA of an admin when a user who is no admin resets it', function (
     ]);
 
     $browser->assertStatus(403);
-    expect(User::getById($admin->getId(), true)?->getTwoFactorAuthentication('enabled'))->toBeTrue();
+    expect(storedUser($admin->getId())?->getTwoFactorAuthentication('enabled'))->toBeTrue();
 });
 
 it('resets the 2FA of a user for a user who manages users', function () {
@@ -50,7 +50,7 @@ it('resets the 2FA of a user for a user who manages users', function () {
         'body' => ['id' => $user->getId()],
     ]);
 
-    expect(User::getById($user->getId(), true)?->getTwoFactorAuthentication('enabled'))->toBeFalse();
+    expect(storedUser($user->getId())?->getTwoFactorAuthentication('enabled'))->toBeFalse();
 });
 
 it('keeps the own user of an admin who deletes it', function () {
@@ -63,5 +63,24 @@ it('keeps the own user of an admin who deletes it', function () {
     ]);
 
     $browser->assertStatus(403);
-    expect(User::getById($admin->getId(), true))->not->toBeNull();
+    expect(storedUser($admin->getId()))->not->toBeNull();
+});
+
+it('keeps the folder of an admin who deletes it', function () {
+    $folder = new User\Folder();
+    $folder->setName('admins-' . uniqid());
+    $folder->save();
+    $admin = UserFactory::new()
+        ->admin()
+        ->create(['parentId' => $folder->getId()]);
+
+    $browser = Browser::actingAs($admin)->delete('/admin/user/delete', [
+        'body' => ['id' => $folder->getId()],
+    ]);
+
+    $browser->assertStatus(403);
+    expect(storedUser($admin->getId()))
+        ->not->toBeNull()
+        ->and(User\Folder::getById($folder->getId()))
+        ->not->toBeNull();
 });

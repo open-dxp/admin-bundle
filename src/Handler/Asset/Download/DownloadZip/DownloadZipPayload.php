@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadZip;
 
+use OpenDxp\Bundle\AdminBundle\Handler\Asset\ZipJobId;
 use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -32,7 +33,7 @@ final readonly class DownloadZipPayload implements ExtJsPayloadInterface
     {
         return new static(
             id:        $request->query->getInt('id'),
-            jobId:     $request->query->getString('jobId'),
+            jobId:     ZipJobId::fromRequest($request->query->getString('jobId')),
             thumbnail: $request->query->getString('thumbnail') ?: null,
         );
     }

@@ -57,7 +57,8 @@ final class DeleteUserHandler
         if (
             ($user instanceof User\Folder && !$adminUser?->isAdmin()) ||
             ($user instanceof User && $user->isAdmin() && !$adminUser?->isAdmin()) ||
-            $user->getId() === $currentUserId
+            $user->getId() === $currentUserId ||
+            ($user instanceof User\Folder && $this->isInFolder($adminUser, $user))
         ) {
             throw new AccessDeniedHttpException('You are not allowed to delete this user');
         }
@@ -72,6 +73,22 @@ final class DeleteUserHandler
         } elseif ($user->getId()) {
             $user->delete();
         }
+    }
+
+    /**
+     * Deleting a folder deletes every user below it.
+     */
+    private function isInFolder(?User $adminUser, User\Folder $folder): bool
+    {
+        $parentId = $adminUser?->getParentId();
+        while ($parentId) {
+            if ($parentId === $folder->getId()) {
+                return true;
+            }
+            $parentId = User\AbstractUser::getById($parentId)?->getParentId();
+        }
+
+        return false;
     }
 
     /**
