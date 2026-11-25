@@ -10,6 +10,11 @@
       <code>$result-&gt;redirectUrl</code>
     </TaintedRedirect>
   </file>
+  <file src="src/DataObject/GridColumnConfig/Operator/PHP.php">
+    <TaintedUnserialize>
+      <code>$result-&gt;value</code>
+    </TaintedUnserialize>
+  </file>
   <file src="src/Handler/DataObject/ChangeChildrenSortBy/ChangeChildrenSortByHandler.php">
     <TaintedSql>
       <code>'UPDATE ' . $list-&gt;getDao()-&gt;getTableName() . ' o,
