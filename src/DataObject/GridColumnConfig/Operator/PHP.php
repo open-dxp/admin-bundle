@@ -71,7 +71,7 @@ final class PHP extends AbstractOperator
         if ($this->mode === 's') {
             $result->value = Serialize::serialize($result->value);
         } elseif ($this->mode === 'u') {
-            $result->value = Serialize::unserialize($result->value);
+            $result->value = Serialize::unserialize($result->value, ['allowed_classes' => false]);
         }
 
         return $result;

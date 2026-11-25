@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Download\DownloadZip;
 
+use OpenDxp\Bundle\AdminBundle\Exception\AdminOperationFailedException;
 use OpenDxp\Bundle\AdminBundle\Exception\Asset\AssetNotFoundException;
 use OpenDxp\Model\Asset;
 
@@ -37,6 +38,9 @@ final class DownloadZipHandler
     public function __invoke(DownloadZipPayload $payload): DownloadZipResult
     {
         $asset = Asset::getById($payload->id) ?? throw new AssetNotFoundException($payload->id);
+        if (!$asset->isAllowed('view')) {
+            throw new AdminOperationFailedException('');
+        }
 
         $zipFile = OPENDXP_SYSTEM_TEMP_DIRECTORY . '/download-zip-' . $payload->jobId . '.zip';
         $suggestedFilename = $asset->getFilename() ?: 'assets';

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="7.13.2">
+<files psalm-version="7.20.0">
   <file src="src/Controller/Admin/DataObject/DataObjectController.php">
     <TaintedRedirect>
       <code>$handler($payload)</code>
@@ -9,6 +9,42 @@
     <TaintedRedirect>
       <code>$result-&gt;redirectUrl</code>
     </TaintedRedirect>
+  </file>
+  <file src="src/Handler/DataObject/ChangeChildrenSortBy/ChangeChildrenSortByHandler.php">
+    <TaintedSql>
+      <code>'UPDATE ' . $list-&gt;getDao()-&gt;getTableName() . ' o,
+                    (
+                    SELECT newIndex, id FROM (
+                        SELECT @n := @n +1 AS newIndex, id
+                        FROM ' . $list-&gt;getDao()-&gt;getTableName() . ',
+                                (SELECT @n := -1) variable
+                                 WHERE parentId = ? ORDER BY `key` ' . $currentSortOrder
+                . ') tmp
+                    ) order_table
+                    SET o.index = order_table.newIndex
+                    WHERE o.id=order_table.id'</code>
+    </TaintedSql>
+  </file>
+  <file src="src/Handler/DataObject/ClassDef/GetTextLayoutPreview/GetTextLayoutPreviewHandler.php">
+    <TaintedCallable>
+      <code>$fqClassName</code>
+    </TaintedCallable>
+  </file>
+  <file src="src/Handler/DataObject/Classificationstore/AddCollections/AddCollectionsHandler.php">
+    <TaintedSql>
+      <code>$groupCondition</code>
+      <code>$keyCondition</code>
+    </TaintedSql>
+  </file>
+  <file src="src/Handler/DataObject/Classificationstore/GetCollections/GetCollectionsHandler.php">
+    <TaintedSql>
+      <code>$condition</code>
+    </TaintedSql>
+  </file>
+  <file src="src/Handler/DataObject/Classificationstore/GetPage/GetPageHandler.php">
+    <TaintedSql>
+      <code>$query</code>
+    </TaintedSql>
   </file>
   <file src="src/Helper/GridHelperService.php">
     <TaintedSql>
@@ -26,5 +62,21 @@
     <TaintedCallable>
       <code>$classname</code>
     </TaintedCallable>
+  </file>
+  <file src="src/Service/Grid/GridBatchService.php">
+    <TaintedCallable>
+      <code>$classname</code>
+    </TaintedCallable>
+  </file>
+  <file src="src/Service/Grid/GridColumnConfigService.php">
+    <TaintedSql>
+      <code>'id in (' . implode(',', $ids) . ')'</code>
+    </TaintedSql>
+  </file>
+  <file src="src/Service/Translation/TranslationQueryService.php">
+    <TaintedSql>
+      <code>$conditions['condition']</code>
+      <code>$havings</code>
+    </TaintedSql>
   </file>
 </files>
