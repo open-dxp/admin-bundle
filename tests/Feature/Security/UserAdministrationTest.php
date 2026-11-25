@@ -79,5 +79,8 @@ it('keeps the folder of an admin who deletes it', function () {
     ]);
 
     $browser->assertStatus(403);
-    expect(storedUser($admin->getId()))->not->toBeNull();
+    expect(storedUser($admin->getId()))
+        ->not->toBeNull()
+        ->and(User\Folder::getById($folder->getId()))
+        ->not->toBeNull();
 });

@@ -18,13 +18,12 @@ namespace OpenDxp\Bundle\AdminBundle\Handler\Asset;
 
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
-/**
- * The id of a zip download or a zip import names a file in the temporary directory.
- * The handlers create it with uniqid(), so it consists of hex digits only.
- */
 final class ZipJobId
 {
     /**
+     * The id of a zip download or a zip import names a file in the temporary directory.
+     * The handlers create it with uniqid(), so it consists of hex digits only.
+     *
      * @psalm-taint-escape file
      */
     public static function fromRequest(string $jobId): string

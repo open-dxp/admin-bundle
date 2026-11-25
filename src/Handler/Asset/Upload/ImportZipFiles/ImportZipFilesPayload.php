@@ -16,8 +16,8 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\Asset\Upload\ImportZipFiles;
 
-use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
 use OpenDxp\Bundle\AdminBundle\Handler\Asset\ZipJobId;
+use OpenDxp\Bundle\AdminBundle\Payload\ExtJsPayloadInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 final readonly class ImportZipFilesPayload implements ExtJsPayloadInterface
