@@ -45,7 +45,7 @@ final readonly class GetVideoThumbnailPayload implements ExtJsPayloadInterface
             hasSetImage:         $request->query->has('setimage'),
             hasImage:            $request->query->has('image'),
             imageId:             $request->query->getInt('image'),
-            time:                $request->query->getString('time') ?: null,
+            time:                $request->query->has('time') ? $request->query->getString('time') : null,
             origin:              $request->query->getString('origin') ?: null,
             queryAll:            $request->query->all(),
         );
