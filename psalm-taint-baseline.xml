@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="7.20.0">
+<files psalm-version="7.22.0">
   <file src="src/Controller/Admin/DataObject/DataObjectController.php">
     <TaintedRedirect>
       <code>$handler($payload)</code>
@@ -14,6 +14,11 @@
     <TaintedUnserialize>
       <code>$result-&gt;value</code>
     </TaintedUnserialize>
+  </file>
+  <file src="src/GridExport/Source/AssetGridExportSource.php">
+    <TaintedCallable>
+      <code>'get' . ucfirst($name)</code>
+    </TaintedCallable>
   </file>
   <file src="src/Handler/DataObject/ChangeChildrenSortBy/ChangeChildrenSortByHandler.php">
     <TaintedSql>
@@ -51,12 +56,52 @@
       <code>$query</code>
     </TaintedSql>
   </file>
+  <file src="src/Handler/DataObject/Classificationstore/UpdateCollection/UpdateCollectionHandler.php">
+    <TaintedCallable>
+      <code>$setter</code>
+    </TaintedCallable>
+  </file>
+  <file src="src/Handler/DataObject/Classificationstore/UpdateGroup/UpdateGroupHandler.php">
+    <TaintedCallable>
+      <code>$setter</code>
+    </TaintedCallable>
+  </file>
+  <file src="src/Handler/DataObject/Classificationstore/UpdateProperty/UpdatePropertyHandler.php">
+    <TaintedCallable>
+      <code>$setter</code>
+    </TaintedCallable>
+  </file>
+  <file src="src/Handler/Settings/UpdateThumbnail/UpdateThumbnailHandler.php">
+    <TaintedCallable>
+      <code>$setter</code>
+    </TaintedCallable>
+  </file>
+  <file src="src/Handler/Settings/UpdateVideoThumbnail/UpdateVideoThumbnailHandler.php">
+    <TaintedCallable>
+      <code>$setter</code>
+    </TaintedCallable>
+  </file>
+  <file src="src/Handler/User/UpdateUser/UpdateUserHandler.php">
+    <TaintedCallable>
+      <code>'setWorkspaces' . ucfirst($type)</code>
+    </TaintedCallable>
+  </file>
   <file src="src/Helper/GridHelperService.php">
     <TaintedSql>
       <code>$condition</code>
       <code>$condition</code>
       <code>implode(' AND ', $conditionFilters)</code>
     </TaintedSql>
+  </file>
+  <file src="src/Mapper/GridData/DataObject.php">
+    <TaintedCallable>
+      <code>$brickFieldGetter</code>
+      <code>$getBrickType</code>
+      <code>$getter</code>
+      <code>$getter</code>
+      <code>$getter</code>
+      <code>'get' . ucfirst($innerContainer)</code>
+    </TaintedCallable>
   </file>
   <file src="src/Security/Authenticator/AdminAbstractAuthenticator.php">
     <TaintedRedirect>
@@ -65,12 +110,25 @@
   </file>
   <file src="src/Service/DataObject/DataObjectGridService.php">
     <TaintedCallable>
+      <code>$brickGetter</code>
+      <code>$brickSetter</code>
       <code>$classname</code>
     </TaintedCallable>
   </file>
   <file src="src/Service/Grid/GridBatchService.php">
     <TaintedCallable>
+      <code>$brickGetter</code>
+      <code>$brickSetter</code>
       <code>$classname</code>
+      <code>$getter</code>
+      <code>$getter</code>
+      <code>$setter</code>
+      <code>$valueGetter</code>
+      <code>$valueGetter</code>
+      <code>$valueSetter</code>
+      <code>$valueSetter</code>
+      <code>'get' . $name</code>
+      <code>'get' . $name</code>
     </TaintedCallable>
   </file>
   <file src="src/Service/Grid/GridColumnConfigService.php">
