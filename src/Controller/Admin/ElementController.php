@@ -287,6 +287,7 @@ class ElementController extends AdminAbstractController
         return $this->apiJson($handler($payload), envelope: false);
     }
 
+    #[IsGranted(CorePermission::Users->value)]
     #[Route('/element/analyze-permissions', name: 'opendxp_admin_element_analyzepermissions', methods: ['POST'])]
     public function analyzePermissionsAction(
         AnalyzePermissionsHandler $handler,
