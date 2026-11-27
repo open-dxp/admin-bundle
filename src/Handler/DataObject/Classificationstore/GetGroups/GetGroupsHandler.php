@@ -74,6 +74,7 @@ final class GetGroupsHandler
         $list->setOrderKey($orderKey);
 
         $conditionParts = [];
+        $conditionVariables = [];
         $db = Db::get();
 
         if ($payload->searchfilter !== null) {
@@ -111,12 +112,13 @@ final class GetGroupsHandler
             $allowedGroupIds = $fd->getAllowedGroupIds();
 
             if ($allowedGroupIds) {
-                $conditionParts[] = 'ID in (' . implode(',', $allowedGroupIds) . ')';
+                $conditionParts[] = 'ID IN (:allowedGroupIds)';
+                $conditionVariables['allowedGroupIds'] = array_map(intval(...), $allowedGroupIds);
             }
         }
 
         $condition = implode(' AND ', $conditionParts);
-        $list->setCondition($condition);
+        $list->setCondition($condition, $conditionVariables);
 
         $list->load();
         $configList = $list->getList();
