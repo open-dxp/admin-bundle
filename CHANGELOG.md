@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.5.8
+- [BUGFIX] Analyzing permissions of an element requires the `users` permission. It showed rights, roles and workspaces of every user to every user before
 - [BUGFIX] Group search of classification stores binds allowed group ids as integers
 - [BUGFIX] "Use current player position as preview" with the player at 0:00 sets the first frame of the video as its preview image. It set the frame at a third of the video before
 - [BUGFIX] An admin can no longer delete a user folder that holds the own user
