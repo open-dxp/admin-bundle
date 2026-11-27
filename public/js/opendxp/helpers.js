@@ -2872,6 +2872,9 @@ opendxp.helpers.searchAndReplaceAssignments = function() {
     }
 };
 
+/**
+ * @deprecated since 1.5 and will be removed in 2.0, the SeoBundle registers the key binding of redirects
+ */
 opendxp.helpers.redirects = function() {
     var user = opendxp.globalmanager.get("user");
     if (user.isAllowed("redirects")) {
@@ -2947,11 +2950,9 @@ opendxp.helpers.keyBindingMapping = {
     "showElementHistory": opendxp.helpers.showElementHistory,
     "closeAllTabs": opendxp.helpers.closeAllTabs,
     "searchAndReplaceAssignments": opendxp.helpers.searchAndReplaceAssignments,
-    "redirects": opendxp.helpers.redirects,
     "sharedTranslations": opendxp.helpers.sharedTranslations,
     "recycleBin": opendxp.helpers.recycleBin,
     "notesEvents": opendxp.helpers.notesEvents,
-    "tagManager": opendxp.helpers.tagManager,
     "tagConfiguration": opendxp.helpers.tagConfiguration,
     "users": opendxp.helpers.users,
     "roles": opendxp.helpers.roles,

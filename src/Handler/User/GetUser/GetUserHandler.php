@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\AdminBundle\Handler\User\GetUser;
 
+use OpenDxp\Bundle\AdminBundle\Helper\User as UserHelper;
 use OpenDxp\Bundle\AdminBundle\Perspective\Config;
 use OpenDxp\Bundle\AdminBundle\Service\Admin\AdminUserContextInterface;
 use OpenDxp\Model\DataObject;
@@ -122,6 +123,7 @@ final class GetUserHandler
         $userData['twoFactorAuthentication']['isActive'] = ($user->getTwoFactorAuthentication('enabled') || $user->getTwoFactorAuthentication('secret'));
         unset($userData['password'], $userData['passwordRecoveryToken'], $userData['twoFactorAuthentication']['secret']);
         $userData['hasImage'] = $user->hasImage();
+        $userData['keyBindings'] = UserHelper::getDefaultKeyBindings($user);
 
         $availablePerspectives = Config::getAvailablePerspectives(null);
 
