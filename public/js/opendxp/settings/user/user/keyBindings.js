@@ -144,9 +144,16 @@ opendxp.settings.user.user.keyBindings = Class.create({
         return generalItems;
     },
 
+    getStoredBindings: function () {
+        if (this.userProfile) {
+            return opendxp.globalmanager.get("user").keyBindings;
+        }
+
+        return this.userPanel.data.user.keyBindings;
+    },
+
     getPanel: function (responseData) {
-        var user = opendxp.globalmanager.get("user");
-        var userBindings = responseData ? responseData : user.keyBindings;
+        var userBindings = responseData ? responseData : this.getStoredBindings();
 
         var generalItems = this.buildItems(userBindings);
 

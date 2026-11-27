@@ -1,6 +1,11 @@
 # Changelog
 
 ## 1.5.8
+- [BUGFIX] The user editor shows and saves key bindings of the edited user. It showed key bindings of the own user and gave them to the edited user on save
+- [BUGFIX] "Reset" of key bindings in the own profile works without the `users` permission
+- [BUGFIX] Ctrl+Alt+N opens notes and events only. Tag configuration moves to Ctrl+Alt+G
+- [BUGFIX] The key binding Ctrl+Alt+H of the tag manager is removed. It had no action behind it
+- [DEPRECATION] `opendxp.helpers.redirects` is deprecated and will be removed in 2.0. The SeoBundle registers the key binding of redirects
 - [BUGFIX] Group search of classification stores binds allowed group ids as integers
 - [BUGFIX] "Use current player position as preview" with the player at 0:00 sets the first frame of the video as its preview image. It set the frame at a third of the video before
 - [BUGFIX] An admin can no longer delete a user folder that holds the own user

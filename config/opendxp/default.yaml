@@ -108,13 +108,8 @@ opendxp_admin:
                 action: notesEvents
                 ctrl: true
                 alt: true
-            tag_manager:
-                key: 'H'
-                action: tagManager
-                ctrl: true
-                alt: true
             tag_configuration:
-                key: 'N'
+                key: 'G'
                 action: tagConfiguration
                 ctrl: true
                 alt: true

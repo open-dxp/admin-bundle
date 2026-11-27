@@ -117,8 +117,10 @@ opendxp.settings.user.usertab = Class.create({
                 }
             }
 
-            var user = opendxp.globalmanager.get("user");
-            user.keyBindings = Ext.encode(userBindings);
+            this.data.user.keyBindings = Ext.encode(userBindings);
+            if (this.id == opendxp.currentuser.id) {
+                opendxp.globalmanager.get("user").keyBindings = this.data.user.keyBindings;
+            }
 
             data.keyBindings = Ext.encode(keyBindingsFromForm);
         } catch (e3) {
